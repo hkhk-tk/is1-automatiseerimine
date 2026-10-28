@@ -9,14 +9,12 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    Selle lehe lõpuks:
+    Lõpuks:
 
     - on control node'il nimi `control` ja sinu enda parool;
     - on control node'il SSH-võti ja see võti on kõigis viies labori VM-is;
     - kannavad VM-id nimesid `web01`, `app01`, `rmq01`, `mc01`, `db01`;
     - logid control node'ilt igasse VM-i käsuga `ssh web01`, ilma IP-d ja parooli küsimata.
-
-    Kõik selle lehe sammud teed **ühe Bashi skriptiga**, mille loed enne läbi ja mõistad.
 
 ## Enne alustamist
 
@@ -33,7 +31,7 @@ tags:
 
 *Tabel 1. Sinu masinad. Kasutaja kõigis: `kasutaja`.*
 
-Kõik selle lehe käsud käivad **control node'il**, VS Code'i terminalis.
+Kõik käsud käivad **control node'il**, VS Code'i terminalis.
 
 ## A1 · Control node'i nimi
 

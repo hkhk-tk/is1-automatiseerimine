@@ -7,10 +7,6 @@ tags:
 
 # 1. kohtumine · Linuxi haldusest automatiseerimiseni
 
-**Eeldus:** oskad Linuxis liikuda kaustade vahel, muuta faile, lugeda õigusi (`ls -l`), kasutada `sudo`-t ja ühenduda SSH-ga. Programmeerimist, Bashi skripte ega Ansible'it ei eeldata.
-
-See tekst on kohtumise kodune lugemismaterjal. Ta vastab küsimustele **mida me teeme, miks ja kuidas sellest mõelda**. Mida täpselt käivitada ja mida väljundis näha, on [praktikumis](lab.md).
-
 ??? abstract "Õpiväljundid"
 
     Pärast seda kohtumist oskad:
@@ -22,8 +18,6 @@ See tekst on kohtumise kodune lugemismaterjal. Ta vastab küsimustele **mida me 
     - selgitada mõisteid control node, hallatav masin, inventory, moodul, ülesanne ja playbook ning käivitada playbook'i;
     - lugeda Ansible'i tulemust (`ok`, `changed`, `failed`) ja näidata idempotentsust kahe käivitusega;
     - kontrollida tulemust masinast endast, mitte ainult tööriista aruandest.
-
-Kogu päeva läbib üks väike ülesanne. Teeme selle kolm korda: käsitsi, Bashi skriptiga ja Ansible'iga.
 
 !!! info "Päeva ülesanne"
 
@@ -37,7 +31,7 @@ Kogu päeva läbib üks väike ülesanne. Teeme selle kolm korda: käsitsi, Bash
     Need väärtused on harjutuse nõuded, mitte soovitus päris rakendusele.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
-<svg viewBox="0 0 720 150" role="img" aria-label="Sama ülesanne kolmel viisil: käsitsi, Bashi skriptiga ja Ansible'iga, iga kord sama kontroll" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 95" role="img" aria-label="Sama ülesanne kolmel viisil: käsitsi, Bashi skriptiga ja Ansible'iga, iga kord sama kontroll" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:15px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:13px}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
 <defs><marker id="lxt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
 <rect class="box" x="10" y="20" width="160" height="60" rx="8"/><text class="b" x="90" y="47" text-anchor="middle">Käsitsi</text><text class="s" x="90" y="66" text-anchor="middle">mkdir, printf, chmod</text>
@@ -47,7 +41,6 @@ Kogu päeva läbib üks väike ülesanne. Teeme selle kolm korda: käsitsi, Bash
 <rect class="box" x="390" y="20" width="160" height="60" rx="8"/><text class="b" x="470" y="47" text-anchor="middle">Ansible</text><text class="s" x="470" y="66" text-anchor="middle">soovitud seis</text>
 <line class="a" x1="550" y1="50" x2="578" y2="50" marker-end="url(#lxt)"/>
 <rect class="hi" x="580" y="20" width="130" height="60" rx="8"/><text class="b" x="645" y="47" text-anchor="middle">Kontroll</text><text class="s" x="645" y="66" text-anchor="middle">cat, stat</text>
-<text class="s" x="360" y="120" text-anchor="middle">Iga teostuse järel sama kontrollnimekiri: kas tulemus vastab nõuetele?</text>
 </svg>
 <figcaption>Joonis 1.1. Päeva lugu: üks ülesanne, kolm teostust, üks kontroll.</figcaption>
 </figure>
@@ -106,8 +99,6 @@ Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, kor
 ## 2. Kuidas töötamise viis on muutunud
 
 **Küsimus:** miks inimesed käsitsi haldusest kaugemale liikusid?
-
-Vaatame lihtsustatud järjekorda. See on mudel probleemide mõistmiseks, mitte ajalugu, mida iga ettevõte läbis.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 140" role="img" aria-label="Viis sammu: käsitsi, kirjalik juhend, skript, konfihaldus, versioonihalduses ja üle vaadatud kood" xmlns="http://www.w3.org/2000/svg">
@@ -178,7 +169,7 @@ Kui automaatika on kood, saab seda hoida Gitis. Siis on näha, kes mida muutis j
 
 **IT-automatiseerimine** tähendab, et korduv töö (paigaldus, seadistus, uuendused, kasutajad, varundus) on kirjas koodina, mida saab üle vaadata, uuesti käivitada ja mille tulemust saab kontrollida.
 
-Selles lauses on kolm sõna, mida tasub meeles pidada:
+Kolm märksõna:
 
 - **kirjeldada**: töö on üles kirjutatud nii täpselt, et teine inimene või arvuti saab sellest aru;
 - **korrata**: sama kirjeldus annab teisel masinal ja teisel päeval sama tulemuse;
@@ -258,7 +249,7 @@ Pea meeles ka seda: kui käsk ei trüki midagi, ei tähenda see veel, et kogu ü
 
 **Küsimus:** kuidas tuttavatest käskudest saab väike programm?
 
-Skript ei ole lihtsalt koht, kuhu käsud salvestada. Selle kirjutamisel pead otsustama, millised väärtused võivad muutuda, mida eeldad, kuidas vastad veale ja kuidas tunned ära edu. Bashi õpime ainult nii palju, kui meie ülesanne vajab.
+Skript ei ole lihtsalt koht, kuhu käsud salvestada. Selle kirjutamisel pead otsustama, millised väärtused võivad muutuda, mida eeldad, kuidas vastad veale ja kuidas tunned ära edu.
 
 ### Shell on ka programmeerimiskeel
 
@@ -384,7 +375,7 @@ if ! printf '%s\n' 'environment=training' 'enabled=true' | cmp -s - "$config_fil
 fi
 ```
 
-`cmp -s` võrdleb soovitud sisu failiga ja kirjutab ainult siis, kui need erinevad. Iga sellise kontrolli pead aga ise välja mõtlema ja kirjutama. Siit tuleb järgmise peatüki küsimus: kas leidub tööriist, kus see kontroll on juba valmis?
+`cmp -s` võrdleb soovitud sisu failiga ja kirjutab ainult siis, kui need erinevad. Iga sellise kontrolli pead aga ise välja mõtlema ja kirjutama. Ansible'is on selline kontroll moodulis juba olemas.
 
 ??? question "Kontrolli ennast"
 

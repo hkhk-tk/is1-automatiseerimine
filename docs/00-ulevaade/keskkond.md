@@ -8,7 +8,7 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    Tee see leht läbi oma arvutis enne esimest kohtumist või kohtumise alguses. Lõpuks:
+    Enne esimest kohtumist, oma arvutis. Lõpuks:
 
     - ühendub VPN kooli laborivõrku;
     - avab VS Code terminali otse sinu control node'il;
