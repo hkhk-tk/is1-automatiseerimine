@@ -18,18 +18,9 @@ tags:
 
 ## Enne alustamist
 
-[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il. Masinate IP-d kirjutasid oma arvuti SSH config faili ([keskkonnaleht, samm 3.3](../00-ulevaade/keskkond.md#3-vs-code)). Ava see VS Code'is: ++f1++ → `Remote-SSH: Open SSH Configuration File`. Kirjuta IP-d siia:
+[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il.
 
-| Nimi | IP | OS |
-|---|---|---|
-| control | | Ubuntu |
-| web01 | | Ubuntu |
-| app01 | | Ubuntu |
-| rmq01 | | Ubuntu |
-| mc01 | | Rocky Linux |
-| db01 | | Rocky Linux |
-
-*Tabel 1. Sinu masinad. Kasutaja kõigis: `kasutaja`.*
+Hoia Proxmox brauseris lahti. Viie masina IP-d leiad sealt: masin → **Summary** → rida **IPs**. Kirjutad need sammus A3 otse skripti. Kasutaja kõigis masinates on `kasutaja`. Ubuntu masinad on `web01`, `app01` ja `rmq01`, Rocky Linuxi masinad `mc01` ja `db01`.
 
 Kõik käsud käivad **control node'il**, VS Code'i terminalis.
 
@@ -79,7 +70,7 @@ Viie masina seadistamine käsitsi tähendab viis korda samu käske. Just sellist
 
 ## A3 · Loo skript
 
-Loo control node'il fail `~/ssh-seadistus.sh` (VS Code: **File → New File**, salvesta kodukausta). Kopeeri sisse alljärgnev ja **muuda viis IP-d** oma tabeli järgi:
+Loo control node'il fail `~/ssh-seadistus.sh` (VS Code: **File → New File**, salvesta kodukausta). Kopeeri sisse alljärgnev ja **muuda viis IP-d** Proxmoxi järgi:
 
 ```bash
 #!/usr/bin/env bash
@@ -87,7 +78,7 @@ Loo control node'il fail `~/ssh-seadistus.sh` (VS Code: **File → New File**, s
 # Käivita control node'il oma kasutajana, ilma sudo-ta:
 #   bash ~/ssh-seadistus.sh
 
-# --- Sinu VM-ide IP-d (koolitajalt). Muuda need! ---
+# --- Sinu VM-ide IP-d (Proxmoxist). Muuda need! ---
 WEB01_IP="10.10.N.11"
 APP01_IP="10.10.N.12"
 RMQ01_IP="10.10.N.13"
@@ -304,13 +295,13 @@ Kõik selle kohtumise failid lähevad kausta `~/kursus/k01/`.
 
 | Mida näed | Põhjus | Mida teha |
 |---|---|---|
-| `Connection timed out` | vale IP või masin ei tööta | kontrolli IP-d tabelis ja skripti alguses |
+| `Connection timed out` | vale IP või masin ei tööta | võrdle skripti alguses olevaid IP-sid Proxmoxiga, kontrolli, et masin töötab |
 | `Permission denied (publickey,password)` | vale parool | proovi uuesti, kasutaja on `kasutaja` |
 | `REMOTE HOST IDENTIFICATION HAS CHANGED` | masin loodi uuesti | `ssh-keygen -R <ip>`, siis käivita skript uuesti |
 | `Bad owner or permissions on ~/.ssh/config` | config on teistele loetav | `chmod 600 ~/.ssh/config` |
 | kontrollis `VIGA ... ei vasta ilma paroolita` | võti ei jõudnud masinasse | käivita skript uuesti ja vaata selle masina väljundit |
 
-*Tabel 2. Levinud vead.*
+*Tabel 1. Levinud vead.*
 
 ??? info "Loe juurde"
 

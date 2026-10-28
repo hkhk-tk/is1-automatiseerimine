@@ -131,7 +131,7 @@ sudo systemctl restart ssh
 hostname -I
 ```
 
-Esimene number on control node'i IP. Teiste masinate IP leiad samamoodi: masin → **Summary** → rida **IPs** (või konsoolis `hostname -I`). Kirjuta need järgmise sammu faili.
+Esimene number on control node'i IP. Seda on vaja järgmises sammus. Teiste viie masina IP-sid on vaja alles 1. praktikumis.
 
 ??? question "Proxmox ei lase sisse?"
 
@@ -145,27 +145,20 @@ Esimene number on control node'i IP. Teiste masinate IP leiad samamoodi: masin �
 
 **3.2 Lisa laiendus.** Vasakul **Extensions** (nelja ruuduga ikoon), otsi `Remote - SSH` (Microsoft), **Install**.
 
-**3.3 Kirjuta IP SSH config faili.** Vajuta ++f1++, kirjuta `Remote-SSH: Open SSH Configuration File` ja vali esimene fail:
+**3.3 Kirjuta control node'i aadress SSH config faili.** Vajuta ++f1++, kirjuta `Remote-SSH: Open SSH Configuration File` ja vali esimene fail:
 
 - Windows: `C:\Users\<sinu nimi>\.ssh\config`
 - macOS, Linux: `~/.ssh/config`
 
-Kirjuta faili (oma IP-dega) ja salvesta (++ctrl+s++):
+Kirjuta faili kolm rida, `HostName` asemele oma control node'i IP, ja salvesta (++ctrl+s++):
 
 ```text
 Host control
     HostName 192.168.124.51
     User kasutaja
-
-# 1. praktikumi jaoks:
-# web01 192.168.124.52
-# app01 192.168.124.53
-# rmq01 192.168.124.54
-# mc01  192.168.124.55
-# db01  192.168.124.56
 ```
 
-`Host control` on lühinimi, `HostName` on päris aadress. Read, mis algavad `#`-ga, on märkmed: teiste masinate IP-sid läheb vaja 1. praktikumis ja nii on need ühes kohas.
+`Host control` on lühinimi, `HostName` on päris aadress, `User` on kasutaja masinas. Sinu arvuti ühendub ainult control node'iga, teisi masinaid siia ei kirjutata. See fail jääb kogu kursuseks samaks: ka pärast 1. praktikumi logid control node'ile parooliga.
 
 **3.4 Ühendu.**
 
