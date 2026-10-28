@@ -597,23 +597,6 @@ Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne tegemist
 
 ## 9. Kokkuvõte
 
-**Küsimus:** mida õppisime ja kuidas seda kasutame?
-
-Tegid ühe ülesande kolm korda. Käsitsi versioon näitas, et mõistad Linuxi toiminguid. Bashi versioon tegi töö käivitatavaks ja andis võimaluse kirjeldada sisendeid, kontrolle ja otsuseid. Ansible'i versioon kirjeldas soovitud seisu ja tööriist kontrollis ise, kas muudatust on vaja.
-
-Küsimus ei ole, milline tööriist on parim. Küsimused on:
-
-| Küsimus | Käsitsi | Bash | Ansible |
-|---|---|---|---|
-| Kui lihtne on teisele selgitada? | | | |
-| Kus on eeldused kirjas? | | | |
-| Mis juhtub teisel käivitusel? | | | |
-| Kui hästi on näha soovitud tulemus? | | | |
-
-*Tabel 9.1. Täida see tabel praktikumi tulemuste põhjal.*
-
-### Pea meeles
-
 - **Tulemus enne käske:** kirjuta enne, mis peab olema ja kuidas seda kontrollid.
 - **Käsitsi enne automaatikat:** mõista tööd enne, kui annad selle arvutile.
 - **Skript on otsused:** muutujad, jutumärgid, väljumiskood ja `if` ütlevad, mis juhtub, kui olukord on teine.
