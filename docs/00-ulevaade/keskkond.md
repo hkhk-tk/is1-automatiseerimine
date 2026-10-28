@@ -42,7 +42,7 @@ Vaja läheb:
 
 | Mis | Kust |
 |---|---|
-| kooli kasutajanimi ja parool | sama, millega logid kooli e-posti (kasutajanimi nt `silmberg.is126`) |
+| kooli kasutajanimi ja parool | sama, millega logid kooli e-posti (kasutajanimi nt `maasikas.is126`) |
 | VPN-i profiil (fail `.ovpn`) | e-kirjaga eraldi |
 | VM-ide kasutaja ja parool | kasutaja `kasutaja`, parooli annab juhendaja |
 
@@ -86,7 +86,7 @@ Salvesta e-kirjaga saadud `.ovpn` fail oma arvutisse.
 
 ### 1.3 Ühendu
 
-Kasutajanimi ja parool on **sama mis kooli kontol** (näiteks `silmberg.is126`).
+Kasutajanimi ja parool on **sama mis kooli kontol** (näiteks `maasikas.is126`).
 
 === "Windows"
 
@@ -245,7 +245,7 @@ ssh-keygen -R <control-ip>
 | `Connection timed out` | VPN pole ühendatud või vale IP | ühenda VPN, kontrolli IP-d |
 | `Permission denied` | vale kasutajanimi või parool | kasutaja on `kasutaja`; pärast `passwd`-d kasuta uut parooli |
 | `REMOTE HOST IDENTIFICATION HAS CHANGED` | hostivõti muutus (samm 4.2) või VM loodi uuesti | oma arvutis `ssh-keygen -R <control-ip>` ja ühendu uuesti |
-| VPN küsib parooli uuesti ja ei ühendu | vale kasutajanimi või parool | kasutajanimi on kujul `perenimi.is126`, parool sama mis kooli e-postil |
+| VPN küsib parooli uuesti ja ei ühendu | vale kasutajanimi või parool | kasutajanimi on kujul `perekonnanimi.is126`, parool sama mis kooli e-postil |
 | Proxmoxi leht ei avane | VPN pole ühendatud | ühenda VPN (samm 1.3) |
 | VS Code jääb „Setting up SSH Host“ juurde | ühendus katkes poole pealt | ++f1++ → **Remote-SSH: Kill VS Code Server on Host**, proovi uuesti |
 | macOS-is Tunnelblick ei ühendu | süsteemilaiendus lubamata | **System Settings → Privacy & Security → Allow** |
