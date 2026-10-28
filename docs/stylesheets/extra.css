@@ -93,7 +93,7 @@
   .md-typeset .spikker p { margin: .3em 0 .1em; }
 }
 /* Loengu kokkuvõte: väike, tihe nimekiri, mitte suured kaardid */
-.md-typeset .kokkuvote.grid.cards > ul { grid-gap: .3rem; }
+.md-typeset .kokkuvote.grid { grid-gap: .3rem; }
 .md-typeset .kokkuvote.grid.cards > ul > li {
   padding: .35rem .7rem;
   border: 0; border-left: 2px solid var(--md-default-fg-color--lightest);
@@ -106,23 +106,30 @@
 
 /* --- Avaleht --- */
 .md-typeset .avaleht-hero {
-  padding: 1.2rem 0 .6rem;
-  border-bottom: 1px solid var(--md-default-fg-color--lightest);
-  margin-bottom: 1rem;
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; align-items: center;
+  padding: .6rem 0 .8rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); margin-bottom: .8rem;
 }
-.md-typeset .avaleht-hero h1 { font-size: 2.1em; margin-bottom: .3em; }
-.md-typeset .avaleht-hero > p:first-of-type { font-size: .9rem; line-height: 1.45; max-width: 36rem; }
-.md-typeset .avaleht-hero .md-button { margin: .4em .4em .4em 0; }
-.md-typeset .avaleht-info { font-size: .66rem; color: var(--md-default-fg-color--light); }
-/* Õppepäevade kaardid: kaks veergu, telefonis üks */
-.md-typeset .paevad.grid.cards > ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.md-typeset .avaleht-hero h1 { font-size: 2em; margin: 0 0 .3em; }
+.md-typeset .hero-tekst > p:first-of-type { font-size: .82rem; line-height: 1.45; }
+.md-typeset .avaleht-hero .md-button { margin: .3em .3em .3em 0; }
+.md-typeset figure.hero-pilt { margin: 0; width: 100%; max-width: 360px; justify-self: center; }
 @media screen and (max-width: 44.9375em) {
-  .md-typeset .paevad.grid.cards > ul { grid-template-columns: 1fr; }
+  .md-typeset .avaleht-hero { grid-template-columns: 1fr; }
+  .md-typeset figure.hero-pilt { max-width: 260px; }
 }
-.md-typeset .paevad.grid.cards > ul > li > p { margin: .25em 0; }
+.md-typeset .avaleht-info { font-size: .64rem; color: var(--md-default-fg-color--light); margin: .3em 0; }
+/* Avalehe sektsioonid tihedamalt */
+.md-typeset .avaleht h2 { margin: 1.4em 0 .4em; }
+.md-typeset .avaleht .admonition { margin: .4em 0 .6em; }
+/* Õppepäevade kaardid: kaks veergu, telefonis üks */
+.md-typeset .paevad.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-gap: .5rem; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .paevad.grid { grid-template-columns: 1fr; }
+}
+.md-typeset .paevad.grid.cards > ul > li { padding: .6rem .8rem; }
+.md-typeset .paevad.grid.cards > ul > li > p { margin: .15em 0; }
 .md-typeset .paev-nr {
-  font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  font-size: .58rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   color: var(--md-accent-fg-color);
 }
-.md-typeset .tuleb { font-size: .62rem; color: var(--md-default-fg-color--light); }
-.md-typeset .sammud.grid.cards > ul > li > p { margin: .2em 0; }
+.md-typeset .tuleb { font-size: .6rem; color: var(--md-default-fg-color--light); }

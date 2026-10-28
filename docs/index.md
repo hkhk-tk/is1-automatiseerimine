@@ -8,9 +8,11 @@ hide:
 
 <div class="avaleht-hero" markdown>
 
-# IT-infrastruktuuri automatiseerimine I
+<div class="hero-tekst" markdown>
 
-Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, Ansible, konteinerid, taristu koodina, tarneahel ja Kubernetes.
+# IT-infrastruktuuri automatiseerimine&nbsp;I
+
+Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi tööst ja jõuad selleni, et rakenduse paigaldus, taristu, tarne ja käitus on kood, mida saab korrata ja kontrollida.
 
 [Alusta siit](00-ulevaade/keskkond.md){ .md-button .md-button--primary } [Vaata õppepäevi](#oppepaevad){ .md-button }
 
@@ -18,19 +20,39 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
 </div>
 
+<figure class="lx hero-pilt" markdown="0">
+<svg viewBox="0 0 360 300" role="img" aria-label="Rakendus keskel, selle ümber neli automatiseerimise osa: paigaldus, taristu, tarne ja käitus" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .core{fill:var(--md-primary-fg-color);fill-opacity:.18;stroke:var(--md-primary-fg-color);stroke-width:2}.lx .ring{fill:none;stroke:var(--md-default-fg-color--lightest);stroke-width:1.5;stroke-dasharray:4 4}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-accent-fg-color);stroke-width:1.5}.lx .t{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:11.5px}</style>
+<circle class="ring" cx="180" cy="150" r="105"/>
+<circle class="core" cx="180" cy="150" r="52"/><text class="t" x="180" y="146" text-anchor="middle">Rakendus</text><text class="s" x="180" y="164" text-anchor="middle">sinu teenus</text>
+<rect class="box" x="115" y="8" width="130" height="48" rx="10"/><text class="b" x="180" y="29" text-anchor="middle">Paigaldus</text><text class="s" x="180" y="46" text-anchor="middle">Bash · Ansible</text>
+<rect class="box" x="230" y="126" width="124" height="48" rx="10"/><text class="b" x="292" y="147" text-anchor="middle">Taristu</text><text class="s" x="292" y="164" text-anchor="middle">OpenTofu</text>
+<rect class="box" x="115" y="244" width="130" height="48" rx="10"/><text class="b" x="180" y="265" text-anchor="middle">Tarne</text><text class="s" x="180" y="282" text-anchor="middle">Actions · Jenkins</text>
+<rect class="box" x="6" y="126" width="124" height="48" rx="10"/><text class="b" x="68" y="147" text-anchor="middle">Käitus</text><text class="s" x="68" y="164" text-anchor="middle">Docker · Kubernetes</text>
+</svg>
+</figure>
+
+</div>
+
+<div class="avaleht" markdown>
+
+!!! tip "Enne esimest kohtumist"
+
+    Võta vastu GitHubi kutse orgi `hkhk-tk`, seadista VPN ja VS Code ning kontrolli ühendust laboriga. [Ava ettevalmistusjuhend →](00-ulevaade/keskkond.md)
+
 ## Kursuse teekond
 
-<figure style="max-width:760px;margin:.4em auto 1em" class="lx" markdown="0">
-<svg viewBox="0 0 760 110" role="img" aria-label="Kursuse teekond: 1 Bash ja Ansible, 2 Ansible, 3 Konteinerid, 4 Taristu koodina, 5 Tarneahel, 6 Jenkins, 7 Kubernetes" xmlns="http://www.w3.org/2000/svg">
+<figure style="max-width:760px;margin:.2em auto .6em" class="lx" markdown="0">
+<svg viewBox="0 0 760 105" role="img" aria-label="Kursuse teekond: 1 Bash ja Ansible, 2 Ansible, 3 Konteinerid, 4 Taristu, 5 Tarneahel, 6 Jenkins, 7 Kubernetes" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .ln{stroke:var(--md-default-fg-color--lighter);stroke-width:2}.lx .c{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.5}.lx .on{fill:var(--md-primary-fg-color);stroke:var(--md-primary-fg-color)}.lx .n{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .non{fill:var(--md-primary-bg-color);font-size:15px;font-weight:700}.lx .t{fill:var(--md-default-fg-color);font-size:13px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:11.5px}</style>
-<line class="ln" x1="54" y1="34" x2="706" y2="34"/>
-<a href="k01/loeng/"><circle class="c on" cx="54" cy="34" r="20"/><text class="non" x="54" y="39" text-anchor="middle">1</text><text class="t" x="54" y="76" text-anchor="middle">Bash</text><text class="s" x="54" y="93" text-anchor="middle">ja Ansible</text></a>
-<circle class="c" cx="163" cy="34" r="20"/><text class="n" x="163" y="39" text-anchor="middle">2</text><text class="t" x="163" y="76" text-anchor="middle">Ansible</text><text class="s" x="163" y="93" text-anchor="middle">mitu masinat</text>
-<circle class="c" cx="271" cy="34" r="20"/><text class="n" x="271" y="39" text-anchor="middle">3</text><text class="t" x="271" y="76" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="93" text-anchor="middle">Docker, Podman</text>
-<circle class="c" cx="380" cy="34" r="20"/><text class="n" x="380" y="39" text-anchor="middle">4</text><text class="t" x="380" y="76" text-anchor="middle">Taristu</text><text class="s" x="380" y="93" text-anchor="middle">OpenTofu</text>
-<circle class="c" cx="489" cy="34" r="20"/><text class="n" x="489" y="39" text-anchor="middle">5</text><text class="t" x="489" y="76" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="93" text-anchor="middle">GitHub Actions</text>
-<circle class="c" cx="597" cy="34" r="20"/><text class="n" x="597" y="39" text-anchor="middle">6</text><text class="t" x="597" y="76" text-anchor="middle">Jenkins</text><text class="s" x="597" y="93" text-anchor="middle">kvaliteedivärav</text>
-<circle class="c" cx="706" cy="34" r="20"/><text class="n" x="706" y="39" text-anchor="middle">7</text><text class="t" x="706" y="76" text-anchor="middle">Kubernetes</text><text class="s" x="706" y="93" text-anchor="middle">GitOps</text>
+<line class="ln" x1="54" y1="30" x2="706" y2="30"/>
+<a href="k01/"><circle class="c on" cx="54" cy="30" r="20"/><text class="non" x="54" y="35" text-anchor="middle">1</text><text class="t" x="54" y="72" text-anchor="middle">Bash</text><text class="s" x="54" y="89" text-anchor="middle">ja Ansible</text></a>
+<circle class="c" cx="163" cy="30" r="20"/><text class="n" x="163" y="35" text-anchor="middle">2</text><text class="t" x="163" y="72" text-anchor="middle">Ansible</text><text class="s" x="163" y="89" text-anchor="middle">mitu masinat</text>
+<circle class="c" cx="271" cy="30" r="20"/><text class="n" x="271" y="35" text-anchor="middle">3</text><text class="t" x="271" y="72" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="89" text-anchor="middle">Docker, Podman</text>
+<circle class="c" cx="380" cy="30" r="20"/><text class="n" x="380" y="35" text-anchor="middle">4</text><text class="t" x="380" y="72" text-anchor="middle">Taristu</text><text class="s" x="380" y="89" text-anchor="middle">OpenTofu</text>
+<circle class="c" cx="489" cy="30" r="20"/><text class="n" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="89" text-anchor="middle">GitHub Actions</text>
+<circle class="c" cx="597" cy="30" r="20"/><text class="n" x="597" y="35" text-anchor="middle">6</text><text class="t" x="597" y="72" text-anchor="middle">Jenkins</text><text class="s" x="597" y="89" text-anchor="middle">kvaliteedivärav</text>
+<circle class="c" cx="706" cy="30" r="20"/><text class="n" x="706" y="35" text-anchor="middle">7</text><text class="t" x="706" y="72" text-anchor="middle">Kubernetes</text><text class="s" x="706" y="89" text-anchor="middle">GitOps</text>
 </svg>
 </figure>
 
@@ -42,19 +64,15 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **Linuxi haldusest automatiseerimiseni**
 
-    Kuidas muuta käsitsi tehtud töö korratavaks ja kontrollitavaks?
+    Sama ülesanne käsitsi, Bashiga ja Ansible'iga.
 
-    *Päeva tulemus:* sama seadistus käsitsi, Bashi skriptiga ja Ansible'iga. Teine käivitus ei muuda midagi.
-
-    [Loeng](k01/loeng.md) · [Praktikum](k01/lab.md) · [Kodutöö](k01/kodutoo.md)
+    [Ava õppepäev →](k01/index.md)
 
 -   <span class="paev-nr">02 · Ansible</span>
 
     **Mitu masinat, üks kirjeldus**
 
-    Kuidas seadistada viis masinat ühe playbook'iga?
-
-    *Päeva tulemus:* inventory, muutujad ja mallid; üks playbook seadistab kõik labori masinad.
+    Üks playbook seadistab kõik labori masinad.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -62,9 +80,7 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **Docker ja Podman**
 
-    Kuidas pakkida rakendus nii, et see töötab igal pool ühtemoodi?
-
-    *Päeva tulemus:* rakendus ja andmebaas konteinerites Compose'iga.
+    Rakendus koos vajaliku käituskeskkonnaga.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -72,9 +88,7 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **OpenTofu (Terraform)**
 
-    Kuidas luua virtuaalmasinad koodist, mitte hiirega?
-
-    *Päeva tulemus:* labori masinad tekivad ja kaovad ühe käsuga.
+    Virtuaalmasinad koodis kirjeldatud plaani järgi.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -82,9 +96,7 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **GitHub Actions**
 
-    Kuidas kontrollida ja tarnida iga muudatust automaatselt?
-
-    *Päeva tulemus:* iga `git push` käivitab kontrolli, ehituse ja tarne.
+    Töövoog, mis kontrollib muudatusi ning ehitab ja tarnib kokkulepitud tingimustel.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -92,9 +104,7 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **Jenkins, SonarQube ja Nexus**
 
-    Kuidas peatada vigane muudatus enne tootmist?
-
-    *Päeva tulemus:* tarneahel kvaliteediväravaga ja versioonitud artefaktiga.
+    Kvaliteedivärav ja versioonitud artefakt.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -102,37 +112,15 @@ Käsitsi tehtud Linuxi tööst korratava ja kontrollitava automaatikani: Bash, A
 
     **Kubernetes ja GitOps**
 
-    Kuidas hoida rakendust klastris nii, et Git on tõe allikas?
-
-    *Päeva tulemus:* rakendus klastris, muudatus jõuab sinna Giti kaudu.
+    Rakendus klastris, Git on tõe allikas.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
 </div>
 
-## Enne esimest kohtumist
-
-<div class="grid cards sammud" markdown>
-
--   **1 · GitHub**
-
-    Võta vastu e-postiga tulnud kutse orgi `hkhk-tk`. Konto puudumisel loo see kooli e-postiga.
-
--   **2 · VPN ja VS Code**
-
-    Paigalda VPN-i klient ja VS Code laiendusega Remote - SSH.
-
--   **3 · Ühenduse kontroll**
-
-    Logi VS Code'iga control node'ile ja vaheta parool.
-
-</div>
-
-[Ava ettevalmistusjuhend](00-ulevaade/keskkond.md){ .md-button .md-button--primary }
-
 ## Kuidas õppimine toimub
 
-<figure style="max-width:760px;margin:.4em auto" class="lx" markdown="0">
+<figure style="max-width:760px;margin:.2em auto" class="lx" markdown="0">
 <svg viewBox="0 0 760 70" role="img" aria-label="Loe, vaata näidet, tee laboris, kontrolli, esita" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
 <defs><marker id="lxo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
@@ -152,24 +140,8 @@ Iga kohtumine on loeng, praktikum ja lühike kodutöö. Töö on sinu GitHubi re
 
 ## Lisapraktika
 
-Valikuline, põhiteekonnast eraldi.
-
-<div class="grid cards" markdown>
-
--   **[Pilv (AWS)](kodutood/kodutood.md)**
-
-    Sama oskus pilves, oma kontol. Loe enne [reeglid ja kulud](kodutood/aws-reeglid.md).
-
--   **[Monitooring](kodutood/monitooring.md)**
-
-    Väike ülesanne iga päeva tööriistaga.
-
--   **[Teemad](teemad/it-automatiseerimine.md)**
-
-    Süvalugemine automatiseerimise valdkondade kohta.
-
-</div>
-
----
+Valikuline, põhiteekonnast eraldi: [Pilv (AWS)](kodutood/kodutood.md) · [Monitooring](kodutood/monitooring.md) · [Teemad](teemad/it-automatiseerimine.md)
 
 <p class="avaleht-info">Koolitajad: Maria Talvik, Rain Koor · Küsimused: <a href="https://github.com/hkhk-tk/is126-arutelu/discussions">is126-arutelu</a></p>
+
+</div>

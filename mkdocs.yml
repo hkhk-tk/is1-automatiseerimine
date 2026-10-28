@@ -85,6 +85,7 @@ nav:
       - Litsents: 00-ulevaade/litsents.md
   - Kohtumised:
       - 1. kohtumine · Bash ja Ansible:
+          - Ülevaade: k01/index.md
           - Loeng: k01/loeng.md
           - Labor:
               - k01/lab.md
