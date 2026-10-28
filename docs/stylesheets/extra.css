@@ -106,16 +106,16 @@
 
 /* --- Avaleht --- */
 .md-typeset .avaleht-hero {
-  display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; align-items: center;
+  display: grid; grid-template-columns: 1fr auto; gap: 1.2rem; align-items: center;
   padding: .6rem 0 .8rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); margin-bottom: .8rem;
 }
 .md-typeset .avaleht-hero h1 { font-size: 2em; margin: 0 0 .3em; }
 .md-typeset .hero-tekst > p:first-of-type { font-size: .82rem; line-height: 1.45; }
 .md-typeset .avaleht-hero .md-button { margin: .3em .3em .3em 0; }
-.md-typeset figure.hero-pilt { margin: 0; width: 100%; max-width: 360px; justify-self: center; }
+.md-typeset figure.hero-pilt { margin: 0; width: 230px; max-width: 230px; justify-self: end; }
 @media screen and (max-width: 44.9375em) {
   .md-typeset .avaleht-hero { grid-template-columns: 1fr; }
-  .md-typeset figure.hero-pilt { max-width: 260px; }
+  .md-typeset figure.hero-pilt { display: none; }
 }
 .md-typeset .avaleht-info { font-size: .64rem; color: var(--md-default-fg-color--light); margin: .3em 0; }
 /* Avalehe sektsioonid tihedamalt */
@@ -133,3 +133,4 @@
   color: var(--md-accent-fg-color);
 }
 .md-typeset .tuleb { font-size: .6rem; color: var(--md-default-fg-color--light); }
+@media print { .md-typeset figure.hero-pilt { display: none; } .md-typeset .avaleht-hero { display: block; } }
