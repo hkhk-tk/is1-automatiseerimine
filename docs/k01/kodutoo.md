@@ -7,10 +7,6 @@ tags:
 
 # 1. kohtumine · Kodutöö
 
-Umbes 30 minutit, enne 2. kohtumist. Kõik kolm ülesannet teed samas keskkonnas nagu praktikumis. Iga ülesanne lõpeb `git push`-iga, kontrolli teeb automaatne hindaja.
-
-Loe enne läbi [loengu](loeng.md) peatükid 6 ja 7, kui need jäid kohtumisel poolikuks.
-
 ## H1 · Muuda üht väärtust
 
 Muuda playbook'is `training.yml` faili sisu: `enabled=true` → `enabled=false`. Käivita kaks korda:
