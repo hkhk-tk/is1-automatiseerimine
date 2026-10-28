@@ -1,0 +1,3 @@
+# rmq01: Deployment + Service. rabbitmq:4.1-management-alpine, port 5672,
+# RABBITMQ_DEFAULT_USER=labseis, RABBITMQ_DEFAULT_PASS Secret'ist (RABBITMQ_PASSWORD),
+# readinessProbe (miks mitte rabbitmq-diagnostics ping 1 s timeout'iga?), resources.

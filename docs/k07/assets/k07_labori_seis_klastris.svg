@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<style>text{font-family:Inter, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.l{text-anchor:start}.ln{stroke:#7e57c2;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#ede7f6;stroke:#7e57c2;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.m{fill:#5e35b1;stroke:#5e35b1}</style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<rect x="10" y="10" width="780" height="380" rx="8" fill="none" stroke="#7e57c2" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text class="t l" x="30" y="38">namespace is-&lt;github&gt;</text>
+<rect class="p" x="30" y="150" width="180" height="90" rx="8"/>
+<text class="t" x="120" y="178">Ingress</text>
+<text class="s" x="120" y="200">labori-seis-&lt;github&gt;</text>
+<text class="s" x="120" y="220">.lab.hkhk.ee</text>
+<rect class="m" x="260" y="140" width="210" height="110" rx="8"/>
+<text class="t w" x="365" y="168">app01</text>
+<text class="s w" x="365" y="190">Service + Deployment</text>
+<text class="s w" x="365" y="210">init: wait-deps</text>
+<text class="s w" x="365" y="230">startup, readiness, liveness</text>
+<rect class="o" x="260" y="295" width="210" height="65" rx="8"/>
+<text class="s" x="365" y="322">ConfigMap labori-seis</text>
+<text class="s" x="365" y="342">Secret labori-seis</text>
+<rect class="p" x="520" y="50" width="140" height="60" rx="8"/>
+<text class="t" x="590" y="76">db01 :3306</text>
+<text class="s" x="590" y="96">MariaDB</text>
+<rect class="o" x="680" y="50" width="100" height="60" rx="8"/>
+<text class="t" x="730" y="76">PVC</text>
+<text class="s" x="730" y="96">db01-data</text>
+<rect class="p" x="520" y="165" width="140" height="60" rx="8"/>
+<text class="t" x="590" y="191">mc01 :11211</text>
+<text class="s" x="590" y="211">memcached</text>
+<rect class="p" x="520" y="280" width="140" height="60" rx="8"/>
+<text class="t" x="590" y="306">rmq01 :5672</text>
+<text class="s" x="590" y="326">RabbitMQ</text>
+<line class="ln" x1="210" y1="195" x2="258" y2="195" marker-end="url(#a)"/>
+<line class="ln" x1="365" y1="295" x2="365" y2="252" marker-end="url(#a)"/>
+<line class="ln" x1="470" y1="165" x2="518" y2="85" marker-end="url(#a)"/>
+<line class="ln" x1="470" y1="195" x2="518" y2="195" marker-end="url(#a)"/>
+<line class="ln" x1="470" y1="225" x2="518" y2="305" marker-end="url(#a)"/>
+<line class="ln" x1="660" y1="80" x2="678" y2="80" marker-end="url(#a)"/>
+</svg>

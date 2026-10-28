@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="300" fill="#fff"/>
+<rect x="20" y="40" width="220" height="90" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="130" y="70" text-anchor="middle" class="b">Soovitud seis</text>
+<text x="130" y="94" text-anchor="middle" class="s">playbookis kirjas</text>
+<text x="130" y="116" text-anchor="middle" class="s">mariadb-server: present</text>
+<rect x="20" y="170" width="220" height="90" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="130" y="200" text-anchor="middle" class="b">Tegelik seis</text>
+<text x="130" y="224" text-anchor="middle" class="s">masinas praegu</text>
+<text x="130" y="246" text-anchor="middle" class="s">pakett puudub või on olemas</text>
+<rect x="300" y="105" width="180" height="90" rx="8" fill="#5e35b1"/>
+<text x="390" y="143" text-anchor="middle" class="b w">Moodul</text>
+<text x="390" y="167" text-anchor="middle" class="w">võrdleb</text>
+<rect x="560" y="40" width="220" height="90" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="670" y="70" text-anchor="middle" class="b">Erinevus on</text>
+<text x="670" y="94" text-anchor="middle" class="s">muudab ainult erinevuse</text>
+<text x="670" y="116" text-anchor="middle" class="s">changed: true</text>
+<rect x="560" y="170" width="220" height="90" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="670" y="200" text-anchor="middle" class="b">Erinevust pole</text>
+<text x="670" y="224" text-anchor="middle" class="s">ei tee midagi</text>
+<text x="670" y="246" text-anchor="middle" class="s">changed: false</text>
+<path d="M240,85 L298,132" class="l" marker-end="url(#a)"/>
+<path d="M240,215 L298,168" class="l" marker-end="url(#a)"/>
+<path d="M480,132 L558,85" class="l" marker-end="url(#a)"/>
+<path d="M480,168 L558,215" class="l" marker-end="url(#a)"/>
+</svg>

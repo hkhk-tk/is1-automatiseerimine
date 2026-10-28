@@ -1,0 +1,64 @@
+# K7.3 starter: kopeeri .github/workflows/gitops.yml-iks ja täida TODO-d (k07/lab.md 3.2).
+# Kui ci.yml on main'il roheline, kirjutab see workflow uue image'i tagi k07-k8s/40-app.yaml-i ja commit'ib.
+# Klastrisse viib muudatuse Argo CD. Siin pole kubeconfig'i.
+name: gitops
+
+on:
+  workflow_run:
+    workflows: [ci]           # K5 workflow'i name:
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitops-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    # TODO 1: ainult siis, kui ci lõppes edukalt ja käivitaja oli push (mitte pull_request ega schedule).
+    #         Väljad: github.event.workflow_run.conclusion, github.event.workflow_run.event
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # TODO 2: sellel job'il on vaja õigust repo'sse kirjutada (permissions: ...)
+    env:
+      MANIFEST: k07-k8s/40-app.yaml
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Kas uut image'i on vaja manifesti panna?
+        id: need
+        run: |
+          # Commit muutis ainult k07-k8s/ faile (käsitsi tag, git revert): image jääb, nagu inimene valis
+          changed=$(git diff --name-only "$SHA^" "$SHA" 2>/dev/null || echo "?")
+          if ! grep -qv '^k07-k8s/' <<< "$changed"; then echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # Manifestis on juba uuem commit (vanem ci jooks lõpetas hiljem): ära keera tagasi
+          current=$(grep -oE 'image:[[:space:]]*ghcr\.io/[^[:space:]]+' "$MANIFEST" | head -1 | sed 's/.*://')
+          if [[ "$current" =~ ^[0-9a-f]{7}$ ]] && git merge-base --is-ancestor "$SHA" "$current" 2>/dev/null; then
+            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+
+      - name: Uus tag ja change-cause manifesti
+        if: steps.need.outputs.go == 'true'
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${SHA::7}"     # sama, mille ci.yml image-job lükkas
+          # TODO 3: sed -i -E, mis asendab ghcr.io/... image'i rea väärtuse "$image"-ga
+          # TODO 4: sed -i -E, mis paneb kubernetes.io/change-cause väärtuseks "${SHA::7} (ci)"
+          grep -q "image: ${image}\$" "$MANIFEST" || { echo "::error::image'i rida ei muutunud"; exit 1; }
+
+      - name: Commit ja push
+        if: steps.need.outputs.go == 'true'
+        run: |
+          git diff --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # TODO 5: commit sõnumiga "k07: app01 → <sha7> [skip ci]" ja push origin HEAD:main
+          #         (vahepealse push'i korral: git pull --rebase origin main ja proovi uuesti)

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="300" fill="#fff"/>
+<rect x="20" y="30" width="230" height="110" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="135" y="62" text-anchor="middle" class="b">vault.yml</text>
+<text x="135" y="88" text-anchor="middle" class="s">krüpteeritud, Gitis</text>
+<text x="135" y="112" text-anchor="middle" class="s">vault_db_password</text>
+<rect x="285" y="30" width="230" height="110" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="400" y="62" text-anchor="middle" class="b">group_vars/all/main.yml</text>
+<text x="400" y="88" text-anchor="middle" class="s">labseis_db_password:</text>
+<text x="400" y="112" text-anchor="middle" class="s">"{{ vault_db_password }}"</text>
+<rect x="550" y="30" width="230" height="110" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="665" y="62" text-anchor="middle" class="b">env.j2 (roll tomcat)</text>
+<text x="665" y="88" text-anchor="middle" class="s">DB_PASSWORD=</text>
+<text x="665" y="112" text-anchor="middle" class="s">{{ labseis_db_password }}</text>
+<rect x="20" y="190" width="230" height="80" rx="8" fill="#fff" stroke="#7e57c2" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="135" y="223" text-anchor="middle" class="s">~/.config/is1/vault_pass</text>
+<text x="135" y="247" text-anchor="middle" class="s">väljaspool repot, 0600</text>
+<text x="300" y="215" class="s">main.yml on avatekstis: grep leiab kõik kasutuskohad</text>
+<text x="300" y="240" class="s">ja on näha, millised saladused on olemas,</text>
+<text x="300" y="265" class="s">ka siis, kui vault on lukus.</text>
+<path d="M250,85 L283,85" class="l" marker-end="url(#a)"/>
+<path d="M515,85 L548,85" class="l" marker-end="url(#a)"/>
+<path d="M135,190 L135,142" class="l" marker-end="url(#a)"/>
+<text x="145" y="172" class="s">avab</text>
+</svg>

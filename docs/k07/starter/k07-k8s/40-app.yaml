@@ -1,0 +1,8 @@
+# app01: ConfigMap labori-seis (DB_HOST, MEMCACHED_HOST, RABBITMQ_HOST) + Deployment + Service + Ingress.
+# image: sinu K5 image tagiga (ghcr.io/hkhk-tk/<repo>:<sha7>), mitte :latest
+# initContainers: wait-deps (image mariadb:11.4, envFrom sama ConfigMap), ootab TCP-d $DB_HOST:3306 ja
+#   $RABBITMQ_HOST:5672:  until timeout 2 bash -c "</dev/tcp/<host>/<port>"; do sleep 3; done
+#   Miks mitte nslookup? Proovi: kubectl run t --rm -it --image=busybox:1.37 --restart=Never -- nslookup db01
+#   ajal, mil db01 on 0 koopiaga.
+# probe'id: startupProbe /health/live, readinessProbe /health, livenessProbe /health/live
+# Ingress: ingressClassName traefik, host labori-seis-<github>.lab.hkhk.ee → app01:8080

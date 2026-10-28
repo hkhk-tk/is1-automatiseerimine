@@ -1,0 +1,8 @@
+# db01: PersistentVolumeClaim + Deployment + Service. Ära kirjuta namespace: ridu.
+# TODO 1: PVC db01-data, ReadWriteOnce, 1Gi (storageClassName jäta ära → k3s local-path)
+# TODO 2: Deployment db01, strategy Recreate, image mariadb:11.4
+#         env MARIADB_DATABASE/USER = labseis, paroolid Secret'ist labori-seis (DB_PASSWORD, MARIADB_ROOT_PASSWORD)
+#         mahud: PVC → /var/lib/mysql, ConfigMap labori-seis-db → /docker-entrypoint-initdb.d
+#         readinessProbe exec: healthcheck.sh --connect --innodb_initialized (timeoutSeconds!)
+#         resources requests/limits
+# TODO 3: Service db01, port 3306 → nimega konteineriport

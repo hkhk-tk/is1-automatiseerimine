@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="800" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="360" fill="#ffffff"/>
+<text x="40" y="40" font-weight="bold" fill="#5e35b1">Internet</text>
+<line x1="330" y1="30" x2="330" y2="320" stroke="#ff9100" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="330" y="22" text-anchor="middle" font-size="14">VPN / tulemüür</text>
+<text x="330" y="345" text-anchor="middle" font-size="14">sissetulevaid reegleid pole, ainult väljuv HTTPS</text>
+<g text-anchor="middle">
+<rect x="40" y="60" width="210" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="145" y="87" font-weight="bold">GitHub Actions</text><text x="145" y="110" font-size="14">jobide järjekord</text>
+<rect x="40" y="220" width="210" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="145" y="247" font-weight="bold">ghcr.io</text><text x="145" y="270" font-size="14">image :sha7</text>
+<rect x="410" y="40" width="370" height="285" rx="8" fill="#fafafa" stroke="#7e57c2" stroke-width="1.5"/>
+<text x="595" y="64" font-weight="bold" fill="#5e35b1">control node</text>
+<rect x="440" y="78" width="310" height="54" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/><text x="595" y="100" font-weight="bold">runner (systemd teenus)</text><text x="595" y="121" font-size="14">label labseis</text>
+<rect x="440" y="172" width="310" height="44" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="595" y="199">docker compose up -d --wait</text>
+<rect x="440" y="256" width="310" height="54" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="595" y="278" font-weight="bold">app01: healthy</text><text x="595" y="299" font-size="14">/version → commit = GITHUB_SHA</text>
+</g>
+<g stroke="#7e57c2" stroke-width="2" fill="none" marker-end="url(#a)">
+<line x1="440" y1="88" x2="254" y2="80"/>
+<line x1="250" y1="112" x2="436" y2="118" stroke-dasharray="5 4"/>
+<line x1="440" y1="128" x2="254" y2="236"/>
+<line x1="595" y1="132" x2="595" y2="168"/>
+<line x1="595" y1="216" x2="595" y2="252"/>
+</g>
+<g font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="5" stroke-linejoin="round">
+<text x="350" y="72" text-anchor="middle">1. kas on tööd?</text>
+<text x="350" y="136" text-anchor="middle">2. job deploy</text>
+<text x="318" y="180" text-anchor="end">3. docker pull</text>
+<text x="605" y="155">4. deploy samm</text>
+<text x="605" y="239">5. HEALTHCHECK</text>
+</g>
+</svg>

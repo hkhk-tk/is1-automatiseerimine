@@ -1,0 +1,5 @@
+# K7.3: Argo CD Application. Alamkaustas, et kubectl apply -f k07-k8s/ seda ei rakendaks.
+# apiVersion argoproj.io/v1alpha1, kind Application, name labori-seis
+# project is-<github>; source: sinu repo URL, targetRevision main, path k07-k8s
+# destination: https://kubernetes.default.svc, namespace is-<github>
+# syncPolicy.automated: prune + selfHeal

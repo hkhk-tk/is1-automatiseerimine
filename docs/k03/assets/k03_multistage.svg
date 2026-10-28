@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" width="800"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700}.s{font-size:13px}.c{text-anchor:middle}.e{text-anchor:end}.p{fill:#ede7f6;stroke:#5e35b1;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.f{fill:#fff;stroke:#7e57c2;stroke-width:1.5}.l{stroke:#7e57c2;stroke-width:2;fill:none}.d{stroke:#ff9100;stroke-width:2;fill:none;stroke-dasharray:6 4}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/></marker></defs>
+<rect width="800" height="350" fill="#fff"/>
+<rect class="f" x="20" y="20" width="760" height="135" rx="8"/>
+<text class="b" x="40" y="46">Aste 1 (build): FROM maven:3-eclipse-temurin-21 AS build</text>
+<rect class="p" x="40" y="62" width="165" height="56" rx="8"/><text class="c" x="122" y="95">COPY pom.xml</text>
+<rect class="p" x="225" y="62" width="165" height="56" rx="8"/><text class="c" x="307" y="86">mvn dependency:</text><text class="c" x="307" y="106">go-offline</text>
+<rect class="p" x="410" y="62" width="165" height="56" rx="8"/><text class="c" x="492" y="95">COPY src</text>
+<rect class="p" x="595" y="62" width="165" height="56" rx="8"/><text class="c" x="677" y="95">mvn package</text>
+<line class="l" x1="205" y1="90" x2="223" y2="90" marker-end="url(#a)"/>
+<line class="l" x1="390" y1="90" x2="408" y2="90" marker-end="url(#a)"/>
+<line class="l" x1="575" y1="90" x2="593" y2="90" marker-end="url(#a)"/>
+<text class="s" x="40" y="142">jääb lõppimage'ist välja: JDK, Maven, ~/.m2, target/</text>
+<rect class="f" x="20" y="205" width="760" height="125" rx="8"/>
+<text class="b" x="40" y="231">Aste 2 (käitus): FROM tomcat:10.1-jre21-temurin</text>
+<rect class="p" x="40" y="252" width="225" height="56" rx="8"/><text class="c" x="152" y="285">curl, webapps tühjaks</text>
+<rect class="o" x="287" y="252" width="225" height="56" rx="8"/><text class="c" x="399" y="276">COPY --from=build</text><text class="c" x="399" y="296">ROOT.war</text>
+<rect class="p" x="535" y="252" width="225" height="56" rx="8"/><text class="c" x="647" y="276">ARG/ENV GIT_SHA</text><text class="c s" x="647" y="296">viimasena</text>
+<line class="l" x1="265" y1="280" x2="285" y2="280" marker-end="url(#a)"/>
+<line class="l" x1="512" y1="280" x2="533" y2="280" marker-end="url(#a)"/>
+<path class="l" d="M677,118 L677,180 L470,180 L470,250" marker-end="url(#a)"/>
+<text class="s b" x="560" y="174">labori-seis.war</text>
+</svg>

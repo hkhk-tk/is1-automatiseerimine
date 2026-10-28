@@ -1,0 +1,52 @@
+/* Rahulikumad kastid: soovituslik, vihje, mõtle, taust ja näide ühtses hallis stiilis.
+   Värv jääb ainult hoiatusele (oranž), veale (punane) ja valmisolekule (roheline). */
+:root {
+  --kast-neutraal: #7e7a8a;
+  --kast-neutraal-taust: rgba(126, 122, 138, 0.08);
+}
+.md-typeset .admonition:is(.note, .tip, .question, .info, .example, .abstract),
+.md-typeset details:is(.note, .tip, .question, .info, .example, .abstract) {
+  border-color: var(--kast-neutraal);
+  box-shadow: none;
+}
+.md-typeset :is(.note, .tip, .question, .info, .example, .abstract) > :is(.admonition-title, summary) {
+  background-color: var(--kast-neutraal-taust);
+}
+.md-typeset :is(.note, .tip, .question, .info, .example, .abstract) > :is(.admonition-title, summary)::before {
+  background-color: var(--kast-neutraal);
+}
+/* "Selle korra töö" kast jääb lilla aktsendiga */
+.md-typeset .admonition.info:first-of-type { border-color: var(--md-primary-fg-color); }
+/* Joonised: tekst loetavam, kui SVG on kitsas */
+.md-typeset figure img[src$=".svg"] { min-width: min(100%, 720px); }
+/* K1 spikker: üks A4 leht printimisel */
+.md-typeset .spikker table:not([class]) { font-size: .64rem; }
+.md-typeset .spikker table:not([class]) :is(td, th) { padding: .25em .6em; }
+@media print {
+  .md-typeset .spikker table:not([class]) { font-size: 7pt; }
+  .md-typeset .spikker p { margin: .3em 0 .1em; }
+}
+/* Loengu kokkuvõte: nummerdatud kaardid (grid cards), rahulik hall raam, number ringis */
+.md-typeset .kokkuvote.grid.cards > ul { counter-reset: kv; }
+.md-typeset .kokkuvote.grid.cards > ul > li {
+  counter-increment: kv;
+  position: relative;
+  padding: .9rem 1rem .8rem 3.1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 3px solid var(--md-primary-fg-color);
+  box-shadow: none;
+}
+.md-typeset .kokkuvote.grid.cards > ul > li:hover { box-shadow: none; border-color: var(--md-default-fg-color--lighter); border-left-color: var(--md-primary-fg-color); }
+.md-typeset .kokkuvote.grid.cards > ul > li::before {
+  content: counter(kv);
+  position: absolute; left: .9rem; top: .85rem;
+  width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--md-primary-fg-color); color: var(--md-primary-bg-color);
+  font-size: .7rem; font-weight: 700; line-height: 1.5rem; text-align: center;
+}
+.md-typeset .kokkuvote.grid.cards > ul > li > p:first-child { margin-top: 0; font-weight: 700; color: var(--md-primary-fg-color); }
+.md-typeset .kokkuvote.grid.cards > ul > li > p:last-child { margin-bottom: 0; }
+.md-typeset .kontrollkysimus {
+  margin-top: 1rem; padding: .8rem 1rem;
+  background: var(--kast-neutraal-taust); border-radius: .2rem;
+}

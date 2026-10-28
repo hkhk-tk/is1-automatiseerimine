@@ -1,0 +1,214 @@
+site_name: IT-infrastruktuuri automatiseerimine I
+site_description: HKHK täiendkoolitus
+site_author: Maria Talvik
+copyright: Maria Talvik, Haapsalu Kutsehariduskeskus
+site_url: https://hkhk-tk.github.io/is1-automatiseerimine/
+repo_name: hkhk-tk/is1-automatiseerimine
+repo_url: https://github.com/hkhk-tk/is1-automatiseerimine
+docs_dir: docs
+
+theme:
+  name: material
+  language: et
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle: { icon: material/weather-night, name: Tume režiim }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle: { icon: material/weather-sunny, name: Hele režiim }
+
+plugins:
+  - search:
+      lang: et
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - footnotes
+  - tables
+  - toc: { permalink: false }
+  - pymdownx.details
+  - pymdownx.highlight: { anchor_linenums: true }
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.keys
+
+exclude_docs: |
+  k07/starter/
+
+nav:
+  - Avaleht:
+      - index.md
+      - Töökeskkonna ettevalmistus: 00-ulevaade/keskkond.md
+      - Töö repos ja hindamine: 00-ulevaade/too-ja-hindamine.md
+  - Kohtumised:
+      - 1. kohtumine · Bash ja Ansible:
+          - Loeng: k01/loeng.md
+          - Labor:
+              - k01/lab.md
+              - 1. Keskkond: k01/lab-1-keskkond.md
+              - 2. websetup.sh nagu tootmises: k01/lab-2-websetup.md
+              - 3. Üks käsk, mitu hosti: k01/lab-3-mitu-hosti.md
+              - 4. Viis teenust ühe käsuga: k01/lab-4-viis-teenust.md
+              - 5. Kolm viga: k01/lab-5-kolm-viga.md
+              - 6. Sama töö Ansible'iga: k01/lab-6-ansible.md
+              - 7. Operatsioon: k01/lab-7-operatsioon.md
+              - 8. Git meeskonnas: k01/lab-8-git-meeskonnas.md
+              - 9. Esitamine: k01/lab-9-esitamine.md
+              - Abi: k01/abi.md
+              - Linux + Bash spikker: k01/spikker.md
+          - Lisaülesanded: k01/lisa.md
+      - 2. kohtumine · Ansible:
+          - Loeng: k02/loeng.md
+          - Labor:
+              - k02/lab.md
+              - 1. Algseis: k02/lab-1-lahteseis.md
+              - 2. Andmebaas lamedalt: k02/lab-2-andmebaas.md
+              - 3. Rollid ja muutujad: k02/lab-3-rollid.md
+              - 4. Kogu stack: k02/lab-4-stack.md
+              - 5. Kontroll enne muudatust: k02/lab-5-kontroll.md
+              - 6. Deploy ja rolling: k02/lab-6-deploy.md
+              - 7. Tsüklid, mallid ja TLS: k02/lab-7-tsuklid-tls.md
+              - 8. Intsident: k02/lab-8-intsident.md
+              - 9. Esitamine: k02/lab-9-esitamine.md
+              - Abi: k02/abi.md
+          - Lisaülesanded: k02/lisa.md
+      - 3. kohtumine · Docker ja Podman:
+          - Loeng: k03/loeng.md
+          - Labor:
+              - k03/lab.md
+              - 1. Konteinerid käsitsi: k03/lab-1-kasitsi.md
+              - 2. db ja web image: k03/lab-2-db-web.md
+              - 3. App image: k03/lab-3-app-image.md
+              - 4. Kogu stack Compose'iga: k03/lab-4-compose.md
+              - 5. Tootmiskeskkonda sobiv stack: k03/lab-5-tootmine.md
+              - 6. Registry, Trivy ja SBOM: k03/lab-6-registry.md
+              - 7. Sama teenus Podmaniga: k03/lab-7-podman.md
+              - 8. Kolm riket: k03/lab-8-kolm-riket.md
+              - 9. Esitamine: k03/lab-9-esitamine.md
+              - Abi: k03/abi.md
+          - Lisaülesanded: k03/lisa.md
+      - 4. kohtumine · OpenTofu (Terraform):
+          - Loeng: k04/loeng.md
+          - Labor:
+              - k04/lab.md
+              - 1. Üks VM koodist: k04/lab-1-uks-vm.md
+              - 2. Viis VM-i muutujatega: k04/lab-2-viis-vmi.md
+              - 3. Moodul, moved ja state: k04/lab-3-moodul-state.md
+              - 4. Üks käsk: k04/lab-4-uks-kask.md
+              - 5. Elutsükkel ja kaitsed: k04/lab-5-elutsukkel.md
+              - 6. Import, drift ja keskkonnad: k04/lab-6-import-drift.md
+              - 7. Golden image Packeriga: k04/lab-7-kuldne-mall.md
+              - "8. Intsident: state ja tegelikkus": k04/lab-8-intsident.md
+              - 9. Esitamine: k04/lab-9-esitamine.md
+              - Abi: k04/abi.md
+          - Lisaülesanded: k04/lisa.md
+      - 5. kohtumine · GitHub Actions:
+          - Loeng: k05/loeng.md
+          - Labor:
+              - k05/lab.md
+              - 1. Maven: k05/lab-1-maven.md
+              - 2. Esimene workflow: k05/lab-2-workflow.md
+              - 3. Trivy, matrix ja õigused: k05/lab-3-trivy-matrix.md
+              - 4. Image ja deploy: k05/lab-4-deploy.md
+              - 5. Triggerid, saladused ja environment: k05/lab-5-saladused.md
+              - 6. Health check ja rollback: k05/lab-6-tagasipoore.md
+              - 7. Katkine pipeline: k05/lab-7-katkine-pipeline.md
+              - 8. Esitamine: k05/lab-8-esitamine.md
+              - Abi: k05/abi.md
+          - Lisaülesanded: k05/lisa.md
+      - 6. kohtumine · Jenkins, SonarQube ja Nexus:
+          - Loeng: k06/loeng.md
+          - Labor:
+              - k06/lab.md
+              - 1. Agent ja esimene pipeline: k06/lab-1-agent.md
+              - 2. Triggerid, options ja post: k06/lab-2-triggerid.md
+              - 3. Quality gate ja Nexus: k06/lab-3-sonar-nexus.md
+              - 4. Image, paralleel ja deploy: k06/lab-4-image-deploy.md
+              - 5. Jenkins koodina: k06/lab-5-jenkins-koodina.md
+              - 6. Õigused, varundus ja taaste: k06/lab-6-haldus.md
+              - 7. Neli punast buildi: k06/lab-7-neli-punast.md
+              - 8. Esitamine: k06/lab-8-esitamine.md
+              - Abi: k06/abi.md
+          - Lisaülesanded: k06/lisa.md
+      - 7. kohtumine · Kubernetes:
+          - Loeng: k07/loeng.md
+          - Labor:
+              - k07/lab.md
+              - 1. Oma klaster: k07/lab-1-oma-klaster.md
+              - 2. Namespace ja põhiobjektid: k07/lab-2-namespace.md
+              - 3. Ressursid ja rikkeotsing: k07/lab-3-ressursid.md
+              - 4. Labori seis klastris: k07/lab-4-labori-seis.md
+              - 5. Neli riket: k07/lab-5-neli-riket.md
+              - 6. Helm alused: k07/lab-6-helm.md
+              - 7. GitOps Argo CD-ga: k07/lab-7-argocd.md
+              - 8. Esitamine: k07/lab-8-esitamine.md
+              - Abi: k07/abi.md
+          - Lisaülesanded: k07/lisa.md
+  - Pilv (AWS):
+      - Enne alustamist:
+          - Üldjuhend: kodutood/kodutood.md
+          - Reeglid, kulud ja koristus: kodutood/aws-reeglid.md
+      - Kodutööd:
+          - K1 · EC2 ja websetup.sh: kodutood/k01-aws.md
+          - K2 · Ansible EC2-del: kodutood/k02-aws.md
+          - K3 · ECR ja Compose: kodutood/k03-aws.md
+          - K4 · VPC ja EC2 OpenTofuga: kodutood/k04-aws.md
+          - K5 · GitHub Actions → EC2: kodutood/k05-aws.md
+          - K6 · Jenkins → EC2: kodutood/k06-aws.md
+          - K7 · k3s EC2-l: kodutood/k07-aws.md
+  - Monitooring: kodutood/monitooring.md
+  - Teemad:
+      - Alused:
+          - IT-automatiseerimine: teemad/it-automatiseerimine.md
+          - AI ja automatiseerimine: teemad/ai-ja-automatiseerimine.md
+          - RPA ja äriprotsessid: teemad/rpa-ja-aeriprotsessid.md
+      - Serverid ja konfiguratsioon:
+          - Provisioning: teemad/provisioning.md
+          - SOE ja elutsükkel: teemad/soe-ja-elutsukkel.md
+          - Konfiguratsioonihaldus: teemad/konfiguratsioonihaldus.md
+          - Patch-haldus: teemad/patch-haldus.md
+          - Windows: teemad/windows-automaatika.md
+      - Taristu ja pilv:
+          - Taristu koodina: teemad/iac.md
+          - Orkestreerimine: teemad/orkestreerimine.md
+          - Virtuaaltaristu ja SDDC: teemad/virtuaaltaristu.md
+          - Migratsioon: teemad/migratsioon.md
+          - Kubernetese klastrihaldus: teemad/kubernetes-klastrihaldus.md
+      - Võrk:
+          - Võrguautomaatika ja NetOps: teemad/vorguautomaatika.md
+      - Tarne, teenus ja töökindlus:
+          - DevOps automation: teemad/devops-automaatika.md
+          - ITSM: teemad/itsm.md
+          - Sündmuspõhine automaatika: teemad/sundmuspohine-automaatika.md
+          - Jälgitavus ja AIOps: teemad/jalgitavus-ja-aiops.md
+          - SRE: teemad/sre.md
+      - Turve ja ligipääs:
+          - RBAC: teemad/rbac.md
+          - Turvaautomaatika: teemad/turvaautomaatika.md
+
+extra_css:
+  - stylesheets/extra.css

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="800" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="240" fill="#ffffff"/>
+<g text-anchor="middle">
+<rect x="22" y="40" width="170" height="60" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="107" y="65" font-weight="bold">compose pull</text><text x="107" y="87" font-size="13">ghcr.io/…:sha7</text>
+<rect x="217" y="40" width="170" height="60" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="302" y="65" font-weight="bold">up -d --wait</text><text x="302" y="87" font-size="13">HEALTHCHECK: healthy</text>
+<rect x="412" y="40" width="170" height="60" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="497" y="65" font-weight="bold">restart web01</text><text x="497" y="87" font-size="13">nginx leiab uue IP</text>
+<rect x="607" y="40" width="170" height="60" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/><text x="692" y="65" font-weight="bold">curl /version</text><text x="692" y="87" font-size="13">commit = GITHUB_SHA?</text>
+<rect x="607" y="160" width="170" height="50" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="692" y="190">deploy roheline</text>
+<rect x="390" y="160" width="190" height="50" rx="8" fill="#ffffff" stroke="#ff9100" stroke-width="1.5"/><text x="485" y="182" font-size="14">::error::vale versioon</text><text x="485" y="200" font-size="14">exit 1</text>
+<text x="707" y="136" font-size="14" text-anchor="start">jah</text>
+<text x="575" y="136" font-size="14">ei</text>
+<text x="200" y="150" font-size="14">sleep 20 ei tõenda midagi:</text>
+<text x="200" y="172" font-size="14">vana konteiner vastaks samuti</text>
+</g>
+<g stroke="#7e57c2" stroke-width="2" fill="none" marker-end="url(#a)">
+<line x1="192" y1="70" x2="213" y2="70"/><line x1="387" y1="70" x2="408" y2="70"/><line x1="582" y1="70" x2="603" y2="70"/>
+<line x1="692" y1="100" x2="692" y2="156"/><line x1="650" y1="100" x2="540" y2="156"/>
+</g>
+</svg>

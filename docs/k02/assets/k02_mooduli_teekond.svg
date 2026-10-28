@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="800" height="360"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="360" fill="#fff"/>
+<rect x="20" y="120" width="200" height="110" rx="8" fill="#5e35b1"/>
+<text x="120" y="160" text-anchor="middle" class="b w">Control node</text>
+<text x="120" y="184" text-anchor="middle" class="s w">Ansible, inventory</text>
+<text x="120" y="206" text-anchor="middle" class="s w">ansible.cfg</text>
+<rect x="300" y="15" width="480" height="330" rx="8" fill="none" stroke="#7e57c2" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="540" y="42" text-anchor="middle" class="b">Managed node (nt db01)</text>
+<rect x="330" y="60" width="420" height="50" rx="8" fill="#ede7f6" stroke="#5e35b1"/>
+<text x="345" y="90" class="s">1. SSH-ühendus kasutajana kasutaja</text>
+<rect x="330" y="130" width="420" height="50" rx="8" fill="#ede7f6" stroke="#5e35b1"/>
+<text x="345" y="160" class="s">2. AnsiballZ_ping.py: ~/.ansible/tmp/ või stdin</text>
+<rect x="330" y="200" width="420" height="50" rx="8" fill="#ede7f6" stroke="#5e35b1"/>
+<text x="345" y="230" class="s">3. sudo -u root /usr/bin/python3 käivitab mooduli</text>
+<rect x="330" y="270" width="420" height="50" rx="8" fill="#fff3e0" stroke="#ff9100"/>
+<text x="345" y="300" class="s">4. JSON stdout'i, ajutine fail kustutatakse</text>
+<path d="M220,150 L328,88" class="l" marker-end="url(#a)"/>
+<path d="M540,110 L540,128" class="l" marker-end="url(#a)"/>
+<path d="M540,180 L540,198" class="l" marker-end="url(#a)"/>
+<path d="M540,250 L540,268" class="l" marker-end="url(#a)"/>
+<path d="M328,295 L222,215" class="l" marker-end="url(#a)"/>
+<text x="150" y="290" text-anchor="middle" class="s">JSON: changed, rc …</text>
+</svg>

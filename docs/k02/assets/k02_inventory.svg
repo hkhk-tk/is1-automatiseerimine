@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="800" height="340"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="340" fill="#fff"/>
+<rect x="20" y="125" width="190" height="90" rx="8" fill="#5e35b1"/>
+<text x="115" y="163" text-anchor="middle" class="b w">Control node</text>
+<text x="115" y="188" text-anchor="middle" class="s w">inventory.ini</text>
+<text x="115" y="245" text-anchor="middle" class="s">SSH kasutaja + sudo</text>
+<rect x="300" y="15" width="480" height="125" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="316" y="38" class="b">rocky (Rocky 9)</text>
+<rect x="330" y="55" width="200" height="65" rx="8" fill="#fff" stroke="#5e35b1"/>
+<text x="430" y="82" text-anchor="middle" class="b">db01</text>
+<text x="430" y="105" text-anchor="middle" class="s">grupp db</text>
+<rect x="550" y="55" width="200" height="65" rx="8" fill="#fff" stroke="#5e35b1"/>
+<text x="650" y="82" text-anchor="middle" class="b">mc01</text>
+<text x="650" y="105" text-anchor="middle" class="s">grupp cache</text>
+<rect x="300" y="165" width="480" height="160" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="316" y="188" class="b">ubuntu (Ubuntu 24.04)</text>
+<rect x="320" y="215" width="140" height="70" rx="8" fill="#fff" stroke="#5e35b1"/>
+<text x="390" y="244" text-anchor="middle" class="b">rmq01</text>
+<text x="390" y="267" text-anchor="middle" class="s">grupp queue</text>
+<rect x="470" y="215" width="140" height="70" rx="8" fill="#fff" stroke="#5e35b1"/>
+<text x="540" y="244" text-anchor="middle" class="b">app01</text>
+<text x="540" y="267" text-anchor="middle" class="s">grupp app</text>
+<rect x="620" y="215" width="140" height="70" rx="8" fill="#fff" stroke="#5e35b1"/>
+<text x="690" y="244" text-anchor="middle" class="b">web01</text>
+<text x="690" y="267" text-anchor="middle" class="s">grupp web</text>
+<path d="M210,150 L298,85" class="l" marker-end="url(#a)"/>
+<path d="M210,190 L298,240" class="l" marker-end="url(#a)"/>
+</svg>

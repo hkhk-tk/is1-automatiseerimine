@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="800" height="370"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="370" fill="#fff"/>
+<rect x="20" y="15" width="360" height="175" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="36" y="42" class="b">k02-ansible/</text>
+<text x="40" y="72" class="s">ansible.cfg, inventory.ini</text>
+<text x="40" y="96" class="s">site.yml, deploy.yml</text>
+<text x="40" y="120" class="s">requirements.yml (kollektsioonid)</text>
+<text x="40" y="144" class="s">run2.txt (teise käivituse väljund)</text>
+<text x="40" y="168" class="s">scratch/ (Gitist väljas)</text>
+<rect x="20" y="205" width="360" height="150" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="36" y="234" class="b">group_vars/ ja host_vars/</text>
+<text x="40" y="264" class="s">all/main.yml: ühised väärtused</text>
+<text x="40" y="288" class="s">all/vault.yml: saladused, krüpteeritud</text>
+<text x="40" y="312" class="s">rocky.yml, ubuntu.yml: OS-grupp</text>
+<text x="40" y="336" class="s">host_vars/app01.yml: ühe hosti erand</text>
+<rect x="420" y="15" width="360" height="340" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="436" y="42" class="b">roles/&lt;roll&gt;/</text>
+<text x="440" y="72" class="s">tasks/main.yml: ülesanded</text>
+<text x="440" y="96" class="s">handlers/main.yml: restart, reload</text>
+<text x="440" y="120" class="s">templates/*.j2: mallid</text>
+<text x="440" y="144" class="s">defaults/main.yml: vaikeväärtused</text>
+<text x="440" y="168" class="s">vars/Debian.yml, vars/RedHat.yml</text>
+<text x="440" y="192" class="s">files/: staatilised failid</text>
+<line x1="440" y1="215" x2="760" y2="215" stroke="#7e57c2"/>
+<text x="440" y="245" class="b">Rollid</text>
+<text x="440" y="272" class="s">common (kõik hostid)</text>
+<text x="440" y="296" class="s">mariadb, memcached, rabbitmq</text>
+<text x="440" y="320" class="s">tomcat, nginx</text>
+</svg>

@@ -1,0 +1,2 @@
+# mc01: Deployment + Service. memcached:1.6-alpine, port 11211, args -m 64,
+# readinessProbe tcpSocket, resources.

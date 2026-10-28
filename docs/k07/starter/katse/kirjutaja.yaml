@@ -1,0 +1,32 @@
+# K7 moodul 1: ainult oma klastris (k3s01). PVC + pod, mis kirjutab sinna faili.
+#   kubectl --context k3s01 apply -f kirjutaja.yaml
+# Sõlmel: sudo find /var/lib/rancher/k3s/storage -name tere.txt
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: katse
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kirjutaja
+spec:
+  containers:
+    - name: c
+      image: busybox:1.37
+      command: ["sh", "-c", "date > /data/tere.txt; sleep 3600"]
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+        limits: {memory: 32Mi}
+      volumeMounts:
+        - name: d
+          mountPath: /data
+  volumes:
+    - name: d
+      persistentVolumeClaim:
+        claimName: katse

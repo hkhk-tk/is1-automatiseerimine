@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 330" width="800" height="330"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.w{fill:#fff}.l{stroke:#7e57c2;stroke-width:2;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="330" fill="#fff"/>
+<rect x="20" y="135" width="140" height="60" rx="8" fill="#fff" stroke="#7e57c2" stroke-width="2"/>
+<text x="90" y="161" text-anchor="middle" class="s">curl /health</text>
+<text x="90" y="181" text-anchor="middle" class="s">või brauser</text>
+<rect x="200" y="125" width="160" height="80" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="280" y="152" text-anchor="middle" class="b">web01</text>
+<text x="280" y="174" text-anchor="middle" class="s">Nginx :80</text>
+<text x="280" y="194" text-anchor="middle" class="s">Ubuntu</text>
+<rect x="400" y="125" width="160" height="80" rx="8" fill="#5e35b1"/>
+<text x="480" y="152" text-anchor="middle" class="b w">app01</text>
+<text x="480" y="174" text-anchor="middle" class="s w">Tomcat :8080</text>
+<text x="480" y="194" text-anchor="middle" class="s w">Ubuntu</text>
+<rect x="610" y="15" width="170" height="80" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="695" y="42" text-anchor="middle" class="b">db01</text>
+<text x="695" y="64" text-anchor="middle" class="s">MariaDB :3306</text>
+<text x="695" y="84" text-anchor="middle" class="s">Rocky</text>
+<rect x="610" y="125" width="170" height="80" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+<text x="695" y="152" text-anchor="middle" class="b">mc01</text>
+<text x="695" y="174" text-anchor="middle" class="s">Memcached :11211</text>
+<text x="695" y="194" text-anchor="middle" class="s">Rocky</text>
+<rect x="610" y="235" width="170" height="80" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+<text x="695" y="262" text-anchor="middle" class="b">rmq01</text>
+<text x="695" y="284" text-anchor="middle" class="s">RabbitMQ :5672</text>
+<text x="695" y="304" text-anchor="middle" class="s">Ubuntu</text>
+<path d="M160,165 L198,165" class="l" marker-end="url(#a)"/>
+<path d="M360,165 L398,165" class="l" marker-end="url(#a)"/>
+<path d="M560,145 L608,60" class="l" marker-end="url(#a)"/>
+<path d="M560,165 L608,165" class="l" marker-end="url(#a)"/>
+<path d="M560,185 L608,270" class="l" marker-end="url(#a)"/>
+</svg>

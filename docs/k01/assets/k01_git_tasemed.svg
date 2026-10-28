@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 250" width="840" height="250" font-family="Inter, Arial, sans-serif"><style>text{font-family:Inter, Arial, sans-serif;font-size:14px;fill:#212121}.b{font-weight:600;font-size:15px}.m{font-family:"JetBrains Mono",Consolas,monospace;font-size:14px}.p{fill:#5e35b1}.am{fill:#e65100}.box{fill:#ede7f6;stroke:#5e35b1;stroke-width:1.5}.acc{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.ln{stroke:#7e57c2;stroke-width:1.8;fill:none}.la{stroke:#ff9100;stroke-width:1.8;fill:none}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/></marker></defs><rect width="100%" height="100%" fill="#fff"/>
+<rect x="10" y="60" width="190" height="70" rx="8" class="box"/><text x="105" y="90" text-anchor="middle" class="b">Töökaust</text><text x="105" y="113" text-anchor="middle">muudetud failid</text>
+<line x1="105" y1="130" x2="105" y2="155" class="la" stroke-dasharray="4 3" marker-end="url(#b)"/>
+<text x="105" y="186" text-anchor="middle" class="m">git restore fail</text><text x="105" y="212" text-anchor="middle">muudatus kaob</text>
+<rect x="220" y="60" width="190" height="70" rx="8" class="box"/><text x="315" y="90" text-anchor="middle" class="b">Staging</text><text x="315" y="113" text-anchor="middle">pärast git add</text>
+<line x1="315" y1="130" x2="315" y2="155" class="la" stroke-dasharray="4 3" marker-end="url(#b)"/>
+<text x="315" y="186" text-anchor="middle" class="m">git restore --staged</text><text x="315" y="212" text-anchor="middle">tagasi töökausta</text>
+<rect x="430" y="60" width="190" height="70" rx="8" class="box"/><text x="525" y="90" text-anchor="middle" class="b">Kohalik commit</text><text x="525" y="113" text-anchor="middle">ainult sinu masinas</text>
+<line x1="525" y1="130" x2="525" y2="155" class="la" stroke-dasharray="4 3" marker-end="url(#b)"/>
+<text x="525" y="186" text-anchor="middle" class="m">git reset --hard</text><text x="525" y="212" text-anchor="middle">commit'id kaovad</text>
+<rect x="640" y="60" width="190" height="70" rx="8" class="box"/><text x="735" y="90" text-anchor="middle" class="b">GitHub</text><text x="735" y="113" text-anchor="middle">push'itud, jagatud</text>
+<line x1="735" y1="130" x2="735" y2="155" class="la" stroke-dasharray="4 3" marker-end="url(#b)"/>
+<text x="735" y="186" text-anchor="middle" class="m">git revert &lt;commit&gt;</text><text x="735" y="212" text-anchor="middle">uus commit tühistab vana</text>
+<rect x="10" y="158" width="820" height="72" rx="8" fill="none" stroke="#ff9100" stroke-width="1.5"/>
+<line x1="200" y1="95" x2="218" y2="95" class="ln" marker-end="url(#a)"/><text x="210" y="46" text-anchor="middle" class="m p">git add</text>
+<line x1="410" y1="95" x2="428" y2="95" class="ln" marker-end="url(#a)"/><text x="420" y="46" text-anchor="middle" class="m p">git commit</text>
+<line x1="620" y1="95" x2="638" y2="95" class="ln" marker-end="url(#a)"/><text x="630" y="46" text-anchor="middle" class="m p">git push</text>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 230" width="800" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<rect width="800" height="230" fill="#ffffff"/>
+<g stroke="#5e35b1" stroke-width="1.5" fill="none"><path d="M22,48 L22,40 L557,40 L557,48"/></g>
+<text x="290" y="30" text-anchor="middle" fill="#5e35b1" font-weight="bold">mvn verify käivitab kõik need faasid järjest</text>
+<g text-anchor="middle">
+<rect x="22" y="55" width="95" height="44" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="69" y="82">validate</text>
+<rect x="132" y="55" width="95" height="44" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="179" y="82">compile</text>
+<rect x="242" y="55" width="95" height="44" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="289" y="82">test</text>
+<rect x="352" y="55" width="95" height="44" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="399" y="82">package</text>
+<rect x="462" y="55" width="95" height="44" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/><text x="509" y="82" font-weight="bold">verify</text>
+<rect x="572" y="55" width="95" height="44" rx="8" fill="#ffffff" stroke="#7e57c2" stroke-width="1.5" stroke-dasharray="5 4"/><text x="619" y="82">install</text>
+<rect x="682" y="55" width="95" height="44" rx="8" fill="#ffffff" stroke="#7e57c2" stroke-width="1.5" stroke-dasharray="5 4"/><text x="729" y="82">deploy</text>
+<text x="289" y="130" font-size="14">25 testi</text>
+<text x="399" y="130" font-size="14">labori-seis.war</text>
+<text x="509" y="160" font-size="14">JaCoCo, checkstyle</text>
+<text x="674" y="130" font-size="14">pipeline täna ei kasuta</text>
+<text x="400" y="210" font-size="14">clean on eraldi elutsükkel: kustutab kausta target/</text>
+</g>
+<g stroke="#7e57c2" stroke-width="1.5" fill="none" marker-end="url(#a)">
+<line x1="117" y1="77" x2="130" y2="77"/><line x1="227" y1="77" x2="240" y2="77"/><line x1="337" y1="77" x2="350" y2="77"/>
+<line x1="447" y1="77" x2="460" y2="77"/><line x1="557" y1="77" x2="570" y2="77"/><line x1="667" y1="77" x2="680" y2="77"/>
+</g>
+<g stroke="#ff9100" stroke-width="1.5"><line x1="509" y1="99" x2="509" y2="144"/></g>
+</svg>
