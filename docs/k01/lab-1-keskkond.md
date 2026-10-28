@@ -18,7 +18,7 @@ tags:
 
 ## Enne alustamist
 
-[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il. Masinate IP-d said Proxmoxist ([keskkonnaleht, samm 2](../00-ulevaade/keskkond.md#2-proxmox-sinu-masinate-ip-d)), parooli juhendajalt. Kirjuta IP-d siia:
+[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il. Masinate IP-d kirjutasid oma arvuti SSH config faili ([keskkonnaleht, samm 3.3](../00-ulevaade/keskkond.md#3-vs-code)). Ava see VS Code'is: ++f1++ → `Remote-SSH: Open SSH Configuration File`. Kirjuta IP-d siia:
 
 | Nimi | IP | OS |
 |---|---|---|
