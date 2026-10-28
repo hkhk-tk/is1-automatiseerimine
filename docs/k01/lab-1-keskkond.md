@@ -11,7 +11,7 @@ tags:
 
     Lõpuks:
 
-    - on control node'il nimi `control` ja sinu enda parool;
+    - on control node'il nimi `control`;
     - on control node'il SSH-võti ja see võti on kõigis viies labori VM-is;
     - kannavad VM-id nimesid `web01`, `app01`, `rmq01`, `mc01`, `db01`;
     - logid control node'ilt igasse VM-i käsuga `ssh web01`, ilma IP-d ja parooli küsimata.
