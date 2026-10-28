@@ -39,118 +39,83 @@ Kõik kursuse käsud jooksevad control node'il. Sinu arvutisse on vaja ainult VP
 <figcaption>Joonis 1. Vasakul sinu pool: arvuti kodus või klassis, mõlemas VS Code ja OpenVPN. Paremal kooli laborivõrk, kuhu pääseb ainult VPN-iga. Seal on Proxmox ja sinu kuus masinat. Control node'ile ühendud parooliga, control node'ilt edasi SSH-võtmega.</figcaption>
 </figure>
 
-**Kaks parooli, mõlemad olemas, kumbagi ei muuda:**
+**Kaks parooli, kumbagi ei muuda:**
 
-- **kooli konto** (kasutajanimi nt `maasikas.is126`): VPN ja Proxmox;
-- **masinate kasutaja** `kasutaja`: parool juhendajalt, kõigis sinu masinates sama.
-
-**Järjekord:**
-
-1. **VPN**: sinu arvutis.
-2. **Proxmox**: brauseris. Kontrolli masinaid, leia IP-d, uuenda control node'i hostivõtmed.
-3. **VS Code**: sinu arvutis. Kirjuta IP SSH config faili ja ühendu.
-4. **SSH-võti**: control node'il, alles 1. praktikumis.
+- **kooli konto** (nt `maasikas.is126`): VPN ja Proxmox;
+- **masinate kasutaja** `kasutaja`: parool juhendajalt.
 
 ## 1 · VPN
 
-**Kus:** sinu arvutis. Sinu masinad on nähtavad ainult VPN-iga, ka klassis.
+Sinu arvutis. Klassi arvutites on OpenVPN juba olemas, alusta sammust 1.2.
 
-**1.1 Paigalda OpenVPN.** Klassi arvutites on see juba olemas, mine sammu 1.2 juurde.
-
-=== "Windows"
-
-    [openvpn.net/community-downloads](https://openvpn.net/community-downloads/), fail **Windows 64-bit MSI installer**. Paigalda vaikeseadetega.
-
-=== "macOS"
-
-    Paigalda tasuta klient [Tunnelblick](https://tunnelblick.net/downloads.html) (Stable). Esimesel käivitusel vasta küsimusele „I have configuration files“.
-
-=== "Linux"
-
-    Ubuntu, Debian: `sudo apt install -y network-manager-openvpn-gnome`.
-
-**1.2 Lisa profiil**
-
-Salvesta e-kirjaga saadud `.ovpn` fail oma arvutisse.
+**1.1 Paigalda OpenVPN**
 
 === "Windows"
 
-    Ekraani all paremal on OpenVPN-i ikoon (monitor lukuga; kui seda pole, vaata noolekese alt). **Paremklõps → Import file…** ja vali fail.
+    [openvpn.net/community-downloads](https://openvpn.net/community-downloads/), **Windows 64-bit MSI installer**, vaikeseadetega.
 
 === "macOS"
 
-    Tee `.ovpn` failil topeltklõps. Tunnelblick küsib, kas lisada profiil: vali **Only Me**.
+    [Tunnelblick](https://tunnelblick.net/downloads.html) (Stable). Küsimusele vasta „I have configuration files“.
 
 === "Linux"
 
-    **Settings → Network → VPN → + → Import from file…** ja vali fail.
+    `sudo apt install -y network-manager-openvpn-gnome`
 
-**1.3 Ühendu** kooli kasutajanime ja parooliga.
+**1.2 Lisa e-kirjaga saadud `.ovpn` fail**
 
 === "Windows"
 
-    Paremklõps OpenVPN-i ikoonil → **Connect**. Kui ühendus on üleval, muutub ikoon roheliseks.
+    OpenVPN-i ikoon ekraani all paremal → **paremklõps → Import file…**
 
 === "macOS"
 
-    Ülemisel ribal Tunnelblicki ikoon → **Connect**.
+    Topeltklõps failil → **Only Me**.
 
 === "Linux"
 
-    Ülemisel ribal võrguikoon → **VPN** → lülita sisse.
+    **Settings → Network → VPN → + → Import from file…**
 
-**Kontrolli:** ikoon on roheline (Windows) või „Connected“ (macOS, Linux).
+**1.3 Ühendu** kooli kasutajanime ja parooliga: ikoon → **Connect**. Ikoon läheb roheliseks.
 
 !!! warning "Klassi arvutis"
 
-    Tunni lõpus **katkesta VPN ja sulge OpenVPN** (paremklõps ikoonil → Disconnect, siis Exit). Muidu ei saa järgmine inimene arvutisse sisse logida.
+    Tunni lõpus **Disconnect** ja **Exit**. Muidu ei saa järgmine inimene arvutisse sisse.
 
-## 2 · Proxmox: masinad ja IP-d
+## 2 · Proxmox
 
-**Kus:** brauseris, VPN ühendatud.
+Brauseris, VPN ühendatud.
 
-**2.1 Logi sisse.** Ava `https://192.168.124.200:8006`. Brauser hoiatab sertifikaadi eest: **Advanced → Continue** (see on kooli sisevõrk, hoiatus on ootuspärane). Kasutajanimi ja parool on kooli konto omad.
+**2.1 Logi sisse:** `https://192.168.124.200:8006`, kooli kasutajanimi ja parool. Sertifikaadi hoiatus: **Advanced → Continue**.
 
-**2.2 Kontrolli masinaid.** Vasakul puus on sinu kuus masinat: `control`, `web01`, `app01`, `rmq01`, `mc01`, `db01`. Igaühe ikoon peab olema roheline kolmnurgaga (töötab). Kui mõni on hall: vali see ja vajuta üleval **Start**.
+**2.2 Kontrolli:** vasakul on kuus masinat (`control`, `web01`, `app01`, `rmq01`, `mc01`, `db01`), kõik rohelised. Hall masin: vali see → **Start**.
 
-**2.3 Uuenda control node'i hostivõtmed.** Masinad on kloonitud ühest mallist, nii et kõigil on samad hostivõtmed (masina „isikutunnistus“ SSH-s). Uuendame need enne esimest ühendust, siis ei hakka VS Code hiljem hoiatama.
-
-Vali `control` → **Console**. Logi sisse: kasutaja `kasutaja` ja masinate parool (tähti ei kuvata, see on tavaline). Kirjuta:
+**2.3 Control node'i konsool:** `control` → **Console**, logi sisse `kasutaja` ja parooliga. Kirjuta:
 
 ```bash
 sudo rm -f /etc/ssh/ssh_host_*
 sudo ssh-keygen -A
 sudo systemctl restart ssh
-```
-
-Ülejäänud viie masina hostivõtmed uuendab 1. praktikumi skript ise.
-
-**2.4 Leia IP-d.** Samas konsoolis:
-
-```bash
 hostname -I
 ```
 
-Esimene number on control node'i IP. Seda on vaja järgmises sammus. Teiste viie masina IP-sid on vaja alles 1. praktikumis.
+Viimase käsu esimene number on **control node'i IP**. Seda on vaja järgmises sammus.
+
+??? info "Mida need käsud tegid?"
+
+    Masinad on kloonitud ühest mallist, seega on kõigil samad hostivõtmed (masina „isikutunnistus“ SSH-s). Esimesed kolm käsku teevad control node'ile uued, enne kui VS Code sellega esimest korda ühendub. Ülejäänud viie masina võtmed uuendab 1. praktikumi skript ise.
 
 ??? question "Proxmox ei lase sisse?"
 
-    Kirjuta kategooriasse **Küsimused** või küsi juhendajalt: saad IP-d temalt ja hostivõtmed uuendatakse sinu eest. Jätka sammuga 3.
+    Kirjuta kategooriasse **Küsimused**. IP saad juhendajalt, jätka sammuga 3.
 
 ## 3 · VS Code
 
-**Kus:** sinu arvutis.
+Sinu arvutis.
 
-**3.1 Paigalda VS Code.** [code.visualstudio.com](https://code.visualstudio.com/), vaikeseadetega (macOS-is lohista **Applications** kausta).
+**3.1** Paigalda [VS Code](https://code.visualstudio.com/) ja laiendus **Remote - SSH** (vasakul **Extensions**).
 
-**3.2 Lisa laiendus.** Vasakul **Extensions** (nelja ruuduga ikoon), otsi `Remote - SSH` (Microsoft), **Install**.
-
-**3.3 Kirjuta control node'i aadress SSH config faili.** Vajuta ++f1++, kirjuta `Remote-SSH: Open SSH Configuration File` ja vali esimene fail:
-
-- Windows: `C:\Users\<sinu nimi>\.ssh\config`
-- macOS, Linux: `~/.ssh/config`
-
-Kirjuta faili kolm rida, `HostName` asemele oma control node'i IP, ja salvesta (++ctrl+s++):
+**3.2** ++f1++ → `Remote-SSH: Open SSH Configuration File` → vali esimene fail. Kirjuta sinna oma control node'i IP-ga ja salvesta:
 
 ```text
 Host control
@@ -158,24 +123,23 @@ Host control
     User kasutaja
 ```
 
-`Host control` on lühinimi, `HostName` on päris aadress, `User` on kasutaja masinas. Sinu arvuti ühendub ainult control node'iga, teisi masinaid siia ei kirjutata. See fail jääb kogu kursuseks samaks: ka pärast 1. praktikumi logid control node'ile parooliga.
+**3.3** Vasakul **Remote Explorer** → `control` → **Connect**. Platvorm **Linux**, **Continue**, masinate parool.
 
-**3.4 Ühendu.**
+**3.4** **Terminal → New Terminal**.
 
-1. Vasakul **Remote Explorer** (monitori ikoon) → **SSH** all on `control`. Vajuta selle kõrval noolt (**Connect in Current Window**).
-2. Kui küsitakse platvormi, vali **Linux**. Kinnita masina võti (**Continue**).
-3. Sisesta masinate parool. VS Code paigaldab control node'ile oma osa, see võtab minuti.
-4. **Terminal → New Terminal**.
+**Kontrolli:** all vasakul on **SSH: control**, terminalis `kasutaja@control` või `kasutaja@...`. See terminal on control node'il.
 
-**Kontrolli:** vasakul all on roheline silt **SSH: control** ja terminalis on prompt `kasutaja@control` või `kasutaja@...`. Iga terminal selles aknas on nüüd control node'il.
+??? info "Mis on SSH config fail ja miks küsitakse alati parooli?"
 
-VS Code küsib parooli igal ühendusel. See on nii mõeldud: sinu arvutisse SSH-võtit ei tehta.
+    Fail on Windowsis `C:\Users\<sinu nimi>\.ssh\config`, macOS-is ja Linuxis `~/.ssh/config`. `Host` on lühinimi, `HostName` päris aadress, `User` kasutaja masinas.
+
+    Sinu arvutis SSH-võtit pole, seega küsib VS Code parooli igal ühendusel. Nii on mõeldud. Võti tehakse 1. praktikumis control node'il: privaatvõti `~/.ssh/id_ed25519` jääb sinna, avalik võti `id_ed25519.pub` läheb viide masinasse ja GitHubi. Siis logib control node edasi ilma paroolita, ja Ansible vajab just seda.
 
 ??? info "Tahan teisi masinaid VS Code'is näha"
 
-    Tavaliselt pole vaja: Ansible teeb teistes masinates muudatused ise. Kiireim viis vaadata on control node'i aknas **Terminal → Split Terminal** ja igas terminalis `ssh web01`, `ssh db01` jne (pärast 1. praktikumi).
+    Tavaliselt pole vaja: Ansible teeb muudatused ise. Kiireim viis: **Terminal → Split Terminal** ja igas `ssh web01`, `ssh db01` jne (pärast 1. praktikumi).
 
-    Kui tahad iga masinat eraldi aknas koos failipuuga, lisa sinu arvuti config faili iga masina kohta kirje:
+    Eraldi aknaks koos failipuuga lisa sinu arvuti config faili iga masina kohta:
 
     ```text
     Host web01
@@ -184,64 +148,50 @@ VS Code küsib parooli igal ühendusel. See on nii mõeldud: sinu arvutisse SSH-
         ProxyJump control
     ```
 
-    `ProxyJump control` tähendab: mine web01-sse läbi control node'i. Masin ilmub **Remote Explorer**isse nagu `control`. Parooli küsitakse kaks korda, esmalt control node'i, siis web01 oma, sest sinu arvutis SSH-võtit pole.
+    `ProxyJump control`: mine läbi control node'i. Parooli küsitakse kaks korda, control node'i ja web01 oma.
 
 ??? info "Termius, JetBrains või muu tööriist?"
 
-    Võid kasutada ka [Termiust](https://termius.com/), JetBrains Gateway't või tavalist terminali. Ühendus on sama: kasutaja `kasutaja`, control node'i IP, parool.
+    Võib, ühendus on sama: `kasutaja`, control node'i IP, parool. **Soovitan VS Code'i**, sest:
 
-    **Soovitan VS Code'i**, sest:
-
-    - failid ja terminal on ühes aknas: Ansible'i failid kirjutad ja käivitad samas kohas;
+    - failid ja terminal on ühes aknas;
     - Ansible'i ja YAML-i laiendused näitavad vigu juba kirjutades;
     - töötab ühtemoodi Windowsis, macOS-is ja Linuxis, tasuta;
-    - kõik juhendid ja ekraanipildid on VS Code'iga, juhendaja saab kiiremini aidata.
+    - kõik juhendid on VS Code'iga, juhendaja saab kiiremini aidata.
 
-    Termius on hea ainult terminaliks, failide muutmiseks peaksid kasutama `nano`-t. JetBrains on võimas, aga raskem ja kursusel seda ei näidata.
+    Termiuses peaksid faile muutma `nano`-ga. JetBrains on võimas, aga raskem ja kursusel seda ei näidata.
 
-## 4 · SSH-võti
+## Kui midagi ei tööta
 
-**Kus:** control node'il, **1. praktikumis**. Praegu ei tee midagi.
+??? failure "VPN ei ühendu"
 
-Sinu arvutisse SSH-võtit ei tehta. Võtmepaar tehakse control node'il 1. praktikumi skriptiga:
+    Kasutajanimi on kujul `perekonnanimi.is126`, parool sama mis kooli e-postil. macOS-is: **System Settings → Privacy & Security → Allow**.
 
-- `~/.ssh/id_ed25519` on **privaatvõti**. See jääb control node'ile ega lähe kuhugi.
-- `~/.ssh/id_ed25519.pub` on **avalik võti**. Skript kopeerib selle viide labori masinasse, hiljem lisad selle ka GitHubi.
+??? failure "`Connection timed out`"
 
-Pärast seda logib control node teistesse masinatesse ja GitHubi ilma paroolita. Ansible vajab just seda.
+    VPN pole ühendatud, masin seisab Proxmoxis või IP config failis on vale.
 
-??? info "Loe juurde"
+??? failure "`Permission denied` (parool küsiti)"
 
-    - [VS Code: Remote Development over SSH](https://code.visualstudio.com/docs/remote/ssh)
-    - [OpenSSH: ssh_config](https://man.openbsd.org/ssh_config)
+    Config failis peab olema `User kasutaja`. Parool on masinate oma, mitte kooli konto oma.
 
-## Veaotsing
+??? failure "`Permission denied (publickey)` (parooli ei küsitudki)"
 
-| Mida näed | Põhjus | Mida teha |
-|---|---|---|
-| VPN küsib parooli uuesti ja ei ühendu | vale kasutajanimi või parool | kasutajanimi on kujul `perekonnanimi.is126`, parool sama mis kooli e-postil |
-| Proxmox ei avane | VPN pole ühendatud | ühenda VPN, proovi uuesti |
-| VS Code: `Connection timed out` | VPN pole ühendatud, masin seisab või vale IP | ühenda VPN, kontrolli Proxmoxis, et `control` töötab, kontrolli IP-d config failis |
-| VS Code: `Permission denied` | vale kasutajanimi või parool | config failis `User kasutaja`, parool on masinate oma, mitte kooli konto oma |
-| `Permission denied (publickey)`, parooli ei küsitagi | masinas on parooliga sisselogimine keelatud | vaata allpool „Parooliga sisselogimine on keelatud“ |
-| VS Code: `REMOTE HOST IDENTIFICATION HAS CHANGED` | hostivõtmed uuendati pärast esimest ühendust | ava VS Code'is fail `C:\Users\<sinu nimi>\.ssh\known_hosts` (macOS-is `~/.ssh/known_hosts`), kustuta read control node'i IP-ga, salvesta ja ühendu uuesti |
-| VS Code jääb „Setting up SSH Host“ juurde | ühendus katkes poole pealt | ++f1++ → **Remote-SSH: Kill VS Code Server on Host**, proovi uuesti |
-| macOS-is Tunnelblick ei ühendu | süsteemilaiendus lubamata | **System Settings → Privacy & Security → Allow** |
-
-*Tabel 1. Levinud vead.*
-
-??? warning "Parooliga sisselogimine on keelatud"
-
-    Pilvemallidest tehtud masinad lubavad vaikimisi ainult SSH-võtmega sisselogimist. Kui VS Code või `ssh` ütleb `Permission denied (publickey)` ja parooli ei küsigi, luba parool selles masinas: Proxmoxis masin → **Console**, logi sisse `kasutaja` ja parooliga ning kirjuta:
+    Masinas on parooliga sisselogimine keelatud. Proxmoxis masin → **Console**, logi sisse ja kirjuta:
 
     ```bash
     echo "PasswordAuthentication yes" | sudo tee /etc/ssh/sshd_config.d/01-parool.conf
     sudo systemctl restart ssh      # Rocky Linuxis: sudo systemctl restart sshd
-    sudo sshd -T | grep passwordauthentication
     ```
-
-    Viimane käsk peab näitama `passwordauthentication yes`.
 
     !!! danger "Ainult laboris"
 
-        Parooliga SSH on lubatud ainult sellepärast, et labori masinad on suletud võrgus, ainult VPN-iga, ja kursuse lõpus need kustutatakse. **Päris serverites, eriti internetis, nii ei tehta:** parooliga sisselogimist proovivad robotid ööpäevaringselt ära arvata. Seal logitakse sisse ainult SSH-võtmega ja parool on keelatud (`PasswordAuthentication no`).
+        Siin on see lubatud, sest masinad on suletud võrgus, ainult VPN-iga, ja kursuse lõpus kustutatakse. **Päris serverites nii ei tehta:** robotid proovivad paroole ööpäev läbi ära arvata. Seal logitakse sisse ainult SSH-võtmega (`PasswordAuthentication no`).
+
+??? failure "`REMOTE HOST IDENTIFICATION HAS CHANGED`"
+
+    Ava VS Code'is fail `C:\Users\<sinu nimi>\.ssh\known_hosts` (macOS-is `~/.ssh/known_hosts`), kustuta read control node'i IP-ga, salvesta ja ühendu uuesti.
+
+??? failure "VS Code jääb „Setting up SSH Host“ juurde"
+
+    ++f1++ → **Remote-SSH: Kill VS Code Server on Host**, siis uuesti.
