@@ -55,7 +55,7 @@ Kaks [vaikeväärtust](https://docs.ansible.com/projects/rulebook/en/latest/rule
 
 ## Kinnitus AWX-iga ja ilma
 
-AWX-iga koos töötades kutsub rulebook `run_job_template`-iga AWX-i template'it. Nii saad AWX-i RBAC-i, credential'id, logi ja *workflow approval* sammu, kus inimene kinnitab tegevuse. Ilma AWX-ita tuleb kinnitus teha teise sündmusena, nagu [2. kohtumise lisaülesandes 19](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus). Rulebook'e haldav server on Red Hati tootes EDA controller. Selle avatud lähtekoodiga vaste on repo [`ansible/eda-server`](https://github.com/ansible/eda-server), mille paigaldus ja küpsus ei ole AWX-i tasemel.
+AWX-iga koos töötades kutsub rulebook `run_job_template`-iga AWX-i template'it. Nii saad AWX-i RBAC-i, credential'id, logi ja *workflow approval* sammu, kus inimene kinnitab tegevuse. Ilma AWX-ita tuleb kinnitus teha teise sündmusena, nagu 2. kohtumise varasemas lisaülesandes. Rulebook'e haldav server on Red Hati tootes EDA controller. Selle avatud lähtekoodiga vaste on repo [`ansible/eda-server`](https://github.com/ansible/eda-server), mille paigaldus ja küpsus ei ole AWX-i tasemel.
 
 ## Reeglimootorid ja millal mida
 

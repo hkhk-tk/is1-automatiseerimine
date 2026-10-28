@@ -1,306 +1,742 @@
 ---
 tags:
   - Ansible
-  - konfiguratsioonihaldus
-  - Vault
-  - compliance
-  - event-driven
+  - Loeng
 ---
 
-# 2. kohtumine · Konfiguratsioonihaldus: loeng
+# 2. kohtumine · Ansible mitmele masinale
 
-**Eeldus:** eelmisel korral kirjutasid inventory ja esimese playbook'i ning nägid, et teine käivitus annab `changed=0`.
+??? abstract "Õpiväljundid"
 
-Ühe hosti ühe teenusega playbook on veel skript teise süntaksiga. Konfiguratsioonihaldus hakkab end ära tasuma siis, kui hoste ja teenuseid on mitu, inimesi on mitu ja muudatusi tuleb iga nädal. Kood on serverite seisu ainus kirjeldus ja iga muudatus läheb läbi selle koodi kontrollitult, piiratud ulatusega, õigustega ja nii, et selle saab tagasi võtta.
+    Pärast seda kohtumist oskad:
 
-## 🎯 Õpiväljundid
+    - hoida väärtusi muutujates ja valida, kas need kuuluvad kõigile masinatele, grupile või ühele masinale;
+    - korrata ülesannet `loop`-iga, salvestada tulemust `register`-iga ja käivitada teenuse taaskäivitus handler'iga ainult siis, kui midagi muutus;
+    - kirjutada Jinja2 malli, mille väärtused tulevad muutujatest ja faktidest;
+    - jagada töötava playbook'i rollideks ja panna need kokku failis `site.yml`;
+    - paigaldada kogu (collection) `requirements.yml` failist ja kasutada selle mooduleid;
+    - hoida parooli Vaulti abil krüpteeritult Gitis;
+    - teha muudatuse enne nähtavaks (`--check --diff`) ja levitada seda masinhaaval (`serial`, `--limit`).
 
-Pärast seda loengut oskad:
+## 1. Ühest masinast mitme masinani
 
-- võrrelda Ansible'it Puppeti, Chefi ja Saltiga ning põhjendada, kus push-mudel ei sobi;
-- selgitada, kuidas moodul seisu loeb ja muudab, ning valida muutujale ja saladusele õige koha;
-- piirata muudatuse riski plaani, osade kaupa rollout'i, rollback'i ja health check'iga;
-- kirjeldada patch-halduse elutsüklit ja eristada `--check` auditit OpenSCAP-i skannist;
-- kavandada automatiseerimisplatvormi RBAC-i ja CMDB-st tuleva inventory piirid;
-- selgitada sündmuspõhise automatiseerimise ahelat ja seda, kus inimene kinnitab;
-- eristada Linuxi, võrguseadme ja Windowsi hosti täitmismudelit.
+**Küsimus:** mis muutub, kui masinaid on mitu ja need ei ole ühesugused?
 
+Eelmisel kohtumisel seadistasid Ansible'iga ühe masina ja kontrollisid korduva käivituse tulemust. Nüüd laiendame sama mõtet. Erinevad masinad vajavad erinevaid seadistusi: veebiserver vajab nginx-i, andmebaas MariaDB-d, kasutajaid on vaja kõigis. Kasvav playbook vajab selget struktuuri, muidu on sul paari nädala pärast üks 400-realine fail, mida keegi ei julge muuta.
 
-[Konfiguratsioonihaldus](../teemad/konfiguratsioonihaldus.md) · [Patch-haldus](../teemad/patch-haldus.md) · [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md) · [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md) · [Windowsi automatiseerimine](../teemad/windows-automaatika.md) · [RBAC ja ligipääsu kontroll](../teemad/rbac.md) · [Sündmuspõhine automaatika](../teemad/sundmuspohine-automaatika.md)
+Tänase päeva lõpuks on sul projekt, kus:
 
-## 1. Ansible infra töös
+- **muutujad** hoiavad väärtusi eraldi ülesannetest;
+- **mallid** teevad muutujatest konfiguratsioonifailid;
+- **handler'id** taaskäivitavad teenuse ainult siis, kui konfiguratsioon muutus;
+- **rollid** jagavad töö loogilisteks osadeks: ühine, veeb, andmebaas;
+- **Vault** hoiab andmebaasi parooli krüpteeritult;
+- **`site.yml`** paneb kõik kokku ja teine käivitus annab `changed=0`.
 
-Turvateade tuleb kolmapäeval ja reedeks peab 40 Rocky ja Ubuntu serverit olema paigatud. Pooled vajavad pärast kerneli uuendust reboot'i ja runbook ütleb, mitu rakendushosti tohib korraga maas olla ning mida pärast tagasitulekut kontrollida. Käsitsi on see SSH-tsükkel, tabel ja kaks inimest öises aknas. Ansible'iga on sama runbook playbook: kolleeg vaatab selle PR-is üle, `--check` näitab enne akent, mis muutuks, ja järgmisel kuul käivitub see muutmata.
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 200" role="img" aria-label="Täna ehitatav projekt: site.yml käivitab rollid common kõigile masinatele, veeb gruppi veeb ja andmebaas gruppi andmebaas" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.14;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxs2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="hi" x="280" y="10" width="160" height="44" rx="8"/><text class="c" x="360" y="37" text-anchor="middle">site.yml</text>
+<line class="a" x1="320" y1="54" x2="110" y2="96" marker-end="url(#lxs2)"/><line class="a" x1="360" y1="54" x2="360" y2="96" marker-end="url(#lxs2)"/><line class="a" x1="400" y1="54" x2="610" y2="96" marker-end="url(#lxs2)"/>
+<rect class="box" x="20" y="98" width="180" height="90" rx="8"/><text class="b" x="110" y="122" text-anchor="middle">roll common</text><text class="s" x="110" y="146" text-anchor="middle">kasutajad</text><text class="s" x="110" y="170" text-anchor="middle">kõik 5 masinat</text>
+<rect class="box" x="270" y="98" width="180" height="90" rx="8"/><text class="b" x="360" y="122" text-anchor="middle">roll veeb</text><text class="s" x="360" y="146" text-anchor="middle">nginx, mall, handler</text><text class="s" x="360" y="170" text-anchor="middle">web01, app01</text>
+<rect class="box" x="520" y="98" width="180" height="90" rx="8"/><text class="b" x="610" y="122" text-anchor="middle">roll andmebaas</text><text class="s" x="610" y="146" text-anchor="middle">MariaDB, parool Vaultist</text><text class="s" x="610" y="170" text-anchor="middle">db01</text>
+</svg>
+<figcaption>Joonis 1.1. Tänase päeva projekt.</figcaption>
+</figure>
 
-| Ülesanne | Moodul või muster | Lõks |
+Inventory jääb samaks nagu 1. kohtumisel, lisanduvad kaks gruppi masinate ülesande järgi:
+
+```ini
+[ubuntu]
+web01
+app01
+rmq01
+
+[rocky]
+mc01
+db01
+
+[veeb]
+web01
+app01
+
+[andmebaas]
+db01
+
+[all:vars]
+ansible_user=kasutaja
+```
+
+Sama masin võib olla mitmes grupis: web01 on nii `ubuntu` kui ka `veeb`. Grupid OS-i järgi aitavad otsustada, kuidas midagi teha. Grupid ülesande järgi ütlevad, mida masinas teha.
+
+??? note "Süvenemiseks: teised konfihalduse tööriistad"
+
+    Puppet, Chef ja Salt lahendavad sama ülesannet agendi ja serveriga. Nende võrdlus on lehel [Konfiguratsioonihaldus](../teemad/konfiguratsioonihaldus.md).
+
+??? question "Kontrolli ennast"
+
+    1. Miks on web01 kahes grupis ja mida kumbki grupp ütleb?
+    2. Mis juhtub, kui kõik tänased ülesanded oleksid ühes playbook'is ühe play all?
+
+## 2. Muutujad ja faktid
+
+**Küsimus:** kuhu panna väärtused, mis on masinatel erinevad?
+
+### Muutuja
+
+**Muutuja** on väärtus nime all. Playbook'is kasutad seda kujul `{{ nimi }}`. Nii on ülesanne üks ja sama, aga väärtus võib eri masinates olla erinev:
+
+```yaml
+- name: Veebilehe kaust on olemas
+  ansible.builtin.file:
+    path: "{{ veeb_juur }}"
+    state: directory
+```
+
+Kui väärtus algab `{{`-ga, pane kogu väärtus jutumärkidesse. Muidu loeb YAML seda sõnastikuna ja tuleb viga.
+
+### Kus muutujad elavad
+
+Väärtused hoitakse projekti kaustades inventory kõrval:
+
+```text
+k02/
+├── inventory.ini
+├── group_vars/
+│   ├── all.yml          # kõigile masinatele
+│   ├── veeb.yml         # grupile veeb
+│   └── andmebaas/       # grupile andmebaas, mitu faili
+│       ├── vars.yml
+│       └── vault.yml
+└── host_vars/
+    └── web01.yml        # ainult web01-le
+```
+
+Faili nimi on grupi või masina nimi. Ansible loeb need ise, playbook'is pole vaja midagi lisada.
+
+```yaml
+# group_vars/veeb.yml
+veeb_pealkiri: "IS1 labor"
+veeb_port: 80
+```
+
+### Kumb võidab
+
+Kui sama muutuja on mitmes kohas, võidab täpsem. Kogu järjekord on Ansible'is pikk, alustamiseks piisab sellest:
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 120" role="img" aria-label="Muutujate järjekord nõrgemast tugevamani: rolli defaults, group_vars all, group_vars grupp, host_vars, play vars, -e" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxv2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="5" y="20" width="108" height="44" rx="6"/><text class="c" x="59" y="47" text-anchor="middle">defaults</text>
+<rect class="box" x="125" y="20" width="108" height="44" rx="6"/><text class="c" x="179" y="47" text-anchor="middle">group all</text>
+<rect class="box" x="245" y="20" width="108" height="44" rx="6"/><text class="c" x="299" y="47" text-anchor="middle">group veeb</text>
+<rect class="box" x="365" y="20" width="108" height="44" rx="6"/><text class="c" x="419" y="47" text-anchor="middle">host_vars</text>
+<rect class="box" x="485" y="20" width="108" height="44" rx="6"/><text class="c" x="539" y="47" text-anchor="middle">play vars</text>
+<rect class="hi" x="605" y="20" width="108" height="44" rx="6"/><text class="c" x="659" y="47" text-anchor="middle">-e</text>
+<line class="a" x1="20" y1="90" x2="700" y2="90" marker-end="url(#lxv2)"/><text class="s" x="20" y="112">nõrgem</text><text class="s" x="700" y="112" text-anchor="end">tugevam: võidab</text>
+</svg>
+<figcaption>Joonis 2.1. Kui muutuja on mitmes kohas, võidab paremal olev.</figcaption>
+</figure>
+
+| Koht | Millal kasutada |
+|---|---|
+| rolli `defaults/main.yml` | mõistlik vaikeväärtus, mida kasutaja võib üle kirjutada |
+| `group_vars/all.yml` | kõigile masinatele ühine, näiteks kasutajate nimekiri |
+| `group_vars/<grupp>.yml` | ühe grupi väärtused, näiteks veebiserveri port |
+| `host_vars/<masin>.yml` | üks masin on teistest erinev |
+| play `vars:` | väärtus kuulub selle playbook'i juurde |
+| `-e nimi=väärtus` | ühekordne üle kirjutamine käsurealt |
+
+*Tabel 2.1. Kuhu muutuja panna.*
+
+Muutujat näed ad-hoc käsuga, see on parim viis kontrollida, millise väärtuse Ansible tegelikult valis:
+
+```bash
+ansible web01 -m ansible.builtin.debug -a "var=veeb_pealkiri"
+```
+
+### Faktid otsustes
+
+1. kohtumisel nägid, et Ansible kogub masinast fakte. Need on samuti muutujad, ainult Ansible täidab need ise:
+
+| Fakt | Näide |
+|---|---|
+| `ansible_facts['os_family']` | `Debian`, `RedHat` |
+| `ansible_facts['distribution']` | `Ubuntu`, `Rocky` |
+| `ansible_facts['default_ipv4']['address']` | masina IP |
+| `ansible_facts['memtotal_mb']` | mälu megabaitides |
+
+*Tabel 2.2. Sagedasemad faktid.*
+
+**`inventory_hostname`** on masina nimi inventory's (`web01`). See ei ole fakt, vaid Ansible'i enda muutuja ja on olemas ka siis, kui fakte ei koguta.
+
+??? note "Muutujate nimed"
+
+    Pane muutuja nime ette rolli või teema nimi: `veeb_port`, mitte `port`. Siis ei kirjuta kaks rolli kogemata teineteise väärtust üle. Nimes on ainult väiketähed, numbrid ja alakriips.
+
+??? question "Kontrolli ennast"
+
+    1. `veeb_port` on `group_vars/veeb.yml`-is `80` ja `host_vars/app01.yml`-is `8080`. Mis port on app01-l?
+    2. Miks on `path: "{{ veeb_juur }}"` jutumärkides?
+    3. Mis vahe on `inventory_hostname`-il ja `ansible_facts['hostname']`-il?
+
+??? info "Loe juurde"
+
+    - [Using variables](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html)
+    - [Variable precedence](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence)
+    - [Organizing host and group variables](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html#organizing-host-and-group-variables)
+    - [Discovering variables: facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html)
+
+## 3. Tsükkel, tulemus ja handler
+
+**Küsimus:** kuidas teha sama asja mitu korda, kasutada eelmise ülesande tulemust ja taaskäivitada teenust ainult siis, kui vaja?
+
+### `loop`: üks ülesanne, mitu väärtust
+
+Kolm kasutajat kolme ülesandega oleks kopeerimine. **`loop`** käivitab sama ülesande iga nimekirja elemendiga, element on muutujas `item`:
+
+```yaml
+# group_vars/all.yml
+labori_kasutajad:
+  - anna
+  - peeter
+  - mari
+```
+
+```yaml
+- name: Kasutajad on olemas
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    state: present
+  loop: "{{ labori_kasutajad }}"
+```
+
+Uue kasutaja lisamiseks muudad ainult nimekirja, ülesanne jääb samaks. Väljundis on iga element eraldi real: `changed: [web01] => (item=anna)`.
+
+Nimekirja element võib olla ka sõnastik. Siis loed väljad punktiga:
+
+```yaml
+labori_kasutajad:
+  - { nimi: anna, shell: /bin/bash }
+  - { nimi: peeter, shell: /bin/sh }
+```
+
+```yaml
+    name: "{{ item.nimi }}"
+    shell: "{{ item.shell }}"
+```
+
+### `register`: ülesande tulemus muutujasse
+
+Iga moodul tagastab tulemuse. **`register`** salvestab selle muutujasse, mida saad järgmistes ülesannetes kasutada:
+
+```yaml
+- name: Kodukaustade nimekiri
+  ansible.builtin.command: ls /home
+  register: kodud
+  changed_when: false
+
+- name: Näita tulemust
+  ansible.builtin.debug:
+    var: kodud.stdout_lines
+```
+
+| Väli | Sisu |
+|---|---|
+| `kodud.stdout` | käsu väljund ühe tekstina |
+| `kodud.stdout_lines` | väljund ridade nimekirjana |
+| `kodud.rc` | väljumiskood |
+| `kodud.changed` | kas ülesanne muutis midagi |
+
+*Tabel 3.1. `register`-iga salvestatud tulemus.*
+
+`changed_when: false` ütleb, et see käsk ainult loeb ega muuda midagi. Ilma selleta oleks `command` igal käivitusel `changed` (1. kohtumine, toores käsk).
+
+### `when` uuesti
+
+1. kohtumisel valis `when` ülesande OS-i järgi. Sama tingimus töötab ka `register`-i tulemusega:
+
+```yaml
+- name: Hoiatus, kui kodukaustu on liiga palju
+  ansible.builtin.debug:
+    msg: "Kodukaustu on {{ kodud.stdout_lines | length }}"
+  when: kodud.stdout_lines | length > 5
+```
+
+`| length` on **filter**: see võtab väärtuse ja annab tagasi selle pikkuse. Filtrid tulevad mallide juures uuesti.
+
+### Handler: taaskäivitus ainult muudatuse peale
+
+Kui muudad teenuse konfiguratsioonifaili, peab teenus selle uuesti lugema. Kui fail ei muutunud, oleks taaskäivitus asjatu katkestus. **Handler** on ülesanne, mis käivitub ainult siis, kui mõni teine ülesanne teda **`notify`**-ga teavitas ja ise `changed` oli:
+
+```yaml
+- name: Veebiserver
+  hosts: veeb
+  become: true
+  tasks:
+    - name: nginx-i seadistus on olemas
+      ansible.builtin.template:
+        src: labor.conf.j2
+        dest: /etc/nginx/conf.d/labor.conf
+        mode: "0644"
+      notify: reload nginx
+
+  handlers:
+    - name: reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+```
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 150" role="img" aria-label="Ülesanne muudab faili ja teavitab handlerit; handler käivitub play lõpus üks kord; kui ülesanne on ok, handler ei käivitu" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .d{stroke-dasharray:4 3}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxh2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="15" width="200" height="50" rx="8"/><text class="b" x="110" y="37" text-anchor="middle">template</text><text class="s" x="110" y="55" text-anchor="middle">changed</text>
+<line class="a" x1="210" y1="40" x2="268" y2="40" marker-end="url(#lxh2)"/><text class="s" x="239" y="32" text-anchor="middle">notify</text>
+<rect class="hi" x="270" y="15" width="200" height="50" rx="8"/><text class="b" x="370" y="37" text-anchor="middle">handler ootab</text><text class="s" x="370" y="55" text-anchor="middle">play lõpuni</text>
+<line class="a" x1="470" y1="40" x2="528" y2="40" marker-end="url(#lxh2)"/>
+<rect class="box" x="530" y="15" width="180" height="50" rx="8"/><text class="b" x="620" y="37" text-anchor="middle">reload nginx</text><text class="s" x="620" y="55" text-anchor="middle">üks kord</text>
+<rect class="box" x="10" y="90" width="200" height="50" rx="8"/><text class="b" x="110" y="112" text-anchor="middle">template</text><text class="s" x="110" y="130" text-anchor="middle">ok</text>
+<line class="a d" x1="210" y1="115" x2="268" y2="115"/><text class="s" x="280" y="120">handler ei käivitu, teenus jääb puutumata</text>
+</svg>
+<figcaption>Joonis 3.1. Handler käivitub ainult siis, kui teavitanud ülesanne oli <code>changed</code>.</figcaption>
+</figure>
+
+Kolm reeglit:
+
+- `notify` väärtus peab olema täpselt handler'i nimi;
+- handler käivitub **play lõpus**, mitte kohe;
+- handler käivitub **üks kord**, ükskõik mitu ülesannet teda teavitas.
+
+??? note "Kui handler peab käima kohe"
+
+    `- ansible.builtin.meta: flush_handlers` käivitab ootel handler'id selles kohas. Seda on vaja, kui järgmine ülesanne eeldab, et teenus juba töötab uue seadistusega.
+
+??? question "Kontrolli ennast"
+
+    1. Mis on `loop`-i sees muutujas `item`?
+    2. Miks on `ls /home` ülesandel `changed_when: false`?
+    3. Kaks ülesannet teavitavad sama handler'it. Mitu korda handler käivitub?
+    4. Mis juhtub handler'iga, kui konfiguratsioonifail ei muutunud?
+
+??? info "Loe juurde"
+
+    - [Loops](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_loops.html)
+    - [Return values](https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html)
+    - [Handlers](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html)
+    - [Defining failure and changed](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html)
+
+## 4. Mallid
+
+**Küsimus:** kuidas saavad muutujate väärtused konfiguratsioonifaili?
+
+### `copy` ja `template`
+
+1. kohtumisel kirjutas `copy` faili täpselt sellise sisuga, nagu playbook'is oli. **`template`** loeb faili, asendab selles muutujad ja kirjutab tulemuse masinasse. Mall on tavaline tekstifail laiendiga `.j2` ja asub kaustas `templates/`. Mallikeel on **Jinja2**.
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 150" role="img" aria-label="Mall index.html.j2 ja muutujad koos faktidega annavad iga masina jaoks oma valmis faili" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .c{fill:var(--md-default-fg-color);font-size:12px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxm2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="10" width="220" height="60" rx="8"/><text class="b" x="120" y="32" text-anchor="middle">index.html.j2</text><text class="c" x="120" y="54" text-anchor="middle">&lt;h1&gt;{{ veeb_pealkiri }}&lt;/h1&gt;</text>
+<rect class="box" x="10" y="80" width="220" height="60" rx="8"/><text class="b" x="120" y="102" text-anchor="middle">muutujad ja faktid</text><text class="c" x="120" y="124" text-anchor="middle">veeb_pealkiri: IS1 labor</text>
+<line class="a" x1="230" y1="40" x2="298" y2="68" marker-end="url(#lxm2)"/><line class="a" x1="230" y1="110" x2="298" y2="82" marker-end="url(#lxm2)"/>
+<rect class="hi" x="300" y="50" width="120" height="50" rx="8"/><text class="b" x="360" y="80" text-anchor="middle">template</text>
+<line class="a" x1="420" y1="75" x2="478" y2="75" marker-end="url(#lxm2)"/>
+<rect class="box" x="480" y="40" width="230" height="70" rx="8"/><text class="b" x="595" y="64" text-anchor="middle">web01: index.html</text><text class="c" x="595" y="88" text-anchor="middle">&lt;h1&gt;IS1 labor&lt;/h1&gt;</text>
+</svg>
+<figcaption>Joonis 4.1. Mall pluss väärtused annab iga masina jaoks oma faili.</figcaption>
+</figure>
+
+### Jinja2 lühidalt
+
+| Kirjutis | Mida teeb | Näide |
 |---|---|---|
-| paigad ja reboot lainetena | `dnf`/`apt` `state: latest`, `needs-restarting -r` (Rocky) või `/var/run/reboot-required` (Ubuntu), `ansible.builtin.reboot`, `serial` + health check | reboot ainult vajadusel, laine suurus teenuse järgi |
-| kasutajad, SSH võtmed, sudo | `user`, `ansible.posix.authorized_key` `exclusive: true`, `copy` `validate: visudo -cf %s` | lahkunu võti kaob igalt hostilt ühe commit'iga |
-| hardening ja compliance | `template`/`lineinfile` `validate: sshd -t -f %s`, `sysctl`, `ansible.posix.seboolean`; `--check --diff` auditina | `changed` check'is on kõrvalekalle; vigane `sshd_config` lukustab Ansible'i välja |
-| sertifikaadid | `community.crypto`: `openssl_csr`, `x509_certificate`, `get_certificate`; reload handler | moodul aegumist ei vaata, kontroll on eraldi |
-| konfi drift | öine `--check --diff`, `fetch`, `failed_when` poliitikana | drift'i korral on väljumiskood `0`, loe PLAY RECAP-i |
-| teenuse paigaldus ja uuendus | roll, `template` + handler, `block`/`rescue`, `serial` | rollback on koodis enne, kui seda vaja läheb |
-| võrguseadme backup ja muudatus | `cisco.ios`, `junipernetworks.junos`: `*_facts`, `*_config` `backup: true`, ressursimoodulid (`*_interfaces`, `*_ospfv2`); Linuxi ruuter (FRR): `command: vtysh -c '…'`; Pythonis Netmiko | Cisco/Juniperil töötab moodul control node'il `network_cli` kaudu, Linuxi ruuteris nagu serveris |
-| dünaamiline inventory | `community.proxmox.proxmox`, `netbox.netbox.nb_inventory`, CMDB | API maas tähendab tühja inventory't ja rohelist jooksu |
-| mitme tiimi muudatus | üks playbook mitme play'ga: LB drain, skeemi muudatus `run_once`, app rolling, LB tagasi | järjekord ja peatumise reegel on koodis, mitte protokollis |
+| `{{ ... }}` | trükib väärtuse | `{{ inventory_hostname }}` |
+| <code>{{ x &#124; filter }}</code> | muudab väärtust | <code>{{ veeb_pealkiri &#124; upper }}</code> |
+| <code>{{ x &#124; default('...') }}</code> | vaikeväärtus, kui muutujat pole | <code>{{ veeb_port &#124; default(80) }}</code> |
+| `{% if %} ... {% endif %}` | tingimus | `{% if ansible_facts['os_family'] == 'Debian' %}` |
+| `{% for x in list %} ... {% endfor %}` | tsükkel | kõik kasutajad nimekirjas |
+| `{# ... #}` | kommentaar, väljundisse ei jõua | |
 
-*Tabel 2.1. Infra-ülesanne ja Ansible'i muster.*
+*Tabel 4.1. Jinja2 põhivõtted.*
 
-Kus Ansible ei sobi. **Pidev drift'i parandus:** push parandab ainult siis, kui keegi käivitab. Kui nõue on, et käsitsi muudatus kaob 30 minutiga ilma inimeseta, on vaja pull-mudelit (ptk 2). **Taristu loomine:** VM-ide ja DNS-kirjete moodulid on olemas, state'i pole. Koodist kustutatud VM jääb Proxmoxi alles ja plaani, mis selle eemaldaks, keegi ei näe. OpenTofu loob taristu, Ansible seadistab, mis sinna tekkis. **Meeskond ilma keskse käivitajata:** kui playbook'e käivitatakse sülearvutitest, pole ühist ajakava, logi ega õiguste piiri (ptk 7).
+Veebilehe mall:
 
-### Mida see admini töös asendab
-
-Enne Ansible'it on enamikul meeskondadel olemas `for host in $(cat hosts)` tsükkel, `pssh` või `clusterssh` ja wiki-runbook. Ad hoc käsk `ansible app -m shell -a '…'` teeb sama mis `pssh`, lisades hostigrupid, paralleelsuse piiri ja hostipõhise tulemuse. Erinevus tekib playbook'iga: tsükkel kontrollib väljumiskoodi ainult siis, kui keegi selle kontrolli kirjutas, playbook peatab hosti esimese vea järel ja RECAP ütleb, millisel hostil töö pooleli jäi. Cron-skript, mis kirjutab igal ööl `/etc/chrony.conf`-i üle, on juba konfiguratsioonihaldus, ainult ilma diff'i, ülevaatuse ja aruandeta. Golden image ja Ansible ei välista teineteist: mall annab baasi kiiresti, playbook hoiab seda pärast paigaldust ja parandab drift'i, mida mall ei näe.
-
-Hind on sõltuvus sihtmasina Pythonist. [Toetusmaatriksi](https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html) järgi toetab ansible-core 2.16 hostides veel Python 2.7 ja 3.6, 2.17 alates Python 3.7-st ja 2.18 alates 3.8-st. RHEL 8 süsteemne `platform-python` on 3.6, nii et segapargis lukustatakse control node'i ansible-core versioon vanima hosti järgi või paigaldatakse vanadele hostidele uuem Python ja määratakse `ansible_python_interpreter`. Moodul `raw` töötab ilma Pythonita ja sobib ainult Pythoni enda paigaldamiseks.
-
-## 2. Soovitud seis ja konfihalduse tööriistad
-
-Reedel kell 23 tõstis valvur ühel veebiserveril Nginxi `worker_connections`-i käsitsi, sest koormuse all said kasutajad 502. Esmaspäeval käivitas teine admin sama hostigrupi peal playbook'i, mall kirjutas faili üle, [handler](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html) laadis Nginxi uuesti ja tipptunnil tuli rike tagasi. Faili sisul oli kaks allikat ja intsidendi sulgemine ei nõudnud parandust koodis.
-
-Konfiguratsioonihaldus kirjeldab **soovitud seisu**: pakett on paigaldatud, fail on sellise sisuga, teenus töötab. Control node pakib mooduli koos `module_utils`-iga üheks Pythoni failiks (AnsiballZ) ja saadab selle SSH kaudu hosti. Moodul loeb tegeliku seisu, võrdleb seda argumentidega, muudab ainult vahet ja tagastab JSON-i, kus on `changed`. Idempotentsus on seega mooduli omadus, mitte Ansible'i oma:
+```html
+<!doctype html>
+<html lang="et">
+<head><meta charset="utf-8"><title>{{ veeb_pealkiri }}</title></head>
+<body>
+  <h1>{{ veeb_pealkiri }}</h1>
+  <p>Masin: {{ inventory_hostname }} ({{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }})</p>
+  <p>Kasutajad: {{ labori_kasutajad | join(', ') }}</p>
+</body>
+</html>
+```
 
 ```yaml
-- ansible.builtin.command: systemctl restart nginx      # alati changed
-- ansible.builtin.template: {src: nginx.conf.j2, dest: /etc/nginx/nginx.conf}
-  notify: Reload nginx                                   # ainult muutuse korral
+- name: Veebileht on olemas
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/labor/index.html
+    mode: "0644"
 ```
 
-**Handler** on ülesanne, mis käivitub ainult teavitanud ülesande `changed` korral ja vaikimisi üks kord play osa lõpus. Kui host ebaõnnestub pärast malli muutmist, aga enne play lõppu, jääb handler [vaikimisi käivitamata](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html). Fail on uus, teenus töötab vana seadistusega ja järgmine jooks näeb mallis `ok`-d, sest teavitust jooksude vahel ei mäletata. `force_handlers: true` käivitab teavitatud handlerid ka ebaõnnestunud hostil.
+Sama mall annab web01-le ja app01-le eri faili, sest `inventory_hostname` on erinev. `template` on idempotentne nagu `copy`: kui valmis fail on sama, mis masinas, on tulemus `ok`.
 
-Ansible on **push-mudel**: control node ühendub ja viib muudatused hostidesse siis, kui keegi playbook'i käivitab. Teised levinud tööriistad teevad sama töö teise mudeliga:
+### Vigane konfiguratsioon ei jõua teenuseni
 
-| | Ansible | Puppet | Chef | Salt |
-|---|---|---|---|---|
-| mudel | push üle SSH, agenti pole | pull: agent küsib kataloogi, vaikimisi iga 30 min | pull: `chef-client` iga 30 min | mõlemad: minion hoiab masteriga ZeroMQ ühendust (4505/4506) |
-| keel | YAML + Jinja2, ülesanded järjekorras | oma deklaratiivne DSL, sõltuvused `require`/`notify`-ga | Ruby DSL, retseptid järjekorras | YAML + Jinja2 (SLS) |
-| sündmused | eraldi tööriist (ptk 7) | ei | ei | event bus ja reactor sisse ehitatud |
-| litsents | ansible-core GPLv3 | ametlikud paketid kommertslitsentsiga, kogukonna haru [OpenVox](https://devclass.com/2024/12/18/community-plans-to-fork-puppet-unhappy-with-perforce-changes-to-open-source-project/) | Progress, vaba build Cinc | Apache 2.0, omanik Broadcom |
-
-*Tabel 2.2. Konfihalduse tööriistad.*
-
-Pull vajab agenti, keskserverit, sertifikaate ja kõrgkäideldavust, aga parandab drift'i ise ja skaleerub tuhandeteni. Eesti näide pull-mudelist on [X-tee](https://docs.x-road.global/Architecture/arc-ss_x-road_security_server_architecture.html): turvaserver laadib globaalse konfiguratsiooni ise, keskus temasse ei ühendu. Push vajab ainult SSH-d ja Pythonit, kuid control node teeb kogu töö: vaikimisi `forks = 5` ja `linear` strateegia tähendavad, et 50 hostiga käivitub iga ülesanne kümnes laines ja järgmine algab alles siis, kui kõige aeglasem host on eelmise lõpetanud. Ansible'il pole ka hostipõhist lukku: kui pipeline ja admin käivitavad sama playbook'i korraga, võidab viimane kirjutaja.
-
-### Mis toimub ühe ülesande ajal
-
-Ühe ülesande hind on mitu SSH operatsiooni: ajutise kausta loomine, mooduli kopeerimine, õiguste seadmine, käivitamine ja koristus. [SSH connection plugin](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/ssh_connection.html) kasutab vaikimisi `-C -o ControlMaster=auto -o ControlPersist=60s`, nii et sama hosti järgmised operatsioonid lähevad olemasolevas ühenduses ja uut võtmevahetust ei tule. `pipelining = True` saadab mooduli otse Pythoni stdin'i ja jätab failiedastuse ära. Vaikimisi on see välja lülitatud, sest `become` sudo'ga ei tööta, kui sudoers'is on `requiretty`. Vanemate RHEL-i mallidega hostidelt tuleb see rida enne eemaldada.
-
-Teine peidetud kulu on faktid. Iga play algab vaikimisi `setup` mooduliga, mis kogub hostist sadu väärtusi: liidesed, kettad, distro, mälu. 300 hosti ja mitme play'ga playbook'is võib see võtta suurema osa jooksu ajast. `gather_facts: false` ja `gather_subset` vähendavad tööd, fact cache (`jsonfile`, `redis`) hoiab tulemust jooksude vahel. Vahemälu hind on vananemine: kui ketas lisati pärast viimast kogumist, otsustab playbook vana teabe järgi.
-
-`linear` strateegia hoiab hostid ülesande kaupa sammus, `free` laseb igal hostil oma tempos edasi minna. `free` lühendab jooksu, kui hostid on eri kiirusega, aga väljund läheb segamini ja ülesanne, mis eeldab, et kõik hostid on eelmise sammu teinud (näiteks klastri liikmete nimekiri), saab poolikud andmed.
-
-Iseseisvaks lugemiseks: [Konfiguratsioonihaldus](../teemad/konfiguratsioonihaldus.md).
-
-## 3. Kus väärtus elab: rollid, muutujad ja saladused
-
-Rakendusserveril on mälu 768 MB, kuigi hosti muutujate failis on 512. Väärtus on kirjas mitmes kohas ja keegi ei tea, kumb võidab.
-
-[Roll](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html) on üks teenus kokkulepitud kaustastruktuuris. Rolli **liides** on tema `defaults/` muutujad: port, mälu, kuulamisaadress. Distrost sõltuvad väärtused (paketinimi, konfifaili kaust) on `vars/` all, millel on palju kõrgem prioriteet. Võõras roll Ansible Galaxyst töötab root'ina sinu masinates, nii et loe enne tema `defaults/` ja `tasks/` ning lukusta versioon `requirements.yml`-is. Rollideks jagamise test: kui pärast refaktorit annab käivitus `changed`, muutus käitumine.
-
-Ansible'il on [22 prioriteeditaset](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable) ja põhimõte on üks: **spetsiifilisem võidab üldisemat**. Rolli vaikeväärtus on kõige madalamal, kõigile ühine väärtus on grupis `all`, ühe hosti erand hosti failis ja käsurea `-e` võidab kõik.
-
-<figure markdown="span">
-
-```mermaid
-flowchart BT
-    D["rolli defaults<br/>tomcat_heap: 384m"] --> GA["group_vars/all"]
-    GA --> GP["vanemgrupp (ubuntu)"]
-    GP --> GC["lapsgrupp (app)"]
-    GC --> HV["host_vars/app01<br/>tomcat_heap: 512m"]
-    HV --> PV["play vars, rolli parameeter"]
-    PV --> E["-e tomcat_heap=768m"]
-```
-
-  <figcaption>Joonis 2.1. Muutujate prioriteet: ülemine võidab. Täielik järjekord on dokumentatsioonis.</figcaption>
-</figure>
-
-Sama sügavusega gruppide puhul võidab tähestikus hilisem nimi, kui `ansible_group_priority` ei ütle teisiti, ja sõnastikud ei liitu üle tasemete. "Mis väärtus siin kehtib" on küsimus tööriistale: `ansible-inventory --host` näitab lõplikke inventory muutujaid.
-
-<figure markdown="span">
-  ![Control node ja viis hosti funktsionaalsetes ja OS-gruppides](assets/k02_inventory.svg)
-  <figcaption>Joonis 2.2. Funktsionaalne grupp (db, app) ja OS-grupp (rocky, ubuntu) annavad hostile muutujad kahest suunast.</figcaption>
-</figure>
-
-Saladus on muutuja, mille fail on krüpteeritud. [Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/index.html) krüpteerib terve faili AES-256-ga, võti tuletatakse paroolist PBKDF2-ga ja fail jääb Giti. Probleem liigub ühe sammu edasi: Vaulti parool on failis väljaspool repot. `ansible-vault rekey` lekke korral ei aita, sest vana fail on Giti ajaloos. Hea muster on vahekiht: krüpteeritud failis on `vault_db_password`, avatud failis `app_db_password: "{{ vault_db_password }}"`, nii et `grep` leiab iga kasutuskoha.
-
-Mitme keskkonnaga repos ei ole üks parool kõigile failidele hea valik. `--vault-id dev@prompt --vault-id prod@/etc/ansible/prod.pass` annab igale failile oma sildi ja parooli, silt kirjutatakse faili päisesse (`$ANSIBLE_VAULT;1.2;AES256;prod`) ja arendaja, kellel on ainult dev parool, prod faili ei ava. Parooli vahetus ei muuda lekkinud saladust kehtetuks: kehtetuks muutub see alles siis, kui andmebaasi parool vahetatakse andmebaasis.
-
-<figure markdown="span">
-  ![Krüpteeritud vault.yml, avatud main.yml vahekiht ja mall, mis kasutab muutujat](assets/k02_vault_vahekiht.svg)
-  <figcaption>Joonis 2.3. Saladus jõuab krüpteeritud failist mallini avatud vahekihi kaudu.</figcaption>
-</figure>
-
-Krüpteerimine kaitseb saladust ainult repos. Control node dekrüpteerib selle mällu ja saadab mooduli argumendina hosti. `no_log: true` peidab ülesande tulemuse väljundist ja logist, aga `command` argumendina on saladus `ps` väljundis igale kohalikule kasutajale näha. Suuremas keskkonnas võtab pipeline saladused HashiCorp Vaultist või OpenBaost lookup plugin'iga: kasu on auditilogi ja lühiajalised saladused, hind on see, et Vaulti seisaku ajal ei käivitu ükski deploy.
-
-## 4. Muudatuse risk ja selle piiramine
-
-19. juulil 2024 jõudis CrowdStrike'i Falconi sisu-uuendus korraga kõigi klientide Windowsi masinatesse ja [Microsofti hinnangul](https://blogs.microsoft.com/blog/2024/07/20/helping-our-customers-through-the-crowdstrike-outage/) jäi umbes 8,5 miljonit masinat sinisele ekraanile; [juurpõhjuse analüüsi](https://www.crowdstrike.com/content/dam/crowdstrike/www/en-us/wp/2024/08/Channel-File-291-Incident-Root-Cause-Analysis-08.06.2024.pdf) üks parandus on paigaldus canary hostidest ringide kaupa. Cloudflare'i [2. juuli 2019 katkestuses](https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/) jõudis uus WAF-reegel etapiviisilisest paigaldusest mööda paari sekundiga igasse masinasse ja liiklus oli 27 minutit häiritud. Ansible'i jooks on sama mehhanism: üks käsk muudab kõiki inventory hoste.
-
-Konfihaldus annab riski piiramiseks neli võtet. ITIL-i keeles muudavad need korduva muudatuse standardmuudatuseks: plaani väljund on muudatustaotluse lisa ja rollback on kirjas koodis.
-
-**Plaan.** [Check-režiim](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html) koos `--diff`-iga näitab, mida käivitus muudaks. Moodul, mis check-režiimi ei toeta, ja `command` jäetakse vahele, nii et seisu küsiv ülesanne saab tühja `register`-i, kui sellel pole `check_mode: false`. Check eeldab, et eelmised ülesanded juba tehti, seepärast on plaan tühjal masinal alati osaliselt vale.
-
-**Piiratud ulatus.** [`serial`](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_strategies.html) jagab hostid batch'ideks ja käivitab play batch'i kaupa algusest lõpuni. `max_fail_percentage` arvutatakse iga batch'i kohta ja piir peab olema ületatud, mitte saavutatud:
+Vigane konfiguratsioonifail võib teenuse maha võtta. **`validate`** kontrollib uut faili **enne**, kui see paika läheb. `%s` asendatakse ajutise faili teega:
 
 ```yaml
-- hosts: app
-  serial: [1, "25%"]          # canary, siis veerandi kaupa
-  max_fail_percentage: 0      # esimese vea järel ülejäänud jäävad puutumata
+- name: sudo reegel laborile
+  ansible.builtin.template:
+    src: labor-sudoers.j2
+    dest: /etc/sudoers.d/labor
+    mode: "0440"
+    validate: visudo -cf %s
 ```
 
-**Rollback.** [Plokk](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_blocks.html) jagab deploy kolmeks: `block` teeb vahetuse, `rescue` paneb vea korral tagasi eelmise versiooni, `always` kirjutab üles, mis nüüd töötab. Edukas `rescue` annab RECAP-is `failed=0` ja pipeline on roheline, seepärast lõpeb `rescue` `fail`-iga.
+Kui `visudo` leiab vea, ülesanne ebaõnnestub ja vana fail jääb alles. `validate` töötab ainult siis, kui kontrollitav fail on iseseisev. nginx-i puhul kontrollitakse kogu seadistust käsuga `nginx -t`; laboris teed seda pärast muudatust.
 
-**Health check.** Teenus võib olla `active (running)` ja ometi kasutamatu, seega käib kontroll `delegate_to`-ga sealt, kust teenust kasutatakse. Alles see kontroll otsustab, kas rollout läheb järgmisele batch'ile.
+??? note "Päis `ansible_managed`"
 
-<figure markdown="span">
+    Pane malli esimesele reale `# {{ ansible_managed }}`. Valmis failis on siis kommentaar „Ansible managed“: kes faili masinas avab, näeb, et käsitsi muutmine kirjutatakse järgmisel käivitusel üle.
 
-```mermaid
-flowchart LR
-    P[plaan:<br/>--check --diff] --> B1[1 host]
-    B1 --> H1{health check}
-    H1 -- OK --> B2[järgmine batch]
-    H1 -- viga --> R[rollback +<br/>rollout peatub]
-    B2 --> H2{health check}
-    H2 -- OK --> D[kõik hostid]
-    H2 -- viga --> R
+??? question "Kontrolli ennast"
+
+    1. Mis vahe on moodulitel `copy` ja `template`?
+    2. Mida teeb `{{ labori_kasutajad | join(', ') }}`?
+    3. Millal kasutad `validate`-i ja mis juhtub, kui kontroll ebaõnnestub?
+
+??? info "Loe juurde"
+
+    - [Templating (Jinja2)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_templating.html)
+    - [Using filters](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_filters.html)
+    - [`ansible.builtin.template`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/template_module.html)
+
+## 5. Rollid
+
+**Küsimus:** kuidas jagada kasvav projekt osadeks, mida saab eraldi muuta ja uuesti kasutada?
+
+### Mis on roll
+
+Pärast muutujaid, malle ja handler'eid on veebiserveri playbook juba pikk. Andmebaas ja kasutajad lisavad veel. **Roll** on kaust kindla ülesehitusega, kuhu läheb kõik, mis ühe ülesande juurde kuulub: ülesanded, handler'id, mallid ja vaikeväärtused. Playbook ütleb siis ainult, milline roll millistesse masinatesse.
+
+```text
+roles/veeb/
+├── defaults/main.yml     # vaikeväärtused, kõige nõrgemad
+├── handlers/main.yml     # handler'id
+├── tasks/main.yml        # ülesanded
+└── templates/            # mallid
+    ├── index.html.j2
+    └── labor.conf.j2
 ```
 
-  <figcaption>Joonis 2.4. Muudatus läheb läbi plaani, väikese esimese osa ja kontrolli, enne kui jõuab kõigisse hostidesse.</figcaption>
+Kaustu, mida ei kasuta, pole vaja. Tühja rolli ülesehituse teeb käsk `ansible-galaxy role init roles/veeb`, aga käsitsi on algajale selgem.
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 170" role="img" aria-label="Playbook'i osad lähevad rolli kaustadesse: tasks tasks/main.yml-i, handlers handlers/main.yml-i, mallid templates kausta, vaikeväärtused defaults/main.yml-i" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.14;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="10" width="250" height="150" rx="10"/><text class="b" x="26" y="34">veeb.yml (playbook)</text>
+<text class="c" x="26" y="62">tasks:</text><text class="c" x="26" y="88">handlers:</text><text class="c" x="26" y="114">vars:</text><text class="c" x="26" y="140">templates/*.j2</text>
+<line class="a" x1="150" y1="58" x2="408" y2="40" marker-end="url(#lxr2)"/><line class="a" x1="150" y1="84" x2="408" y2="76" marker-end="url(#lxr2)"/><line class="a" x1="150" y1="110" x2="408" y2="112" marker-end="url(#lxr2)"/><line class="a" x1="150" y1="136" x2="408" y2="148" marker-end="url(#lxr2)"/>
+<rect class="hi" x="410" y="10" width="300" height="150" rx="10"/>
+<text class="c" x="426" y="44">roles/veeb/tasks/main.yml</text><text class="c" x="426" y="80">roles/veeb/handlers/main.yml</text><text class="c" x="426" y="116">roles/veeb/defaults/main.yml</text><text class="c" x="426" y="152">roles/veeb/templates/</text>
+</svg>
+<figcaption>Joonis 5.1. Rolli tegemine on töötava playbook'i osade ümbertõstmine.</figcaption>
 </figure>
 
-Paljude hostidega lisanduvad rikked, mida viie hostiga ei näe. 50 fork'iga läbi ühe bastion'i ületab ühenduste arv sshd `MaxStartups 10:30:100` piiri ja osa hoste tuleb juhuslikult `UNREACHABLE`. Jooksu lõpus on hostid eri seisus ja see on lubatud ainult siis, kui järgmine idempotentne jooks viib kõik ühte seisu. Andmeid konfihaldus ei kaitse: `mariadb_db` `state: import` impordib igal käivitusel uuesti ja varukoopia on eraldi tööriist.
-
-### Kui kaitse ise on vigane
-
-Kaitsemehhanism on samuti tarkvara. Meta [4. oktoobri 2021 katkestuse](https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/) põhjustas hoolduse ajal antud käsk, mis pidi hindama backbone-võrgu vaba läbilaskevõimet, aga katkestas kõik backbone'i ühendused. Süsteem pidi sellised käsud auditeerima ja peatama, kuid auditivahendi viga laskis käsu läbi. Ansible'is on `--check` sama koodi teine käivitusviis: kui moodul check-režiimis teatab valesti või ülesanne töötab `check_mode: false`-ga, näitab plaan midagi muud kui tegelik käivitus. Plaan vähendab riski, kuid canary batch'i see ei asenda.
-
-`serial` muudab ka teiste märksõnade tähendust. [Dokumentatsiooni](https://docs.ansible.com/projects/ansible/13/playbook_guide/playbooks_strategies.html) järgi käivitub `run_once` ülesanne `serial`-iga play's üks kord iga batch'i kohta, mitte kogu jooksu peale. Andmebaasi migratsioon, mis peab toimuma üks kord, käivitub nelja batch'iga neli korda, seepärast on see eraldi play's enne rolling-osa. `throttle` piirab ühe ülesande või ploki paralleelsust ja ülejäänud play't see ei aeglusta: sobib ülesandele, mis laadib artefakti alla serverist, mis talub ainult paari samaaegset ühendust.
-
-Kolm tiimi ja kaks aastat toovad teistsuguse rikke. Inventory grupid kasvavad, `group_vars/all`-i lisatakse väärtusi, mida keegi ei julge eemaldada, ja ühe tiimi muudatus jõuab teise tiimi hostidele, sest grupid kattuvad. Kaitse on `hosts:` muster, mis on kitsam kui `all`, kohustuslik `--limit` käsitsi käivitusel ning `ansible-lint` ja `--syntax-check` CI-s enne ülevaatust. Playbook, mida pole pool aastat käivitatud, ei ole praktikas enam idempotentne: hostide seis on liikunud ja esimene jooks muudab rohkem, kui keegi ootab. Regulaarne `--check` ka siis, kui muudatusi pole, hoiab selle vahe väikesena.
-
-## 5. Patch-haldus ja compliance
-
-Apache Struts'i haavatavus avalikustati 8. märtsil 2017 ja Equifaxi süsteeme rünnati selle kaudu alates 13. maist. [USA GAO raporti](https://www.gao.gov/assets/700/694347.pdf) järgi ei jõudnud teade paigaldajateni, sest saajate nimekiri oli vananenud, nädal hiljem tehtud skänn haavatavat portaali ei leidnud ja ettevõttel polnud ülevaadet, millistes süsteemides haavatav versioon töötab. GAO andmetel lekkisid vähemalt 145,5 miljoni inimese andmed. Paik oli olemas, puudu oli protsess.
-
-**Patch-haldus** on elutsükkel, mitte `dnf upgrade`. Esiteks inventuur: millistel hostidel on millised turvauuendused saadaval (`dnf updateinfo list --security`, `apt list --upgradable`). Teiseks testring, kus paik elab mõne päeva enne tootmist. Kolmandaks hooldusaken, mis on kokku lepitud teenuse omanikuga. Neljandaks lained: canary, siis `serial` teenuse lubatud katkestuse järgi, reboot ainult siis, kui `needs-restarting -r` või `/var/run/reboot-required` seda nõuab, ja health check enne järgmist lainet. Viiendaks raport: `package_facts` ja `uname -r` igast hostist näitavad, kes on millisel tasemel ja kes jäi aknast välja. Riigiasutuses küsib sama raportit [E-ITS](https://eits.ria.ee/) audit. Kompromiss on kiiruse ja stabiilsuse vahel: `dnf-automatic` või `unattended-upgrades` paikab kiiresti, aga reboot ja teenuse restart tulevad siis, kui need tulevad, ilma laine ja health check'ita.
-
-**Compliance** tähendab, et host vastab välisele standardile, mitte ainult sinu koodile. Levinud baasid on [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks) ja USA kaitseministeeriumi DISA STIG. `--check --diff` on audit sinu koodi vastu: see näitab drift'i, aga kui koodis pole `PermitRootLogin no` reeglit, ei näita ta midagi. [OpenSCAP](https://www.open-scap.org/) hindab hosti XCCDF-profiili järgi (`oscap xccdf eval --profile …`), annab HTML-raporti ja reeglite kaupa pass/fail. [ComplianceAsCode](https://github.com/ComplianceAsCode/content) genereerib samadest reeglitest ka Ansible'i parandusplaybook'i, nii et skänn ja **security automation** kasutavad üht allikat. Kompromiss: terve CIS Level 1 profiil korraga lõhub tootmise (näiteks `/tmp` `noexec` peatab installerid). Hardening tehakse reeglite kaupa, erandid kirjutatakse koodi koos põhjendusega ja raport läheb auditisse.
-
-### Mida paigaldatakse: repo seis
-
-Testringist pole kasu, kui tootmine paigaldab hiljem teised paketid. `state: latest` tähendab "uusim, mis repos täna on": kui testring paigati esmaspäeval ja tootmine reedel, sai tootmine vahepeal ilmunud uuendused, mida keegi ei testinud. Lahendus on fikseeritud repo seis. [Pulp](https://pulpproject.org/), Foreman/Katello content view või aptly teevad peeglist snapshot'i, testring ja tootmine loevad sama snapshot'i ning uus snapshot liigub keskkondade vahel nagu artefakt pipeline'is. Ilma selleta saab versioonid lukustada playbook'is täpse paketinimega, aga sellist nimekirja on raske hallata. Rocky/RHEL-il paigaldab `ansible.builtin.dnf` koos `security: true`-ga ainult turvateatega märgitud uuendused; Ubuntu `apt` moodulil sellist lippu pole ja turvauuendused eraldatakse `unattended-upgrades`-i allikate või eraldi peegli kaudu.
-
-Reboot'i saab edasi lükata kerneli live patch'iga (kpatch RHEL-il, Canonical Livepatch Ubuntul). See parandab valitud kerneli haavatavused ilma taaskäivituseta, kuid ainult osa CVE-de jaoks ja tavaliselt piiratud aja jooksul ühe kerneli versiooni kohta, nii et reboot tuleb hiljem siiski. Raport peab siis eristama kolme seisu: paik on paigaldatud, paik on live patch'ina aktiivne ja host töötab uue kerneliga.
-
-Iseseisvaks lugemiseks: [Patch-haldus](../teemad/patch-haldus.md).
-
-Iseseisvaks lugemiseks: [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md).
-
-## 6. Võrguseadmed ja Windows
-
-Öösel muudeti tuumikruuteris ACL-i ja hommikul ei tea keegi, milline konfiguratsioon enne oli. Võrguinseneri esimene automaatika on sama mis sysadminil: backup ja diff.
-
-Võrguseadmes Pythonit pole, nii et moodul töötab control node'il. [`network_cli`](https://docs.ansible.com/projects/ansible/latest/network/getting_started/network_differences.html) hoiab seadmega SSH CLI sessiooni, saadab käske ja parsib vastuse tekstist. Platvormi ütleb `ansible_network_os` (`cisco.ios.ios`), enable-režiim on `become_method: enable`, mitte `sudo`, ja sessioon on püsiv: üks sisselogimine teenindab kogu play't, mitte iga ülesannet eraldi. `httpapi` räägib seadme REST API-ga (Arista eAPI, FortiOS), `netconf` saadab XML RPC-sid üle pordi 830 ja kasutab candidate-konfi koos `commit`-iga. Junose `commit confirmed` on seadme oma rollback: kui kinnitust minutite jooksul ei tule, võtab seade muudatuse ise tagasi ja kaugelt välja lukustatud ruuter tuleb tagasi. Ressursimoodul (`*_interfaces`, `*_ospfv2`) võrdleb struktureeritud olekut, `*_config` ridu, nii et idempotentsus sõltub sellest, kui täpselt moodul running-konfi loeb.
-
-Paljud võrguinsenerid alustavad automaatikat Pythonist, mitte Ansible'ist. [Netmiko](https://github.com/ktbyers/netmiko) on SSH teegi Paramiko peal ja tunneb üle saja platvormi CLI-d: `ConnectHandler(device_type="cisco_ios", …)` logib sisse, lülitab paging'u välja ja `send_command()` tagastab väljundi, kui prompt on tagasi. Skriptis on veakäsitlus ja parsimine sinu kood, Ansible annab inventory, paralleelsuse, `--check`-i ja recap'i valmis kujul. Väike seadmepõhine tööriist on Pythonis lihtsam, kümnete seadmete ühesugune muudatus Ansible'iga; sageli käivitab Ansible ja keerulisem osa on Pythoni moodul. Laboris on ruuteriks FRR Ubuntu peal: Netmikol pole FRR-i draiverit (ühendus `device_type="linux"` ja `vtysh -c 'show …'`) ja Ansible'i `frr.frr` kollektsioon on aegunud, nii et Ansible kasutab tavalist SSH-d ja `command: vtysh -c '…'`. Lisaülesannete võrguinseneri osa teeb sama kogumise mõlemaga.
-
-**NetOps** tähendab, et võrgu seis on Gitis: öine `*_config backup: true` annab diff'i, compliance-kontroll vaatab, et igal seadmel on NTP, syslog ja AAA read, ja muudatus läheb sama PR-i ja `--check`-i kaudu nagu serveritel. Hind on tootjate erinevus: igal platvormil on oma kollektsioon ja CLI parsimine läheb tarkvarauuendusega katki.
-
-Windowsis töötab moodul PowerShellina. Klassikaline transport on WinRM (5985/5986, Kerberos või NTLM), ansible-core 2.18-st on [ametlikult toetatud ka SSH](https://docs.ansible.com/projects/ansible/latest/os_guide/windows_ssh.html) alates Windows Server 2022-st. Moodulid on `ansible.windows.win_*`, mitte `ansible.builtin`.
-
-Windowsi tüüpiline üllatus on double hop. WinRM-i Kerberose või NTLM-i sessioonis ei saa host Ansible'i autentimist edasi kasutada, nii et ülesanne, mis loeb faili võrgukettalt või pärib AD-d teisest serverist, saab "access denied" ka domeeniadmini kontoga. [Lahendusi on kolm](https://www.redhat.com/en/blog/making-double-hop-windows-ansible): `become` `runas`-iga, kus `logon_flags=netcredentials_only` kasutab antud kontot ainult väljaminevaks autentimiseks; CredSSP või Kerberose delegeerimine ühenduse tasemel; või mooduli enda credential'i parameetrid koos `no_log`-iga. Igal juhul saab kompromiteeritud Windowsi host kasutada kontot, mis talle edasi anti. Kerberose piiratud delegeerimine on neist kõige kitsam, aga vajab AD seadistust.
-
-Iseseisvaks lugemiseks: [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md).
-
-Iseseisvaks lugemiseks: [Windowsi automatiseerimine](../teemad/windows-automaatika.md).
-
-## 7. Kes käivitab: platvorm, RBAC, CMDB ja sündmused
-
-Kaks valvurit käivitasid sama `patch.yml`-i eri sülearvutitest kümneminutilise vahega ja teine laine läks käima enne, kui esimese health check lõppes. Keegi ei tea, kumb käivitus tegi app02-le reboot'i.
-
-[AWX](https://github.com/ansible/awx) ja [Semaphore](https://semaphoreui.com/) viivad käivituse ühte kohta: job template seob playbook'i, inventory ja credential'i, ajakava ja logi on serveris ning sama template'i kaks käivitust ei tööta korraga. **RBAC** on seal kolmemõõtmeline: kes tohib millist template'it (playbook'i) millise inventory peal käivitada. AWX-is on template'il rollid Admin, Execute ja Read ning credential'il Use: valvur saab `patch.yml`-i tootmise inventory peal käivitada, aga SSH võtit ega Vaulti parooli ei näe. Semaphore'is on rollid Owner, Manager, Task Runner ja Guest. Piir on Git: kes saab `main`-i commit'ida, muudab seda, mida Execute-õigusega inimene käivitab. Seega on branch protection ja PR-i ülevaatus osa RBAC-ist.
-
-Inventory ei pea olema käsitsi fail. **CMDB** ehk konfiguratsiooniüksuste andmebaas (NetBox, ServiceNow) on hostide, rollide ja omanike allikas ning `netbox.netbox.nb_inventory` teeb sellest grupid saidi, rolli ja tag'i järgi. Kasu on see, et uus server jõuab patch'imise lainesse ilma, et keegi inventory't muudaks. Risk on andmekvaliteet: CMDB-s puuduv host jääb paikamata ja mahavõetud, aga `active` staatusega host saab reboot'i. Filtreeri staatuse järgi ja lisa play algusesse `assert`, mis peatab jooksu, kui hoste on oodatust vähem.
-
-**Sündmuspõhine automatiseerimine** reageerib monitooringu signaalile ilma, et inimene playbook'i käivitaks. [ansible-rulebook](https://docs.ansible.com/projects/rulebook/en/latest/) kuulab allikat (webhook, Alertmanager, Kafka), hindab tingimust ja käivitab heakskiidetud tegevuse:
+Rolli failides pole play päist (`hosts`, `tasks:`), ainult ülesannete nimekiri:
 
 ```yaml
-- name: Ketas täis
-  condition: event.payload.pct >= 90 and event.payload.mount == "/var"
-  throttle: {once_within: 30 minutes, group_by_attributes: [event.payload.host]}
-  action:
-    run_job_template: {name: disk-cleanup, organization: Infra}
+# roles/veeb/tasks/main.yml
+- name: nginx on paigaldatud
+  ansible.builtin.package:
+    name: nginx
+    state: present
+
+- name: nginx töötab ja käivitub boodil
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
 ```
 
-Rulebook ei leiuta tegevust: see valib olemasoleva, testitud playbook'i. Riskantse tegevuse ette paneb AWX-i workflow approval sammu, kus inimene kinnitab ja nimi läheb logisse. `throttle` takistab sündmuste tormi: kümme sama hosti häiret pool tundi järjest käivitavad ühe koristuse. Tüüpiline rike on silmus, kus parandus ise tekitab uue häire, näiteks teenuse restart, mis käivitab "teenus maas" reegli. Salti reactor tegi sama mustri ammu, ansible-rulebook toob selle Ansible'i playbook'ide juurde.
+Mall rollis: `src: index.html.j2` leitakse automaatselt kaustast `roles/veeb/templates/`.
 
-### Platvormi sisemus ja hind
+### `defaults` ja `vars`
 
-AWX ei käivita playbook'i oma protsessis. Iga job töötab execution environment'is: konteineri image'is, kus on ansible-core, kollektsioonid ja Pythoni sõltuvused. Image ehitatakse `ansible-builder`-iga ja kõik jooksud kasutavad sama versiooni, nii et sülearvuti ja serveri erinevus kaob. AWX paigaldatakse awx-operator'iga Kubernetesesse ja job'id käivituvad seal pod'idena, seega saab väike infratiim koos AWX-iga hallata ka Kubernetest ja PostgreSQL-i. [2024. aasta mais–juunis teatas](https://www.jeffgeerling.com/blog/2024/saying-lot-while-saying-nothing-all-about-ansible-awx) AWX-i meeskond komponentide ümberkorraldamisest ja teatest jäi ebaselgeks, mida see väljalasetele tähendab. Enne tootmisesse valimist vaata projekti viimase väljalaske kuupäeva. Semaphore on Go-s kirjutatud server koos andmebaasiga ja kasutab serverisse paigaldatud Ansible'it, nii et versioonide ühtlus jääb sinu hooleks.
+| Kaust | Tugevus | Kasutus |
+|---|---|---|
+| `defaults/main.yml` | kõige nõrgem | väärtused, mida rolli kasutaja tohib üle kirjutada: port, pealkiri |
+| `vars/main.yml` | tugevam kui `group_vars` | rolli sisemised väärtused, mida väljast muuta ei tohiks |
 
-Platvorm asendab tavaliselt jump host'i, kus mitu admini jagavad sama SSH võtit, ja muudatustaotluse, mille lisaks on kopeeritud terminali väljund. Job'i logi koos käivitaja, commit'i ja inventory'ga annab sama tõendi automaatselt ning ITSM-i muudatuskirje saab sellele viidata.
+*Tabel 5.1. Rolli muutujad.*
 
-Iseseisvaks lugemiseks: [RBAC ja ligipääsu kontroll](../teemad/rbac.md).
+Algaja reegel: pane rolli väärtused `defaults/main.yml`-i ja kirjuta need vajadusel üle `group_vars`-is või `host_vars`-is.
 
-Iseseisvaks lugemiseks: [Sündmuspõhine automaatika](../teemad/sundmuspohine-automaatika.md).
+### `site.yml`: kõik kokku
 
-Laboris proovid seda Labori seisu peal: `patch.yml` paikab viis hosti lainetena ja reboot'ib ainult need, mis seda vajavad, ning `--check --diff` on sinu öine drift'i audit. Platvormi osa on lisaülesandes [Semaphore](lisa.md#18-ansible-teenusena-semaphore), sündmuste osa ülesandes [ketas üle 90% ja inimese kinnitus](lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus).
+```yaml
+- name: Kõik masinad
+  hosts: all
+  become: true
+  roles:
+    - common
 
-## Kokkuvõte
+- name: Veebiserverid
+  hosts: veeb
+  become: true
+  roles:
+    - veeb
 
-<div class="grid cards kokkuvote" markdown>
+- name: Andmebaas
+  hosts: andmebaas
+  become: true
+  roles:
+    - andmebaas
+```
 
--   **Ansible infra töös**
+Üks käsk seadistab kogu labori. Iga play ütleb, milline roll millise grupi masinatesse. Ansible otsib rolle kaustast `roles/` playbook'i kõrval.
 
-    Kirjuta runbook playbook'iks ja lase see PR-is üle vaadata. Taristu loo OpenTofuga ja pideva drift'i paranduseks vali pull-mudel.
+??? note "Roll Galaxyst"
 
--   **Idempotentsus**
+    Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne võõra rolli kasutamist vaata, millal seda viimati uuendati, mida selle ülesanded täpselt teevad ja millised muutujad tal on. Võõras roll jookseb sinu masinates `become`-iga, sama usaldusega nagu sinu enda kood.
 
-    Eelista moodulit `command`-ile, sest ainult moodul loeb seisu ja muudab vahet. Arvesta, et push maksab control node'i ajaga ja hostipõhist lukku Ansible ei paku.
+??? question "Kontrolli ennast"
 
--   **Väärtuse koht**
+    1. Mis kaustadest roll koosneb ja mis igaühes on?
+    2. Miks pole rolli `tasks/main.yml`-is rida `hosts:`?
+    3. Kumb on nõrgem, `defaults` või `group_vars`? Miks on see rolli puhul kasulik?
 
-    Pane väärtus kõige kitsamale tasemele, mis seda vajab, ja küsi lõpptulemust tööriistalt. Vault kaitseb saladust repos, `no_log` ainult väljundis.
+??? info "Loe juurde"
 
--   **Muudatuse ulatus**
+    - [Roles](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
+    - [Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html)
 
-    Usalda `--check`-i ainult moodulite osas, mis seda toetavad, ja alusta canary batch'iga. Lõpeta `rescue` `fail`-iga ja lase health check'il otsustada, kas rollout jätkub.
+## 6. Kogud ja Galaxy
 
--   **Patch-haldus**
+**Küsimus:** kust tulevad moodulid, mida `ansible-core`'is pole?
 
-    Vii paik läbi inventuuri, testringi, akna, lainete ja raporti ning reboot'i ainult vajadusel. Võrdle raportit inventory'ga, sest puuduv host jääb raportist välja.
+### Kogu
 
--   **Compliance**
+`ansible-core` sisaldab ainult põhimooduleid (`ansible.builtin.*`). Kõik muu tuleb **kogudest** (collection): pakkidest, kus on moodulid, rollid ja pluginad ühe teema kohta. Kogu nimi on kahest osast: nimeruum ja nimi.
 
-    Mõõda hosti välise standardi vastu OpenSCAP-iga. `--check` näitab ainult drift'i sinu koodist, mitte kõrvalekallet CIS-ist või STIG-ist.
+| Kogu | Mida sisaldab |
+|---|---|
+| `ansible.mysql` | MariaDB ja MySQL: andmebaasid, kasutajad, õigused (vanades juhendites nimega `community.mysql`) |
+| `community.general` | sadu sekalisi mooduleid, näiteks ajavöönd, UFW tulemüür |
+| `ansible.posix` | Linuxi lisad: `firewalld`, `sysctl`, `authorized_key` |
+| `community.docker` | Docker: image'id, konteinerid, Compose (3. kohtumine) |
 
--   **Platvorm ja RBAC**
+*Tabel 6.1. Sagedasemad kogud.*
 
-    Anna õigus kujul kes × template × inventory ja lase credential'it kasutada ilma seda näitamata. Kaitse `main`-i haru, sest Git on osa õiguste piirist.
+Mooduli pikk nimi ütleb, millisest kogust see tuleb: `ansible.mysql.mysql_db` on moodul `mysql_db` kogust `ansible.mysql`.
 
--   **Sündmuspõhine automaatika**
+### `requirements.yml`
 
-    Lase rulebook'il valida olemasolev testitud playbook. Pane riskantse tegevuse ette inimese kinnitus ja piira sündmuste tormi `throttle`-iga.
+Kogud paigaldatakse control node'ile käsuga `ansible-galaxy`. Et projekt töötaks ka kolleegi masinas, pane vajalikud kogud faili `requirements.yml` ja Giti:
 
-</div>
+```yaml
+collections:
+  - name: ansible.mysql
+```
 
-<div class="kontrollkysimus" markdown>
-**Kontrollküsimus:** Miks võib patch-raport näidata 100% paigatud hoste ka siis, kui osa servereid on paikamata, ja kust see viga tuleb?
-</div>
+```bash
+ansible-galaxy collection install -r requirements.yml
+ansible-galaxy collection list ansible.mysql
+```
 
-## Kontrolli ennast
+Kogud lähevad vaikimisi kausta `~/.ansible/collections/`. Mooduli juhendi näed samamoodi nagu sisseehitatud moodulitel: `ansible-doc ansible.mysql.mysql_user`.
 
-??? question "Kolleeg parandas tootmises konfifaili käsitsi ja intsident lahenes. Mis juhtub järgmisel playbook'i käivitusel ja mis on õige järgmine samm?"
-    Käivitus kirjutab faili koodi järgi üle ja rike tuleb tagasi. Õige samm on viia parandus koodi, käivitada `--check --diff`, mis peab nüüd näitama, et midagi ei muutu, ja kirjutada põhjus commit'i sõnumisse.
+??? note "Versioon kinni"
 
-??? question "Play ebaõnnestus app01-l pärast seda, kui mall muutis Tomcati unit-faili. Järgmine jooks on roheline, aga Tomcat töötab vana `-Xmx`-iga. Miks?"
-    Handler oli teavitatud, aga host ebaõnnestus enne play osa lõppu ja vaikimisi handlerit siis ei käivitata. Järgmises jooksus on mall `ok` ja teavitust ei tule. Lahendus on `force_handlers: true` ja kontroll, mis võrdleb töötava protsessi seadeid (`systemctl show`) failiga.
+    `requirements.yml`-is saab versiooni piirata: `version: ">=3.0.0,<4.0.0"`. Siis ei muuda uus suurversioon sinu projekti käitumist ootamatult. Galaxy ja Red Hati automation hub'i vahet näed 1. kohtumise loengu tabelis „Ansible Automation Platformi komponendid“.
 
-??? question "Öine `--check --diff` on kõigil hostidel `changed=0`, aga OpenSCAP-i CIS-raport näitab 40 ebaõnnestunud reeglit. Kas üks neist valetab?"
-    Ei. Check võrdleb hosti sinu koodiga ja kood on juba käivitatud. OpenSCAP võrdleb hosti välise standardiga ja need 40 reeglit pole sinu koodis. Lisa reeglid koodi ükshaaval või kirjuta erand koos põhjendusega.
+### Moodul kogust laboris
 
-??? question "Valvuril on AWX-is `patch.yml` template'ile Execute-õigus tootmise inventory peal. Kuidas saab ta ikkagi muuta, mida tootmises tehakse?"
-    Kui ta saab `main`-i commit'ida, muudab ta playbook'i, mida template käivitab. RBAC-i piir on ka repos: branch protection ja kohustuslik PR-i ülevaatus.
+```yaml
+- name: Andmebaas labor on olemas
+  ansible.mysql.mysql_db:
+    name: labor
+    state: present
+    login_unix_socket: /var/lib/mysql/mysql.sock
+```
 
-??? question "Rulebook käivitab ketta koristuse iga häire peale. Häireid tuleb samalt hostilt minutis kümme ja koristus restardib teenuse. Mis läheb valesti ja kuidas seda piirata?"
-    Koristusi käivitub paralleelselt mitu ja teenuse restart võib tekitada uue häire, nii et tekib silmus. `throttle` `once_within` hosti kaupa käivitab ühe tegevuse ajaakna kohta, AWX-i approval samm jätab riskantse sammu inimesele ja reegel, mis paranduse enda tekitatud häiret ei arvesta, katkestab silmuse.
+Rocky MariaDB-s logib `root` sisse sokli kaudu ilma paroolita, kui ühendus tuleb sama masina `root`-kasutajalt. `become: true` annab just selle.
+
+??? question "Kontrolli ennast"
+
+    1. Mis vahe on `ansible-core`'il ja kogul?
+    2. Miks panna kogud `requirements.yml`-i, mitte lihtsalt käsurealt paigaldada?
+    3. Millisest kogust tuleb moodul `ansible.posix.firewalld`?
+
+??? info "Loe juurde"
+
+    - [Using Ansible collections](https://docs.ansible.com/projects/ansible/latest/collections_guide/index.html)
+    - [Installing collections](https://docs.ansible.com/projects/ansible/latest/collections_guide/collections_installing.html)
+    - [`ansible.mysql` kogu](https://docs.ansible.com/projects/ansible/latest/collections/ansible/mysql/index.html)
+
+## 7. Saladused Vaultiga
+
+**Küsimus:** kuidas hoida parooli Gitis nii, et seda ei saa lugeda?
+
+### Probleem
+
+Andmebaasi kasutaja vajab parooli. Kui see on `group_vars`-is avatekstina, on see Gitis kõigile nähtav ja jääb ajalukku ka pärast kustutamist. GitHub ei tunne seda ära, sest `db_parool: Salajane123` ei näe välja nagu teenuse token.
+
+### `ansible-vault`
+
+**Ansible Vault** krüpteerib faili parooliga. Krüpteeritud fail võib olla Gitis, sest ilma Vaulti paroolita on see loetamatu. Ansible dekrüpteerib selle käivitamise ajal mälus.
+
+```bash
+ansible-vault create group_vars/andmebaas/vault.yml
+```
+
+Avaneb redaktor. Kirjuta sisse:
+
+```yaml
+vault_db_parool: "MuudaMind-2026"
+```
+
+| Käsk | Mida teeb |
+|---|---|
+| `ansible-vault create fail.yml` | uus krüpteeritud fail |
+| `ansible-vault view fail.yml` | näita sisu |
+| `ansible-vault edit fail.yml` | muuda sisu |
+| `ansible-vault encrypt fail.yml` | krüpteeri olemasolev avatekstiga fail |
+| `ansible-vault rekey fail.yml` | vaheta Vaulti parool |
+
+*Tabel 7.1. `ansible-vault` käsud.*
+
+Playbook'i käivitamisel küsi Vaulti parooli:
+
+```bash
+ansible-playbook site.yml -K --ask-vault-pass
+```
+
+`-K` küsib `sudo` parooli, `--ask-vault-pass` (lühidalt `-J`) Vaulti parooli. Need on kaks eri parooli.
+
+### Kaks faili: `vars.yml` ja `vault.yml`
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 140" role="img" aria-label="vars.yml on loetav ja viitab muutujale vault_db_parool, mis on krüpteeritud failis vault.yml; Vaulti parool on ainult inimese peas või failis väljaspool Giti" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .c{fill:var(--md-default-fg-color);font-size:12px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxq2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="20" width="230" height="70" rx="8"/><text class="b" x="125" y="44" text-anchor="middle">vars.yml · Gitis loetav</text><text class="c" x="125" y="70" text-anchor="middle">db_parool: "{{ vault_db_parool }}"</text>
+<line class="a" x1="240" y1="55" x2="298" y2="55" marker-end="url(#lxq2)"/>
+<rect class="hi" x="300" y="20" width="230" height="70" rx="8"/><text class="b" x="415" y="44" text-anchor="middle">vault.yml · Gitis krüpteeritud</text><text class="c" x="415" y="70" text-anchor="middle">$ANSIBLE_VAULT;1.1;AES256…</text>
+<line class="a" x1="620" y1="55" x2="532" y2="55" marker-end="url(#lxq2)"/>
+<rect class="box" x="560" y="20" width="150" height="70" rx="8"/><text class="b" x="635" y="44" text-anchor="middle">Vaulti parool</text><text class="s" x="635" y="68" text-anchor="middle">ei ole Gitis</text>
+<text class="s" x="360" y="125" text-anchor="middle">grep db_parool leiab muutuja, aga mitte väärtuse</text>
+</svg>
+<figcaption>Joonis 7.1. Loetav viide ja krüpteeritud väärtus eraldi failides.</figcaption>
+</figure>
+
+```yaml
+# group_vars/andmebaas/vars.yml  (loetav)
+db_nimi: labor
+db_kasutaja: labor
+db_parool: "{{ vault_db_parool }}"
+```
+
+Nii näeb `grep`-iga ja koodiülevaatusel, millised muutujad on olemas ja kus neid kasutatakse, aga väärtus jääb krüpteerituks. Eesliide `vault_` ütleb, et väärtus tuleb Vaultist.
+
+### Parool väljundis
+
+Ansible trükib vaikimisi ülesande parameetrid välja, kui midagi läheb valesti või kui käivitad `-v`-ga. Ülesandel, mis kasutab parooli, peab olema **`no_log: true`**:
+
+```yaml
+- name: Andmebaasi kasutaja on olemas
+  ansible.mysql.mysql_user:
+    name: "{{ db_kasutaja }}"
+    password: "{{ db_parool }}"
+    priv: "{{ db_nimi }}.*:ALL"
+    state: present
+    login_unix_socket: /var/lib/mysql/mysql.sock
+  no_log: true
+```
+
+!!! warning "Mis ei lähe Giti"
+
+    Vaulti parool, avatekstiga paroolifailid ja privaatvõtmed. Kui avatekstiga parool jõudis kord GitHubi, vaheta see kohe ära: ajaloo ümberkirjutamine ei jõua kloonideni.
+
+??? question "Kontrolli ennast"
+
+    1. Miks võib krüpteeritud `vault.yml` olla Gitis?
+    2. Miks on parool kahes failis (`vars.yml` ja `vault.yml`)?
+    3. Mida teeb `no_log: true`?
+
+??? info "Loe juurde"
+
+    - [Protecting sensitive data with Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/index.html)
+    - [Keep vaulted variables safely visible](https://docs.ansible.com/projects/ansible/latest/tips_tricks/ansible_tips_tricks.html#keep-vaulted-variables-safely-visible)
+
+## 8. Kontrollitud muudatus
+
+**Küsimus:** kuidas muuta viit masinat nii, et viga ei jõuaks korraga kõigini?
+
+1. kohtumisel nägid `--check --diff`-i ja `--limit`-i ühe faili peal. Mitme masina ja teenusega projektis on need veel olulisemad, sest üks vigane mall võib võtta maha kõik veebiserverid korraga.
+
+| Võte | Mida annab | Näide |
+|---|---|---|
+| `--check --diff` | näitab muudatust failides enne tegemist | `ansible-playbook site.yml --check --diff -K -J` |
+| `--limit` | muudatus ainult valitud masinatele | `--limit web01` |
+| `serial` | play käib korraga ainult osa masinate peal | `serial: 1` |
+| `--syntax-check`, `ansible-lint` | leiab vead enne käivitamist | `ansible-lint site.yml` |
+
+*Tabel 8.1. Kontrollitud muudatuse võtted.*
+
+### `serial`: masinhaaval
+
+Vaikimisi teeb Ansible iga ülesande kõigis masinates ja liigub siis järgmise juurde. Kui mall on vigane, katkeb nginx kõigis veebiserverites peaaegu samal ajal. **`serial: 1`** teeb kogu play läbi ühe masinaga, siis järgmisega:
+
+```yaml
+- name: Veebiserverid
+  hosts: veeb
+  become: true
+  serial: 1
+  roles:
+    - veeb
+```
+
+Kui esimeses masinas mõni ülesanne ebaõnnestub, peatub play enne, kui viga teise masinani jõuab. `serial` võib olla ka protsent (`"50%"`) või nimekiri (`[1, "50%"]`): esimene masin proovina, siis pooled korraga.
+
+### Tööjärjekord muudatusel
+
+1. muuda muutujat või malli;
+2. `--check --diff --limit web01`: vaata, mis failis muutuks;
+3. käivita päriselt `--limit web01` ja kontrolli teenust (`curl`);
+4. käivita kõigile, `serial`-iga;
+5. teine käivitus: `changed=0`;
+6. `git commit`, `git push`.
+
+??? question "Kontrolli ennast"
+
+    1. Mis vahe on `--limit`-il ja `serial`-il?
+    2. Miks käivitad muudatuse kõigepealt ühel masinal?
+
+??? info "Loe juurde"
+
+    - [Controlling playbook execution: strategies and serial](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_strategies.html)
+    - [Check mode ja diff](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html)
+
+## 9. Kokkuvõte
+
+- **Muutujad** hoiavad väärtusi eraldi ülesannetest; täpsem koht võidab: `host_vars` enne `group_vars`-i.
+- **`loop`** kordab ülesannet, **`register`** salvestab tulemuse, **handler** taaskäivitab teenuse ainult muudatuse peale.
+- **Mall** teeb muutujatest ja faktidest iga masina jaoks oma faili.
+- **Roll** on ühe ülesande kaust; **`site.yml`** ütleb, milline roll millisesse gruppi.
+- **Kogud** tuuakse `requirements.yml`-ist, mooduli pikk nimi ütleb, kust see tuleb.
+- **Vault** hoiab parooli Gitis krüpteeritult; Vaulti parool Giti ei lähe.
+- **Muudatus:** `--check --diff`, üks masin, siis kõik `serial`-iga.
+
+Järgmisel kohtumisel paned rakenduse konteinerisse: rakendus ja kõik, mida see vajab, ühes pakis. Ansible jääb tööriistaks, mis paigaldab masinatesse Dockeri ja käivitab konteinerid.

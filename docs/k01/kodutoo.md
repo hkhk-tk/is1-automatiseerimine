@@ -7,6 +7,10 @@ tags:
 
 # 1. kohtumine · Kodutöö
 
+## Test
+
+Vasta [1. kohtumise testile](https://docs.google.com/forms/d/e/1FAIpQLSdd-Ah3cswzPvXM8J4PN3mUVHnoT7q67U9IZU3CokmbaLdl7w/viewform): 12 küsimust loengu ja praktikumi kohta. Pärast saatmist näed oma tulemust ja õigeid vastuseid.
+
 ## H1 · Muuda üht väärtust
 
 Muuda playbook'is `training.yml` faili sisu: `enabled=true` → `enabled=false`. Käivita kaks korda:

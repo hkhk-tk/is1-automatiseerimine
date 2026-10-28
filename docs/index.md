@@ -45,7 +45,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .ln{stroke:var(--md-default-fg-color--lighter);stroke-width:2}.lx .c{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.5}.lx .on{fill:var(--md-primary-fg-color);stroke:var(--md-primary-fg-color)}.lx .n{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .non{fill:var(--md-primary-bg-color);font-size:15px;font-weight:700}.lx .t{fill:var(--md-default-fg-color);font-size:13px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:11.5px}</style>
 <line class="ln" x1="54" y1="30" x2="706" y2="30"/>
 <a href="k01/"><circle class="c on" cx="54" cy="30" r="20"/><text class="non" x="54" y="35" text-anchor="middle">1</text><text class="t" x="54" y="72" text-anchor="middle">Bash</text><text class="s" x="54" y="89" text-anchor="middle">ja Ansible</text></a>
-<circle class="c" cx="163" cy="30" r="20"/><text class="n" x="163" y="35" text-anchor="middle">2</text><text class="t" x="163" y="72" text-anchor="middle">Ansible</text><text class="s" x="163" y="89" text-anchor="middle">mitu masinat</text>
+<a href="k02/"><circle class="c on" cx="163" cy="30" r="20"/><text class="non" x="163" y="35" text-anchor="middle">2</text><text class="t" x="163" y="72" text-anchor="middle">Ansible</text><text class="s" x="163" y="89" text-anchor="middle">mitu masinat</text></a>
 <circle class="c" cx="271" cy="30" r="20"/><text class="n" x="271" y="35" text-anchor="middle">3</text><text class="t" x="271" y="72" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="89" text-anchor="middle">Docker, Podman</text>
 <circle class="c" cx="380" cy="30" r="20"/><text class="n" x="380" y="35" text-anchor="middle">4</text><text class="t" x="380" y="72" text-anchor="middle">Taristu</text><text class="s" x="380" y="89" text-anchor="middle">OpenTofu</text>
 <circle class="c" cx="489" cy="30" r="20"/><text class="n" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="89" text-anchor="middle">GitHub Actions</text>
@@ -68,11 +68,11 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
 -   <span class="paev-nr">02 · Ansible</span>
 
-    **Mitu masinat, üks kirjeldus**
+    **Ansible mitmele masinale**
 
-    Üks playbook seadistab kõik labori masinad.
+    Muutujad, mallid, handler'id ja rollid; üks käsk seadistab kogu labori.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k02/index.md)
 
 -   <span class="paev-nr">03 · Konteinerid</span>
 

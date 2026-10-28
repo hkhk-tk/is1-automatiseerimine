@@ -28,13 +28,13 @@ tags:
 | 4 | [Ansible'i alused](lab-3-ansible-alused.md): ad-hoc käsud viiel masinal |
 | 5 | [Esimene playbook](lab-4-playbook.md) |
 | 6 | [Playbook viiele masinale](lab-5-parem-playbook.md): `when`, `--limit`, `tags` |
-| 7 | [Kontroll ja esitamine](lab-6-esitamine.md) |
+| 7 | [Lõpuülesanne ja esitamine](lab-6-esitamine.md) |
 
 *Tabel 1. Päeva järjekord.*
 
 ## Mida päeva lõpuks esitad
 
-Kaustas `k01/` on `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml` ja `vordlus.md`, `git push` tehtud.
+Kaustas `k01/` on `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml` ja `tools.yml`, `git push` tehtud.
 
 ## Abi
 

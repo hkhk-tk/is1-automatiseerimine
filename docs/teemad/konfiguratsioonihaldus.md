@@ -53,7 +53,7 @@ Ansible on push-mudel: control node ühendub, saadab mooduli, saab JSON-i ja lõ
 - **Chef**: `chef-client` laeb cookbook'id alla ja käivitab need kahes faasis: compile-faas ehitab Ruby koodist ressursside kogu, converge-faas teeb need muudatused. Klassikaline viga on Ruby kood, mis töötab compile-faasis, kui ressurss, millest see sõltub, pole veel tehtud.
 - **Salt**: minion hoiab masteriga püsivat ZeroMQ ühendust, nii et käsk jõuab tuhandesse hosti sekunditega. Seisu kirjeldavad SLS-failid ja `state.apply` (highstate) viib hosti `top.sls`-is määratud seisu.
 
-[2. kohtumise loengu](../k02/loeng.md) tabel 2.2 võrdleb neid mudeli, keele ja litsentsi järgi. Valiku sisuline küsimus on see, kas drift peab kaduma ilma inimeseta (pull) või ainult siis, kui keegi käivitab (push), ja kas sihtmasinatesse tohib panna agendi.
+Valiku sisuline küsimus on see, kas drift peab kaduma ilma inimeseta (pull) või ainult siis, kui keegi käivitab (push), ja kas sihtmasinatesse tohib panna agendi.
 
 <figure markdown="span">
 

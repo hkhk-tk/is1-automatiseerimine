@@ -94,25 +94,24 @@ nav:
               - 3. Ansible'i alused: k01/lab-3-ansible-alused.md
               - 4. Esimene playbook: k01/lab-4-playbook.md
               - 5. Playbook viiele masinale: k01/lab-5-parem-playbook.md
-              - 6. Kontroll ja esitamine: k01/lab-6-esitamine.md
+              - 6. Lõpuülesanne ja esitamine: k01/lab-6-esitamine.md
               - Abi: k01/abi.md
               - Linux + Bash spikker: k01/spikker.md
           - Kodutöö: k01/kodutoo.md
           - Lisaülesanded: k01/lisa.md
-      - 2. kohtumine · Ansible:
+      - 2. kohtumine · Ansible mitmele masinale:
+          - Ülevaade: k02/index.md
           - Loeng: k02/loeng.md
-          - Labor:
+          - Praktikum:
               - k02/lab.md
-              - 1. Algseis: k02/lab-1-lahteseis.md
-              - 2. Andmebaas lamedalt: k02/lab-2-andmebaas.md
-              - 3. Rollid ja muutujad: k02/lab-3-rollid.md
-              - 4. Kogu stack: k02/lab-4-stack.md
-              - 5. Kontroll enne muudatust: k02/lab-5-kontroll.md
-              - 6. Deploy ja rolling: k02/lab-6-deploy.md
-              - 7. Tsüklid, mallid ja TLS: k02/lab-7-tsuklid-tls.md
-              - 8. Intsident: k02/lab-8-intsident.md
-              - 9. Esitamine: k02/lab-9-esitamine.md
+              - 1. Algseis: k02/lab-1-algseis.md
+              - 2. Kasutajad: k02/lab-2-kasutajad.md
+              - 3. Veebiserver: k02/lab-3-veebiserver.md
+              - 4. Andmebaas: k02/lab-4-andmebaas.md
+              - 5. Rollid: k02/lab-5-rollid.md
+              - 6. Kontrollitud muudatus ja esitamine: k02/lab-6-esitamine.md
               - Abi: k02/abi.md
+          - Kodutöö: k02/kodutoo.md
           - Lisaülesanded: k02/lisa.md
       - 3. kohtumine · Docker ja Podman:
           - Loeng: k03/loeng.md

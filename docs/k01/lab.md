@@ -20,7 +20,7 @@ tags:
 | [3. Ansible'i alused](lab-3-ansible-alused.md) | paigaldus, `ansible.cfg`, inventory, ad-hoc käsud | viis `pong`-i |
 | [4. Esimene playbook](lab-4-playbook.md) | päeva ülesanne playbook'ina, triiv | teine käivitus annab `changed=0` |
 | [5. Playbook viiele masinale](lab-5-parem-playbook.md) | `when`, `--limit`, `tags` | `tools.yml` teine käivitus annab `changed=0` |
-| [6. Kontroll ja esitamine](lab-6-esitamine.md) | võrdlus, lõpuülesanne, `git push` | kuus faili GitHubis |
+| [6. Lõpuülesanne ja esitamine](lab-6-esitamine.md) | iseseisev ülesanne playbook'is, `git push` | viis faili GitHubis |
 
 *Tabel 1. Praktikumi etapid.*
 

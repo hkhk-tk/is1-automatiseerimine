@@ -16,7 +16,7 @@ Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 | Kohtumine | Kodutöö | Tulemus | Juhend |
 |---|---|---|---|
 | 1 | konto ja ohutus, sama playbook EC2-l | IAM-kasutaja, eelarvehäired, `training.yml` EC2-l `changed=0` | [k01-aws.md](k01-aws.md) |
-| 2 | Labori seis viiel EC2-l Ansible'iga, dünaamiline inventory | `/health` `UP` viiel EC2-l | [k02-aws.md](k02-aws.md) |
+| 2 | samad rollid EC2-l | EC2 grupis `veeb`, `site.yml` teine käivitus `changed=0` | [k02-aws.md](k02-aws.md) |
 | 3 | image ECR-i, Compose EC2-l | Compose EC2-l, app01 image ECR-ist | [k03-aws.md](k03-aws.md) |
 | 4 | VPC + SG + EC2 OpenTofuga, väljund → Ansible | üks `apply` + playbook → `UP` | [k04-aws.md](k04-aws.md) |
 | 5 | GitHub Actions: ECR push ja deploy kinnitusega | kinnitatud deploy, `/version` = SHA | [k05-aws.md](k05-aws.md) |
