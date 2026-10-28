@@ -258,6 +258,25 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 
     Ansible võib töötada ka samas masinas, kus ta on paigaldatud (`connection: local`). See on mugav proovimiseks, aga siis ei kasutata SSH-d ega kontrollita, kas võti ja kasutaja on õiged. Meie kasutame kogu aeg päris kaugühendust web01-le.
 
+??? note "Ansible ja Ansible Automation Platform"
+
+    Meie kasutame **Ansible'it** (täpsemalt `ansible-core`): tasuta käsurea tööriista. Red Hat müüb selle ümber ettevõtte platvormi **Ansible Automation Platform**. Platvormi komponendid lahendavad suure organisatsiooni muresid: kes tohib mida käivitada, kus on heakskiidetud kood, kuidas töö jõuab tuhandetesse masinatesse.
+
+    | Komponent | Mida teeb | Tasuta vaste |
+    |---|---|---|
+    | arendustööriistad | VS Code'i laiendus, ansible-lint, Molecule, ansible-navigator | samad tööriistad |
+    | automation controller | veebiliides ja API: playbook'ide käivitamine, ajakava, õigused (RBAC), logid | AWX, Semaphore |
+    | automation hub | Red Hati sertifitseeritud kollektsioonid (moodulite kogud) | Ansible Galaxy |
+    | private automation hub | ettevõtte enda kollektsioonide ja käivituskeskkondade hoidla | Galaxy NG |
+    | automation mesh | töö jagamine eri võrkudes ja asukohtades olevate masinate vahel | |
+    | Ansible Lightspeed | AI-abiline, mis pakub VS Code'is playbook'i ridu | |
+    | automation analytics, Red Hat Insights | aruanded: mida käivitati, kui palju aega säästeti | |
+    | Event-Driven Ansible | käivitab playbook'i sündmuse peale (häire, webhook) | ansible-rulebook |
+
+    *Tabel 5.1. Ansible Automation Platformi komponendid.*
+
+    Kõik need ehitavad sama asja peale, mida sel kohtumisel õpid: inventory, moodul ja playbook. Ilma nendeta pole platvormist kasu.
+
 ??? question "Kontrolli ennast"
 
     1. Kus Ansible jookseb ja mida on vaja hallataval masinal?
@@ -267,6 +286,7 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 
     - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
     - [Connection methods and details](https://docs.ansible.com/projects/ansible/latest/inventory_guide/connection_details.html)
+    - [Red Hat: Ansible Automation Platform beginner's guide](https://www.redhat.com/en/resources/ansible-automation-platform-beginners-guide-ebook) (e-raamat)
     - Harjuta brauseris: [Red Hati interaktiivsed laborid](https://www.redhat.com/en/interactive-labs#red-hat-ansible-automation-platform-labs) (tasuta, vajab Red Hati kontot)
 
 ## 6. Ansible'i seadistamine
