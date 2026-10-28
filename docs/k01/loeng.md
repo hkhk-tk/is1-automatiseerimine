@@ -610,18 +610,3 @@ Küsimus ei ole, milline tööriist on parim. Küsimused on:
 - **Aruanne ei ole tulemus:** kontrolli masinat ennast.
 
 Oskad nüüd lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel ehitame sellest mitme masina seadistamise lahenduse: grupid, muutujad, mallid ja rollid.
-
-Kodutöö (umbes 30 minutit): [Kodutöö](kodutoo.md).
-
-## Allikad
-
-| Teema | Allikas |
-|---|---|
-| Shell ja Bash | [GNU Bash Reference Manual](https://www.gnu.org/software/bash/manual/) |
-| Ansible | [Ansible Community Documentation](https://docs.ansible.com/projects/ansible/latest/) |
-| Shelli algõpe | [Software Carpentry: The Unix Shell](https://swcarpentry.github.io/shell-novice/) |
-| Korduv töö ja automatiseerimine | [Google SRE raamatud](https://sre.google/books/) |
-| Snowflake server | [Martin Fowler](https://martinfowler.com/bliki/SnowflakeServer.html) |
-| Töökohad ja oskused | [WEF Future of Jobs Report 2025](https://www.weforum.org/publications/the-future-of-jobs-report-2025/) |
-
-*Järgmine: [praktikum](lab.md), kus teed sama ülesande läbi käsitsi, Bashiga ja Ansible'iga.*
