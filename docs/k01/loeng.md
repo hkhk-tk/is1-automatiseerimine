@@ -215,7 +215,26 @@ Omadust, et korduv käivitus ei muuda midagi, kui soovitud seis on juba olemas, 
 
 **Ansible** on avatud lähtekoodiga programm serverite seadistamiseks. Sa kirjutad tekstifaili, milline peab masin olema: millised paketid on paigaldatud, millised failid on olemas, millised teenused töötavad. Ansible loeb selle faili, ühendub SSH-ga masinatesse ja teeb seal ainult need muudatused, mis on puudu.
 
-Ansible'i lõi Michael DeHaan 2012. aastal ja alates 2015. aastast arendab seda Red Hat koos kogukonnaga. Seda kasutatakse serverite seadistamiseks, rakenduste paigaldamiseks, uuenduste levitamiseks ning võrguseadmete ja pilveressursside haldamiseks. Põhimõte on igal pool sama: **kirjeldad soovitud seisu, Ansible viib masina sinna**.
+Seda kasutatakse serverite seadistamiseks, rakenduste paigaldamiseks, uuenduste levitamiseks ning võrguseadmete ja pilveressursside haldamiseks. Põhimõte on igal pool sama: **kirjeldad soovitud seisu, Ansible viib masina sinna**.
+
+### Ajalugu
+
+Ansible ei olnud esimene konfihalduse tööriist. Varasemad töötasid **agendiga**: igasse hallatavasse masinasse paigaldati eraldi programm, mis küsis serverilt, milline masin peab olema.
+
+| Aasta | Mis juhtus |
+|---|---|
+| 1993 | **CFEngine**: üks esimesi konfihalduse tööriistu, agent igas masinas |
+| 2005 | **Puppet**: oma keel soovitud seisu kirjeldamiseks, agent ja server |
+| 2009 | **Chef**: seadistus Ruby keeles, agent ja server |
+| 2011 | **Salt**: kiire sõnumside agentide ja serveri vahel |
+| 2012 | **Ansible**: Michael DeHaan teeb tööriista, mis ei vaja agenti ega serverit, kasutab olemasolevat SSH-d ja kirjeldab seisu YAML-is |
+| 2015 | Red Hat ostab Ansible'it arendava firma |
+| 2017 | Red Hat avaldab oma veebiplatvormi (Ansible Tower) lähtekoodi nime all **AWX** |
+| 2020 | Ansible jaguneb: tuum **`ansible-core`** ja eraldi **kogud** (collections) moodulitega |
+
+*Tabel 5.1. Konfihalduse tööriistade ajalugu.*
+
+Ansible levis kiiresti, sest alustamiseks ei pidanud midagi hallatavatesse masinatesse paigaldama: kui SSH töötas, töötas ka Ansible. Nimi on pärit Ursula K. Le Guini ulmekirjandusest, kus *ansible* on seade, millega saab sõnumi saata kohe ükskõik kui kaugele.
 
 Kolm asja eristavad Ansible'it Bashi skriptist:
 
@@ -263,9 +282,7 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 | **Windowsi hallatav masin** | WinRM või SSH ja PowerShell | moodulid on eraldi kogus `ansible.windows` |
 | **võrguseade** (ruuter, kommutaator) | SSH või API | Pythonit seadmes pole: moodul jookseb control node'il ja saadab seadmele käsud |
 
-*Tabel 5.1. Mida Ansible eri masinatelt eeldab.*
-
-Paigaldamiseks on kaks tavalist teed: distro paketihaldur (`sudo apt install ansible-core`, `sudo dnf install ansible-core`) või Pythoni tööriist `pipx install ansible-core`, mis annab uusima versiooni. Laboris kasutame paketihaldurit.
+*Tabel 5.2. Mida Ansible eri masinatelt eeldab.*
 
 ### Väikeses ja suures keskkonnas
 
@@ -300,7 +317,7 @@ Playbook ise on mõlemas keskkonnas sama. See, mida sel kohtumisel õpid, kehtib
     | automation analytics, Red Hat Insights | aruanded: mida käivitati, kui palju aega säästeti | |
     | Event-Driven Ansible | käivitab playbook'i sündmuse peale (häire, webhook) | ansible-rulebook |
 
-    *Tabel 5.2. Ansible Automation Platformi komponendid.*
+    *Tabel 5.3. Ansible Automation Platformi komponendid.*
 
     Kõik need ehitavad sama asja peale, mida sel kohtumisel õpid: inventory, moodul ja playbook. Ilma nendeta pole platvormist kasu.
 
@@ -326,25 +343,82 @@ Playbook ise on mõlemas keskkonnas sama. See, mida sel kohtumisel õpid, kehtib
 
 **Küsimus:** kuidas Ansible teab, millised masinad on olemas ja kuidas neid kasutada?
 
+### Paigaldamine
+
+Ansible paigaldatakse ainult control node'ile. Kaks tavalist teed:
+
+=== "Ubuntu, Debian"
+
+    ```bash
+    sudo apt update
+    sudo apt install -y ansible-core
+    ```
+
+=== "AlmaLinux, Rocky, RHEL"
+
+    ```bash
+    sudo dnf install -y ansible-core
+    ```
+
+=== "pipx (uusim versioon)"
+
+    ```bash
+    pipx install ansible-core
+    ```
+
+Paketihaldur annab distro testitud versiooni, `pipx` uusima. Laboris kasutame paketihaldurit. Kontrolli:
+
+```bash
+ansible --version
+```
+
+```text
+ansible [core 2.16.3]
+  config file = /home/kasutaja/kursus/k01/ansible.cfg
+  configured module search path = [...]
+  ansible python module location = /usr/lib/python3/dist-packages/ansible
+  executable location = /usr/bin/ansible
+  python version = 3.12.3 (...)
+  jinja version = 3.1.2
+```
+
+| Rida | Mida ütleb |
+|---|---|
+| `ansible [core 2.16.3]` | `ansible-core`'i versioon; sellest sõltub, millised moodulid ja võtmed on olemas |
+| `config file` | milline `ansible.cfg` on kasutusel; `None` tähendab, et ühtegi ei leitud |
+| `python version` | Python, millega Ansible control node'il jookseb |
+| `jinja version` | mallimootor, mida läheb vaja 2. kohtumisel |
+
+*Tabel 6.1. `ansible --version` väljund.*
+
 ### Inventory: millised masinad
 
-**Inventory** on fail, kus on kirjas masinad, mida Ansible haldab, ja kuidas nendega ühenduda:
+**Inventory** on fail, kus on kirjas masinad, mida Ansible haldab, ja kuidas nendega ühenduda. Meie laboris:
 
 ```ini
-[veeb]
-web01 ansible_host=<web01-ip> ansible_user=kasutaja
+[ubuntu]
+web01
+app01
+rmq01
+
+[rocky]
+mc01
+db01
+
+[all:vars]
+ansible_user=kasutaja
 ```
 
 | Osa | Tähendus |
 |---|---|
-| `[veeb]` | grupp; nii saab hiljem käivitada töö kõigi veebimasinate vastu korraga |
-| `web01` | nimi, mida kasutad käskudes ja playbook'is |
-| `ansible_host` | aadress, kuhu Ansible ühendub |
+| `[ubuntu]`, `[rocky]` | grupid; nii saab käivitada töö ühe grupi kõigi masinate vastu korraga |
+| `web01` | masina nimi; IP tuleb failist `~/.ssh/config` |
+| `[all:vars]` | muutujad, mis kehtivad kõigile masinatele |
 | `ansible_user` | kasutaja, kellena Ansible sisse logib |
 
-*Tabel 6.1. Inventory rida.*
+*Tabel 6.2. Inventory osad.*
 
-Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada: `ansible -i inventory.ini ...`.
+Kui masina nime pole `~/.ssh/config`-is ega DNS-is, kirjuta aadress inventory'sse: `web01 ansible_host=10.10.7.11`. Grupp `all` on alati olemas ja sisaldab kõiki masinaid. Salvesta fail nimega `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada: `ansible -i inventory.ini ...`.
 
 ### `ansible.cfg`: projekti seaded
 
@@ -364,9 +438,40 @@ Ansible otsib seadistusfaili kindlas järjekorras ja kasutab **esimest**, mille 
 | 3 | `~/.ansible.cfg` | sinu isiklikud vaikeväärtused |
 | 4 | `/etc/ansible/ansible.cfg` | kogu masina vaikeväärtused |
 
-*Tabel 6.2. Kust Ansible seadistuse võtab.*
+*Tabel 6.3. Kust Ansible seadistuse võtab.*
 
 Millist faili Ansible parasjagu kasutab, näed käsust `ansible --version`, real `config file = ...`. Kui seal on `None`, ei leidnud Ansible ühtegi ja `-i` on jälle vaja. Hoia `ansible.cfg` koos inventory ja playbook'idega samas kaustas ja Gitis: siis töötab projekt igaühe masinas ühtemoodi.
+
+### Kasutaja ja õigused
+
+Ansible teeb hallatavas masinas tööd selle kasutajana, kellena ta SSH-ga sisse logib. Meil on see `kasutaja` (inventory's `ansible_user=kasutaja`) ja sisselogimine käib SSH-võtmega. Kõik, mida see kasutaja tohib, tohib ka Ansible. Meie päeva ülesanne käib kasutaja kodukaustas ja administraatori õigusi ei vaja.
+
+Paketi paigaldamiseks, teenuse käivitamiseks või `/etc` all oleva faili muutmiseks on vaja administraatori õigusi. Selleks on **`become`**: Ansible logib sisse tavakasutajana ja tõstab õigused `sudo` kaudu ainult nende ülesannete jaoks, kus seda vaja on.
+
+```yaml
+- name: Tööriistad on paigaldatud
+  hosts: web01
+  become: true
+  tasks:
+    - name: tree on paigaldatud
+      ansible.builtin.package:
+        name: tree
+        state: present
+```
+
+```bash
+ansible-playbook tools.yml -K
+```
+
+| Võti | Tähendus |
+|---|---|
+| `become: true` | selle play (või ühe ülesande) ajal tööta `sudo` kaudu |
+| `become_user: postgres` | tõsta õigused mõne teise kasutajani, vaikimisi `root` |
+| `-K` | küsi `sudo` parooli üks kord käivitamise alguses |
+
+*Tabel 6.4. Õiguste tõstmine.*
+
+Pane `become: true` ainult sinna, kus seda vaja on. Mida vähem õigusi, seda väiksem kahju vea korral.
 
 ### Kaks käsku: `ansible` ja `ansible-playbook`
 
@@ -375,7 +480,7 @@ Millist faili Ansible parasjagu kasutab, näed käsust `ansible --version`, real
 | `ansible` | käivitab ühe mooduli kohe, ilma failita (ad-hoc) | `ansible web01 -m ansible.builtin.ping` |
 | `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook training.yml` |
 
-*Tabel 6.3. Ansible'i kaks põhikäsku.*
+*Tabel 6.5. Ansible'i kaks põhikäsku.*
 
 `ansible web01 -m ansible.builtin.ping` on esimene kontroll. Vastus `pong` tähendab, et Ansible jõuab SSH-ga masinasse ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist. Ad-hoc käsk sobib kiireks kontrolliks, näiteks `ansible web01 -m ansible.builtin.command -a uptime`. Seadistus, mida tahad korrata, käib playbook'i.
 
@@ -503,26 +608,27 @@ ansible-lint training.yml
 
 Suuremate projektide jaoks on Red Hatil veel [arendustööriistu](https://www.redhat.com/en/technologies/management/ansible/development-tools): **ansible-navigator** (playbook'i käivitamine ja tulemuse sirvimine), **Molecule** (rollide testimine) ja **ansible-builder** (käivituskeskkonna pakendamine). Neid läheb vaja hiljem.
 
-### Administraatori õigused: `become`
+### Tingimus, sihtmasinad ja sildid
 
-Meie ülesanne käib kasutaja kodukaustas ja `sudo`-t ei vaja. Paketi paigaldamiseks või teenuse käivitamiseks on aga vaja administraatori õigusi. Playbook'is ütleb seda `become: true`:
+Meie laboris on kaks distrot. Sama programm võib neil olla eri paketinimega: Ubuntul `vim`, Rockyl `vim-enhanced`. Tingimus **`when`** paneb ülesande käima ainult siis, kui see on tõene. Otsus tuleb faktist:
 
 ```yaml
-- name: Tööriistad on paigaldatud
-  hosts: web01
-  become: true
-  tasks:
-    - name: tree on paigaldatud
-      ansible.builtin.package:
-        name: tree
-        state: present
+- name: vim on paigaldatud (Rocky)
+  ansible.builtin.package:
+    name: vim-enhanced
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: paketid
 ```
 
-```bash
-ansible-playbook tools.yml -K
-```
+| Vahend | Mida teeb | Näide |
+|---|---|---|
+| `when` | ülesanne käib ainult siis, kui tingimus on tõene; muidu `skipping` | `when: ansible_facts['os_family'] == "Debian"` |
+| `hosts` | millistes masinates play käib | `hosts: all`, `hosts: rocky` |
+| `--limit` | piirab käivituse osaga masinatest playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
+| `tags` | ülesande silt; `--tags` käivitab ainult need | `ansible-playbook tools.yml --tags motd` |
 
-`-K` küsib `sudo` parooli üks kord ja Ansible kasutab seda kõigi ülesannete jaoks. Pane `become: true` ainult sinna, kus seda vaja on: mida vähem õigusi, seda väiksem kahju vea korral.
+*Tabel 7.3. Tingimus, sihtmasinad ja sildid.*
 
 ### Mis juhtub käivitamisel
 
@@ -549,7 +655,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus, sellel masinal edasi ei minda |
 | `skipped` | ülesanne jäeti tingimuse tõttu vahele (2. kohtumine) |
 
-*Tabel 7.3. PLAY RECAP väljad.*
+*Tabel 7.4. PLAY RECAP väljad.*
 
 ### Soovitud seis ja teine käivitus
 

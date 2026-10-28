@@ -12,8 +12,8 @@ tags:
 Muuda playbook'is `training.yml` faili sisu: `enabled=true` → `enabled=false`. Käivita kaks korda:
 
 ```bash
-ansible-playbook -i inventory.ini training.yml
-ansible-playbook -i inventory.ini training.yml
+ansible-playbook training.yml
+ansible-playbook training.yml
 ```
 
 ??? success "Oodatav tulemus"
@@ -26,18 +26,18 @@ ansible-playbook -i inventory.ini training.yml
 
 Commit'i sõnumisse kirjuta üks lause: mis muutus ja mida näitas teine käivitus. `git push`.
 
-## H2 · Sama seadistus teise masinasse
+## H2 · Sama seadistus kõigile Ubuntu masinatele
 
-Lisa inventory'sse `app01` gruppi `veeb` ja muuda playbook'is `hosts: web01` → `hosts: veeb`. Proovi enne ainult uue masinaga:
+Muuda `training.yml`-is `hosts: web01` → `hosts: ubuntu`. Proovi enne ühe uue masinaga, siis kõigiga:
 
 ```bash
-ansible-playbook -i inventory.ini training.yml --limit app01 --check --diff
-ansible-playbook -i inventory.ini training.yml
+ansible-playbook training.yml --limit app01 --check --diff
+ansible-playbook training.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    `--check` näitab app01 kohta muudatusi, aga ei tee neid. Päris käivitusel on app01 `changed`, web01 `ok`, sest seal oli kõik juba õige.
+    `--check` näitab app01 kohta muudatusi, aga ei tee neid. Päris käivitusel on app01 ja rmq01 `changed`, web01 `ok`, sest seal oli kõik juba õige.
 
 `git push`.
 

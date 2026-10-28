@@ -14,7 +14,7 @@ tags:
 ## Mida täna õpid
 
 - kirjeldada ülesannet tulemusena ja koostada sellele kontrollnimekirja;
-- kirjutada ja selgitada lühikest Bashi skripti;
+- käivitada Ansible'i ad-hoc käske mitmes masinas korraga;
 - käivitada Ansible'i playbook'i ja lugeda selle tulemust;
 - kontrollida, mis juhtub teisel käivitusel ja pärast käsitsi muudatust.
 
@@ -22,18 +22,19 @@ tags:
 
 | | Osa |
 |---|---|
-| 1 | Miks automatiseerida: loeng ja arutelu |
+| 1 | Miks automatiseerida ja mis on Ansible: loeng |
 | 2 | [Keskkond](lab-1-keskkond.md): SSH-võti, masinate nimed, repo |
-| 3 | [Ülesanne käsitsi](lab-2-kasitsi.md) web01-s |
-| 4 | [Bashi skript](lab-3-bash.md), [teine käivitus, triiv ja viga](lab-4-viga.md) |
-| 5 | [Sama ülesanne Ansible'iga](lab-5-ansible.md) |
-| 6 | [Kontroll, lõpuülesanne ja esitamine](lab-6-esitamine.md) |
+| 3 | [Käsitsi ja skriptina](lab-2-kasitsi.md) |
+| 4 | [Ansible'i alused](lab-3-ansible-alused.md): ad-hoc käsud viiel masinal |
+| 5 | [Esimene playbook](lab-4-playbook.md) |
+| 6 | [Playbook viiele masinale](lab-5-parem-playbook.md): `when`, `--limit`, `tags` |
+| 7 | [Kontroll ja esitamine](lab-6-esitamine.md) |
 
 *Tabel 1. Päeva järjekord.*
 
 ## Mida päeva lõpuks esitad
 
-Kaustas `k01/` on `prepare-training.sh`, `inventory.ini`, `training.yml` ja `vordlus.md`, `git push` tehtud.
+Kaustas `k01/` on `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml` ja `vordlus.md`, `git push` tehtud.
 
 ## Abi
 

@@ -35,8 +35,8 @@ Seda kausta haldab Ansible. Ära muuda käsitsi.
 Käivita kaks korda ja kontrolli masinas:
 
 ```bash
-ansible-playbook -i inventory.ini training.yml
-ansible-playbook -i inventory.ini training.yml
+ansible-playbook training.yml
+ansible-playbook training.yml
 ssh web01 "cat automation-lab/README.txt; stat -c '%a %n' automation-lab/README.txt"
 ```
 
@@ -61,13 +61,14 @@ Ava oma repo GitHubis ja vaata, et kaustas `k01/` on need failid:
 
 | Fail | Kust |
 |---|---|
-| `prepare-training.sh` | [3. Bashi skript](lab-3-bash.md) |
-| `inventory.ini` | [5. Ansible](lab-5-ansible.md) |
-| `training.yml` | [5. Ansible](lab-5-ansible.md) ja A2 |
+| `prepare-training.sh` | [2. Käsitsi ja skriptina](lab-2-kasitsi.md) |
+| `ansible.cfg`, `inventory.ini` | [3. Ansible'i alused](lab-3-ansible-alused.md) |
+| `training.yml` | [4. Esimene playbook](lab-4-playbook.md) ja A2 |
+| `tools.yml` | [5. Playbook viiele masinale](lab-5-parem-playbook.md) |
 | `vordlus.md` | A1 |
 
 *Tabel 1. Esitatavad failid.*
 
-**Valmis, kui** kõik neli faili on GitHubis ja playbook'i teine käivitus annab `changed=0`.
+**Valmis, kui** kõik kuus faili on GitHubis ja playbook'i teine käivitus annab `changed=0`.
 
 Edasi: [Kodutöö](kodutoo.md).

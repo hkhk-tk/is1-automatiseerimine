@@ -1,16 +1,16 @@
 ---
 tags:
   - Linux
+  - Bash
   - Praktikum
 ---
 
-# 2. Ülesanne käsitsi
+# 2. Käsitsi ja skriptina
 
 !!! abstract "Eesmärgid"
 
-    - teed päeva ülesande web01-s käsk-käsult;
-    - ennustad enne iga käsku, mis muutub;
-    - kontrollid tulemust kontrollnimekirja järgi.
+    - teed päeva ülesande web01-s käsitsi ja kontrollid tulemust;
+    - paned samad käsud skripti ja näed, mida skript teisel käivitusel teeb.
 
 !!! info "Päeva ülesanne"
 
@@ -21,57 +21,17 @@ tags:
     enabled=true
     ```
 
-## A1 · Mine web01-sse
-
-Control node'il:
+## A1 · Käsitsi
 
 ```bash
 ssh web01
+mkdir ~/automation-lab
+chmod 0750 ~/automation-lab
+printf '%s\n' 'environment=training' 'enabled=true' > ~/automation-lab/training.conf
+chmod 0640 ~/automation-lab/training.conf
 ```
 
-Prompt on nüüd `kasutaja@web01`. Kõik selle osa käsud käivad web01-s.
-
-## A2 · Kaust
-
-Ennusta enne: mis õigused saab uus kaust?
-
-```bash
-cd ~
-mkdir automation-lab
-ls -ld automation-lab
-```
-
-??? success "Oodatav tulemus"
-
-    ```
-    drwxr-xr-x 2 kasutaja kasutaja 4096 ... automation-lab
-    ```
-
-    Vaikimisi õigused on `755` (`rwxr-xr-x`): kõik masina kasutajad saavad kausta sisu lugeda. Meie nõue on `750`: grupp loeb, teised mitte.
-
-```bash
-chmod 0750 automation-lab
-ls -ld automation-lab
-```
-
-??? success "Oodatav tulemus"
-
-    ```
-    drwxr-x--- 2 kasutaja kasutaja 4096 ... automation-lab
-    ```
-
-## A3 · Fail
-
-```bash
-printf '%s\n' 'environment=training' 'enabled=true' > automation-lab/training.conf
-chmod 0640 automation-lab/training.conf
-```
-
-`printf '%s\n'` trükib iga järgneva teksti eraldi reale. `>` suunab väljundi faili.
-
-## A4 · Kontrolli
-
-Kontrollnimekiri: kas kaust on olemas, kas failis on täpselt kaks rida, kas õigused on `750` ja `640`, kas omanik on `kasutaja`.
+Kontrolli:
 
 ```bash
 cat ~/automation-lab/training.conf
@@ -87,23 +47,55 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
     640 kasutaja /home/kasutaja/automation-lab/training.conf
     ```
 
-    `stat -c '%a %U %n'` näitab õigusi numbrina, omanikku ja nime. Seda kahte käsku kasutad kogu päeva.
+    Need kaks kontrollkäsku kasutad kogu päeva.
 
-??? question "Mõtle"
-
-    Käivita `mkdir automation-lab` uuesti. Mis juhtub ja miks? Mis peaks juhtuma, kui seda tööd teeb skript?
-
-## A5 · Koristus
-
-Järgmises osas teeb sama töö skript. Et näha, kas skript töötab, eemalda kaust:
+Proovi `mkdir ~/automation-lab` uuesti. Tuleb viga `File exists`: käsk ei tea, et kaust on juba olemas ja õige. Eemalda kaust ja mine tagasi control node'ile:
 
 ```bash
 rm -r ~/automation-lab
 exit
 ```
 
-!!! warning "Kustutad ainult selle kausta"
+## A2 · Skriptina
 
-    Kontrolli enne Enterit, et tee on täpselt `~/automation-lab`. `rm -r` ei küsi kinnitust ja prügikasti pole.
+Control node'il, oma repos, loo fail `~/kursus/k01/prepare-training.sh`:
 
-**Valmis, kui** kontrollkäskude väljund klappis oodatavaga ja oled tagasi control node'il.
+```bash
+#!/usr/bin/env bash
+mkdir -p ~/automation-lab
+chmod 0750 ~/automation-lab
+printf '%s\n' 'environment=training' 'enabled=true' > ~/automation-lab/training.conf
+chmod 0640 ~/automation-lab/training.conf
+echo "Valmis"
+```
+
+`mkdir -p` ei anna viga, kui kaust on juba olemas. Kopeeri skript web01-le ja käivita seal:
+
+```bash
+cd ~/kursus/k01
+scp prepare-training.sh web01:
+ssh web01 bash prepare-training.sh
+```
+
+## A3 · Teine käivitus
+
+Ennusta enne: kas skript kirjutab faili teisel korral uuesti? Vaata faili muutmise aega enne ja pärast:
+
+```bash
+ssh web01 stat -c '%y' automation-lab/training.conf
+ssh web01 bash prepare-training.sh
+ssh web01 stat -c '%y' automation-lab/training.conf
+```
+
+??? success "Oodatav tulemus"
+
+    Aeg on teisel korral uus: fail kirjutati üle, kuigi sisu oli juba õige. Skript ei kontrolli seisu, ta lihtsalt teeb käsud uuesti. Ansible'is näed sama tööd tegemas moodulit, mis kontrollib enne, kas muutmine on vaja.
+
+```bash
+cd ~/kursus
+git add k01/prepare-training.sh
+git commit -m "k01: prepare-training.sh"
+git push
+```
+
+**Valmis, kui** skript on GitHubis ja oskad öelda, mis juhtus teisel käivitusel.
