@@ -5,27 +5,13 @@ tags:
 
 # Töö repos ja hindamine
 
-## Päev
-
-| Kell | Mis |
-|---|---|
-| 10:00–11:30 | loeng |
-| 11:30–12:30 | labor |
-| 12:30–13:00 | lõuna |
-| 13:00–15:00 | labor |
-
-*Tabel 0.3. Kohtumise päev.*
-
-Labor on jagatud mooduliteks. Iga kohtumise laborilehel on tabel „Mis on kohustuslik“: millised moodulid teed kohtumise ajal ja mida
-võid lõpetada hiljem. Mis klassis pooleli jääb, lõpetad kodus VPN-i kaudu. 7. kohtumise lõpus on lõputest.
-
 ## Repo
 
 Classroom 50 annab sulle repo `<klassiruum>-labori-seis-<github>`.
 
 | Kaust | Kohtumine |
 |---|---|
-| `k01/` | 1 (`prepare-training.sh`, `inventory.ini`, `training.yml`, `vordlus.md`) |
+| `k01/` | 1 (`ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml`) |
 | `k02-ansible/` | 2 |
 | `k03-docker/`, `.dockerignore` | 3 |
 | `k04-tofu/` | 4 |
