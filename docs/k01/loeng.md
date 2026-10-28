@@ -572,6 +572,8 @@ Küsimus ei ole, milline tööriist on parim. Küsimused on:
 - **Ansible kirjeldab seisu:** inventory ütleb kus, playbook ütleb mis, moodul võrdleb ise.
 - **Aruanne ei ole tulemus:** kontrolli masinat ennast.
 
+Oskad nüüd lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel ehitame sellest mitme masina seadistamise lahenduse: grupid, muutujad, mallid ja rollid.
+
 Kodutöö (umbes 30 minutit): [Kodutöö](kodutoo.md).
 
 ## Allikad
