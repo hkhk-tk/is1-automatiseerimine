@@ -973,7 +973,7 @@ systemctl --user is-enabled docker; loginctl show-user "$USER" -p Linger
 
 ## Võrguinsenerile
 
-Võrguinseneri osa jätkab tööriistaga `vorgukogu` ([1. kohtumise lisa 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt)). Seni töötas see sinu venv'is: Pythoni versioon, Netmiko ja Paramiko on just selles kaustas ja kolleegi masinas teised. Image paneb Pythoni ja paketid ühte faili, mida 6. kohtumisel Jenkins ja 7. kohtumisel Kubernetes käivitavad muutmata. Koolitaja on loonud `rtr01` ja `rtr02` (Ubuntu 24.04 + FRR 10.x, kasutaja `kasutaja` sinu võtmega), `vorgukogu/` kaustas on 1. kohtumise failid.
+Võrguinseneri osa jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21). Seni töötas see sinu venv'is: Pythoni versioon, Netmiko ja Paramiko on just selles kaustas ja kolleegi masinas teised. Image paneb Pythoni ja paketid ühte faili, mida 6. kohtumisel Jenkins ja 7. kohtumisel Kubernetes käivitavad muutmata. Koolitaja on loonud `rtr01` ja `rtr02` (Ubuntu 24.04 + FRR 10.x, kasutaja `kasutaja` sinu võtmega), `vorgukogu/` kaustas on 1. kohtumise failid.
 
 ### 15. vorgukogu konteineris
 

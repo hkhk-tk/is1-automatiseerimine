@@ -84,24 +84,20 @@ nav:
       - Töö repos ja hindamine: 00-ulevaade/too-ja-hindamine.md
       - Litsents: 00-ulevaade/litsents.md
   - Kohtumised:
-      - 1. kohtumine · Bash ja Ansible:
+      - 1. kohtumine · Linuxi haldusest automatiseerimiseni:
           - Ülevaade: k01/index.md
           - Loeng: k01/loeng.md
-          - Labor:
+          - Praktikum:
               - k01/lab.md
               - 1. Keskkond: k01/lab-1-keskkond.md
-              - 2. websetup.sh nagu tootmises: k01/lab-2-websetup.md
-              - 3. Üks käsk, mitu hosti: k01/lab-3-mitu-hosti.md
-              - 4. Viis teenust ühe käsuga: k01/lab-4-viis-teenust.md
-              - 5. Kolm viga: k01/lab-5-kolm-viga.md
-              - 6. Sama töö Ansible'iga: k01/lab-6-ansible.md
-              - 7. Operatsioon: k01/lab-7-operatsioon.md
-              - 8. Git meeskonnas: k01/lab-8-git-meeskonnas.md
-              - 9. Esitamine: k01/lab-9-esitamine.md
+              - 2. Käsitsi: k01/lab-2-kasitsi.md
+              - 3. Bashi skript: k01/lab-3-bash.md
+              - 4. Teine käivitus, triiv ja viga: k01/lab-4-viga.md
+              - 5. Ansible: k01/lab-5-ansible.md
+              - 6. Kontroll ja esitamine: k01/lab-6-esitamine.md
               - Abi: k01/abi.md
               - Linux + Bash spikker: k01/spikker.md
           - Kodutöö: k01/kodutoo.md
-          - Lisaülesanded: k01/lisa.md
       - 2. kohtumine · Ansible:
           - Loeng: k02/loeng.md
           - Labor:

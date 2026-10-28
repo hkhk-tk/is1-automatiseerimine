@@ -1073,7 +1073,7 @@ Vihje: `DELETE FROM student` ei sobi katseks, `result.student_id` võõrvõti ke
 
 ## Võrguinsenerile
 
-Ülesanded jätkavad 1. kohtumise tööriistaga `vorgukogu` ([1. kohtumise lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt)): sama kogumine, nüüd Ansible'iga. Koolitaja on loonud `rtr01` ja `rtr02` (Ubuntu 24.04 + FRR 10.x, kasutaja `kasutaja` grupis `frrvty`, sinu võti), kaustas `vorgukogu/` on 1. kohtumise `known_hosts`. Failid lähevad kausta `vorgukogu/ansible/`, mitte `k02-ansible/`-isse: automaatne hindaja kontrollib `k02-ansible/inventory.ini`-d ja ruuterid sinna ei kuulu.
+Ülesanded jätkavad 1. kohtumise tööriistaga `vorgukogu` (1. kohtumise lisaülesanne 21): sama kogumine, nüüd Ansible'iga. Koolitaja on loonud `rtr01` ja `rtr02` (Ubuntu 24.04 + FRR 10.x, kasutaja `kasutaja` grupis `frrvty`, sinu võti), kaustas `vorgukogu/` on 1. kohtumise `known_hosts`. Failid lähevad kausta `vorgukogu/ansible/`, mitte `k02-ansible/`-isse: automaatne hindaja kontrollib `k02-ansible/inventory.ini`-d ja ruuterid sinna ei kuulu.
 
 ### 20. vorgukogu Ansible'iga: ad-hoc ja playbook
 

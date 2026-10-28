@@ -259,6 +259,41 @@ exit
 
     `~/.ssh/id_ed25519` (ilma `.pub`-ita) on sinu privaatvõti. Seda ei kopeerita kuhugi, ei panda Giti ega saadeta kellelegi. Avaliku võtme (`.pub`) võib jagada.
 
+## A7 · Võti GitHubi ja kursuse repo
+
+Control node'i võtmega saad ka GitHubiga parooli ja tokenita suhelda. Kuva avalik võti:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+GitHubis: profiilipilt → **Settings → SSH and GPG keys → New SSH key**. *Title:* `control`, kleebi kogu rida, **Add SSH key**. Kontrolli:
+
+```bash
+ssh -T git@github.com
+```
+
+??? success "Oodatav tulemus"
+
+    Esimesel korral kinnita `yes`, siis:
+
+    ```
+    Hi <sinu-github-kasutaja>! You've successfully authenticated, but GitHub does not provide shell access.
+    ```
+
+Ava [Classroom 50 ülesanne](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) ja võta see vastu. Sulle tekib privaatne repo orgis `hkhk-tk`. Repo lehel: **Code → SSH**, kopeeri aadress.
+
+```bash
+git config --global user.name "Eesnimi Perenimi"
+git config --global user.email "sinu@email.ee"
+cd ~
+git clone git@github.com:hkhk-tk/<sinu-repo>.git kursus
+cd ~/kursus
+mkdir -p k01
+```
+
+Kõik selle kohtumise failid lähevad kausta `~/kursus/k01/`.
+
 ## Veaotsing
 
 | Mida näed | Põhjus | Mida teha |

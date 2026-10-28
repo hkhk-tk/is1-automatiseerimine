@@ -936,7 +936,7 @@ Vihje: juhendi [Shared Libraries](https://www.jenkins.io/doc/book/pipeline/share
 
 ## Võrguinsenerile
 
-Rada jätkab tööriistaga `vorgukogu` ([1. kohtumise lisa 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt), image [3. kohtumise lisa 15](../k03/lisa.md#15-vorgukogu-konteineris)). Jenkins teeb siin sama, mida võrgutiimis teeb RANCID või Oxidized: igal ööl võtab ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
+Rada jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21, image [3. kohtumise lisa 15](../k03/lisa.md#15-vorgukogu-konteineris)). Jenkins teeb siin sama, mida võrgutiimis teeb RANCID või Oxidized: igal ööl võtab ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
 
 ### 17. vorgukogu öösel Jenkinsiga
 

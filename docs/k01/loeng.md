@@ -302,7 +302,7 @@ Iga käsk lõpetab **väljumiskoodiga** (exit status). `0` tähendab õnnestumis
 `if` vaatab käsu väljumiskoodi ja valib haru:
 
 ```bash
-if ! mkdir -p -- "$lab_dir"; then
+if ! mkdir -p "$lab_dir"; then
     printf 'Viga: ei saa kausta teha: %s\n' "$lab_dir" >&2
     exit 1
 fi

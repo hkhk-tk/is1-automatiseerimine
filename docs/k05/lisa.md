@@ -979,7 +979,7 @@ Selle päeva töö ei vaja ruutereid: testid kasutavad võlts-ühendust ja GitHu
 
 ### 18. vorgukogu testid ja CI
 
-**Tase:** keskmine · **Eeldus:** [Esimene workflow](lab-2-workflow.md), [1. kohtumise lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt) ja [4. kohtumise lisaülesanne 17](../k04/lisa.md#17-renderpy-soovitud-seis-templateist-diff-ja-apply) (`vorgukogu.py`, `render.py`, `intent/`, `templates/`) · **Esita:** `vorgukogu/`, `.github/workflows/vorgukogu.yml`
+**Tase:** keskmine · **Eeldus:** [Esimene workflow](lab-2-workflow.md), 1. kohtumise lisaülesanne 21 ja [4. kohtumise lisaülesanne 17](../k04/lisa.md#17-renderpy-soovitud-seis-templateist-diff-ja-apply) (`vorgukogu.py`, `render.py`, `intent/`, `templates/`) · **Esita:** `vorgukogu/`, `.github/workflows/vorgukogu.yml`
 
 Kolleeg lisab maskeerimisse uue rea ja murrab kogemata olemasoleva, või template kaotab `key chain` ploki. Ruuter seda ei ütle ja viga märkab alles see, kes varukoopiat loeb.
 
@@ -1430,7 +1430,7 @@ gh pr create --fill && sleep 60 && gh pr checks
 
     Kontroll: nõuete all olevad käsud. Täislahendus: `labori-seis/deploy/lisa-lahendused/k05/vork-ci/`. Kontrollitud: 23 testi, `ruff check` ja `ruff format --check` (ruff 0.16, pytest 9.1, Python 3.13, ilma Netmikota), `actionlint` 1.7. Kontrollimata: workflow GitHubis ja Netmiko 4.7 paigaldusega.
 
-    **Miks nii.** Ülesanne jätkab tööriistaga `vorgukogu` ([1. kohtumise lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt), [4. kohtumise lisaülesanne 17](../k04/lisa.md#17-renderpy-soovitud-seis-templateist-diff-ja-apply)). Testid ja CI püüavad katkise maski või kadunud `key chain` ploki kinni PR-is, enne kui kood ruuterini jõuab.
+    **Miks nii.** Ülesanne jätkab tööriistaga `vorgukogu` (1. kohtumise lisaülesanne 21, [4. kohtumise lisaülesanne 17](../k04/lisa.md#17-renderpy-soovitud-seis-templateist-diff-ja-apply)). Testid ja CI püüavad katkise maski või kadunud `key chain` ploki kinni PR-is, enne kui kood ruuterini jõuab.
 
 ## Arutelu
 

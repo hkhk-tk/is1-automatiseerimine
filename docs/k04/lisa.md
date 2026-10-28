@@ -1073,11 +1073,11 @@ Vihje: [state'i krüpteerimise dokumentatsioon](https://opentofu.org/docs/langua
 
 ## Võrguinsenerile
 
-Tööriist `vorgukogu` ([1. kohtumise lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt)) seni ainult luges ruuterite seisu. Siin muudad ruuterit samas tsüklis, mida OpenTofu tegi VM-idega: kood → plaan (diff jooksva konfiga) → apply → kontroll, et diff on tühi.
+Tööriist `vorgukogu` (1. kohtumise lisaülesanne 21) seni ainult luges ruuterite seisu. Siin muudad ruuterit samas tsüklis, mida OpenTofu tegi VM-idega: kood → plaan (diff jooksva konfiga) → apply → kontroll, et diff on tühi.
 
 ### 17. render.py: soovitud seis template'ist, diff ja apply
 
-**Tase:** keskmine · **Eeldus:** [Import, drift ja keskkonnad](lab-6-import-drift.md), [1. kohtumise lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt) tehtud, koolitaja `rtr01`, `rtr02` ja `key chain lab` saladus · **Esita:** `vorgukogu/render.py`, `intent/`, `templates/frr.conf.j2`
+**Tase:** keskmine · **Eeldus:** [Import, drift ja keskkonnad](lab-6-import-drift.md), 1. kohtumise lisaülesanne 21 tehtud, koolitaja `rtr01`, `rtr02` ja `key chain lab` saladus · **Esita:** `vorgukogu/render.py`, `intent/`, `templates/frr.conf.j2`
 
 Ruuteri konfi muudetakse `vtysh`-is käsitsi ja keegi ei tea, kas kahe ruuteri konf on sama loogikaga. Proovimuudatus on rtr01 marsruut `10.255.98.0/24 blackhole`.
 
