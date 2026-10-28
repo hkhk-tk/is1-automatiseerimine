@@ -13,7 +13,7 @@ tags:
 
     - selgitada, miks ja millal tööd automatiseerida ning millal see ei tasu end veel ära;
     - kirjeldada ülesannet tulemusena ja koostada sellele kontrollnimekirja enne, kui kirjutad käske;
-    - kirjutada ja selgitada lühikest Bashi skripti (shebang, muutujad, jutumärgid, väljumiskood, `if`);
+    - selgitada, mida skript teeb ja mida mitte, ning miks Ansible'i moodul kontrollib seisu ise;
     - ennustada ja kontrollida, mis juhtub teisel käivitusel ning pärast kontrollitud muudatust või viga;
     - selgitada mõisteid control node, hallatav masin, inventory, moodul, ülesanne ja playbook ning käivitada playbook'i;
     - lugeda Ansible'i tulemust (`ok`, `changed`, `failed`) ning kontrollida ja selgitada näite korduva käivitamise käitumist;
@@ -49,27 +49,13 @@ tags:
 
 **Küsimus:** ma oskan Linuxit hallata. Milleks mulle veel üks töötamise viis?
 
-### Üks kord on lihtne
+### Üks kord on lihtne, kolm korda mitte
 
-Kujutle, et seadistasid serveri. Tegid kausta, lisasid sinna konfiguratsioonifaili, panid õigused ja vaatasid üle, et kõik on korras. Töö oli lihtne, sest sa teadsid käske ja nägid tulemust oma silmaga.
+Valla IT-spetsialist seadistab kolm ühesugust veebiserverit. Esimese teeb ta hoolikalt, teise kiiremini, sest käsud on shelli ajaloos. Kolmanda juures tuleb kõne ja üks samm jääb tegemata. Kõik kolm töötavad. Kuu aja pärast tulevad turvauuendused, serverid taaskäivitatakse ja kolmas ei tule üles. Põhjuse otsimine võtab tunni, sest „kõik serverid on ju samamoodi seadistatud“.
 
-Järgmisel päeval on vaja sama teha teises serveris. Nädal hiljem küsib kolleeg, kuidas sa esimese ette valmistasid. Kuu aja pärast tuleb see server uuesti üles ehitada.
+Probleem polnud oskustes. Masina õige seis oli kirjas ainult inimese mälus. Automatiseerimine vastab küsimusele:
 
-Nüüd on küsimus teine. Enam ei küsita „kas sa oskad seda masinat seadistada?“, vaid:
-
-> Kas sa suudad töö korrata, teisele selgitada ja tõestada, et tulemus on õige?
-
-Sellest küsimusest automatiseerimine algab.
-
-### Mis käsitsi töös katki läheb
-
-Käsitsi töötamises pole midagi valet. Võõra süsteemiga tutvudes, rikke põhjust otsides või uut asja proovides töötad alati käsitsi. Selle kohtumise ülesande teeme esmalt käsitsi.
-
-Raskus tekib siis, kui sama tööd on vaja usaldusväärselt korrata. Juhend võib olla poolik. Keegi jätab sammu vahele, sest telefon helises. Kaks masinat on alguses erinevas seisus. Käsk, mis eile töötas, ei tööta täna, sest ümbrus on muutunud.
-
-Väike näide. Valla IT-spetsialist seadistab registreerimissüsteemi jaoks kolm ühesugust veebiserverit. Esimese teeb ta hoolikalt, teise kiiremini, sest käsud on shelli ajaloos. Kolmanda juures tuleb kõne ja üks samm jääb tegemata. Kõik kolm töötavad. Kuu aja pärast tulevad turvauuendused, serverid taaskäivitatakse ja kolmas ei tule üles. Põhjuse otsimine võtab tunni, sest „kõik serverid on ju samamoodi seadistatud“.
-
-Probleem polnud oskustes. Probleem oli selles, et masina õige seis oli kirjas ainult inimese mälus.
+> Kas suudad töö korrata, teisele selgitada ja tõestada, et tulemus on õige?
 
 ### Mida automatiseerida ja mida veel mitte
 
@@ -83,9 +69,7 @@ Kõike pole mõtet automatiseerida. Kandidaati hinnatakse kolme küsimusega:
 
 *Tabel 1.1. Kolm küsimust automatiseerimise kandidaadile.*
 
-Harva tehtava, lihtsa ja väikese riskiga töö puhul võib piisata kontrollnimekirjast või juhendist. Ka ühekordse töö automatiseerimine võib olla põhjendatud, kui see on mahukas, keeruline või eksimise hind on suur. Automaatika maksab: see tuleb kirjutada, testida ja hiljem ka hooldada, kui süsteem muutub.
-
-Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, korduvat ja hostide arvuga kasvavat tööd sõnaga *toil*. Raamatu mõte pole „automatiseeri kõik“. Selle mõte on, et korduva töö vähendamine jätab inseneridele aega süsteemi parandamiseks ja et otsus, mida ja kuidas automatiseerida, on inseneriotsus.
+Harva tehtava, lihtsa ja väikese riskiga töö puhul võib piisata juhendist. Automaatika maksab: see tuleb kirjutada, testida ja hooldada. Google'i SRE raamat nimetab käsitsi tehtavat, korduvat ja masinate arvuga kasvavat tööd sõnaga *toil*: just see on esimene kandidaat.
 
 ??? question "Mõtle"
 
@@ -99,6 +83,8 @@ Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, kor
 ## 2. Kuidas töötamise viis on muutunud
 
 **Küsimus:** miks inimesed käsitsi haldusest kaugemale liikusid?
+
+Lihtsustatult on töö liikunud viie sammuna: käsitsi, kirjalik juhend, skript, konfihaldus ja lõpuks kood Gitis, mida kolleeg enne käivitamist üle vaatab. Iga samm paneb midagi rohkem kirja ja jätab vähem inimese mällu.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 140" role="img" aria-label="Viis sammu: käsitsi, kirjalik juhend, skript, konfihaldus, versioonihalduses ja üle vaadatud kood" xmlns="http://www.w3.org/2000/svg">
@@ -118,35 +104,17 @@ Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, kor
 <figcaption>Joonis 2.1. Lihtsustatud järjekord. Paljud meeskonnad kasutavad kõiki viite korraga.</figcaption>
 </figure>
 
-### Käsitsi
-
-Administraator teeb töö ise. Teadmine on tema peas ja shelli ajaloos. Kui ta on puhkusel, ei tea keegi täpselt, mis serveris tehti.
-
-### Kirjalik juhend
-
-Kui keegi teine peab tööd kordama, kirjutatakse juhend (runbook). Juhend salvestab teadmise, aga inimene loeb seda ja otsustab igal sammul ise. Kaks inimest teevad sama juhendi järgi sageli veidi erinevalt.
-
-### Skript
-
-Kui juhend on tuttav ja korduv, salvestatakse osa sammudest skripti. Nüüd täidab sammud arvuti, alati samas järjekorras. Skript kirjeldab aga käske, mitte tulemust. Kas teine käivitus on ohutu, pead ise läbi mõtlema.
-
-### Konfihaldus
-
-Kui masinaid on palju, tuleb tööriist, mis kirjeldab soovitud seisu: „siin peab olema see kaust, need õigused, see fail“. Tööriist kontrollib ise, kas midagi on vaja muuta. Selliseid tööriistu on mitu (Ansible, Puppet, Salt). Meie kasutame Ansible'it.
-
-### Kood versioonihalduses
-
-Kui automaatika on kood, saab seda hoida Gitis. Siis on näha, kes mida muutis ja miks, ning muudatuse saab enne käivitamist kolleegiga üle vaadata.
-
 | Samm | Mida kirjeldab | Kes otsustab, kas muuta on vaja | Tüüpiline risk |
 |---|---|---|---|
+| Käsitsi | ei midagi, teadmine on peas | inimene | keegi ei tea, mis tehti |
 | Juhend | samme inimesele | inimene igal sammul | samm jääb vahele |
 | Skript | käskude järjekorda | skripti autor, kui ta kontrolli kirjutas | teine käivitus teeb sama töö uuesti |
 | Konfihaldus | soovitud seisu | tööriista moodul | toores käsk ilma kontrollita |
+| Kood Gitis | kõike ülaltoodut koos ajalooga | ülevaataja enne käivitamist | ülevaatus jääb formaalseks |
 
 *Tabel 2.1. Mida iga samm kirjeldab ja kus on risk.*
 
-Ükski samm ei asenda eelmisi täielikult. Bash pole vananenud ja Ansible ei asenda iga skripti. Ka Eesti X-tee avalikus repos on kõrvuti paigaldusjuhend inimesele ja Ansible'i playbook'id meeskonnale, kes ehitab sama keskkonda kümneid kordi. Järjekord on sama: **tee kõigepealt käsitsi, siis kirjuta üles, siis automatiseeri.**
+Ükski samm ei asenda eelmisi. Ka Eesti X-tee avalikus repos on kõrvuti paigaldusjuhend inimesele ja Ansible'i playbook'id meeskonnale, kes ehitab sama keskkonda kümneid kordi. Järjekord on sama: **tee kõigepealt käsitsi, siis kirjuta üles, siis automatiseeri.**
 
 ??? note "Süvenemiseks: snowflake server ja drift"
 
@@ -154,48 +122,30 @@ Kui automaatika on kood, saab seda hoida Gitis. Siis on näha, kes mida muutis j
 
     Masinate vahelisi väikeseid erinevusi nimetatakse **triiviks** (drift). Triivi ei hoia ära eriline hoolikus, sest inimesed unustavad. Aitab see, kui masina seis on kirjas kohas, mis ei unusta, ja seda kirjeldust rakendatakse ikka ja jälle.
 
-??? question "Mõtle"
-
-    Kus on sinu töökohal (või varasemas Linuxi praktikumis) kirjas, kuidas mõni server on seadistatud: juhendis, skriptis, kellegi peas?
-
 ??? info "Loe juurde"
 
     - [Martin Fowler: SnowflakeServer](https://martinfowler.com/bliki/SnowflakeServer.html)
     - [X-tee repo (juhend ja Ansible kõrvuti)](https://github.com/nordic-institute/X-Road)
 
-## 3. Mida automatiseerimine tähendab
+### Mida automatiseerimine tähendab
 
-**Küsimus:** mida saame kirjeldada, korrata ja kontrollida?
-
-**IT-automatiseerimine** tähendab, et korduv töö (paigaldus, seadistus, uuendused, kasutajad, varundus) on kirjas koodina, mida saab üle vaadata, uuesti käivitada ja mille tulemust saab kontrollida.
-
-Kolm märksõna:
-
-- **kirjeldada**: töö on üles kirjutatud nii täpselt, et teine inimene või arvuti saab sellest aru;
-- **korrata**: sama kirjeldus annab teisel masinal ja teisel päeval sama tulemuse;
-- **kontrollida**: on olemas viis näha, kas tulemus vastab nõuetele.
-
-Automaatika ei tee halba protsessi heaks. Kui keegi ei tea, mida töö peab saavutama, teeb automaatika vea lihtsalt kiiremini ja kõigis masinates korraga.
-
-Automaatika ei taga ka iseenesest, et tulemus on õige. Programm teeb täpselt seda, mis on kirjas. Kui kirjas on vale kaust, tehakse vale kaust, kiiresti ja usaldusväärselt.
+**IT-automatiseerimine** tähendab, et korduv töö on kirjas koodina, mida saab **kirjeldada**, **korrata** ja **kontrollida**. Automaatika ei tee halba protsessi heaks: programm teeb täpselt seda, mis on kirjas, ka siis, kui kirjas on viga, ja teeb seda kõigis masinates korraga.
 
 ??? example "Knight Capital 2012: üks server kaheksast"
 
-    Uus kood pidi käsitsi jõudma kaheksasse serverisse. Ühte jäi see kopeerimata ja seal käivitus vana funktsioon. USA väärtpaberikomisjoni [otsuse](https://www.sec.gov/litigation/admin/2013/34-70694.pdf) järgi kaotas firma 45 minutiga üle 460 miljoni dollari. Käsitsi tehtud samm jäi vahele ja keegi ei kontrollinud, kas kõik kaheksa olid samas seisus.
+    Uus kood pidi käsitsi jõudma kaheksasse serverisse. Ühte jäi see kopeerimata ja seal käivitus vana funktsioon. USA väärtpaberikomisjoni [otsuse](https://www.sec.gov/litigation/admin/2013/34-70694.pdf) järgi kaotas firma 45 minutiga üle 460 miljoni dollari.
 
-??? question "Mõtle"
+??? question "Mõtle: vastutus ja töökohad"
 
     Kui automaatika teeb kolleegi iganädalase töö, mis temast saab? Kes vastutab, kui automaatika teeb vea? World Economic Forumi [Future of Jobs Report 2025](https://www.weforum.org/publications/the-future-of-jobs-report-2025/) järgi kasvab nõudlus inimeste järele, kes automaatikat kirjutavad, üle vaatavad ja hooldavad.
 
-## 4. Mõtle enne, kui kirjutad
+## 3. Päeva ülesanne ja töökeskkond
 
-**Küsimus:** mis on sisend, mida me eeldame, mis peab tulema ja mis võib valesti minna?
+**Küsimus:** mis peab tulemuseks olema ja kuidas seda kontrollime?
 
-### Tulemus enne käske
+### Ülesanne ja kontrollnimekiri
 
-„Käivita käsk, mis teeb kausta“ kirjeldab tegevust. „Kaust on olemas kokkulepitud kohas ja kokkulepitud õigustega“ kirjeldab tulemust. Mõlemat on vaja: käske, et tööd teha, ja tulemust, et teada, millal töö on tehtud.
-
-Meie ülesande tulemus on kastis „Päeva ülesanne“. Sellest tuleb kontrollnimekiri, mida kasutame kogu päeva:
+Enne esimest käsku pane kirja, mis peab olema tulemus. „Tee kaust“ on tegevus, „kaust on olemas õigustega 0750“ on tulemus, ja ainult tulemust saab kontrollida. Päeva ülesandest tuleb kontrollnimekiri, mida kasutad kõigi kolme teostuse järel:
 
 1. Kas kaust `/home/kasutaja/automation-lab` on olemas?
 2. Kas failis `training.conf` on täpselt need kaks rida?
@@ -203,20 +153,18 @@ Meie ülesande tulemus on kastis „Päeva ülesanne“. Sellest tuleb kontrolln
 4. Kas mõlemad kuuluvad kasutajale `kasutaja`?
 5. Kas töö muutis ainult seda kohta, mitte midagi muud?
 
-### Neli küsimust enne esimest käsku
+??? note "Sisend, eeldus, tulemus, viga"
 
-| Küsimus | Meie ülesandes |
-|---|---|
-| **Sisend:** mis võib muutuda? | kausta asukoht, faili sisu |
-| **Eeldus:** mis peab enne tõsi olema? | oled web01-s kasutajana `kasutaja`, kodukaust on kirjutatav |
-| **Tulemus:** kuidas tunned ära, et on tehtud? | kontrollnimekiri ülal |
-| **Viga:** mis võib valesti minna? | kaust pole kirjutatav, failinimes on viga, töö jääb poole peale |
-
-*Tabel 4.1. Ülesande kirjeldus enne käske.*
+    | Küsimus | Meie ülesandes |
+    |---|---|
+    | **Sisend:** mis võib muutuda? | kausta asukoht, faili sisu |
+    | **Eeldus:** mis peab enne tõsi olema? | oled web01-s kasutajana `kasutaja`, kodukaust on kirjutatav |
+    | **Tulemus:** kuidas tunned ära, et on tehtud? | kontrollnimekiri ülal |
+    | **Viga:** mis võib valesti minna? | kaust pole kirjutatav, failinimes on viga, töö jääb poole peale |
 
 ### Sinu keskkond
 
-Töötad kahes masinas. **Control node** on masin, kust juhid tööd ja kuhu ühendud VS Code'iga. **web01** on masin, mida seadistad. Käsitsi ja Bashi osas logid web01-sse ise sisse. Ansible'i osas jääd control node'ile ja Ansible teeb SSH kaudu töö web01-s.
+Töötad kahes masinas. **Control node** on masin, kust juhid tööd ja kuhu ühendud VS Code'iga. **web01** on masin, mida seadistad.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 150" role="img" aria-label="Sinu arvuti ühendub VPN-i ja SSH-ga control node'ile, control node SSH-ga web01-le" xmlns="http://www.w3.org/2000/svg">
@@ -229,204 +177,41 @@ Töötad kahes masinas. **Control node** on masin, kust juhid tööd ja kuhu üh
 <rect class="box" x="520" y="35" width="190" height="70" rx="8"/><text class="b" x="615" y="65" text-anchor="middle">web01</text><text class="s" x="615" y="85" text-anchor="middle">~/automation-lab</text>
 <text class="s" x="360" y="135" text-anchor="middle">Kasutaja mõlemas masinas: kasutaja</text>
 </svg>
-<figcaption>Joonis 4.1. Käsitsi ja Bashiga töötad web01-s. Ansible'i käivitad control node'il ja see teeb töö web01-s SSH kaudu.</figcaption>
+<figcaption>Joonis 3.1. Käsitsi ja Bashiga töötad web01-s. Ansible'i käivitad control node'il ja see teeb töö web01-s SSH kaudu.</figcaption>
 </figure>
 
-### Kõigepealt käsitsi
+Praktikumis teed ülesande kõigepealt web01-s käsitsi käsk-käsult ja kontrollid tulemust käskudega `cat` ja `stat`. Kui käsk ei trüki midagi, ei tähenda see veel, et ülesanne on tehtud: tõend on see, mida kontrollnimekiri küsib.
 
-Enne automatiseerimist teed ülesande web01-s käsitsi. See pole raisatud aeg. Nii näed, mida iga käsk teeb, ja leiad eeldused, mis valmis skripti lugedes märkamata jäävad. Kas tee on suhteline praeguse kausta suhtes või täielik? Mis kasutajana sa töötad? Mis juhtub, kui fail on juba olemas?
+## 4. Skript ja selle piir
 
-Iga käsu eel ütle välja, mida ootad. Iga käsu järel vaata tulemust. Ära oota lõpuni, et avastada, et esimene käsk tegi kausta valesse kohta.
+**Küsimus:** miks ei piisa sellest, et käsud on failis?
 
-Pea meeles ka seda: kui käsk ei trüki midagi, ei tähenda see veel, et kogu ülesanne on õigesti tehtud. Tõend on see, mida kontrollnimekiri küsib: tee, sisu, omanik ja õigused.
-
-??? question "Kontrolli ennast"
-
-    1. Mis vahe on lausetel „tee kaust“ ja „kaust on olemas õigustega 0750“?
-    2. Miks tasub ülesanne enne automatiseerimist käsitsi läbi teha?
-
-## 5. Bash kui esimene samm
-
-**Küsimus:** kuidas tuttavatest käskudest saab väike programm?
-
-Skript ei ole lihtsalt koht, kuhu käsud salvestada. Selle kirjutamisel pead otsustama, millised väärtused võivad muutuda, mida eeldad, kuidas vastad veale ja kuidas tunned ära edu.
-
-### Shell on ka programmeerimiskeel
-
-Kui kirjutad terminali käsu, loeb ja täidab selle **shell**. GNU Bashi juhend kirjeldab shelli kahe asjana: käskude tõlgendaja ja programmeerimiskeel. Sama Bash, mis täidab sinu käske terminalis, oskab neid täita ka failist. Sul on juba tuttavad käsud; nüüd lisad nende ümber programmeerimise võtted.
-
-### Käsud faili
-
-Skript on tekstifail. Esimene rida ütleb, millise programmiga faili käivitada:
+Kui paned käsitsi tehtud käsud faili, saad skripti:
 
 ```bash
 #!/usr/bin/env bash
+mkdir -p ~/automation-lab
+chmod 0750 ~/automation-lab
+printf '%s\n' 'environment=training' 'enabled=true' > ~/automation-lab/training.conf
+chmod 0640 ~/automation-lab/training.conf
 ```
 
-Seda rida nimetatakse **shebang**'iks. Skripti saab käivitada kahel viisil: `bash prepare-training.sh` (valid ise Bashi) või `./prepare-training.sh` (fail peab olema käivitatav, `chmod u+x`, ja shebang ütleb, mis programm seda loeb). Meie skript kasutab Bashi võimalusi, seega ära käivita seda käsuga `sh`.
+Esimene rida ütleb, et faili loeb Bash. Käivitad `bash prepare-training.sh`. Skript teeb sama töö kiiresti ja alati samas järjekorras. Aga ta ei tea midagi masina seisust:
 
-### Muutuja: väärtusele nimi
+- **Teine käivitus kirjutab faili uuesti üle**, kuigi sisu on juba õige. Sama lõpptulemus ei tähenda, et midagi ei tehtud.
+- **Kui üks käsk ebaõnnestub, jätkab skript järgmisega.** Pooleli jäänud töö jääb masinasse.
+- **Iga kontrolli pead ise kirjutama.** Kas kaust on olemas, kas sisu on juba õige, kas õigused klapivad: igaüks on eraldi `if`.
 
-**Muutuja** hoiab väärtust nime all. Nii eraldad töö käigu väärtustest, mis võivad muutuda:
-
-```bash
-lab_dir="$HOME/automation-lab"
-```
-
-`$HOME` on sinu kodukaust ja `$lab_dir` annab muutuja väärtuse tagasi. Võrdusmärgi ümber ei tohi olla tühikuid. `lab_dir = "..."` ei ole muutuja omistamine, Bash proovib siis käivitada käsku nimega `lab_dir`.
-
-Muutuja on kasulik, kui ta annab väärtusele mõistliku nime või kui väärtust on vaja muuta ühes kohas. Iga sõna pole vaja muutujaks teha.
-
-### Jutumärgid
-
-Jutumärgid ütlevad Bashile, kuidas teksti lugeda. Topeltjutumärkides (`"$lab_dir"`) asendatakse muutuja väärtusega ja tühikuga tee jääb üheks argumendiks. Ühekordsetes jutumärkides (`'$HOME'`) jääb tekst täpselt selliseks, nagu see on kirjas.
-
-Praktiline harjumus: **pane muutuja alati topeltjutumärkidesse**, kui see läheb käsule argumendiks. Erand ainult siis, kui tead täpselt, miks.
-
-### `>` kirjutab üle, `>>` lisab lõppu
-
-```bash
-printf '%s\n' 'environment=training' 'enabled=true' > "$lab_dir/training.conf"
-```
-
-`printf` trükib read ja `>` suunab väljundi faili. `>` loob faili, kui seda pole, ja **tühjendab olemasoleva faili** enne kirjutamist. `>>` lisab olemasoleva faili lõppu.
-
-Meie ülesandes on ülekirjutamine õige, sest fail on täielikult skripti hallata. Kui kasutaksid `>>`-i, lisanduks igal käivitusel kaks rida juurde. Ära kunagi kasuta `>`-i tähtsa faili peal, kui sa ei tea, mida see üle kirjutab.
-
-### Väljumiskood
-
-Iga käsk lõpetab **väljumiskoodiga** (exit status). `0` tähendab õnnestumist, muu number ebaõnnestumist. Viimase käsu koodi näed muutujast `$?`. Ekraanil olev tekst on inimesele, väljumiskood on teisele programmile, ka sinu skriptile.
-
-### `if`: otsus käsu tulemuse järgi
-
-`if` vaatab käsu väljumiskoodi ja valib haru:
-
-```bash
-if ! mkdir -p "$lab_dir"; then
-    printf 'Viga: ei saa kausta teha: %s\n' "$lab_dir" >&2
-    exit 1
-fi
-```
-
-Loe nii: „kui kausta tegemine **ei** õnnestu, kirjuta viga ja lõpeta“. `!` pöörab tulemuse ümber, `>&2` saadab teate veaväljundisse ja `exit 1` lõpetab skripti mitte-nulli koodiga, et ka teine programm saaks aru, et tekkis viga.
-
-Skripti mõte on lihtne: iga tähtis samm on `if`-i sees ja vea korral skript peatub ning ütleb, mis juhtus. Praktikumis käivitad selle web01-s.
-
-??? example "Terviknäide: kuidas osad kokku sobivad"
-
-    ```bash
-    #!/usr/bin/env bash
-    # Valmistab ette koolituse kausta ja konfiguratsioonifaili.
-
-    lab_dir="$HOME/automation-lab"                       # 1: sisendid
-    config_file="$lab_dir/training.conf"
-
-    if ! mkdir -p "$lab_dir"; then                       # 2: kaust
-        printf 'Viga: ei saa kausta teha: %s\n' "$lab_dir" >&2
-        exit 1
-    fi
-    if ! chmod 0750 "$lab_dir"; then
-        printf 'Viga: ei saa kausta õigusi muuta: %s\n' "$lab_dir" >&2
-        exit 1
-    fi
-
-    if ! printf '%s\n' 'environment=training' 'enabled=true' > "$config_file"; then   # 3: fail
-        printf 'Viga: ei saa faili kirjutada: %s\n' "$config_file" >&2
-        exit 1
-    fi
-    if ! chmod 0640 "$config_file"; then
-        printf 'Viga: ei saa faili õigusi muuta: %s\n' "$config_file" >&2
-        exit 1
-    fi
-
-    printf 'Valmis: %s\n' "$config_file"                # 4: tulemus
-    ```
-
-    1. **Sisendid:** kaust ja fail on muutujates, nii saab neid muuta ühes kohas.
-    2. **Kaust:** tehakse ja saab õigused `0750`.
-    3. **Fail:** kirjutatakse üle soovitud sisuga ja saab õigused `0640`.
-    4. **Kontroll:** iga tähtsa sammu järel vaatab `if` väljumiskoodi; vea korral skript peatub koodiga `1`, muidu ütleb lõpus `Valmis`.
-
-??? note "Süvenemiseks: miks mitte lihtsalt `set -e`"
-
-    `set -e` paneb Bashi lõpetama, kui mõni käsk ebaõnnestub. See on kasulik, aga mitte täielik veakäsitlus: `if`-i tingimuses, `&&` ja `||` ahelas ning mõnes muus kohas Bash ei peatu. Algaja skriptis on selgem kontrollida tähtsaid samme otse `if`-iga, nii et on näha, mis vea korral juhtub.
-
-    Kuulus näide tühjast muutujast: Steam for Linuxi skript kustutas 2015. aastal kasutajate faile, sest kustutuskäsu tee algas muutujaga, mis jäi tühjaks ([PCWorld](https://www.pcworld.com/article/431317/scary-steam-for-linux-bug-erases-all-the-personal-files-on-your-pc.html)).
-
-    `set -u` peatab skripti, kui kasutad muutujat, mida pole üldse määratud, aga mitte siis, kui muutuja on määratud ja tühi. Kuju `${MUUTUJA:?}` peatab mõlemal juhul. Ka sellest üksi ei piisa: enne kustutamist kontrolli, et tee on just see, mida kavatsed kustutada.
+Omadust, et korduv käivitus ei muuda midagi, kui soovitud seis on juba olemas, nimetatakse **idempotentsuseks**. Skriptis on iga selline kontroll sinu töö. Ansible'i moodulites on need valmis.
 
 ??? question "Kontrolli ennast"
 
-    1. Mis vahe on käskudel `bash prepare-training.sh` ja `./prepare-training.sh`?
-    2. Miks on `"$lab_dir"` jutumärkides?
-    3. Mida teeb `>`, kui fail on juba olemas?
+    1. Mis juhtub failiga `training.conf`, kui käivitad skripti teist korda?
+    2. Mida tähendab idempotentsus?
 
-??? info "Loe juurde"
+## 5. Mis on Ansible ja kuidas see töötab
 
-    - [GNU Bash: What is a shell?](https://www.gnu.org/software/bash/manual/html_node/What-is-a-shell_003f.html)
-    - [GNU Bash: Exit Status](https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html)
-    - [GNU Bash: Conditional Constructs](https://www.gnu.org/software/bash/manual/html_node/Conditional-Constructs.html)
-    - [Software Carpentry: The Unix Shell](https://swcarpentry.github.io/shell-novice/)
-    - [ShellCheck](https://www.shellcheck.net/): kontrollib skripti levinud vigade suhtes
-
-## 6. Rohkem kui käskude jada
-
-**Küsimus:** mis juhtub, kui olukord on teine või käivitame töö uuesti?
-
-Esimene õnnestunud käivitus vastab ainult ühele küsimusele: kas skript töötab nendes tingimustes, mida just proovisid. Usaldusväärsuse kohta ütleb see vähe.
-
-### Kui midagi läheb valesti
-
-Kaust võib olla kirjutamiseks lukus. Tees võib olla trükiviga. Kausta kohal võib olla samanimeline fail. Esimene samm võib ebaõnnestuda ja järgmised siiski õnnestuda.
-
-Praktikumis tekitad kontrollitud vea ja ennustad enne:
-
-- Kus skript peaks peatuma?
-- Mida ta peaks sulle ütlema?
-- Kas midagi jääb poolikuks?
-- Kuidas seda kontrollid?
-- Mis juhtub pärast vea parandamist?
-
-Meie skript peatub vea juures, aga ei võta juba tehtud samme tagasi. Kui fail kirjutati, aga õiguste muutmine ebaõnnestus, jääb fail alles valede õigustega. **Peatumine ja tagasivõtmine on kaks eri nõuet.** Eesmärk ei ole, et esimene skript lahendaks iga võimaliku olukorra. Eesmärk on, et viga oleks osa kavandist, mitte üllatus.
-
-### Teine käivitus
-
-Käivita skript teist korda ilma midagi koristamata. Enne pane kirja, mida ootad: kas see õnnestub, kas fail kirjutatakse üle, kas ta kaebab, et kaust on juba olemas? Need on eri küsimused.
-
-Meie skript kirjutab faili igal käivitusel uuesti. Tulemus on sama, aga töö tehakse ikkagi ära. **Sama lõpptulemus ei tähenda, et midagi ei tehtud.** Päris teenuse puhul võib iga ülekirjutus tähendada teenuse taaskäivitust ja katkenud ühendusi.
-
-### Triiv: keegi muutis faili
-
-Seejärel muudad faili käsitsi, näiteks paned `enabled=false`, ja käivitad skripti uuesti. Skript taastab õige sisu, sest me otsustasime, et fail on täielikult automaatika hallata.
-
-See on kavandi otsus, mitte iga skripti omadus. Mõne faili puhul oleks ülekirjutamine vale, sest seal on teiste inimeste seadeid. Enne kui hindad, kas teostus on õige, pead teadma, mis käitumist sa tahad.
-
-### Idempotentsus
-
-Omadust, et korduv käivitus ei muuda enam midagi, kui soovitud seis on juba olemas, nimetatakse **idempotentsuseks**. Bashis saad selle ise kirjutada: enne muutmist kontrolli, kas muutmine on vaja. Iga sellise kontrolli pead aga ise välja mõtlema ja kirjutama. Meie kasutatavad Ansible'i `file`- ja `copy`-moodulid sisaldavad vajalikke seisukontrolle juba valmis kujul.
-
-??? note "Süvenemiseks: kirjuta ainult siis, kui sisu erineb"
-
-    ```bash
-    if ! printf '%s\n' 'environment=training' 'enabled=true' | cmp -s - "$config_file"; then
-        printf '%s\n' 'environment=training' 'enabled=true' > "$config_file"
-        printf 'Muudetud: %s\n' "$config_file"
-    fi
-    ```
-
-    Toru `|` saadab esimese käsu väljundi teise käsu sisendiks. `printf` toodab soovitud sisu ja `cmp` võrdleb seda failiga. `-` tähendab „loe võrreldavat sisu torust“ ja `-s` paneb `cmp`-i vaikima: vastuse annab ainult väljumiskood (`0` = sama). Fail kirjutatakse ainult siis, kui sisu erineb.
-
-??? question "Kontrolli ennast"
-
-    1. Miks ei tõesta üks õnnestunud käivitus, et skript on usaldusväärne?
-    2. Mis vahe on „skript peatub vea juures“ ja „skript võtab vea korral muudatuse tagasi“?
-    3. Mida tähendab idempotentsus ja kas Bashi skript võib olla idempotentne?
-
-## 7. Sissejuhatus Ansible'isse
-
-**Küsimus:** kuidas kirjeldada ja hallata seadistust, mida tahame?
-
-### Mis on Ansible
+**Küsimus:** mis tööriist see on ja kuidas see masinani jõuab?
 
 **Ansible** on avatud lähtekoodiga programm serverite seadistamiseks. Sa kirjutad tekstifaili, milline peab masin olema: millised paketid on paigaldatud, millised failid on olemas, millised teenused töötavad. Ansible loeb selle faili, ühendub SSH-ga masinatesse ja teeb seal ainult need muudatused, mis on puudu.
 
@@ -442,15 +227,50 @@ Ansible ei ole operatsioonisüsteem, veebiteenus ega asendus Linuxi teadmistele.
 
 Meie ülesanne jääb samaks: sama kaust ja sama fail web01-s. Uus on ainult see, kuidas Ansible tööd kirjeldab ja teeb.
 
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 220" role="img" aria-label="Control node'il on inventory, playbook ja ansible-playbook; Ansible saadab mooduli SSH-ga web01-le, kus Python võrdleb soovitud ja tegelikku seisu ning tagastab ok või changed" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.12;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .t{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .b{fill:var(--md-default-fg-color);font-size:13.5px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="hi" x="10" y="10" width="290" height="200" rx="10"/><text class="t" x="26" y="36">control node</text>
+<rect class="box" x="26" y="50" width="258" height="38" rx="6"/><text class="c" x="40" y="74">inventory.ini</text><text class="s" x="272" y="74" text-anchor="end">kus</text>
+<rect class="box" x="26" y="98" width="258" height="38" rx="6"/><text class="c" x="40" y="122">training.yml</text><text class="s" x="272" y="122" text-anchor="end">mis</text>
+<rect class="box" x="26" y="146" width="258" height="46" rx="6"/><text class="c" x="40" y="174">ansible-playbook</text><text class="s" x="272" y="174" text-anchor="end">käivitab</text>
+<line class="a" x1="300" y1="90" x2="418" y2="90" marker-end="url(#lxw)"/><text class="s" x="359" y="80" text-anchor="middle">SSH: moodul</text>
+<line class="a" x1="420" y1="140" x2="302" y2="140" marker-end="url(#lxw)"/><text class="s" x="361" y="160" text-anchor="middle">ok / changed</text>
+<rect class="box" x="420" y="10" width="290" height="200" rx="10"/><text class="t" x="436" y="36">web01</text>
+<text class="b" x="436" y="76">1. Python käivitab mooduli</text>
+<text class="b" x="436" y="116">2. võrdleb soovitud ja tegelikku</text>
+<text class="b" x="436" y="156">3. muudab ainult erinevuse</text>
+<text class="s" x="436" y="190">pärast tööd moodul kustutatakse</text>
+</svg>
+<figcaption>Joonis 5.1. Ansible jookseb control node'il ja teeb töö hallatavas masinas SSH kaudu.</figcaption>
+</figure>
+
 ### Kus Ansible jookseb
 
-Ansible on paigaldatud ainult **control node**'ile. Masinat, mida ta seadistab, nimetatakse **hallatavaks masinaks** (managed node), meil on see web01. Hallatavas masinas ei pea Ansible'it olema, piisab SSH-st ja Pythonist. Ansible ühendub SSH-ga, teeb töö ja võtab tulemuse tagasi.
+Ansible on paigaldatud ainult **control node**'ile. Masinat, mida ta seadistab, nimetatakse **hallatavaks masinaks** (managed node), meil on see web01. Hallatavas masinas ei pea Ansible'it olema, piisab SSH-st ja Pythonist.
 
-Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SSH-võtit: praktikumis teed control node'il võtmepaari ja viid avaliku võtme web01-le, nii et ühendus ei küsi parooli.
+Iga ülesande jaoks saadab Ansible SSH-ga web01-le väikese Pythoni programmi, **mooduli**, koos väärtustega, mida playbook'is kirjutasid. Moodul vaatab masinas tegelikku seisu, muudab vajadusel ja saadab tagasi tulemuse. Siis moodul kustutatakse; masinasse ei jää midagi Ansible'ist.
+
+Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SSH-võtit, nii et ühendus ei küsi parooli.
 
 ??? note "Kohalik ühendus ei ole sama mis kaugühendus"
 
     Ansible võib töötada ka samas masinas, kus ta on paigaldatud (`connection: local`). See on mugav proovimiseks, aga siis ei kasutata SSH-d ega kontrollita, kas võti ja kasutaja on õiged. Meie kasutame kogu aeg päris kaugühendust web01-le.
+
+??? question "Kontrolli ennast"
+
+    1. Kus Ansible jookseb ja mida on vaja hallataval masinal?
+    2. Mis on moodul ja kuhu see pärast tööd jääb?
+
+??? info "Loe juurde"
+
+    - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
+    - [Connection methods and details](https://docs.ansible.com/projects/ansible/latest/inventory_guide/connection_details.html)
+
+## 6. Inventory ja esimesed käsud
+
+**Küsimus:** kuidas Ansible teab, millised masinad on olemas, ja kuidas neid proovida?
 
 ### Inventory: millised masinad
 
@@ -461,17 +281,101 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 web01 ansible_host=<web01-ip> ansible_user=kasutaja
 ```
 
-`[veeb]` on grupp, `web01` on nimi, mida kasutad käskudes, ja `ansible_host` on aadress. Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada:
+| Osa | Tähendus |
+|---|---|
+| `[veeb]` | grupp; nii saab hiljem käivitada töö kõigi veebimasinate vastu korraga |
+| `web01` | nimi, mida kasutad käskudes ja playbook'is |
+| `ansible_host` | aadress, kuhu Ansible ühendub |
+| `ansible_user` | kasutaja, kellena Ansible sisse logib |
+
+*Tabel 6.1. Inventory rida.*
+
+Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada.
+
+### Kaks käsku: `ansible` ja `ansible-playbook`
+
+| Käsk | Mida teeb | Näide |
+|---|---|---|
+| `ansible` | käivitab ühe mooduli kohe, ilma failita (ad-hoc) | `ansible -i inventory.ini web01 -m ansible.builtin.ping` |
+| `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook -i inventory.ini training.yml` |
+
+*Tabel 6.2. Ansible'i kaks põhikäsku.*
+
+`ansible ... -m ansible.builtin.ping` on esimene kontroll. Vastus `pong` tähendab, et Ansible jõuab SSH-ga masinasse ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist. Ad-hoc käsk sobib kiireks kontrolliks, näiteks `ansible -i inventory.ini web01 -m ansible.builtin.command -a uptime`. Seadistus, mida tahad korrata, käib playbook'i.
+
+### Faktid: mida Ansible masinast teab
+
+Moodul `ansible.builtin.setup` kogub masinast **fakte**: OS, versioon, mälu, võrguliidesed. Neid kasutab Ansible otsusteks, näiteks millise paketihalduriga paigaldada.
 
 ```bash
-ansible -i inventory.ini web01 -m ansible.builtin.ping
+ansible -i inventory.ini web01 -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 ```
 
-Vastus `pong` tähendab, et Ansible jõuab masinani ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist.
+```text
+web01 | SUCCESS => {
+    "ansible_facts": {
+        "ansible_distribution": "Ubuntu",
+        "ansible_distribution_version": "24.04",
+        ...
+```
 
-### Moodul, ülesanne, playbook
+Rocky masinas oleks `ansible_distribution` väärtus `Rocky`. 2. kohtumisel kasutad seda, et sama playbook teeks Ubuntul ja Rockyl õiget asja.
 
-**Moodul** on Ansible'i valmis tööriist ühe asja jaoks: `ansible.builtin.file` haldab kaustu ja õigusi, `ansible.builtin.copy` faili sisu. **Ülesanne** (task) on üks mooduli kasutus koos väärtustega. **Playbook** on YAML-fail, kus on kirjas, millistes masinates millised ülesanded täita.
+??? question "Kontrolli ennast"
+
+    1. Mida tähendab inventory reas `ansible_host` ja mida `[veeb]`?
+    2. Mis vahe on käskudel `ansible` ja `ansible-playbook`?
+    3. Mida tähendab vastus `pong`?
+
+??? info "Loe juurde"
+
+    - [Building an inventory](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html)
+    - [How to build your inventory](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html)
+    - [Introduction to ad hoc commands](https://docs.ansible.com/projects/ansible/latest/command_guide/intro_adhoc.html)
+    - [Discovering variables: facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html)
+
+## 7. Moodulid ja playbook
+
+**Küsimus:** kuidas kirjeldada soovitud seisu nii, et Ansible saab selle teha?
+
+### Moodulid
+
+**Moodul** on Ansible'i valmis tööriist ühe asja jaoks. Mooduleid on sadu, alustamiseks piisab mõnest:
+
+| Moodul | Mida haldab |
+|---|---|
+| `ansible.builtin.file` | kaustad, õigused, omanikud, lingid |
+| `ansible.builtin.copy` | faili sisu (failist või tekstina) |
+| `ansible.builtin.package` | paketid (`apt`, `dnf` vastavalt distrole) |
+| `ansible.builtin.service` | teenused: käib, käivitub boodil |
+| `ansible.builtin.user` | kasutajad |
+| `ansible.builtin.template` | failid mallist, kuhu tulevad muutujate väärtused (2. kohtumine) |
+| `ansible.builtin.command` | toores käsk; Ansible ei tea, mis on soovitud seis |
+
+*Tabel 7.1. Sagedasemad moodulid.*
+
+Pikk nimi `ansible.builtin.file` ütleb, et moodul `file` on Ansible'iga kaasas olevas kogus `ansible.builtin`. Mooduli juhendi näed käsurealt:
+
+```bash
+ansible-doc ansible.builtin.file
+```
+
+Juhendi lõpus on alati näited (`EXAMPLES`). Sealt on kõige lihtsam alustada.
+
+### Playbook: ülesanded järjest
+
+**Playbook** on YAML-fail. Selles on üks või mitu **play**'d: iga play ütleb, millistes masinates (`hosts`) millised **ülesanded** (`tasks`) täita. Iga ülesanne kasutab üht moodulit koos parameetritega.
+
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 230" role="img" aria-label="Playbook sisaldab play'd, play sisaldab ülesandeid, iga ülesanne kasutab üht moodulit koos parameetritega" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.12;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .t{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .b{fill:var(--md-default-fg-color);font-size:13.5px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<rect class="box" x="10" y="10" width="700" height="210" rx="10"/><text class="t" x="26" y="34">training.yml · playbook</text>
+<rect class="hi" x="26" y="46" width="668" height="160" rx="8"/><text class="b" x="42" y="68">play · name: Koolituse seadistus · hosts: web01</text>
+<rect class="box" x="42" y="82" width="310" height="110" rx="6"/><text class="b" x="56" y="104">ülesanne: Kaust on olemas</text><text class="c" x="56" y="132">ansible.builtin.file</text><text class="s" x="56" y="160">path · state: directory · mode</text><text class="s" x="56" y="180">moodul + parameetrid</text>
+<rect class="box" x="368" y="82" width="310" height="110" rx="6"/><text class="b" x="382" y="104">ülesanne: Konfiguratsioonifail …</text><text class="c" x="382" y="132">ansible.builtin.copy</text><text class="s" x="382" y="160">dest · content · mode</text><text class="s" x="382" y="180">moodul + parameetrid</text>
+</svg>
+<figcaption>Joonis 7.1. Playbook'is on play, play'l sihtmasinad ja ülesanded, igal ülesandel üks moodul.</figcaption>
+</figure>
 
 ```yaml
 - name: Koolituse seadistus
@@ -492,7 +396,7 @@ Vastus `pong` tähendab, et Ansible jõuab masinani ja seal töötab Python. Võ
         mode: "0640"
 ```
 
-Pane tähele ülesannete nimesid: „Kaust **on** olemas“, mitte „Tee kaust“. Playbook kirjeldab seisu, mitte tegevust.
+Pane tähele ülesannete nimesid: „Kaust **on** olemas“, mitte „Tee kaust“. Playbook kirjeldab seisu, mitte tegevust. `state: directory` ütleb, et see tee peab olema kaust; `content: |` tähendab, et järgmised taandega read on faili sisu.
 
 ### YAML minimaalselt
 
@@ -504,17 +408,73 @@ YAML on lihtne tekstivorming, kus struktuur tuleb **taandest**. Kolm reeglit kat
 
 Kõige sagedasem algaja viga on vale taane. Ansible ütleb siis `Syntax Error` ja rea numbri. Teine levinud viga on õigused ilma jutumärkideta: `mode: 0750` loetakse arvuna ja tulemus võib olla vale, `mode: "0750"` on ohutu.
 
-### Soovitud seis ja tulemuse lugemine
+### Administraatori õigused: `become`
 
-Iga ülesande järel ütleb Ansible ühe sõna:
+Meie ülesanne käib kasutaja kodukaustas ja `sudo`-t ei vaja. Paketi paigaldamiseks või teenuse käivitamiseks on aga vaja administraatori õigusi. Playbook'is ütleb seda `become: true`:
 
-| Tulemus | Tähendus |
+```yaml
+- name: Tööriistad on paigaldatud
+  hosts: web01
+  become: true
+  tasks:
+    - name: tree on paigaldatud
+      ansible.builtin.package:
+        name: tree
+        state: present
+```
+
+```bash
+ansible-playbook -i inventory.ini tools.yml -K
+```
+
+`-K` küsib `sudo` parooli üks kord ja Ansible kasutab seda kõigi ülesannete jaoks. Pane `become: true` ainult sinna, kus seda vaja on: mida vähem õigusi, seda väiksem kahju vea korral.
+
+??? question "Kontrolli ennast"
+
+    1. Mis vahe on moodulil, ülesandel ja playbook'il?
+    2. Kust leiad mooduli parameetrid ja näited?
+    3. Miks on playbook'is `mode: "0750"` jutumärkides?
+    4. Millal on vaja `become: true`?
+
+??? info "Loe juurde"
+
+    - [Ansible playbooks](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_intro.html)
+    - [`ansible.builtin` moodulite nimekiri](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/index.html)
+    - [YAML Syntax](https://docs.ansible.com/projects/ansible/latest/reference_appendices/YAMLSyntax.html)
+    - [Understanding privilege escalation: become](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)
+
+## 8. Käivitamine, tulemus ja teine käivitus
+
+**Küsimus:** mida Ansible käivitamisel teeb ja kuidas tulemust lugeda?
+
+### Mis juhtub käivitamisel
+
+```bash
+ansible-playbook -i inventory.ini training.yml
+```
+
+1. Ansible loeb inventory'st, kus on `web01` ja kuidas sinna ühenduda.
+2. Ansible loeb playbook'ist, mida seal teha.
+3. **Gathering Facts:** Ansible kogub masinast fakte (OS, versioon, võrk). Seda näed väljundis esimese ülesandena.
+4. Iga ülesande jaoks: SSH, moodul, võrdlus, tulemus.
+5. **PLAY RECAP:** lõpus kokkuvõte iga masina kohta.
+
+```text
+PLAY RECAP *********************************************************
+web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
+```
+
+| Väli | Tähendus |
 |---|---|
-| `ok` | seis oli juba õige, midagi ei muudetud |
-| `changed` | Ansible muutis midagi, et seis saaks õigeks |
+| `ok` | ülesanded, mis lõppesid edukalt (ka need, mis muutsid) |
+| `changed` | neist need, mis midagi muutsid |
+| `unreachable` | masinasse ei saanud ühendust (SSH, võti, IP) |
 | `failed` | ülesanne ebaõnnestus, sellel masinal edasi ei minda |
+| `skipped` | ülesanne jäeti tingimuse tõttu vahele (2. kohtumine) |
 
-*Tabel 7.1. Ansible'i ülesande tulemus.*
+*Tabel 8.1. PLAY RECAP väljad.*
+
+### Soovitud seis ja teine käivitus
 
 Kui kausta ja faili veel pole, teatavad ülesanded esimesel käivitusel `changed`. Kui käsitsi või Bashiga tehtud seadistus vastab juba nõuetele, on tulemus kohe `ok`: Ansible ei muuda midagi ainult sellepärast, et teda käivitati. Muutmata keskkonnas annab järgmine käivitus kokkuvõttes `changed=0`. See näitab, et selles katses käitus playbook idempotentselt.
 
@@ -530,7 +490,7 @@ Kui kausta ja faili veel pole, teatavad ülesanded esimesel käivitusel `changed
 <rect class="box" x="460" y="10" width="250" height="56" rx="8"/><text class="b" x="585" y="33" text-anchor="middle">Erineb → kirjuta</text><text class="c" x="585" y="53" text-anchor="middle">changed</text>
 <rect class="box" x="460" y="84" width="250" height="56" rx="8"/><text class="b" x="585" y="107" text-anchor="middle">Sama → ära kirjuta</text><text class="c" x="585" y="127" text-anchor="middle">ok</text>
 </svg>
-<figcaption>Joonis 7.1. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
+<figcaption>Joonis 8.1. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
 </figure>
 
 Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, näed `changed` ainult failiülesandel. Ansible leidis erinevuse ja taastas õige sisu. Võti `--check --diff` näitab enne, mida Ansible muudaks, ilma midagi muutmata.
@@ -541,20 +501,17 @@ Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, näed `changed
 
 ??? question "Kontrolli ennast"
 
-    1. Kus Ansible jookseb ja mida on vaja hallataval masinal?
-    2. Mida tähendab `changed=0` teisel käivitusel?
-    3. Miks on playbook'is `mode: "0750"` jutumärkides?
+    1. Mis on `Gathering Facts` ja miks see on esimene ülesanne?
+    2. Mis vahe on `ok` ja `changed` väljal PLAY RECAP reas?
+    3. Miks võib esimene käivitus anda `ok`, kuigi playbook on uus?
+    4. Mida tähendab `changed=0` teisel käivitusel?
 
-??? info "Loe juurde (Ansible'i ametlik dokumentatsioon)"
+??? info "Loe juurde"
 
-    - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
-    - [Building an inventory](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html)
-    - [How to build your inventory](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html)
-    - [Ansible playbooks](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_intro.html)
     - [Check mode ja diff](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html)
     - Järgmisel kohtumisel: [Conditionals (`when`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_conditionals.html) ja [Tags](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_tags.html)
 
-## 8. Kontroll ja vastutustundlik käivitamine
+## 9. Kontroll ja ohutu käivitamine
 
 **Küsimus:** kust tead, et muutsid õiget asja õigesti?
 
@@ -595,11 +552,11 @@ Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne tegemist
     1. Miks ei piisa sellest, et Ansible teatas `ok`?
     2. Millised neli küsimust esitad endale enne muutva käsu käivitamist?
 
-## 9. Kokkuvõte
+## 10. Kokkuvõte
 
 - **Tulemus enne käske:** kirjuta enne, mis peab olema ja kuidas seda kontrollid.
 - **Käsitsi enne automaatikat:** mõista tööd enne, kui annad selle arvutile.
-- **Skript on otsused:** muutujad, jutumärgid, väljumiskood ja `if` ütlevad, mis juhtub, kui olukord on teine.
+- **Skriptis on iga kontroll sinu töö:** Ansible'i moodulites on need valmis.
 - **Teine käivitus on eraldi nõue:** sama tulemus ei tähenda, et midagi ei tehtud.
 - **Ansible kirjeldab seisu:** inventory ütleb kus, playbook ütleb mis, moodul võrdleb ise.
 - **Aruanne ei ole tulemus:** kontrolli masinat ennast.
