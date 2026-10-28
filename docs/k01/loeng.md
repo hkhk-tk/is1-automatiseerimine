@@ -570,9 +570,7 @@ Küsimus ei ole, milline tööriist on parim. Küsimused on:
 
 </div>
 
-### Kodune ülesanne
-
-Muuda praktikumi näites üht kokkulepitud väärtust, näiteks faili sisu või kausta õigusi. Ennusta tulemus, tee muudatus playbook'is, käivita, kontrolli masinat ja käivita uuesti. Kirjuta lühidalt, mis muutus, mis jäi samaks ja kuidas seda kontrollisid. Selgitus on töö osa: töötav fail näitab tulemust, sinu põhjendus näitab, kas mõistad, kuidas see tekkis.
+Kodutöö (umbes 30 minutit): [Kodutöö](kodutoo.md).
 
 ## Allikad
 

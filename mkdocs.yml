@@ -98,6 +98,7 @@ nav:
               - 9. Esitamine: k01/lab-9-esitamine.md
               - Abi: k01/abi.md
               - Linux + Bash spikker: k01/spikker.md
+          - Kodutöö: k01/kodutoo.md
           - Lisaülesanded: k01/lisa.md
       - 2. kohtumine · Ansible:
           - Loeng: k02/loeng.md
