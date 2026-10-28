@@ -1,7 +1,7 @@
 site_name: IT-infrastruktuuri automatiseerimine I
 site_description: HKHK täiendkoolitus
 site_author: Maria Talvik
-copyright: Maria Talvik, Haapsalu Kutsehariduskeskus
+copyright: Maria Talvik &middot; <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.et">CC BY-SA 4.0</a>
 site_url: https://hkhk-tk.github.io/is1-automatiseerimine/
 repo_name: hkhk-tk/is1-automatiseerimine
 repo_url: https://github.com/hkhk-tk/is1-automatiseerimine
@@ -82,6 +82,7 @@ nav:
       - index.md
       - Töökeskkonna ettevalmistus: 00-ulevaade/keskkond.md
       - Töö repos ja hindamine: 00-ulevaade/too-ja-hindamine.md
+      - Litsents: 00-ulevaade/litsents.md
   - Kohtumised:
       - 1. kohtumine · Bash ja Ansible:
           - Loeng: k01/loeng.md

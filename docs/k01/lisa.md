@@ -1358,14 +1358,3 @@ Käske pole vaja. Vasta `NOTES.md`-s paari lausega või arutle järgmise kohtumi
 3. **Kolm viga.** Memcached on maas, aga leht töötab ja `/health` annab 200. Millal võiks vahemälu kadumine olla kasutajale sama halb kui andmebaasi kadumine?
 4. **Sama töö Ansible'iga.** `web.yml` ei oota `cloud-init status --wait`-i ega võta lukku nagu `flock`. Millal see värskelt kloonitud VM-il ebaõnnestub, millise mooduliga lisaksid ootamise ja kas lukk on Ansible'i ülesanne või käivitaja (timer, pipeline) oma?
 5. **Git meeskonnas.** Sinu `check.sh` annab koodi 1, kui vahemälu on maas, ja koodi 2, kui andmebaas on maas. Kas see sobib `git bisect run` testiks, kui otsid commit'i, mis murdis ainult andmebaasiühenduse? Millist testi kasutaksid selle asemel?
-
-## Kodutöö
-
-*Sobib pärast lehte [Operatsioon](lab-7-operatsioon.md).*
-
-Kodutöö viib sama `websetup.sh`-i pilve ja `check.sh` mõtte monitooringusse. AWS-is käivitub `websetup.sh` user-data skriptina ilma argumentideta, seepärast oli vaikemall vajalik. Pilves pole snapshot'i, mis kõik tagasi viiks: koristus on sinu töö ja iga unustatud ressurss maksab.
-
-| Issue | Mis | Juhend |
-|---|---|---|
-| `K1.K` | AWS: konto ohutus, EC2 `websetup.sh`-iga user-datana, koristus | [`kodutood/k01-aws.md`](../kodutood/k01-aws.md) |
-| `K1.M` | Monitooring: `golden-signals.sh`, cron iga 5 min, tulemus Labori seisu | [`kodutood/monitooring.md`](../kodutood/monitooring.md) → 1. kohtumine |
