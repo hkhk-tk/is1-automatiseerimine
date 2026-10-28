@@ -70,7 +70,7 @@
   <!-- control node -->
   <rect x="300" y="364" width="240" height="50" rx="8" fill="#fff3e0" stroke="#ff9100"/>
   <text x="420" y="386" font-size="15" font-weight="700" fill="#212121" text-anchor="middle">control node</text>
-  <text x="420" y="405" font-size="14" fill="#212121" text-anchor="middle">10.10.N.10 · sinu töökoht</text>
+  <text x="420" y="405" font-size="14" fill="#212121" text-anchor="middle">10.10.N.10 · siin jooksevad käsud</text>
   <line x1="420" y1="364" x2="420" y2="325" stroke="#7e57c2" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#nool)"/>
   <text x="432" y="349" font-size="14" fill="#5e35b1">SSH :22 kõigile viiele (kasutaja «kasutaja»)</text>
 </svg>

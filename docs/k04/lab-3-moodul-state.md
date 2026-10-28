@@ -207,4 +207,4 @@ Tühi `grep` väljund tähendab, et Giti ei läinud ei backendi aadress ega stat
 
 **Kaust on asendatav, state mitte.** Kõik, kes käivitavad sama koodi sama backendi ja võtmega, näevad sama state'i, ka kaust, kus pole ühtegi state-faili. Sama kehtib pipeline'i kohta: CI-masin on iga käivituse järel tühi, aga näeb sama taristut, sest backend on jagatud.
 
-Kui jõudsid kiiremini: [Lisaülesanded → 4. Teine töökoht, sama state](lisa.md#4-teine-tookoht-sama-state), näitad teisest kaustast ilma ühegi state-failita, et bucketis olev state on kõigi jaoks sama.
+Kui jõudsid kiiremini: [Lisaülesanded → 4. Teine kaust, sama state](lisa.md#4-teine-kaust-sama-state), näitad teisest kaustast ilma ühegi state-failita, et bucketis olev state on kõigi jaoks sama.

@@ -86,7 +86,7 @@ Paroole, tokeneid, `.env`, `secrets.env`, `terraform.tfvars` ega `*.tfstate` fai
   <figcaption>Joonis 0.1. Labori seisu topoloogia: päringu tee ja haldus control node'ist.</figcaption>
 </figure>
 
-Sinu töökoht on control node (`10.10.N.10`, N on sinu number), selle kõrval on viis VM-i `.11`–`.15`. Kasutaja kõigis masinates on `kasutaja`.
+Kõik käsud käivitad control node'il (`10.10.N.10`, N on sinu number). Selle kõrval on viis VM-i `.11`–`.15`. Kasutaja kõigis masinates on `kasutaja`.
 4. kohtumisel kustutad viis VM-i ja lood need OpenTofuga uuesti. 7. kohtumisel töötad koolitaja k3s klastris oma namespace'is ja
 ehitad lisaks oma ühe node'iga klastri.
 

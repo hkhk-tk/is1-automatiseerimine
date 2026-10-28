@@ -10,7 +10,7 @@ Kui buildid töötavad controlleris või ühisel agendil, jagavad kõik jobid sa
 
 **Kui teed seda tööl iga päev:** agent ühendub `jenkins-agent.sh`-ga esimesel katsel (`journalctl -u jenkins-agent -n 5` näitab `Connected`) ja executorite mõju buildi järjekorrale on sulle tuttav. Kui see on sul juba korras, mine otse etappi [„Katkesta agent ja vaata, kuidas see taastub“](#katkesta-agent-ja-vaata-kuidas-see-taastub).
 
-## Valmista töökoht ette
+## Valmista control node ette
 
 Töö käib eraldi harul, et `main` jääks GitHub Actionsi korra seisu. Abiskriptid on värskes `main`-is olemas.
 

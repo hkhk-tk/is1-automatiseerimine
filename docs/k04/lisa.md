@@ -12,7 +12,7 @@ tags:
 | [1. Validate'i ja plaani piirid](#1-validatei-ja-plaani-piirid) | lihtne | tead, millise vea leiab `validate`, `plan`, `apply` |
 | [2. State lähemalt](#2-state-lahemalt) | lihtne | state'i `serial`, `lineage` ja backup üle vaadatud |
 | [3. Kust muutuja väärtuse saab](#3-kust-muutuja-vaartuse-saab) | lihtne | muutuja allikate järjekord on `NOTES.md`-s |
-| [4. Teine töökoht, sama state](#4-teine-tookoht-sama-state) | lihtne | teine kaust näeb bucketist sama state'i |
+| [4. Teine kaust, sama state](#4-teine-kaust-sama-state) | lihtne | teine kaust näeb bucketist sama state'i |
 | [5. Ketas kasvab lõpuni](#5-ketas-kasvab-lopuni) | keskmine | app01 ja db01 ketas kasvanud ilma restardita |
 | [6. Provisioner võrdluseks](#6-provisioner-vordluseks) | keskmine | tead, miks provisioner skripti muutust ei märka |
 | [7. Sama kood Terraformiga](#7-sama-kood-terraformiga) | keskmine | Tofu ja Terraformi plaan koopias võrreldud |
@@ -160,7 +160,7 @@ Vihje: järjekord ja joonis on lehe [Viis VM-i muutujatega](lab-2-viis-vmi.md#mi
 
     Kontroll: pärast `rm`-i annab esimene käsk jälle `terraform.tfvars`-i väärtuse ja `git status --short` ei näita `proov.auto.tfvars`-i. Pipeline'is tähendab see, et `TF_VAR_*` ei kirjuta üle väärtust, mis on repos `*.tfvars` failis.
 
-### 4. Teine töökoht, sama state
+### 4. Teine kaust, sama state
 
 **Tase:** lihtne · **Eeldus:** [Moodul, moved ja state](lab-3-moodul-state.md)
 
