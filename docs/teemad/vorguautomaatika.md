@@ -77,6 +77,10 @@ Võrguautomaatikale tuleb siit kolm järeldust. Eelkontroll on samuti kood ja se
 - **Source of truth'i kvaliteet.** Kui NetBoxis on vale VLAN, viib automaatika vea kõigisse seadmetesse. Andmetel peavad olema samad kontrollid mis koodil: kohustuslikud väljad, lubatud vahemikud ja review.
 - **Python või Ansible.** Python annab täieliku kontrolli veakäsitluse ja parsimise üle ning sinu vastutusel on ka hooldus. Ansible annab inventory, `--check`-i ja recap'i, aga tootja kollektsioonide versioonid ja CLI parserid tuleb hoida kontrolli all. Paljudes meeskondades käivitab töö Ansible ja keerulisem osa on Pythoni filter või moodul.
 
+??? info "Loe juurde"
+
+    - [Red Hat: Network automation guide](https://www.redhat.com/en/resources/network-automation-guide-ebook) (e-raamat): võrguautomaatika kasutusjuhud alates inventuurist ja varundusest kuni sündmuspõhise automaatikani. Tootjapoolne materjal, mis tutvustab Ansible Automation Platformi.
+
 ## Kontrolli ennast
 
 ??? question "Playbook muudab `cisco.ios.ios_config`-iga ACL-i ja iga jooks näitab `changed`, kuigi seadmes ei muutu midagi. Mis on tõenäoline põhjus ja mis on kaks lahendust?"

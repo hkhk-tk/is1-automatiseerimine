@@ -287,6 +287,7 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
     - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
     - [Connection methods and details](https://docs.ansible.com/projects/ansible/latest/inventory_guide/connection_details.html)
     - [Red Hat: Ansible Automation Platform beginner's guide](https://www.redhat.com/en/resources/ansible-automation-platform-beginners-guide-ebook) (e-raamat)
+    - Võrguinseneridele: [Red Hat: Network automation guide](https://www.redhat.com/en/resources/network-automation-guide-ebook) (e-raamat)
     - Harjuta brauseris: [Red Hati interaktiivsed laborid](https://www.redhat.com/en/interactive-labs#red-hat-ansible-automation-platform-labs) (tasuta, vajab Red Hati kontot)
 
 ## 6. Ansible'i seadistamine
