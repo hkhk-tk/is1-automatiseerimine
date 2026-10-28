@@ -83,7 +83,7 @@ Kõike pole mõtet automatiseerida. Kandidaati hinnatakse kolme küsimusega:
 
 *Tabel 1.1. Kolm küsimust automatiseerimise kandidaadile.*
 
-Kui töö on harv, lihtne ja odavalt parandatav, ei tasu automaatika end ära. Ühekordne kolimine uude serverisse vajab head kirjalikku juhendit, mitte programmi. Automaatika maksab: see tuleb kirjutada, testida ja hiljem ka hooldada, kui süsteem muutub.
+Harva tehtava, lihtsa ja väikese riskiga töö puhul võib piisata kontrollnimekirjast või juhendist. Ka ühekordse töö automatiseerimine võib olla põhjendatud, kui see on mahukas, keeruline või eksimise hind on suur. Automaatika maksab: see tuleb kirjutada, testida ja hiljem ka hooldada, kui süsteem muutub.
 
 Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, korduvat ja hostide arvuga kasvavat tööd sõnaga *toil*. Raamatu mõte pole „automatiseeri kõik“. Selle mõte on, et korduva töö vähendamine jätab inseneridele aega süsteemi parandamiseks ja et otsus, mida ja kuidas automatiseerida, on inseneriotsus.
 
@@ -229,7 +229,7 @@ Töötad kahes masinas. **Control node** on masin, kust juhid tööd ja kuhu üh
 <rect class="box" x="520" y="35" width="190" height="70" rx="8"/><text class="b" x="615" y="65" text-anchor="middle">web01</text><text class="s" x="615" y="85" text-anchor="middle">~/automation-lab</text>
 <text class="s" x="360" y="135" text-anchor="middle">Kasutaja mõlemas masinas: kasutaja</text>
 </svg>
-<figcaption>Joonis 4.1. Kus miski jookseb.</figcaption>
+<figcaption>Joonis 4.1. Käsitsi ja Bashiga töötad web01-s. Ansible'i käivitad control node'il ja see teeb töö web01-s SSH kaudu.</figcaption>
 </figure>
 
 ### Kõigepealt käsitsi
@@ -316,7 +316,9 @@ Täielik skript on praktikumis. Selle mõte on lihtne: iga tähtis samm on `if`-
 
     `set -e` paneb Bashi lõpetama, kui mõni käsk ebaõnnestub. See on kasulik, aga mitte täielik veakäsitlus: `if`-i tingimuses, `&&` ja `||` ahelas ning mõnes muus kohas Bash ei peatu. Algaja skriptis on selgem kontrollida tähtsaid samme otse `if`-iga, nii et on näha, mis vea korral juhtub.
 
-    Kuulus näide tühjast muutujast: Steam for Linuxi skriptis oli 2015. aastal rida `rm -rf "$STEAMROOT/"*`. Kui muutuja jäi tühjaks, sai sellest `rm -rf /*` ([PCWorld](https://www.pcworld.com/article/431317/scary-steam-for-linux-bug-erases-all-the-personal-files-on-your-pc.html)). Valik `set -u` või kuju `${STEAMROOT:?}` oleks skripti enne kustutamist peatanud.
+    Kuulus näide tühjast muutujast: Steam for Linuxi skript kustutas 2015. aastal kasutajate faile, sest kustutuskäsu tee algas muutujaga, mis jäi tühjaks ([PCWorld](https://www.pcworld.com/article/431317/scary-steam-for-linux-bug-erases-all-the-personal-files-on-your-pc.html)).
+
+    `set -u` peatab skripti, kui kasutad muutujat, mida pole üldse määratud, aga mitte siis, kui muutuja on määratud ja tühi. Kuju `${MUUTUJA:?}` peatab mõlemal juhul. Ka sellest üksi ei piisa: enne kustutamist kontrolli, et tee on just see, mida kavatsed kustutada.
 
 ??? question "Kontrolli ennast"
 
@@ -395,7 +397,7 @@ Ansible'i dokumentatsioon kirjeldab seda tööriistana, mis automatiseerib süst
 
 Ansible on paigaldatud ainult **control node**'ile. Masinat, mida ta seadistab, nimetatakse **hallatavaks masinaks** (managed node), meil on see web01. Hallatavas masinas ei pea Ansible'it olema, piisab SSH-st ja Pythonist. Ansible ühendub SSH-ga, teeb töö ja võtab tulemuse tagasi.
 
-Selleks peab control node saama web01-sse SSH-ga ilma paroolita. Praktikumis teed control node'il võtmepaari ja viid avaliku võtme web01-le.
+Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SSH-võtit: praktikumis teed control node'il võtmepaari ja viid avaliku võtme web01-le, nii et ühendus ei küsi parooli.
 
 ??? note "Kohalik ühendus ei ole sama mis kaugühendus"
 
@@ -410,7 +412,13 @@ Selleks peab control node saama web01-sse SSH-ga ilma paroolita. Praktikumis tee
 web01 ansible_host=<web01-ip> ansible_user=kasutaja
 ```
 
-`[veeb]` on grupp, `web01` on nimi, mida kasutad käskudes, ja `ansible_host` on aadress. Esimene kontroll on `ansible web01 -m ping`. Vastus `pong` tähendab, et Ansible jõuab masinani ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist.
+`[veeb]` on grupp, `web01` on nimi, mida kasutad käskudes, ja `ansible_host` on aadress. Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada:
+
+```bash
+ansible -i inventory.ini web01 -m ansible.builtin.ping
+```
+
+Vastus `pong` tähendab, et Ansible jõuab masinani ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist.
 
 ### Moodul, ülesanne, playbook
 
@@ -459,18 +467,28 @@ Iga ülesande järel ütleb Ansible ühe sõna:
 
 *Tabel 7.1. Ansible'i ülesande tulemus.*
 
-Esimesel käivitusel on mõlemad ülesanded `changed`. Teisel käivitusel, kui keegi vahepeal midagi ei muutnud, peavad mõlemad olema `ok` ja kokkuvõttes `changed=0`. See on idempotentsuse tõend.
+Kui kausta ja faili veel pole, teatavad ülesanded esimesel käivitusel `changed`. Kui käsitsi või Bashiga tehtud seadistus vastab juba nõuetele, on tulemus kohe `ok`: Ansible ei muuda midagi ainult sellepärast, et teda käivitati. Muutmata keskkonnas annab järgmine käivitus kokkuvõttes `changed=0`. See näitab, et selles katses käitus playbook idempotentselt.
 
-<figure markdown="span">
-  ![Moodul võrdleb soovitud seisu tegeliku seisuga ja muudab ainult erinevuse](../k02/assets/k02_idempotentsus.svg)
-  <figcaption>Joonis 7.1. Moodul võrdleb soovitud ja tegelikku seisu ning muudab ainult erinevuse.</figcaption>
+<figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
+<svg viewBox="0 0 720 150" role="img" aria-label="Soovitud ja tegelik faili sisu võrreldakse; kui erineb, kirjutatakse ja tulemus on changed, kui sama, ei kirjutata ja tulemus on ok" xmlns="http://www.w3.org/2000/svg">
+<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:12.5px}.lx .c{fill:var(--md-default-fg-color);font-size:12.5px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
+<defs><marker id="lxi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="10" y="10" width="200" height="56" rx="8"/><text class="b" x="110" y="33" text-anchor="middle">Soovitud sisu</text><text class="s" x="110" y="52" text-anchor="middle">playbook'is</text>
+<rect class="box" x="10" y="84" width="200" height="56" rx="8"/><text class="b" x="110" y="107" text-anchor="middle">Tegelik sisu</text><text class="s" x="110" y="126" text-anchor="middle">web01 training.conf</text>
+<line class="a" x1="210" y1="38" x2="268" y2="68" marker-end="url(#lxi)"/><line class="a" x1="210" y1="112" x2="268" y2="82" marker-end="url(#lxi)"/>
+<rect class="hi" x="270" y="50" width="130" height="50" rx="8"/><text class="b" x="335" y="80" text-anchor="middle">Võrdlus</text>
+<line class="a" x1="400" y1="68" x2="458" y2="38" marker-end="url(#lxi)"/><line class="a" x1="400" y1="82" x2="458" y2="112" marker-end="url(#lxi)"/>
+<rect class="box" x="460" y="10" width="250" height="56" rx="8"/><text class="b" x="585" y="33" text-anchor="middle">Erineb → kirjuta</text><text class="c" x="585" y="53" text-anchor="middle">changed</text>
+<rect class="box" x="460" y="84" width="250" height="56" rx="8"/><text class="b" x="585" y="107" text-anchor="middle">Sama → ära kirjuta</text><text class="c" x="585" y="127" text-anchor="middle">ok</text>
+</svg>
+<figcaption>Joonis 7.1. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
 </figure>
 
 Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, näed `changed` ainult failiülesandel. Ansible leidis erinevuse ja taastas õige sisu. Võti `--check --diff` näitab enne, mida Ansible muudaks, ilma midagi muutmata.
 
 ??? warning "Kõik ei ole automaatselt idempotentne"
 
-    Enamik mooduleid kontrollib ise, kas muudatust on vaja. Erand on toores käsk (`ansible.builtin.command`, `ansible.builtin.shell`): Ansible ei tea, mida käsk teeb, ja teatab igal korral `changed`. Ära ütle „Ansible on idempotentne ja Bash mitte“. Võrdleme konkreetseid teostusi: skriptis saab kontrolli kirjutada ja playbook'is saab selle ära rikkuda.
+    Enamik mooduleid kontrollib ise, kas muudatust on vaja. Toore käsu puhul (`ansible.builtin.command`, `ansible.builtin.shell`) ei tea Ansible, mis on soovitud lõppseis. Ilma lisakontrollita võib selline ülesanne teatada `changed` igal käivitusel. Ära ütle „Ansible on idempotentne ja Bash mitte“. Võrdleme konkreetseid teostusi: skriptis saab kontrolli kirjutada ja playbook'is saab selle ära rikkuda.
 
 ??? question "Kontrolli ennast"
 
@@ -519,9 +537,9 @@ Enne kui käivitad midagi, mis muudab masinat, vasta endale:
 
 Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne tegemist ja `--limit web01` piirab töö ühe masinaga, isegi kui inventory's on neid rohkem.
 
-??? example "CrowdStrike 2024: muudatus kõigile korraga"
+??? example "CrowdStrike 2024: kontroll ja levitamise ulatus"
 
-    19. juulil 2024 jõudis vigane uuendus korraga kõigi klientide Windowsi masinateni ja need jooksid kokku. Firma [juurpõhjuse analüüsi](https://crowdstrike.com/wp-content/uploads/2024/08/Executive-Summary_Root-Cause-Analysis_Channel-File-291.pdf) järgi jõuavad sellised uuendused nüüd klientideni järk-järgult. Sama mõte kehtib väikses mahus: proovi muudatust ühel masinal (`--limit`), vaata tulemus üle, siis jätka.
+    19. juulil 2024 põhjustas CrowdStrike Falconi vigane sisukonfiguratsiooni uuendus ulatusliku Windowsi süsteemide katkestuse ([juurpõhjuse analüüs](https://crowdstrike.com/wp-content/uploads/2024/08/Executive-Summary_Root-Cause-Analysis_Channel-File-291.pdf)). Juhtum näitab, et muudatuse kontrollimine ja selle levitamise ulatuse piiramine on eraldi ülesanded. Laboris teeme sama väikses mahus: alusta ühest masinast (`--limit`), kontrolli tulemust ja alles siis laienda muudatust.
 
 ??? question "Kontrolli ennast"
 
@@ -545,21 +563,14 @@ Küsimus ei ole, milline tööriist on parim. Küsimused on:
 
 *Tabel 9.1. Täida see tabel praktikumi tulemuste põhjal.*
 
-<div class="grid cards kokkuvote" markdown>
+### Pea meeles
 
--   **Tulemus enne käske.** Kirjuta enne, mis peab olema, ja kuidas seda kontrollid.
-
--   **Käsitsi enne automaatikat.** Mõista tööd enne, kui annad selle arvutile.
-
--   **Skript on otsused.** Muutujad, jutumärgid, väljumiskood ja `if` ütlevad, mis juhtub, kui olukord on teine.
-
--   **Teine käivitus on eraldi nõue.** Sama tulemus ei tähenda, et midagi ei tehtud.
-
--   **Ansible kirjeldab seisu.** Inventory ütleb kus, playbook ütleb mis, moodul kontrollib ise. Teine käivitus: `changed=0`.
-
--   **Aruanne ei ole tulemus.** Kontrolli masinat ennast.
-
-</div>
+- **Tulemus enne käske:** kirjuta enne, mis peab olema ja kuidas seda kontrollid.
+- **Käsitsi enne automaatikat:** mõista tööd enne, kui annad selle arvutile.
+- **Skript on otsused:** muutujad, jutumärgid, väljumiskood ja `if` ütlevad, mis juhtub, kui olukord on teine.
+- **Teine käivitus on eraldi nõue:** sama tulemus ei tähenda, et midagi ei tehtud.
+- **Ansible kirjeldab seisu:** inventory ütleb kus, playbook ütleb mis, moodul võrdleb ise.
+- **Aruanne ei ole tulemus:** kontrolli masinat ennast.
 
 Kodutöö (umbes 30 minutit): [Kodutöö](kodutoo.md).
 

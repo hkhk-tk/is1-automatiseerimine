@@ -16,8 +16,6 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
 [Alusta siit](00-ulevaade/keskkond.md){ .md-button .md-button--primary } [Vaata õppepäevi](#oppepaevad){ .md-button }
 
-<p class="avaleht-info">7 laupäeva · 10:00–15:00 · HKHK ja kooli Proxmoxi labor</p>
-
 </div>
 
 <figure class="lx hero-pilt" markdown="0">
@@ -137,11 +135,5 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 </figure>
 
 Iga kohtumine on loeng, praktikum ja lühike kodutöö. Töö on sinu GitHubi repos ja automaatne hindaja kontrollib seda iga `git push`-i järel. Täpsemalt: [Töö repos ja hindamine](00-ulevaade/too-ja-hindamine.md).
-
-## Lisapraktika
-
-Valikuline, põhiteekonnast eraldi: [Pilv (AWS)](kodutood/kodutood.md) · [Monitooring](kodutood/monitooring.md) · [Teemad](teemad/it-automatiseerimine.md)
-
-<p class="avaleht-info">Koolitajad: Maria Talvik, Rain Koor · Küsimused: <a href="https://github.com/hkhk-tk/is126-arutelu/discussions">is126-arutelu</a></p>
 
 </div>

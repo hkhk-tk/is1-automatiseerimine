@@ -134,3 +134,15 @@
 }
 .md-typeset .tuleb { font-size: .6rem; color: var(--md-default-fg-color--light); }
 @media print { .md-typeset figure.hero-pilt { display: none; } .md-typeset .avaleht-hero { display: block; } }
+
+/* Rahulikud kastid: näide, märkus, lisalugemine, küsimus ühtses hallis.
+   Värv jääb ainult hoiatusele, oodatavale tulemusele ja "Alusta siit"-le. */
+.md-typeset :is(.admonition, details):is(.note, .info, .question, .example, .abstract) {
+  border-color: var(--md-default-fg-color--lighter); box-shadow: none;
+}
+.md-typeset :is(.note, .info, .question, .example, .abstract) > :is(.admonition-title, summary) {
+  background-color: var(--md-code-bg-color);
+}
+.md-typeset :is(.note, .info, .question, .example, .abstract) > :is(.admonition-title, summary)::before {
+  background-color: var(--md-default-fg-color--light);
+}

@@ -12,8 +12,8 @@ tags:
 Muuda playbook'is `training.yml` faili sisu: `enabled=true` → `enabled=false`. Käivita kaks korda:
 
 ```bash
-ansible-playbook training.yml
-ansible-playbook training.yml
+ansible-playbook -i inventory.ini training.yml
+ansible-playbook -i inventory.ini training.yml
 ```
 
 ??? success "Oodatav tulemus"
@@ -31,8 +31,8 @@ Commit'i sõnumisse kirjuta üks lause: mis muutus ja mida näitas teine käivit
 Lisa inventory'sse `app01` gruppi `veeb` ja muuda playbook'is `hosts: web01` → `hosts: veeb`. Proovi enne ainult uue masinaga:
 
 ```bash
-ansible-playbook training.yml --limit app01 --check --diff
-ansible-playbook training.yml
+ansible-playbook -i inventory.ini training.yml --limit app01 --check --diff
+ansible-playbook -i inventory.ini training.yml
 ```
 
 ??? success "Oodatav tulemus"
