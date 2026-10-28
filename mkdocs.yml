@@ -14,23 +14,41 @@ theme:
     text: Inter
     code: JetBrains Mono
   features:
-    - navigation.tabs
-    - navigation.top
-    - navigation.footer
-    - search.highlight
+    - content.code.annotate
     - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
     - toc.follow
   palette:
+    - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle: { icon: material/brightness-auto, name: Vaheta tumele režiimile }
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: amber
-      toggle: { icon: material/weather-night, name: Tume režiim }
+      primary: indigo
+      accent: teal
+      toggle: { icon: material/brightness-7, name: Vaheta tumele režiimile }
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
-      accent: amber
-      toggle: { icon: material/weather-sunny, name: Hele režiim }
+      primary: indigo
+      accent: teal
+      toggle: { icon: material/brightness-4, name: Vaheta heledasse režiimi }
+  icon:
+    logo: material/server-network
 
 plugins:
   - search:
@@ -42,7 +60,7 @@ markdown_extensions:
   - md_in_html
   - footnotes
   - tables
-  - toc: { permalink: false }
+  - toc: { permalink: true, title: Sisukord, toc_depth: 3 }
   - pymdownx.details
   - pymdownx.highlight: { anchor_linenums: true }
   - pymdownx.inlinehilite
