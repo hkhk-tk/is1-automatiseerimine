@@ -24,10 +24,10 @@ Classroom 50 annab sulle repo `<klassiruum>-labori-seis-<github>`.
 
 ## Igal kohtumisel
 
-1. 1. kohtumisel lähevad failid kausta `k01/` ja piisab `git push`-ist. Alates 2. kohtumisest töötad oma harus: `git switch -c k02-ansible` jne.
+1. 1. kohtumisel lähevad failid kausta `k01/` ja töötad otse `main`-is. Alates 2. kohtumisest töötad oma harus: `git switch -c k02` jne.
 2. Kohtumise issue'd on milestone'is `K1` … `K7`, label `plokk`. Üks issue on üks plokk. Sulge see commit'iga `… (closes #3)`.
-3. Kontrolli ise: `bash autograde/check.sh k01 shellcheck`. Kõik testid on failis `autograde/TESTS.md`.
-4. Kohtumise lõpus: PR `main`-i, merge, siis tag:
+3. Kontrolli ise, näiteks: `bash autograde/check.sh k01 files`. Kõik testid on failis `autograde/TESTS.md`.
+4. Kohtumise lõpus esita tag'iga. Alates 2. kohtumisest tee enne PR `main`-i ja merge.
 
     ```bash
     git switch main && git pull
