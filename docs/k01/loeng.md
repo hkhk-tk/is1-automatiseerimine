@@ -254,6 +254,33 @@ Iga ülesande jaoks saadab Ansible SSH-ga web01-le väikese Pythoni programmi, *
 
 Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SSH-võtit, nii et ühendus ei küsi parooli.
 
+### Nõuded: millises masinas mida vaja on
+
+| Masin | Mida vaja | Märkus |
+|---|---|---|
+| **control node** | Linux või macOS, Python 3, `ansible-core` | Windows otse control node'iks ei sobi; Windowsis töötab Ansible WSL-i kaudu |
+| **Linuxi hallatav masin** | SSH ja Python 3 | Ansible'it sinna paigaldada pole vaja |
+| **Windowsi hallatav masin** | WinRM või SSH ja PowerShell | moodulid on eraldi kogus `ansible.windows` |
+| **võrguseade** (ruuter, kommutaator) | SSH või API | Pythonit seadmes pole: moodul jookseb control node'il ja saadab seadmele käsud |
+
+*Tabel 5.1. Mida Ansible eri masinatelt eeldab.*
+
+Paigaldamiseks on kaks tavalist teed: distro paketihaldur (`sudo apt install ansible-core`, `sudo dnf install ansible-core`) või Pythoni tööriist `pipx install ansible-core`, mis annab uusima versiooni. Laboris kasutame paketihaldurit.
+
+### Väikeses ja suures keskkonnas
+
+**Väikeses keskkonnas**, nagu meie labor või väike IT-osakond, on Ansible paigaldatud ühte masinasse: administraatori control node'i või sülearvutisse. Inventory, `ansible.cfg` ja playbook'id on Gitis ja inimene käivitab `ansible-playbook`-i käsurealt, vajadusel ajastatult (cron, systemd timer).
+
+**Suures ettevõttes** jookseb sama playbook tsentraalsel platvormil, näiteks Red Hat **Ansible Automation Platform** või selle tasuta vaste **AWX**. Platvorm on paigaldatud eraldi serveritesse (Red Hati juhendi järgi RHEL 9, andmebaasiks PostgreSQL) ja lisab:
+
+- **veebiliidese ja API:** playbook'i käivitab nupuvajutus, ajakava või teine süsteem (näiteks ServiceNow);
+- **õigused (RBAC):** kes tohib millist playbook'i millise inventory vastu käivitada;
+- **saladuste hoidmise:** paroolid ja võtmed on platvormis, mitte kasutajate arvutites;
+- **käivituskeskkonnad** (execution environments): konteinerid, kus `ansible-core` ja vajalikud kogud on kindla versiooniga, et sama playbook töötaks igal pool ühtemoodi;
+- **logid ja aruanded:** iga käivitus jääb ajalukku koos käivitaja ja tulemusega.
+
+Playbook ise on mõlemas keskkonnas sama. See, mida sel kohtumisel õpid, kehtib ka suures ettevõttes.
+
 ??? note "Kohalik ühendus ei ole sama mis kaugühendus"
 
     Ansible võib töötada ka samas masinas, kus ta on paigaldatud (`connection: local`). See on mugav proovimiseks, aga siis ei kasutata SSH-d ega kontrollita, kas võti ja kasutaja on õiged. Meie kasutame kogu aeg päris kaugühendust web01-le.
@@ -273,7 +300,7 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
     | automation analytics, Red Hat Insights | aruanded: mida käivitati, kui palju aega säästeti | |
     | Event-Driven Ansible | käivitab playbook'i sündmuse peale (häire, webhook) | ansible-rulebook |
 
-    *Tabel 5.1. Ansible Automation Platformi komponendid.*
+    *Tabel 5.2. Ansible Automation Platformi komponendid.*
 
     Kõik need ehitavad sama asja peale, mida sel kohtumisel õpid: inventory, moodul ja playbook. Ilma nendeta pole platvormist kasu.
 
@@ -286,6 +313,11 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 
     - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
     - [Connection methods and details](https://docs.ansible.com/projects/ansible/latest/inventory_guide/connection_details.html)
+    - [Installing Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html): control node'i ja hallatava masina nõuded
+    - [Windowsi haldamine Ansible'iga](https://docs.ansible.com/projects/ansible/latest/os_guide/intro_windows.html) ja [võrguautomaatika põhimõisted](https://docs.ansible.com/projects/ansible/latest/network/getting_started/basic_concepts.html)
+    - [Execution environments](https://docs.ansible.com/projects/ansible/latest/getting_started_ee/index.html)
+    - [Ansible Automation Platformi süsteeminõuded](https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.4/html/red_hat_ansible_automation_platform_installation_guide/platform-system-requirements) (Red Hat)
+    - [Red Hat: Ansible Automation Platformi oskuste rada](https://www.redhat.com/en/resources/ansible-automation-platform-skills-path)
     - [Red Hat: Ansible Automation Platform beginner's guide](https://www.redhat.com/en/resources/ansible-automation-platform-beginners-guide-ebook) (e-raamat)
     - Võrguinseneridele: [Red Hat: Network automation guide](https://www.redhat.com/en/resources/network-automation-guide-ebook) (e-raamat)
     - Harjuta brauseris: [Red Hati interaktiivsed laborid](https://www.redhat.com/en/interactive-labs#red-hat-ansible-automation-platform-labs) (tasuta, vajab Red Hati kontot)
