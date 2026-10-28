@@ -223,8 +223,25 @@ Pärast seda logib control node teistesse masinatesse ja GitHubi ilma paroolita.
 | Proxmox ei avane | VPN pole ühendatud | ühenda VPN, proovi uuesti |
 | VS Code: `Connection timed out` | VPN pole ühendatud, masin seisab või vale IP | ühenda VPN, kontrolli Proxmoxis, et `control` töötab, kontrolli IP-d config failis |
 | VS Code: `Permission denied` | vale kasutajanimi või parool | config failis `User kasutaja`, parool on masinate oma, mitte kooli konto oma |
+| `Permission denied (publickey)`, parooli ei küsitagi | masinas on parooliga sisselogimine keelatud | vaata allpool „Parooliga sisselogimine on keelatud“ |
 | VS Code: `REMOTE HOST IDENTIFICATION HAS CHANGED` | hostivõtmed uuendati pärast esimest ühendust | ava VS Code'is fail `C:\Users\<sinu nimi>\.ssh\known_hosts` (macOS-is `~/.ssh/known_hosts`), kustuta read control node'i IP-ga, salvesta ja ühendu uuesti |
 | VS Code jääb „Setting up SSH Host“ juurde | ühendus katkes poole pealt | ++f1++ → **Remote-SSH: Kill VS Code Server on Host**, proovi uuesti |
 | macOS-is Tunnelblick ei ühendu | süsteemilaiendus lubamata | **System Settings → Privacy & Security → Allow** |
 
 *Tabel 1. Levinud vead.*
+
+??? warning "Parooliga sisselogimine on keelatud"
+
+    Pilvemallidest tehtud masinad lubavad vaikimisi ainult SSH-võtmega sisselogimist. Kui VS Code või `ssh` ütleb `Permission denied (publickey)` ja parooli ei küsigi, luba parool selles masinas: Proxmoxis masin → **Console**, logi sisse `kasutaja` ja parooliga ning kirjuta:
+
+    ```bash
+    echo "PasswordAuthentication yes" | sudo tee /etc/ssh/sshd_config.d/01-parool.conf
+    sudo systemctl restart ssh      # Rocky Linuxis: sudo systemctl restart sshd
+    sudo sshd -T | grep passwordauthentication
+    ```
+
+    Viimane käsk peab näitama `passwordauthentication yes`.
+
+    !!! danger "Ainult laboris"
+
+        Parooliga SSH on lubatud ainult sellepärast, et labori masinad on suletud võrgus, ainult VPN-iga, ja kursuse lõpus need kustutatakse. **Päris serverites, eriti internetis, nii ei tehta:** parooliga sisselogimist proovivad robotid ööpäevaringselt ära arvata. Seal logitakse sisse ainult SSH-võtmega ja parool on keelatud (`PasswordAuthentication no`).
