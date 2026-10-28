@@ -209,6 +209,13 @@ nav:
       - Turve ja ligipääs:
           - RBAC: teemad/rbac.md
           - Turvaautomaatika: teemad/turvaautomaatika.md
+  - Küsimused ja teated: https://github.com/hkhk-tk/is126-arutelu/discussions
+
+extra:
+  social:
+    - icon: octicons/comment-discussion-16
+      link: https://github.com/hkhk-tk/is126-arutelu/discussions
+      name: Küsimused ja teated
 
 extra_css:
   - stylesheets/extra.css
