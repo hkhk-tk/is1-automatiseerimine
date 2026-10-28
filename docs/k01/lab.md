@@ -25,3 +25,5 @@ tags:
 *Tabel 1. Praktikumi etapid.*
 
 Kinni jäid? [Abi](abi.md) · [Linux + Bash spikker](spikker.md)
+
+Jäi aega üle? [Lisaülesanded](lisa.md)

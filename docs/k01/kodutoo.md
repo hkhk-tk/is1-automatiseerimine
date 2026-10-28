@@ -41,22 +41,18 @@ ansible-playbook training.yml
 
 `git push`.
 
-## H3 · Boonus: skript, mis ei tee asjata tööd
+## H3 · Boonus: sama tööriist, eri nimi
 
-Praktikumi `ssh-seadistus.sh` paneb igal käivitusel masinale nime, ka siis, kui nimi on juba õige. Muuda funktsiooni `seadista` nii, et `hostnamectl` käivitub ainult siis, kui praegune nimi on vale.
+Lisa `tools.yml`-i tööriist `dig` (DNS-päringud). Ubuntul on see paketis `dnsutils`, Rockyl `bind-utils`. Kasuta sama mustrit nagu `vim`-i puhul: kaks ülesannet, `when` ja silt `paketid`.
 
-??? tip "Vihje"
-
-    ```bash
-    praegune=$(ssh -n "$nimi" hostname)
-    if [[ "$praegune" != "$nimi" ]]; then
-        ...
-    fi
-    ```
+```bash
+ansible-playbook tools.yml -K --tags paketid
+ansible all -m ansible.builtin.command -a "dig +short github.com"
+```
 
 ??? success "Oodatav tulemus"
 
-    Teisel käivitusel ei küsi `sudo` enam ühtegi parooli.
+    Esimene käsk: Ubuntu masinatel `dnsutils` `changed`, Rocky masinatel `bind-utils` `changed`, vastupidised ülesanded `skipping`. Teine käsk: igast masinast üks või mitu IP-aadressi.
 
 `git push`.
 

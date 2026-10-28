@@ -98,6 +98,7 @@ nav:
               - Abi: k01/abi.md
               - Linux + Bash spikker: k01/spikker.md
           - Kodutöö: k01/kodutoo.md
+          - Lisaülesanded: k01/lisa.md
       - 2. kohtumine · Ansible:
           - Loeng: k02/loeng.md
           - Labor:
@@ -197,7 +198,6 @@ nav:
           - K5 · GitHub Actions → EC2: kodutood/k05-aws.md
           - K6 · Jenkins → EC2: kodutood/k06-aws.md
           - K7 · k3s EC2-l: kodutood/k07-aws.md
-  - Monitooring: kodutood/monitooring.md
   - Teemad:
       - Alused:
           - IT-automatiseerimine: teemad/it-automatiseerimine.md

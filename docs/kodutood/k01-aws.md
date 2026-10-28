@@ -2,15 +2,14 @@
 tags:
   - AWS
   - EC2
-  - Bash
+  - Ansible
 ---
 
-# 1. kohtumise kodutöö · AWS konto ja sama `websetup.sh` EC2-l
+# 1. kohtumise kodutöö (valikuline) · AWS konto ja sama playbook EC2-l
 
-**Eeldus:** 1. kohtumise labor (`websetup.sh` distro tuvastuse ja argumendiga, `check.sh`, `labseis-report.sh`) · **Esita:** `cloud/k01-aws/check-aws.sh`
+**Eeldus:** 1. kohtumise labor (`training.yml`, `tools.yml`, `inventory.ini`) · **Esita:** `k01/aws.md` ja muudetud `training.yml`
 
-Sinu `websetup.sh` töötab Proxmoxis, kui käivitad selle SSH-ga. Pilves pole sinu terminali: masina loob API ja skripti
-käivitab cloud-init root'ina esimesel boodil. Enne seda on vaja kontot, mis ei tee rahalisi üllatusi.
+Laboris seadistas sinu playbook Proxmoxi masinaid. Siin käivitad sama playbook'i AWS-i virtuaalmasina (EC2) vastu ja näed, mis osa sellest eeldas meie laborit. Enne seda on vaja kontot, mis ei tee rahalisi üllatusi.
 
 **Enne alustamist:**
 
@@ -22,8 +21,9 @@ käivitab cloud-init root'ina esimesel boodil. Enne seda on vaja kontot, mis ei 
 ## Õpiväljundid
 
 1. Seadistab AWS konto nii, et igapäevane töö ei käi root-kasutajaga ja kulu on jälgitav.
-2. Käivitab sama Bashi skripti EC2 user-datana, leiab selle logist üles ja võrdleb Proxmoxi cloud-initiga.
-3. Kontrollib ja koristab pilveressursid skriptiga.
+2. Lisab pilvemasina inventory'sse ja käivitab selle vastu sama playbook'i.
+3. Leiab playbook'ist laborile omase eelduse ja teeb selle üldiseks.
+4. Koristab pilveressursid ja kontrollib, et midagi tasulist ei jäänud.
 
 ---
 
@@ -130,86 +130,78 @@ aws sts get-caller-identity
 
 ---
 
-## Osa 2 · Sama skript, käivitab cloud-init
-
-Proxmoxis käivitasid `websetup.sh`-i SSH-ga. EC2-l annad selle masina loomisel kaasa
-**[user-data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)**na: cloud-init käivitab selle
-esimesel boodil root'ina. Mehhanism on sama mis Proxmoxi mallides, ainult andmeallikas on teine.
+## Osa 2 · EC2 masin
 
 ### 2.1 SG ainult sinu IP-le
 
 ```bash
 MYIP=$(curl -s https://checkip.amazonaws.com)/32
-aws ec2 create-security-group --group-name labseis-k01 --description "K1 kodutoo"
+aws ec2 create-security-group --group-name ansible-k01 --description "K1 kodutoo"
+aws ec2 authorize-security-group-ingress --group-name ansible-k01 --protocol tcp --port 22 --cidr "$MYIP"
 ```
 
-Lisa reeglid 22 ja 80 ainult `$MYIP`-st (`aws ec2 authorize-security-group-ingress … --cidr "$MYIP"`). Käsu
-argumendid leiad `aws ec2 authorize-security-group-ingress help`-ist.
-
-**Miks:** `0.0.0.0/0` pordil 22 saab mõne minutiga esimesed sisselogimiskatsed. Kui tahad neid näha, vaata hiljem
-EC2-l `journalctl -u ssh`.
+**Miks:** `0.0.0.0/0` pordil 22 saab mõne minutiga esimesed võõrad sisselogimiskatsed.
 
 ### 2.2 Võtmepaar
 
-Impordi oma olemasolev avalik võti (`aws ec2 import-key-pair --key-name labseis --public-key-material fileb://~/.ssh/id_ed25519.pub`).
-Privaatvõti jääb control node'ile, AWS-ist `.pem` faili alla ei laadita.
+Impordi control node'i avalik võti, privaatvõti jääb control node'ile:
 
-### 2.3 EC2 Ubuntu 24.04 + user-data
+```bash
+aws ec2 import-key-pair --key-name control --public-key-material fileb://~/.ssh/id_ed25519.pub
+```
 
-Küsi Ubuntu AMI ID [SSM-ist](https://documentation.ubuntu.com/aws/aws-how-to/instances/find-ubuntu-images/), siis on see alati värske:
+### 2.3 EC2 Ubuntu 24.04
 
 ```bash
 AMI=$(aws ssm get-parameter \
     --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
     --query Parameter.Value --output text)
+aws ec2 run-instances --image-id "$AMI" --instance-type t3.micro \
+    --key-name control --security-groups ansible-k01 \
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=ansible-k01}]'
 ```
 
-Käivita `aws ec2 run-instances` nii, et:
-
-- `--image-id "$AMI"`, `--instance-type t3.micro`, sinu võti ja SG;
-- `--user-data file://k01-bash/websetup.sh`;
-- `--tag-specifications` annab sildid `Name=web-k01` ja `Project=labseis`.
-
-**Oodatav tulemus:** käsk tagastab `InstanceId`. Mõne minuti pärast näitab `aws ec2 describe-instances`
-olekut `running` ja avalikku IP-d.
-
-**Kui valisid vaike-AMI (Amazon Linux):** `websetup.sh` lõpetab veaga `Tundmatu distro: amzn`. See on õige käitumine,
-skript ei arva. Vaata lisaülesannet. (Koolitaja lahenduses `lahendus/k01` on `amzn` haru juba olemas.)
-
-### 2.4 Kas skript käivitus?
-
-```bash
-ssh ubuntu@<avalik-ip> 'cloud-init status --long; sudo tail -20 /var/log/cloud-init-output.log'
-```
-
-Ava brauseris `http://<avalik-ip>/`.
-
-**Oodatav tulemus:** `status: done`, logi lõpus on sinu skripti viimane rida (`… töötab, mall …`), brauseris mall.
-**Tõend:** brauseri screenshot + logi viimane rida issue kommentaaris.
-
-**Kui [`cloud-init status`](https://cloudinit.readthedocs.io/en/latest/reference/cli.html#status) jääb olekusse
-`running` ja leht ei avane:** kui sinu `websetup.sh` ootab alguses `cloud-init status --wait`, ootab skript iseennast
-(user-data on cloud-initi osa). Lisa ootele tingimus: oota ainult siis, kui skripti ei käivita cloud-init ise
-(nt `[[ "$(readlink -f "$0")" == /var/lib/cloud/* ]]`).
-
-**Mõtle:** Proxmoxis käivitas skripti kasutaja `kasutaja` `sudo`-ga, siin käivitab root ilma terminalita. Mis sinu
-skriptis eeldab interaktiivset terminali või kasutaja kodukausta? Mis juhtuks, kui `apt` midagi küsiks?
+Mõne minuti pärast näitab `aws ec2 describe-instances` olekut `running` ja avalikku IP-d. Kontrolli: `ssh ubuntu@<avalik-ip> hostname`.
 
 ---
 
-## Osa 3 · Kontroll control node'ist
+## Osa 3 · Sama playbook pilves
 
-Labori seis töötab sinu Proxmoxi web01-l, VPN-i taga. EC2 sinna ei näe, aga control node näeb mõlemat.
+Lisa `inventory.ini`-sse uus grupp:
 
-Kirjuta `cloud/k01-aws/check-aws.sh`: argument on EC2 avalik IP, skript kontrollib `curl`-iga HTTP koodi pordil 80
-ja saadab tulemuse `labseis-report.sh`-iga laborisse `aws-k01` (check `web`, OK või FAIL).
+```ini
+[aws]
+ec2 ansible_host=<avalik-ip> ansible_user=ubuntu
+```
 
-**Oodatav tulemus:** Labori seisus on sinu lehel rida `aws-k01 web OK`.
-**Miks:** sama `labseis-report.sh` töötab mis tahes masina kohta. Kontrollija ja kontrollitav ei pea olema samas võrgus.
-**Tõend:** ShellCheck puhas, Labori seisu screenshot.
+Pilvemasinas on kasutaja `ubuntu`, mitte `kasutaja`, ja aadress on avalik IP, mitte nimi `~/.ssh/config`-ist. EC2-l on kasutajal `ubuntu` paroolita `sudo`: kui `-K` küsib parooli, vajuta lihtsalt Enter.
 
-**Mõtle:** see on *pull*-kontroll (control node küsib). Kuidas teeksid *push*-kontrolli, kus EC2 ise teatab, et
-on valmis? Mis seda praegu takistab?
+```bash
+ansible aws -m ansible.builtin.ping
+ansible-playbook tools.yml -K --limit aws
+ansible-playbook training.yml --limit aws
+```
+
+**Ennusta enne:** `tools.yml` töötab (Ubuntu ülesanded käivad, Rocky omad jäävad vahele). `training.yml` aga kukub: kaust `/home/kasutaja/automation-lab` ei ole EC2-l lubatud, sest seal pole kasutajat `kasutaja`.
+
+See on eeldus, mis oli playbook'is peidus: **tee sõltus meie labori kasutajanimest**. Paranda `training.yml`-is mõlemad teed nii, et need võtavad kodukausta masina faktist:
+
+```yaml
+path: "{{ ansible_facts['env']['HOME'] }}/automation-lab"
+```
+
+Käivita uuesti mõlema keskkonna vastu:
+
+```bash
+ansible-playbook training.yml --limit 'web01,aws'
+ansible-playbook training.yml --limit 'web01,aws'
+```
+
+**Oodatav tulemus:** esimesel korral EC2 `changed`, web01 `ok`; teisel korral mõlemal `changed=0`.
+
+Kirjuta faili `k01/aws.md` kolm lauset: mis eeldus playbook'is oli, kuidas selle leidsid ja kuidas parandasid.
+
+`{{ ... }}` on muutuja; neist räägime 2. kohtumisel.
 
 ---
 
@@ -218,25 +210,19 @@ on valmis? Mis seda praegu takistab?
 ```bash
 aws ec2 terminate-instances --instance-ids <id>
 aws ec2 wait instance-terminated --instance-ids <id>
-aws ec2 delete-security-group --group-name labseis-k01
+aws ec2 delete-security-group --group-name ansible-k01
 bash cloud/aws-leftovers.sh
 ```
 
-Võtmepaar (`labseis`) võib jääda: see on tasuta ja läheb 2. kohtumisel vaja.
+Eemalda `inventory.ini`-st grupp `[aws]`. Võtmepaar (`control`) võib AWS-i jääda, see on tasuta.
 
 ## Valmis, kui
 
 - `aws sts get-caller-identity` näitab IAM-kasutajat, root-il on MFA ja Budgets'is kaks eelarvet kinnitatud e-postiga
 - control node'il töötab `aws login`, `~/.aws/credentials` faili pole
-- `curl -s -o /dev/null -w '%{http_code}' http://<avalik-ip>/` andis `200` ja `cloud-init-output.log`-is on sinu skripti väljund
-- Labori seisus on `aws-k01 web OK`, `shellcheck cloud/k01-aws/check-aws.sh` on puhas
+- `training.yml` teine käivitus annab nii web01-l kui EC2-l `changed=0`
+- `k01/aws.md` on repos
 - `aws-leftovers.sh`: `TULEMUS: tasulisi jääke pole`
-
-## Lisaülesanne
-
-Lisa `websetup.sh`-i haru `amzn)` (Amazon Linux 2023: `dnf`, teenus `httpd`). Käivita sama user-data AL2023 AMI-ga
-(`/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64`). Klassi Proxmoxi labor peab endiselt
-töötama: ShellCheck ja `k01` automaatne hindaja rohelised.
 
 ## Veaotsing
 
@@ -245,5 +231,5 @@ töötama: ShellCheck ja `k01` automaatne hindaja rohelised.
 | Probleem | Põhjus | Lahendus |
 |---|---|---|
 | `aws login` puudub | CLI < 2.32 | paigalda AWS-i zip-ist, mitte apt-ist |
-| brauser timeout, SSH töötab | SG-s pole 80 või skript pole veel lõpetanud | lisa 80; kontrolli `cloud-init status` |
-| `Tundmatu distro: amzn` | vale AMI | kasuta Ubuntu SSM parameetrit |
+| `UNREACHABLE` EC2-le | SG-s pole sinu praegust IP-d või vale kasutaja | uuenda SG reeglit, `ansible_user=ubuntu` |
+| `Permission denied` teel `/home/kasutaja` | tee sõltub labori kasutajast | vt Osa 3, kasuta fakti |

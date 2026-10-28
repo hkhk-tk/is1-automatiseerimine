@@ -6,8 +6,8 @@ tags:
 
 # Pilve kodutööd (AWS) · üldjuhend
 
-Klassis ehitad Labori seisu Proxmoxis. Kodutöös viid **sama koodi** AWS-i oma kontole: sama `websetup.sh`, samad
-Ansible'i rollid, sama Dockerfile, sama OpenTofu struktuur, sama pipeline, samad manifestid. Küsimus on igas kodutöös
+Valikuline, neile, kes tahavad sama asja pilves proovida. Klassis töötad Proxmoxis, kodutöös viid **sama koodi** AWS-i oma kontole: samad
+Ansible'i playbook'id ja rollid, sama Dockerfile, sama OpenTofu struktuur, sama pipeline, samad manifestid. Küsimus on igas kodutöös
 sama: *mis osa minu koodist eeldas Proxmoxi ja kuidas ma selle eelduse parameetriks teen?*
 
 Eeldus on sama kohtumise Proxmoxi labor. Kui labor jäi pooleli, lõpeta see enne (VPN-iga kodust).
@@ -15,7 +15,7 @@ Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 
 | Kohtumine | Kodutöö | Tulemus | Juhend |
 |---|---|---|---|
-| 1 | konto ja ohutus, EC2 + `websetup.sh` user-datana | IAM-kasutaja, eelarvehäired, mall EC2-l | [k01-aws.md](k01-aws.md) |
+| 1 | konto ja ohutus, sama playbook EC2-l | IAM-kasutaja, eelarvehäired, `training.yml` EC2-l `changed=0` | [k01-aws.md](k01-aws.md) |
 | 2 | Labori seis viiel EC2-l Ansible'iga, dünaamiline inventory | `/health` `UP` viiel EC2-l | [k02-aws.md](k02-aws.md) |
 | 3 | image ECR-i, Compose EC2-l | Compose EC2-l, app01 image ECR-ist | [k03-aws.md](k03-aws.md) |
 | 4 | VPC + SG + EC2 OpenTofuga, väljund → Ansible | üks `apply` + playbook → `UP` | [k04-aws.md](k04-aws.md) |
@@ -25,7 +25,6 @@ Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 
 *Tabel 1. Kodutööd kohtumiste kaupa.*
 
-Monitooringu ülesanded (Proxmox): [monitooring.md](monitooring.md).
 
 ## Kuhu kood läheb
 
