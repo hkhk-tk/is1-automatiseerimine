@@ -42,6 +42,15 @@ cd ~/kursus
 git add k01/
 git commit -m "k01: lõpuülesanne"
 git push
+git tag k01
+git push origin k01
+```
+
+Tag `k01` on esitamine: automaatne hindaja kontrollib selle peal sinu faile ja tulemus on [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments)-s. Kohustuslik osa annab 80 punkti, `tools.yml` ja lõpuülesanne kumbki 10 punkti boonust. Kui midagi jäi puudu, paranda, tee uus commit ja lükka tag uuesti üles:
+
+```bash
+git tag -f k01
+git push -f origin k01
 ```
 
 Ava oma repo GitHubis ja vaata, et kaustas `k01/` on need failid:
@@ -55,6 +64,6 @@ Ava oma repo GitHubis ja vaata, et kaustas `k01/` on need failid:
 
 *Tabel 1. Esitatavad failid.*
 
-**Valmis, kui** kõik viis faili on GitHubis ja playbook'i teine käivitus annab `changed=0`.
+**Valmis, kui** kõik viis faili on GitHubis, tag `k01` on üleval ja Classroom 50 näitab kohustusliku osa 80 punkti.
 
 Edasi: [Kodutöö](kodutoo.md).
