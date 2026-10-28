@@ -209,9 +209,9 @@ Omadust, et korduv käivitus ei muuda midagi, kui soovitud seis on juba olemas, 
     1. Mis juhtub failiga `training.conf`, kui käivitad skripti teist korda?
     2. Mida tähendab idempotentsus?
 
-## 5. Mis on Ansible ja kuidas see töötab
+## 5. Ansible'i tutvustus
 
-**Küsimus:** mis tööriist see on ja kuidas see masinani jõuab?
+**Küsimus:** mis tööriist Ansible on ja kuidas see masinani jõuab?
 
 **Ansible** on avatud lähtekoodiga programm serverite seadistamiseks. Sa kirjutad tekstifaili, milline peab masin olema: millised paketid on paigaldatud, millised failid on olemas, millised teenused töötavad. Ansible loeb selle faili, ühendub SSH-ga masinatesse ja teeb seal ainult need muudatused, mis on puudu.
 
@@ -267,10 +267,11 @@ Ansible oskab kasutada ka parooli (`--ask-pass`), aga selles laboris kasutame SS
 
     - [Getting started with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html)
     - [Connection methods and details](https://docs.ansible.com/projects/ansible/latest/inventory_guide/connection_details.html)
+    - Harjuta brauseris: [Red Hati interaktiivsed laborid](https://www.redhat.com/en/interactive-labs#red-hat-ansible-automation-platform-labs) (tasuta, vajab Red Hati kontot)
 
-## 6. Inventory ja esimesed käsud
+## 6. Ansible'i seadistamine
 
-**Küsimus:** kuidas Ansible teab, millised masinad on olemas, ja kuidas neid proovida?
+**Küsimus:** kuidas Ansible teab, millised masinad on olemas ja kuidas neid kasutada?
 
 ### Inventory: millised masinad
 
@@ -290,25 +291,47 @@ web01 ansible_host=<web01-ip> ansible_user=kasutaja
 
 *Tabel 6.1. Inventory rida.*
 
-Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada.
+Salvesta see faili `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada: `ansible -i inventory.ini ...`.
+
+### `ansible.cfg`: projekti seaded
+
+Et iga käsu juurde ei peaks kirjutama `-i inventory.ini`, pane projekti kausta fail `ansible.cfg`:
+
+```ini
+[defaults]
+inventory = inventory.ini
+```
+
+Ansible otsib seadistusfaili kindlas järjekorras ja kasutab **esimest**, mille leiab:
+
+| Järjekord | Kus | Millal kasutada |
+|---|---|---|
+| 1 | keskkonnamuutuja `ANSIBLE_CONFIG` | ajutiselt teine seadistus |
+| 2 | `ansible.cfg` praeguses kaustas | **projekti seaded, meie valik** |
+| 3 | `~/.ansible.cfg` | sinu isiklikud vaikeväärtused |
+| 4 | `/etc/ansible/ansible.cfg` | kogu masina vaikeväärtused |
+
+*Tabel 6.2. Kust Ansible seadistuse võtab.*
+
+Millist faili Ansible parasjagu kasutab, näed käsust `ansible --version`, real `config file = ...`. Kui seal on `None`, ei leidnud Ansible ühtegi ja `-i` on jälle vaja. Hoia `ansible.cfg` koos inventory ja playbook'idega samas kaustas ja Gitis: siis töötab projekt igaühe masinas ühtemoodi.
 
 ### Kaks käsku: `ansible` ja `ansible-playbook`
 
 | Käsk | Mida teeb | Näide |
 |---|---|---|
-| `ansible` | käivitab ühe mooduli kohe, ilma failita (ad-hoc) | `ansible -i inventory.ini web01 -m ansible.builtin.ping` |
-| `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook -i inventory.ini training.yml` |
+| `ansible` | käivitab ühe mooduli kohe, ilma failita (ad-hoc) | `ansible web01 -m ansible.builtin.ping` |
+| `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook training.yml` |
 
-*Tabel 6.2. Ansible'i kaks põhikäsku.*
+*Tabel 6.3. Ansible'i kaks põhikäsku.*
 
-`ansible ... -m ansible.builtin.ping` on esimene kontroll. Vastus `pong` tähendab, et Ansible jõuab SSH-ga masinasse ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist. Ad-hoc käsk sobib kiireks kontrolliks, näiteks `ansible -i inventory.ini web01 -m ansible.builtin.command -a uptime`. Seadistus, mida tahad korrata, käib playbook'i.
+`ansible web01 -m ansible.builtin.ping` on esimene kontroll. Vastus `pong` tähendab, et Ansible jõuab SSH-ga masinasse ja seal töötab Python. Võrguühenduse `ping`-iga sellel pole pistmist. Ad-hoc käsk sobib kiireks kontrolliks, näiteks `ansible web01 -m ansible.builtin.command -a uptime`. Seadistus, mida tahad korrata, käib playbook'i.
 
 ### Faktid: mida Ansible masinast teab
 
 Moodul `ansible.builtin.setup` kogub masinast **fakte**: OS, versioon, mälu, võrguliidesed. Neid kasutab Ansible otsusteks, näiteks millise paketihalduriga paigaldada.
 
 ```bash
-ansible -i inventory.ini web01 -m ansible.builtin.setup -a 'filter=ansible_distribution*'
+ansible web01 -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 ```
 
 ```text
@@ -324,19 +347,20 @@ Rocky masinas oleks `ansible_distribution` väärtus `Rocky`. 2. kohtumisel kasu
 ??? question "Kontrolli ennast"
 
     1. Mida tähendab inventory reas `ansible_host` ja mida `[veeb]`?
-    2. Mis vahe on käskudel `ansible` ja `ansible-playbook`?
-    3. Mida tähendab vastus `pong`?
+    2. Milleks on `ansible.cfg` ja kuidas näed, millist neist Ansible kasutab?
+    3. Mis vahe on käskudel `ansible` ja `ansible-playbook`?
 
 ??? info "Loe juurde"
 
     - [Building an inventory](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html)
     - [How to build your inventory](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html)
+    - [Configuring Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_configuration.html)
     - [Introduction to ad hoc commands](https://docs.ansible.com/projects/ansible/latest/command_guide/intro_adhoc.html)
     - [Discovering variables: facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html)
 
-## 7. Moodulid ja playbook
+## 7. Playbook'i kirjutamine ja käivitamine
 
-**Küsimus:** kuidas kirjeldada soovitud seisu nii, et Ansible saab selle teha?
+**Küsimus:** kuidas kirjeldada soovitud seisu, käivitada see ja lugeda tulemust?
 
 ### Moodulid
 
@@ -408,6 +432,24 @@ YAML on lihtne tekstivorming, kus struktuur tuleb **taandest**. Kolm reeglit kat
 
 Kõige sagedasem algaja viga on vale taane. Ansible ütleb siis `Syntax Error` ja rea numbri. Teine levinud viga on õigused ilma jutumärkideta: `mode: 0750` loetakse arvuna ja tulemus võib olla vale, `mode: "0750"` on ohutu.
 
+### Abivahendid
+
+| Tööriist | Mida teeb |
+|---|---|
+| VS Code'i laiendus **Ansible** (`redhat.ansible`) | värvib YAML-i, näitab vigu kirjutamise ajal, pakub mooduli parameetreid |
+| `ansible-doc <moodul>` | mooduli juhend ja näited käsureal |
+| `ansible-playbook --syntax-check` | kontrollib, kas YAML ja playbook'i ülesehitus on korrektsed |
+| **ansible-lint** | leiab levinud vigu ja halbu tavasid, näiteks moodul ilma `ansible.builtin.` eesliiteta või `mode` ilma jutumärkideta |
+
+*Tabel 7.2. Abivahendid playbook'i kirjutamisel.*
+
+```bash
+ansible-playbook training.yml --syntax-check
+ansible-lint training.yml
+```
+
+Suuremate projektide jaoks on Red Hatil veel [arendustööriistu](https://www.redhat.com/en/technologies/management/ansible/development-tools): **ansible-navigator** (playbook'i käivitamine ja tulemuse sirvimine), **Molecule** (rollide testimine) ja **ansible-builder** (käivituskeskkonna pakendamine). Neid läheb vaja hiljem.
+
 ### Administraatori õigused: `become`
 
 Meie ülesanne käib kasutaja kodukaustas ja `sudo`-t ei vaja. Paketi paigaldamiseks või teenuse käivitamiseks on aga vaja administraatori õigusi. Playbook'is ütleb seda `become: true`:
@@ -424,33 +466,15 @@ Meie ülesanne käib kasutaja kodukaustas ja `sudo`-t ei vaja. Paketi paigaldami
 ```
 
 ```bash
-ansible-playbook -i inventory.ini tools.yml -K
+ansible-playbook tools.yml -K
 ```
 
 `-K` küsib `sudo` parooli üks kord ja Ansible kasutab seda kõigi ülesannete jaoks. Pane `become: true` ainult sinna, kus seda vaja on: mida vähem õigusi, seda väiksem kahju vea korral.
 
-??? question "Kontrolli ennast"
-
-    1. Mis vahe on moodulil, ülesandel ja playbook'il?
-    2. Kust leiad mooduli parameetrid ja näited?
-    3. Miks on playbook'is `mode: "0750"` jutumärkides?
-    4. Millal on vaja `become: true`?
-
-??? info "Loe juurde"
-
-    - [Ansible playbooks](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_intro.html)
-    - [`ansible.builtin` moodulite nimekiri](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/index.html)
-    - [YAML Syntax](https://docs.ansible.com/projects/ansible/latest/reference_appendices/YAMLSyntax.html)
-    - [Understanding privilege escalation: become](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)
-
-## 8. Käivitamine, tulemus ja teine käivitus
-
-**Küsimus:** mida Ansible käivitamisel teeb ja kuidas tulemust lugeda?
-
 ### Mis juhtub käivitamisel
 
 ```bash
-ansible-playbook -i inventory.ini training.yml
+ansible-playbook training.yml
 ```
 
 1. Ansible loeb inventory'st, kus on `web01` ja kuidas sinna ühenduda.
@@ -472,7 +496,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus, sellel masinal edasi ei minda |
 | `skipped` | ülesanne jäeti tingimuse tõttu vahele (2. kohtumine) |
 
-*Tabel 8.1. PLAY RECAP väljad.*
+*Tabel 7.3. PLAY RECAP väljad.*
 
 ### Soovitud seis ja teine käivitus
 
@@ -490,7 +514,7 @@ Kui kausta ja faili veel pole, teatavad ülesanded esimesel käivitusel `changed
 <rect class="box" x="460" y="10" width="250" height="56" rx="8"/><text class="b" x="585" y="33" text-anchor="middle">Erineb → kirjuta</text><text class="c" x="585" y="53" text-anchor="middle">changed</text>
 <rect class="box" x="460" y="84" width="250" height="56" rx="8"/><text class="b" x="585" y="107" text-anchor="middle">Sama → ära kirjuta</text><text class="c" x="585" y="127" text-anchor="middle">ok</text>
 </svg>
-<figcaption>Joonis 8.1. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
+<figcaption>Joonis 7.2. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
 </figure>
 
 Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, näed `changed` ainult failiülesandel. Ansible leidis erinevuse ja taastas õige sisu. Võti `--check --diff` näitab enne, mida Ansible muudaks, ilma midagi muutmata.
@@ -501,17 +525,21 @@ Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, näed `changed
 
 ??? question "Kontrolli ennast"
 
-    1. Mis on `Gathering Facts` ja miks see on esimene ülesanne?
-    2. Mis vahe on `ok` ja `changed` väljal PLAY RECAP reas?
-    3. Miks võib esimene käivitus anda `ok`, kuigi playbook on uus?
-    4. Mida tähendab `changed=0` teisel käivitusel?
+    1. Mis vahe on moodulil, ülesandel ja playbook'il?
+    2. Kust leiad mooduli parameetrid ja näited?
+    3. Millal on vaja `become: true`?
+    4. Mis vahe on `ok` ja `changed` väljal PLAY RECAP reas?
+    5. Mida tähendab `changed=0` teisel käivitusel?
 
 ??? info "Loe juurde"
 
+    - [Ansible playbooks](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_intro.html)
+    - [`ansible.builtin` moodulite nimekiri](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/index.html)
+    - [YAML Syntax](https://docs.ansible.com/projects/ansible/latest/reference_appendices/YAMLSyntax.html)
+    - [Understanding privilege escalation: become](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)
     - [Check mode ja diff](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html)
-    - Järgmisel kohtumisel: [Conditionals (`when`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_conditionals.html) ja [Tags](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_tags.html)
 
-## 9. Kontroll ja ohutu käivitamine
+## 8. Kontroll ja ohutu käivitamine
 
 **Küsimus:** kust tead, et muutsid õiget asja õigesti?
 
@@ -552,7 +580,7 @@ Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne tegemist
     1. Miks ei piisa sellest, et Ansible teatas `ok`?
     2. Millised neli küsimust esitad endale enne muutva käsu käivitamist?
 
-## 10. Kokkuvõte
+## 9. Kokkuvõte
 
 - **Tulemus enne käske:** kirjuta enne, mis peab olema ja kuidas seda kontrollid.
 - **Käsitsi enne automaatikat:** mõista tööd enne, kui annad selle arvutile.
