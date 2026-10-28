@@ -18,7 +18,7 @@ tags:
 
 ## Enne alustamist
 
-[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il. Koolitajalt said oma kuue masina IP-d ja ühise parooli. Kirjuta IP-d siia:
+[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il. Masinate IP-d said Proxmoxist ([keskkonnaleht, samm 2](../00-ulevaade/keskkond.md#2-proxmox-sinu-masinate-ip-d)), parooli juhendajalt. Kirjuta IP-d siia:
 
 | Nimi | IP | OS |
 |---|---|---|
@@ -58,7 +58,7 @@ Viie masina seadistamine käsitsi tähendab viis korda samu käske. Just sellist
 2. **Võtmepaar.** `ssh-keygen` teeb kaks faili: privaatvõti `id_ed25519` jääb control node'ile, avalik võti `id_ed25519.pub` läheb teistesse masinatesse. Kui võti on juba olemas, skript uut ei tee.
 3. **`~/.ssh/config`.** Siia kirjutab skript iga masina kohta nime ja IP. Pärast seda piisab käsust `ssh web01`, IP-d pole vaja meeles pidada. Kui nimi on failis juba olemas, skript seda teist korda ei lisa.
 4. **Võti masinasse.** `ssh-copy-id` küsib masina parooli **üks kord** ja lisab sinu avaliku võtme sinna. Edaspidi parooli ei küsita.
-5. **Masina nimi.** Skript logib masinasse ja paneb sellele nime `hostnamectl`-iga. `sudo` küsib seal parooli.
+5. **Masina nimi ja hostivõtmed.** Skript paneb masinale nime ja teeb esimesel korral uued SSH hostivõtmed, sest kõik masinad on samast mallist ja neil on sama võti. `sudo` küsib parooli.
 6. **Kontroll.** Lõpus küsib skript igalt masinalt nime ilma paroolita. Kui mõni küsib parooli või ei vasta, on seadistus pooleli.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
@@ -135,8 +135,13 @@ seadista() {
         return 1
     fi
 
-    # Masina nimi. sudo küsib parooli.
-    ssh -t "$nimi" "sudo hostnamectl set-hostname $nimi"
+    # Masina nimi ja (ainult esimesel korral) uued hostivõtmed. sudo küsib parooli.
+    if ssh -t "$nimi" "sudo sh -c 'hostnamectl set-hostname $nimi; if [ ! -f /etc/ssh/.hostvotmed-uued ]; then rm -f /etc/ssh/ssh_host_* && ssh-keygen -A > /dev/null && touch /etc/ssh/.hostvotmed-uued && echo UUED_VOTMED && (systemctl restart ssh 2> /dev/null || systemctl restart sshd); fi'" | grep -q UUED_VOTMED; then
+        ssh-keygen -R "$ip" > /dev/null 2>&1
+        ssh-keygen -R "$nimi" > /dev/null 2>&1
+        ssh -n -o StrictHostKeyChecking=accept-new "$nimi" true
+        echo "hostivõtmed uuendatud: $nimi"
+    fi
 }
 
 seadista web01 "$WEB01_IP" || vigu=$((vigu + 1))
@@ -194,7 +199,7 @@ bash -n ~/ssh-seadistus.sh && echo "süntaks korras"
 bash ~/ssh-seadistus.sh
 ```
 
-Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (masina parool, et võti sinna viia), siis `sudo` (et masinale nimi panna). Sisesta ühine parool, mille said koolitajalt.
+Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (et võti masinasse viia), siis `sudo` (et panna nimi ja uued hostivõtmed). Sisesta ühine parool, mille said juhendajalt.
 
 ??? success "Oodatav tulemus"
 
@@ -204,6 +209,7 @@ Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (masina pa
     kasutaja@10.10.N.11's password:
     Number of key(s) added: 1
     [sudo] password for kasutaja:
+    hostivõtmed uuendatud: web01
     ...
     === Kontroll ===
     OK    web01 vastab: web01

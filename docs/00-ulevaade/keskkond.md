@@ -11,8 +11,9 @@ tags:
     Enne esimest kohtumist, oma arvutis. Lõpuks:
 
     - ühendub VPN kooli laborivõrku;
+    - tead Proxmoxist oma masinate IP-sid;
     - avab VS Code terminali otse sinu control node'il;
-    - on control node'il sinu enda parool.
+    - on control node'il sinu enda parool ja oma hostivõtmed.
 
 Sinu arvuti on ainult aken. Kõik kursuse käsud jooksevad control node'il, kooli Proxmoxis. Sinu arvutisse on vaja kaht asja: VPN-i ja VS Code'i.
 
@@ -37,9 +38,89 @@ Sinu arvuti on ainult aken. Kõik kursuse käsud jooksevad control node'il, kool
 <figcaption>Joonis 1. Kus miski jookseb.</figcaption>
 </figure>
 
-Kõigis VM-ides on kasutaja `kasutaja`. Juhendaja annab sulle VPN-i andmed, oma VM-ide IP-d ja parooli. Kirjuta need üles:
+Vaja läheb:
 
-| Nimi | IP |
+| Mis | Kust |
+|---|---|
+| kooli kasutajanimi ja parool | sama, millega logid kooli e-posti (kasutajanimi nt `silmberg.is126`) |
+| VPN-i profiil (fail `.ovpn`) | e-kirjaga eraldi |
+| VM-ide kasutaja ja parool | kasutaja `kasutaja`, parooli annab juhendaja |
+
+*Tabel 1. Mida vajad.*
+
+## 1 · VPN
+
+Kooli Proxmox ja sinu masinad on nähtavad ainult VPN-iga, ka klassis. Kool kasutab **OpenVPN**-i.
+
+### 1.1 Paigalda OpenVPN
+
+=== "Windows"
+
+    Koolis: võrgukettalt `\\192.168.5.2\Jagatud\openvpn`. Kodus: [openvpn.net/community-downloads](https://openvpn.net/community-downloads/), fail **Windows 64-bit MSI installer**. Paigalda vaikeseadetega.
+
+=== "macOS"
+
+    Paigalda tasuta klient [Tunnelblick](https://tunnelblick.net/downloads.html) (Stable). Esimesel käivitusel vasta küsimusele „I have configuration files“.
+
+=== "Linux"
+
+    ```bash
+    sudo apt install -y openvpn
+    ```
+
+### 1.2 Lisa HKHK profiil
+
+Salvesta e-kirjaga saadud `.ovpn` fail oma arvutisse.
+
+=== "Windows"
+
+    Ekraani all paremal on OpenVPN-i ikoon (monitor lukuga; kui seda pole, vaata noolekese alt). **Paremklõps → Import file…** ja vali fail.
+
+=== "macOS"
+
+    Tee `.ovpn` failil topeltklõps. Tunnelblick küsib, kas lisada profiil: vali **Only Me**.
+
+=== "Linux"
+
+    Profiili pole vaja importida, see antakse ühendumisel käsule kaasa.
+
+### 1.3 Ühendu
+
+Kasutajanimi ja parool on **sama mis kooli kontol** (näiteks `silmberg.is126`).
+
+=== "Windows"
+
+    Paremklõps OpenVPN-i ikoonil → **Connect**. Kui ühendus on üleval, muutub ikoon roheliseks.
+
+=== "macOS"
+
+    Ülemisel ribal Tunnelblicki ikoon → **Connect HKHK**.
+
+=== "Linux"
+
+    ```bash
+    sudo openvpn --config <fail>.ovpn
+    ```
+
+    Terminal jääb lahti, kuni VPN on ühendatud. Katkestamiseks ++ctrl+c++.
+
+### 1.4 Kontrolli
+
+Ava brauseris `https://192.168.124.200:8006`. Kui leht avaneb (ka hoiatusega), töötab VPN.
+
+!!! warning "Klassi arvutis"
+
+    Tunni lõpus **katkesta VPN ja sulge OpenVPN** (paremklõps ikoonil → Disconnect, siis Exit). Muidu ei saa järgmine inimene arvutisse sisse logida.
+
+## 2 · Proxmox: sinu masinate IP-d
+
+1. Ava `https://192.168.124.200:8006`. Brauser hoiatab sertifikaadi eest: see on kooli enda server, vajuta **Advanced → Proceed** (või **Täpsemalt → Jätka**).
+2. Logi sisse kooli kasutajanime ja parooliga. **Realm** on kooli domeen; kui sa pole kindel, küsi juhendajalt.
+3. Vasakul puus on sinu masinad. Klõpsa masinal → **Summary**. Real **IPs** on selle IP-aadress.
+
+Kirjuta IP-d üles, neid läheb vaja kogu kursusel:
+
+| Masin | IP |
 |---|---|
 | control | |
 | web01 | |
@@ -48,80 +129,9 @@ Kõigis VM-ides on kasutaja `kasutaja`. Juhendaja annab sulle VPN-i andmed, oma 
 | mc01 | |
 | db01 | |
 
-*Tabel 1. Sinu VM-id.*
+*Tabel 2. Sinu masinad.*
 
-## 1 · VPN
-
-Laborivõrk on nähtav ainult VPN-iga, nii klassis kui kodus. Kooli VPN kasutab FortiClienti (SSL-VPN).
-
-<!-- KOOLITAJALE: kontrolli enne avaldamist, kas kooli VPN on FortiClient SSL-VPN ja kas port on 443. -->
-
-1. Paigalda klient.
-
-    === "Windows"
-
-        Lae alla **FortiClient VPN** (tasuta, ainult VPN) aadressilt [fortinet.com/support/product-downloads](https://www.fortinet.com/support/product-downloads#vpn) või PowerShellis:
-
-        ```powershell
-        winget install -e --id Fortinet.FortiClientVPN
-        ```
-
-    === "macOS"
-
-        Lae alla **FortiClient VPN** aadressilt [fortinet.com/support/product-downloads](https://www.fortinet.com/support/product-downloads#vpn) ja paigalda. Esimesel käivitusel küsib macOS luba: **System Settings → Privacy & Security** → luba Fortineti süsteemilaiendus ja nõustu VPN-i seadistuse lisamisega.
-
-    === "Linux"
-
-        Lihtsaim on `openfortivpn`, mis on distro repos:
-
-        ```bash
-        sudo apt install openfortivpn      # Debian, Ubuntu
-        sudo dnf install openfortivpn      # Fedora, Rocky, Alma
-        ```
-
-2. Seadista ja ühenda.
-
-    === "Windows"
-
-        FortiClient → **Remote Access → Configure VPN**: tüüp **SSL-VPN**, Connection Name `HKHK labor`, Remote Gateway = VPN-i aadress juhendajalt. Salvesta, sisesta kasutajanimi ja parool, **Connect**.
-
-    === "macOS"
-
-        Sama mis Windowsis: **Remote Access → Configure VPN**, **SSL-VPN**, Remote Gateway = VPN-i aadress, **Connect**.
-
-    === "Linux"
-
-        ```bash
-        sudo openfortivpn <vpn-aadress>:443 -u <vpn-kasutaja>
-        ```
-
-        Terminal jääb lahti, kuni VPN on ühendatud. Katkestamiseks ++ctrl+c++. Kui `openfortivpn` keeldub sertifikaadi tõttu ja trükib `--trusted-cert <räsi>`, võrdle räsi juhendaja antuga ja lisa see käsule.
-
-3. Kontrolli, et control node'i SSH-port vastab:
-
-    === "Windows"
-
-        ```powershell
-        Test-NetConnection <control-ip> -Port 22
-        ```
-
-    === "macOS"
-
-        ```bash
-        nc -vz <control-ip> 22
-        ```
-
-    === "Linux"
-
-        ```bash
-        nc -vz <control-ip> 22
-        ```
-
-??? success "Oodatav tulemus"
-
-    Windowsis `TcpTestSucceeded : True`, macOS-is ja Linuxis `succeeded` või `open`. Kui ühendus aegub, pole VPN ühendatud.
-
-## 2 · VS Code ja Remote-SSH
+## 3 · VS Code ja Remote-SSH
 
 1. Paigalda VS Code.
 
@@ -159,9 +169,13 @@ Laborivõrk on nähtav ainult VPN-iga, nii klassis kui kodus. Kooli VPN kasutab 
 
     Kõik töötab ka tavalise terminaliga (PowerShell, Terminal): `ssh kasutaja@<control-ip>`. VS Code annab lisaks failipuu ja redaktori, juhendid eeldavad seda.
 
-## 3 · Oma parool
+## 4 · Esimene sisselogimine: parool ja hostivõtmed
 
-Juhendajalt saadud parool on kõigil sama ja masinad on ühes võrgus. Vaheta see kohe ära, control node'il:
+Need kaks asja teed control node'il **üks kord**, VS Code'i terminalis.
+
+### 4.1 Oma parool
+
+Juhendajalt saadud parool on kõigil sama. Vaheta see:
 
 ```bash
 passwd
@@ -169,7 +183,27 @@ passwd
 
 `passwd` küsib vana parooli, siis kaks korda uut. Liiga lihtsa parooli lükkab süsteem tagasi (`BAD PASSWORD`). Vali vähemalt 8 märki, tähed ja numbrid segamini.
 
-Labori VM-ide paroolid vahetad ja võtmed seadistad esimese kohtumise laboris. Seal teed control node'il SSH-võtme, viid selle labori VM-idele ja GitHubi.
+### 4.2 Oma hostivõtmed
+
+Kõik masinad on tehtud samast mallist, seega on neil sama **hostivõti**: SSH ei saa nii aru, kas räägid päriselt oma masinaga. Tee control node'ile uued võtmed:
+
+```bash
+sudo rm -f /etc/ssh/ssh_host_*
+sudo ssh-keygen -A
+sudo systemctl restart ssh
+```
+
+Nüüd tunneb sinu arvuti control node'i vana võtme järgi ja järgmine ühendus annab hoiatuse. Sulge VS Code'i ühendus (vasakul all roheline silt → **Close Remote Connection**) ja kustuta vana võti **oma arvuti** terminalis (Windowsis PowerShell):
+
+```bash
+ssh-keygen -R <control-ip>
+```
+
+Ühendu VS Code'iga uuesti ja kinnita uus võti (**Continue**).
+
+??? success "Oodatav tulemus"
+
+    VS Code ühendub, küsib uut parooli ja terminal avaneb control node'il. Labori masinatel (web01 … db01) uuendab hostivõtmed 1. praktikumi skript ise.
 
 ??? info "Ilma paroolita ühendus oma arvutist (valikuline)"
 
@@ -210,14 +244,16 @@ Labori VM-ide paroolid vahetad ja võtmed seadistad esimese kohtumise laboris. S
 |---|---|---|
 | `Connection timed out` | VPN pole ühendatud või vale IP | ühenda VPN, kontrolli IP-d |
 | `Permission denied` | vale kasutajanimi või parool | kasutaja on `kasutaja`; pärast `passwd`-d kasuta uut parooli |
-| `REMOTE HOST IDENTIFICATION HAS CHANGED` | VM loodi uuesti | `ssh-keygen -R <control-ip>` ja ühendu uuesti |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` | hostivõti muutus (samm 4.2) või VM loodi uuesti | oma arvutis `ssh-keygen -R <control-ip>` ja ühendu uuesti |
+| VPN küsib parooli uuesti ja ei ühendu | vale kasutajanimi või parool | kasutajanimi on kujul `perenimi.is126`, parool sama mis kooli e-postil |
+| Proxmoxi leht ei avane | VPN pole ühendatud | ühenda VPN (samm 1.3) |
 | VS Code jääb „Setting up SSH Host“ juurde | ühendus katkes poole pealt | ++f1++ → **Remote-SSH: Kill VS Code Server on Host**, proovi uuesti |
-| macOS-is VPN ei ühendu | süsteemilaiendus lubamata | **System Settings → Privacy & Security → Allow** |
+| macOS-is Tunnelblick ei ühendu | süsteemilaiendus lubamata | **System Settings → Privacy & Security → Allow** |
 
-*Tabel 2. Levinud vead.*
+*Tabel 3. Levinud vead.*
 
-Kui kasutad Windowsis WSL-i, tee see leht siiski Windowsi enda PowerShellis. VPN-i ja WSL-i koos seadistamine on eraldi teema ja klassis seda vaja pole.
+Kui kasutad Windowsis WSL-i, tee see leht siiski Windowsi enda PowerShellis. VPN-i ja WSL-i koos seadistamine on eraldi teema ja seda pole vaja.
 
 ## Kokkuvõte
 
-VPN avab laborivõrgu nii klassis kui kodus. VS Code Remote-SSH avab terminali ja failid control node'il, nii et kursuse käsud jooksevad seal, mitte sinu arvutis. Ühine parool on vahetatud, võtmed tulevad esimeses laboris.
+VPN avab kooli laborivõrgu nii klassis kui kodus, Proxmoxist näed oma masinate IP-sid ja VS Code avab terminali control node'il. Control node'il on sinu parool ja oma hostivõtmed; labori masinad seadistad 1. praktikumis.
