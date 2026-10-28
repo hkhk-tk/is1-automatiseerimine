@@ -16,7 +16,7 @@ tags:
     - kirjutada ja selgitada lühikest Bashi skripti (shebang, muutujad, jutumärgid, väljumiskood, `if`);
     - ennustada ja kontrollida, mis juhtub teisel käivitusel ning pärast kontrollitud muudatust või viga;
     - selgitada mõisteid control node, hallatav masin, inventory, moodul, ülesanne ja playbook ning käivitada playbook'i;
-    - lugeda Ansible'i tulemust (`ok`, `changed`, `failed`) ja näidata idempotentsust kahe käivitusega;
+    - lugeda Ansible'i tulemust (`ok`, `changed`, `failed`) ning kontrollida ja selgitada näite korduva käivitamise käitumist;
     - kontrollida tulemust masinast endast, mitte ainult tööriista aruandest.
 
 !!! info "Päeva ülesanne"
@@ -63,7 +63,7 @@ Sellest küsimusest automatiseerimine algab.
 
 ### Mis käsitsi töös katki läheb
 
-Käsitsi töötamises pole midagi valet. Võõra süsteemiga tutvudes, rikke põhjust otsides või uut asja proovides töötad alati käsitsi. Ka sel kursusel teeme iga ülesande esmalt käsitsi.
+Käsitsi töötamises pole midagi valet. Võõra süsteemiga tutvudes, rikke põhjust otsides või uut asja proovides töötad alati käsitsi. Selle kohtumise ülesande teeme esmalt käsitsi.
 
 Raskus tekib siis, kui sama tööd on vaja usaldusväärselt korrata. Juhend võib olla poolik. Keegi jätab sammu vahele, sest telefon helises. Kaks masinat on alguses erinevas seisus. Käsk, mis eile töötas, ei tööta täna, sest ümbrus on muutunud.
 
@@ -89,7 +89,7 @@ Google'i SRE (Site Reliability Engineering) raamat nimetab sellist käsitsi, kor
 
 ??? question "Mõtle"
 
-    Millist tööd teed oma töökohal iga nädal samamoodi? Kas see vastab kolmele küsimusele tabelis 1.1?
+    Millist tööd teed oma töökohal iga nädal samamoodi? Kui sul töökogemust pole, mõtle varasemale Linuxi praktikumile. Kas see vastab kolmele küsimusele tabelis 1.1?
 
 ??? info "Loe juurde"
 
@@ -156,7 +156,7 @@ Kui automaatika on kood, saab seda hoida Gitis. Siis on näha, kes mida muutis j
 
 ??? question "Mõtle"
 
-    Kus on sinu töökohal kirjas, kuidas mõni server on seadistatud: juhendis, skriptis, kellegi peas?
+    Kus on sinu töökohal (või varasemas Linuxi praktikumis) kirjas, kuidas mõni server on seadistatud: juhendis, skriptis, kellegi peas?
 
 ??? info "Loe juurde"
 
@@ -253,7 +253,7 @@ Skript ei ole lihtsalt koht, kuhu käsud salvestada. Selle kirjutamisel pead ots
 
 ### Shell on ka programmeerimiskeel
 
-Kui kirjutad terminali käsu, loeb ja täidab selle **shell**. GNU Bashi juhend kirjeldab shelli kahe asjana: käskude tõlgendaja ja programmeerimiskeel. Sama Bash, mis täidab sinu käske terminalis, oskab neid täita ka failist. Nii et sa ei õpi uut keelt nullist. Lisad tuttavate käskude ümber mõne programmeerimise võtte.
+Kui kirjutad terminali käsu, loeb ja täidab selle **shell**. GNU Bashi juhend kirjeldab shelli kahe asjana: käskude tõlgendaja ja programmeerimiskeel. Sama Bash, mis täidab sinu käske terminalis, oskab neid täita ka failist. Sul on juba tuttavad käsud; nüüd lisad nende ümber programmeerimise võtted.
 
 ### Käsud faili
 
@@ -310,7 +310,42 @@ fi
 
 Loe nii: „kui kausta tegemine **ei** õnnestu, kirjuta viga ja lõpeta“. `!` pöörab tulemuse ümber, `>&2` saadab teate veaväljundisse ja `exit 1` lõpetab skripti mitte-nulli koodiga, et ka teine programm saaks aru, et tekkis viga.
 
-Täielik skript on praktikumis. Selle mõte on lihtne: iga tähtis samm on `if`-i sees ja vea korral skript peatub ning ütleb, mis juhtus.
+Skripti mõte on lihtne: iga tähtis samm on `if`-i sees ja vea korral skript peatub ning ütleb, mis juhtus. Praktikumis käivitad selle web01-s.
+
+??? example "Terviknäide: kuidas osad kokku sobivad"
+
+    ```bash
+    #!/usr/bin/env bash
+    # Valmistab ette koolituse kausta ja konfiguratsioonifaili.
+
+    lab_dir="$HOME/automation-lab"                       # 1: sisendid
+    config_file="$lab_dir/training.conf"
+
+    if ! mkdir -p "$lab_dir"; then                       # 2: kaust
+        printf 'Viga: ei saa kausta teha: %s\n' "$lab_dir" >&2
+        exit 1
+    fi
+    if ! chmod 0750 "$lab_dir"; then
+        printf 'Viga: ei saa kausta õigusi muuta: %s\n' "$lab_dir" >&2
+        exit 1
+    fi
+
+    if ! printf '%s\n' 'environment=training' 'enabled=true' > "$config_file"; then   # 3: fail
+        printf 'Viga: ei saa faili kirjutada: %s\n' "$config_file" >&2
+        exit 1
+    fi
+    if ! chmod 0640 "$config_file"; then
+        printf 'Viga: ei saa faili õigusi muuta: %s\n' "$config_file" >&2
+        exit 1
+    fi
+
+    printf 'Valmis: %s\n' "$config_file"                # 4: tulemus
+    ```
+
+    1. **Sisendid:** kaust ja fail on muutujates, nii saab neid muuta ühes kohas.
+    2. **Kaust:** tehakse ja saab õigused `0750`.
+    3. **Fail:** kirjutatakse üle soovitud sisuga ja saab õigused `0640`.
+    4. **Kontroll:** iga tähtsa sammu järel vaatab `if` väljumiskoodi; vea korral skript peatub koodiga `1`, muidu ütleb lõpus `Valmis`.
 
 ??? note "Süvenemiseks: miks mitte lihtsalt `set -e`"
 
@@ -368,16 +403,18 @@ See on kavandi otsus, mitte iga skripti omadus. Mõne faili puhul oleks ülekirj
 
 ### Idempotentsus
 
-Omadust, et korduv käivitus ei muuda enam midagi, kui soovitud seis on juba olemas, nimetatakse **idempotentsuseks**. Bashis saad selle ise kirjutada: enne muutmist kontrolli, kas muutmine on vaja.
+Omadust, et korduv käivitus ei muuda enam midagi, kui soovitud seis on juba olemas, nimetatakse **idempotentsuseks**. Bashis saad selle ise kirjutada: enne muutmist kontrolli, kas muutmine on vaja. Iga sellise kontrolli pead aga ise välja mõtlema ja kirjutama. Meie kasutatavad Ansible'i `file`- ja `copy`-moodulid sisaldavad vajalikke seisukontrolle juba valmis kujul.
 
-```bash
-if ! printf '%s\n' 'environment=training' 'enabled=true' | cmp -s - "$config_file"; then
-    printf '%s\n' 'environment=training' 'enabled=true' > "$config_file"
-    printf 'Muudetud: %s\n' "$config_file"
-fi
-```
+??? note "Süvenemiseks: kirjuta ainult siis, kui sisu erineb"
 
-`cmp -s` võrdleb soovitud sisu failiga ja kirjutab ainult siis, kui need erinevad. Iga sellise kontrolli pead aga ise välja mõtlema ja kirjutama. Ansible'is on selline kontroll moodulis juba olemas.
+    ```bash
+    if ! printf '%s\n' 'environment=training' 'enabled=true' | cmp -s - "$config_file"; then
+        printf '%s\n' 'environment=training' 'enabled=true' > "$config_file"
+        printf 'Muudetud: %s\n' "$config_file"
+    fi
+    ```
+
+    Toru `|` saadab esimese käsu väljundi teise käsu sisendiks. `printf` toodab soovitud sisu ja `cmp` võrdleb seda failiga. `-` tähendab „loe võrreldavat sisu torust“ ja `-s` paneb `cmp`-i vaikima: vastuse annab ainult väljumiskood (`0` = sama). Fail kirjutatakse ainult siis, kui sisu erineb.
 
 ??? question "Kontrolli ennast"
 
@@ -539,7 +576,7 @@ Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne tegemist
 
 ??? example "CrowdStrike 2024: kontroll ja levitamise ulatus"
 
-    19. juulil 2024 põhjustas CrowdStrike Falconi vigane sisukonfiguratsiooni uuendus ulatusliku Windowsi süsteemide katkestuse ([juurpõhjuse analüüs](https://crowdstrike.com/wp-content/uploads/2024/08/Executive-Summary_Root-Cause-Analysis_Channel-File-291.pdf)). Juhtum näitab, et muudatuse kontrollimine ja selle levitamise ulatuse piiramine on eraldi ülesanded. Laboris teeme sama väikses mahus: alusta ühest masinast (`--limit`), kontrolli tulemust ja alles siis laienda muudatust.
+    CrowdStrike'i katkestus toimus 19. juulil 2024, kui Falconi vigane sisukonfiguratsiooni uuendus põhjustas ulatusliku Windowsi süsteemide katkestuse ([juurpõhjuse analüüs](https://crowdstrike.com/wp-content/uploads/2024/08/Executive-Summary_Root-Cause-Analysis_Channel-File-291.pdf)). Juhtum näitab, et muudatuse kontrollimine ja selle levitamise ulatuse piiramine on eraldi ülesanded. Laboris teeme sama väikses mahus: alusta ühest masinast (`--limit`), kontrolli tulemust ja alles siis laienda muudatust.
 
 ??? question "Kontrolli ennast"
 

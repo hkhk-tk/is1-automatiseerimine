@@ -25,7 +25,7 @@ Classroom 50 annab sulle repo `<klassiruum>-labori-seis-<github>`.
 
 | Kaust | Kohtumine |
 |---|---|
-| `k01-bash/` | 1 (starteris mustandid, kolm tahtlikku viga) |
+| `k01/` | 1 (`prepare-training.sh`, `inventory.ini`, `training.yml`, `vordlus.md`) |
 | `k02-ansible/` | 2 |
 | `k03-docker/`, `.dockerignore` | 3 |
 | `k04-tofu/` | 4 |
@@ -38,7 +38,7 @@ Classroom 50 annab sulle repo `<klassiruum>-labori-seis-<github>`.
 
 ## Igal kohtumisel
 
-1. Uus haru: `git switch -c k01-bash` (2. kohtumisel `k02-ansible` jne).
+1. 1. kohtumisel lähevad failid kausta `k01/` ja piisab `git push`-ist. Alates 2. kohtumisest töötad oma harus: `git switch -c k02-ansible` jne.
 2. Kohtumise issue'd on milestone'is `K1` … `K7`, label `plokk`. Üks issue on üks plokk. Sulge see commit'iga `… (closes #3)`.
 3. Kontrolli ise: `bash autograde/check.sh k01 shellcheck`. Kõik testid on failis `autograde/TESTS.md`.
 4. Kohtumise lõpus: PR `main`-i, merge, siis tag:
@@ -55,7 +55,7 @@ force-push'ita kunagi. Kui jäid maha, võta koolitaja eelmise korra lahendus (`
 
 | Hindamiskriteerium | Kohtumine | Mis näitab |
 |---|---|---|
-| HK1 | 1 | Bashi skriptid: stack üles, ShellCheck puhas, saladused Gitist väljas |
+| HK1 | 1 | Bashi skript ja Ansible'i playbook annavad nõutud tulemuse; korduva käivituse käitumine on kontrollitud |
 | HK2 | 2 | Ansible'i rollid, Vault, idempotentsus |
 | HK3 | 4 | OpenTofu: viis VM-i, moodul, inventory Ansible'ile |
 | HK4 | 3 | Dockerfile'id, Compose, image registry's |
