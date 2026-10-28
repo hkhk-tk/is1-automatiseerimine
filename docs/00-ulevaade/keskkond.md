@@ -171,6 +171,21 @@ Host control
 
 VS Code küsib parooli igal ühendusel. See on nii mõeldud: sinu arvutisse SSH-võtit ei tehta.
 
+??? info "Tahan teisi masinaid VS Code'is näha"
+
+    Tavaliselt pole vaja: Ansible teeb teistes masinates muudatused ise. Kiireim viis vaadata on control node'i aknas **Terminal → Split Terminal** ja igas terminalis `ssh web01`, `ssh db01` jne (pärast 1. praktikumi).
+
+    Kui tahad iga masinat eraldi aknas koos failipuuga, lisa sinu arvuti config faili iga masina kohta kirje:
+
+    ```text
+    Host web01
+        HostName 192.168.124.52
+        User kasutaja
+        ProxyJump control
+    ```
+
+    `ProxyJump control` tähendab: mine web01-sse läbi control node'i. Masin ilmub **Remote Explorer**isse nagu `control`. Parooli küsitakse kaks korda, esmalt control node'i, siis web01 oma, sest sinu arvutis SSH-võtit pole.
+
 ??? info "Termius, JetBrains või muu tööriist?"
 
     Võid kasutada ka [Termiust](https://termius.com/), JetBrains Gateway't või tavalist terminali. Ühendus on sama: kasutaja `kasutaja`, control node'i IP, parool.
