@@ -16,6 +16,12 @@ tags:
 
 Sinu arvuti on ainult aken. Kõik kursuse käsud jooksevad control node'il, kooli Proxmoxis. Sinu arvutisse on vaja kaht asja: VPN-i ja VS Code'i.
 
+??? info "Mis on PowerShell ja kas WSL-i on vaja?"
+
+    **PowerShell** on Windowsi käsurida, sama roll mis Terminalil macOS-is. See on Windowsiga kaasas: Start → kirjuta `powershell`. Sellel lehel on seda vaja ainult paigalduseks ja ühenduse kontrolliks, kui eelistad käske klõpsamisele. Kõik saab teha ka ilma selleta.
+
+    **WSL-i pole vaja.** Linux jookseb control node'il, mitte sinu arvutis. VS Code avab terminali otse control node'il ja kõik kursuse käsud käivad seal.
+
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 200" role="img" aria-label="Sinu arvuti ühendub VPN-i ja SSH-ga control node'ile, control node SSH-ga viiele labori VM-ile ja git pushiga GitHubi" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14.5px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:13px}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
