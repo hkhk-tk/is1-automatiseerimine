@@ -79,10 +79,6 @@ Samal ajal näitas [2019. aasta State of DevOps uuring](https://dora.dev/publica
 - **Automaatika pimesi usaldamine.** Kui AI suunab ticket'i valesse meeskonda või pakub sarnase intsidendi vale lahenduse, kipub inimene seda usaldama, sest see on tavaliselt õige. Klassifikatsiooni täpsust tuleb mõõta ja valesti suunatud kirjed peavad tagasisidena süsteemi jõudma.
 - **Alertide tulv intsidentideks.** Ilma dedup'ita avab iga alert intsidendi ja valvur sulgeb neid hulgi. Siis jääb tegelik intsident märkamata.
 
-## Kus see kursusel tuleb
-
-Muudatuste tüübid pipeline'is, environment'i kaitsereegel, kirje loomine REST API-ga ning fail-open ja fail-closed on [5. kohtumise loengu osas 6](../k05/loeng.md#6-muudatuste-haldus-pipelineis). Jenkinsi `input` ja `submitter`, neli silma ja auditilogi väljaspool Jenkinsit on [6. kohtumise loengu osas 6](../k06/loeng.md#6-juhtimine-kes-kinnitab-ja-kus-on-logi) ja lisaülesandes [16. Neli silma ja muudatuse kirje](../k06/lisa.md#16-neli-silma-ja-muudatuse-kirje). CMDB kui inventory allikas ja selle andmekvaliteedi risk on [2. kohtumise loengu osas 7](../k02/loeng.md#7-kes-kaivitab-platvorm-rbac-cmdb-ja-sundmused), sama idee Proxmoxi andmetega [Lisaprojektis: Proxmoxi dünaamiline inventory](../k02/lisa.md#lisaprojekt-proxmoxi-dunaamiline-inventory).
-
 ## Kontrolli ennast
 
 ??? question "Mis vahe on intsidendil ja probleemil ning miks on see vahe automaatika jaoks oluline?"

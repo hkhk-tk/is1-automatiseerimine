@@ -79,10 +79,6 @@ Automaatika identiteedid on sama tüüpi. Pipeline'i token, AWX-i credential, Ar
 - **Teenusekonto jagamine.** Üks `automation` konto kõigil hostidel ja seadmetel tähendab, et logist ei selgu, milline pipeline mida tegi. Iga töö jaoks eraldi identiteet maksab haldusega, aga annab auditi.
 - **Kood on õigus.** Kes saab muuta playbook'i, Jenkinsfile'i või Helm chart'i, muudab seda, mida kõrgema õigusega identiteet käivitab. Seepärast on haru kaitse ja CODEOWNERS osa ligipääsu kontrollist.
 
-## Kus see kursusel tuleb
-
-Semaphore'i Task Runner'it, kes saab käivitada, aga mitte muuta, näed [2. kohtumise loengu osas 7](../k02/loeng.md#7-kes-kaivitab-platvorm-rbac-cmdb-ja-sundmused) ja lisaülesandes [18. Ansible teenusena: Semaphore](../k02/lisa.md#18-ansible-teenusena-semaphore). Jenkinsi folderid, credential'id ja `submitter` on [6. kohtumise loengu osades 5 ja 6](../k06/loeng.md#5-ci-serveri-turve-ja-haldus), laboris [Õigused, varundus ja taaste](../k06/lab-6-haldus.md) ning lisaülesannetes [11. Sandboxis rollipõhised õigused](../k06/lisa.md#11-sandboxis-rollipohised-oigused) ja [16. Neli silma ja muudatuse kirje](../k06/lisa.md#16-neli-silma-ja-muudatuse-kirje). 7. kohtumisel teed laboris [Namespace ja põhiobjektid](../k07/lab-2-namespace.md) `can-i` tabeli ja vaatad ClusterRole `edit` piire, loengu [osas 7](../k07/loeng.md#7-signaalist-tegevuseni-sundmuspohine-automaatika-ja-ai) on agendi ServiceAccount ja kitsas Role, sama teema jätkub lisaülesandes [11. Oma klastri admini vaade](../k07/lisa.md#11-oma-klastri-admini-vaade).
-
 ## Kontrolli ennast
 
 ??? question "Arendajal on namespace'is `prod` õigus luua Deployment'e, aga mitte lugeda Secret'eid. Kas ta saab andmebaasi parooli kätte?"

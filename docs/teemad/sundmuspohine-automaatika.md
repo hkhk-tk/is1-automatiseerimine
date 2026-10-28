@@ -87,10 +87,6 @@ Sündmuspõhise automaatika jaoks on siin kolm õppetundi. Automaatne tegevus v�
 - **Auditi jälg.** Öösel tehtud automaatne tegevus peab jätma kirje: mis sündmus, milline reegel, mis tegevus, mis tulemus. Ilma selleta näeb hommikune vahetus ainult tulemust.
 - **Millal mitte.** Kui runbook nõuab hinnangut, mida reeglisse kirjutada ei saa, ei tohi reegel tegevust ise käivitada. Siis jääb reeglile teavitus koos vajalike andmetega ja otsustab inimene.
 
-## Kus see kursusel tuleb
-
-Webhook'i, `throttle`'i, kinnitust teise sündmusena ja sisendi kontrolli teed [2. kohtumise loengu osa 7](../k02/loeng.md#7-kes-kaivitab-platvorm-rbac-cmdb-ja-sundmused) järgi lisaülesandes [19. Sündmuspõhine koristus: ketas üle 90% ja inimese kinnitus](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus). [5. kohtumise loengu osas 2](../k05/loeng.md#2-pipeline-kui-graaf) käivitub pipeline sündmusest (`push`, `pull_request`) ja lisaülesandes [13. Ebaõnnestunud deploy annab teada](../k05/lisa.md#13-ebaonnestunud-deploy-annab-teada) avab sündmus issue ja kordus lisab sellele kommentaari, mitte uue issue. 6. kohtumise laboris [Triggerid, options ja post](../k06/lab-2-triggerid.md) näed, miks webhook Jenkinsini ei jõua ja mida pollimine maksab. Alertmanager, ansible-rulebook, Argo Events ja AI piirid on [7. kohtumise loengu osas 7](../k07/loeng.md#7-signaalist-tegevuseni-sundmuspohine-automaatika-ja-ai).
-
 ## Kontrolli ennast
 
 ??? question "Miks ei piisa ainult sündmustest ja miks on vaja ka perioodilist kontrolli?"

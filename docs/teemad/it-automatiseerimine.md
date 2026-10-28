@@ -89,10 +89,6 @@ Eesti avalikus sektoris on sama küsimus seotud [E-ITS](https://eits.ria.ee/)-ig
 
 **Platvormi hind.** AWX vajab Kubernetest, PostgreSQL-i ja uuendusi. Viie hosti peal on see rohkem tööd kui kasu. Platvorm tasub end ära siis, kui automaatikat käivitab mitu meeskonda ja audit on nõue.
 
-## Kus see kursusel tuleb
-
-Strateegia, astmed ja kolm režiimi on [1. kohtumise loengu](../k01/loeng.md) peatükkides 1 ja 7, heakskiidetud tegevuste kataloogi ehitad [1. kohtumise lisaülesandes 20](../k01/lisa.md#20-heakskiidetud-tegevuste-kataloog). 2. kohtumisel käivitad Ansible't teenusena [lisaülesandes 18 (Semaphore)](../k02/lisa.md#18-ansible-teenusena-semaphore) ja seod ketta häire heakskiidetud tegevusega [lisaülesandes 19: sündmuspõhine koristus](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus). Poliitika koodina ja automation as code on [4. kohtumise loengu](../k04/loeng.md) peatükis 3 ning sama mõtet CI serveri seadistuse kohta proovid [6. kohtumise laboris: Jenkins koodina](../k06/lab-5-jenkins-koodina.md).
-
 ## Kontrolli ennast
 
 ??? question "Meeskonnal on aega automatiseerida üks kolmest: kuine paikamine 40 hostil, kord aastas tehtav sertifikaadivahetus koormusjaoturil või ühekordne andmebaasi migratsioon. Kuidas otsustad?"

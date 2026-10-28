@@ -77,18 +77,6 @@ Võrguautomaatikale tuleb siit kolm järeldust. Eelkontroll on samuti kood ja se
 - **Source of truth'i kvaliteet.** Kui NetBoxis on vale VLAN, viib automaatika vea kõigisse seadmetesse. Andmetel peavad olema samad kontrollid mis koodil: kohustuslikud väljad, lubatud vahemikud ja review.
 - **Python või Ansible.** Python annab täieliku kontrolli veakäsitluse ja parsimise üle ning sinu vastutusel on ka hooldus. Ansible annab inventory, `--check`-i ja recap'i, aga tootja kollektsioonide versioonid ja CLI parserid tuleb hoida kontrolli all. Paljudes meeskondades käivitab töö Ansible ja keerulisem osa on Pythoni filter või moodul.
 
-## Kus see kursusel tuleb
-
-`network_cli`, `netconf`, `httpapi`, Netmikot ja NetOpsi käsitleb lühidalt [2. kohtumise loengu osa 6](../k02/loeng.md#6-vorguseadmed-ja-windows). Võrguinseneri lisaülesannetes kasvab iga kohtumisega üks tööriist, `vorgukogu`, mille sihtmärk on kaks FRR-ruuterit:
-
-- 1. kohtumise [lisaülesanne 21](../k01/lisa.md#21-vorgukogupy-show-kaskude-valjund-kahelt-ruuterilt): Netmiko, `show` väljund failidesse, hostivõtmed ja saladuste mask;
-- 2. kohtumise [lisaülesanded 20](../k02/lisa.md#20-vorgukogu-ansibleiga-ad-hoc-ja-playbook) ja [21](../k02/lisa.md#21-cisco-ios-xe-ainult-lugemiseks): sama töö Ansible'iga, siis Cisco IOS XE `network_cli` kaudu;
-- 3. kohtumise [lisaülesanne 15](../k03/lisa.md#15-vorgukogu-konteineris): tööriist image'is;
-- 4. kohtumise [lisaülesanne 17](../k04/lisa.md#17-renderpy-soovitud-seis-templateist-diff-ja-apply): soovitud seis YAML-ist, mall, diff ja apply;
-- 5. kohtumise [lisaülesanne 18](../k05/lisa.md#18-vorgukogu-testid-ja-ci): testid ja CI ilma ruuteriteta;
-- 6. kohtumise [lisaülesanne 17](../k06/lisa.md#17-vorgukogu-oosel-jenkinsiga): öine varundus Giti nagu Oxidizedis;
-- 7. kohtumise [lisaülesanne 22](../k07/lisa.md#22-vorgukogu-cronjobina): sama image Kubernetese CronJob'ina.
-
 ## Kontrolli ennast
 
 ??? question "Playbook muudab `cisco.ios.ios_config`-iga ACL-i ja iga jooks näitab `changed`, kuigi seadmes ei muutu midagi. Mis on tõenäoline põhjus ja mis on kaks lahendust?"

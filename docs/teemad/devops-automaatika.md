@@ -82,10 +82,6 @@ Deployment automation oleks katnud kaks puudust. Sama protseduur oleks käinud k
 - **Mõõdiku manipuleerimine.** Kui deploy'de sagedus on eesmärk, tekivad tühjad deploy'd. DORA näitajad on meeskonna enda tagasiside ja meeskondade võrdlemiseks neid ei kasutata.
 - **Järelkontrolli puudumine.** `docker compose up -d` lõpetab, kui konteiner käivitus, mitte siis, kui rakendus vastab. Ilma versiooni ja mõõdikute kontrollita on see käsitsi deploy, mis lihtsalt käib kiiremini.
 
-## Kus see kursusel tuleb
-
-CI/CD, `concurrency`, health check ja rollback on [5. kohtumise loengu osades 1 ja 5](../k05/loeng.md#5-deployment-automation-risk-ja-rollback) ning laborites [Image ja deploy](../k05/lab-4-deploy.md) ja [Health check ja rollback](../k05/lab-6-tagasipoore.md), edasi lähevad lisaülesanne [13. Ebaõnnestunud deploy annab teada](../k05/lisa.md#13-ebaonnestunud-deploy-annab-teada) ja [Lisaprojekt: korduvkasutatav deploy-workflow](../k05/lisa.md#lisaprojekt-korduvkasutatav-deploy-workflow). Build once, deploy many on [6. kohtumise loengu osas 4](../k06/loeng.md#4-artefakt-ja-versioon-build-once-deploy-many), laboris [Image, paralleel ja deploy](../k06/lab-4-image-deploy.md) ja lisaülesandes [14. WAR Nexusest app01-le koos rollback'iga](../k06/lisa.md#14-war-nexusest-app01-le-koos-rollbackiga). Sama mustrit näed Ansible'i rolling'u ja rescue'ga laboris [Deploy ja rolling](../k02/lab-6-deploy.md), Kubernetese rolling update'iga [7. kohtumise loengus](../k07/loeng.md#3-probeid-ja-vork-kes-saab-liiklust) ja laboris [GitOps Argo CD-ga](../k07/lab-7-argocd.md).
-
 ## Kontrolli ennast
 
 ??? question "Deployment ei jõua kümne minutiga uute pod'idega olekusse Ready. Mis on klastri seis ja kes teeb rollback'i?"

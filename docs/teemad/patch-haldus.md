@@ -92,10 +92,6 @@ Avaliku sektori jaoks on tähtajad üha sagedamini kirjas. USA küberturbe agent
 
 **Versiooni lukustamine.** `exclude` või `apt-mark hold` andmebaasi paketile hoiab ära ootamatu põhiversiooni vahetuse, aga ununenud lukk jätab paketi aastateks paikamata. Lukk vajab põhjendust ja kuupäeva koodis.
 
-## Kus see kursusel tuleb
-
-Lained, `serial` ja health check on [2. kohtumise loengu](../k02/loeng.md) ptk 4-s, patch-haldus ja compliance ptk 5-s. `patch.yml`-i, `needs-restarting -r`-i, `/var/run/reboot-required`-i ning MariaDB ja RabbitMQ lukustamist teed [2. kohtumise laboris 6: paigad ja reboot lainetena](../k02/lab-6-deploy.md#paigad-ja-reboot-lainetena). Sama ajastatud kontrolli mustrit raporti jaoks kasutab [2. kohtumise lisaülesanne 9: drift'i öine kontroll](../k02/lisa.md#9-drifti-oine-kontroll), paikamist konteinerite maailmas [3. kohtumise lisaülesanne 12: oma baas-image ja selle elutsükkel](../k03/lisa.md#12-oma-baas-image-ja-selle-elutsukkel).
-
 ## Kontrolli ennast
 
 ??? question "Testringi paikasid esmaspäeval, tootmise neljapäeval ja tootmises tuli viga, mida testis polnud. Mis on tõenäoline põhjus ja kuidas seda väldid?"

@@ -84,10 +84,6 @@ Migratsiooni ajal makstakse kahe keskkonna eest. Kui allika mahavõtmine pole pl
 
 Turvamudel muutub. Andmekeskuse tulemüür ja VLAN-id ei kandu pilve automaatselt üle, security group'id ja IAM-i õigused tuleb kirjeldada uuesti. Rehost kopeerib ka OS-i turvaaugud ja käsitsi muudatused.
 
-## Kus see kursusel tuleb
-
-[Pilve kodutööd](../kodutood/kodutood.md) on üks migratsioon seitsmes osas, sama kood Proxmoxist AWS-i: [2. kohtumise kodutöö](../kodutood/k02-aws.md) on rehost Ansible'iga, [3. kohtumise kodutöö](../kodutood/k03-aws.md) viib image'i ECR-i, [4. kohtumise kodutöö](../kodutood/k04-aws.md) ehitab VPC ja EC2-d OpenTofuga ja [7. kohtumise kodutöö](../kodutood/k07-aws.md) käivitab samad manifestid k3s-is. Laboris [Import, drift ja keskkonnad](../k04/lab-6-import-drift.md) tood käsitsi tehtud VM-i koodi alla, mis on iga rebuild-migratsiooni esimene samm, ja laboris [Golden image Packeriga](../k04/lab-7-kuldne-mall.md) kolib Labori seis uuele mallile, esmalt ühele hostile. Elutsüklit ja mahavõtmist (ptk 5) ning OpenTofu ja Terraformi vahel kolimist (ptk 7) käsitleb [4. kohtumise loeng](../k04/loeng.md).
-
 ## Kontrolli ennast
 
 ??? question "Mis vahe on rehost'il ja replatform'il? Too mõlemast näide."

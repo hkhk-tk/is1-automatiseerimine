@@ -77,10 +77,6 @@ See on äriprotsessi automatiseerimine sündmuse peale (sünni registreerimine k
 - **"Low-code" ilma muudatuste halduseta.** Töövoog, mida saab veebiliideses muuta, muutub ilma review'ta. Töövood ekspordi Giti ja muuda neid sama PR-protsessiga nagu playbook'e.
 - **MSP mõjuala.** Üks RMM-platvorm on administraator sadades ettevõtetes. Nõua eraldi kontot iga kliendi jaoks, MFA-d, logide edastamist sinu SIEM-i ja võimalust ligipääs ise sulgeda.
 
-## Kus see kursusel tuleb
-
-[6. kohtumise loengu osa 7](../k06/loeng.md#7-jenkins-voi-github-actions) käsitleb RPA-d kui kolmandat valikut Jenkinsi ja GitHub Actionsi kõrval ja põhjendab, miks see on infra jaoks vale tööriist. [Osas 6](../k06/loeng.md#6-juhtimine-kes-kinnitab-ja-kus-on-logi) avab ja sulgeb pipeline ise ITSM-i change ticket'i; seal kohtuvad äriprotsess ja IT-automaatika. Nelja silma kontrolli ja muudatuse kirjet teed [6. kohtumise lisaülesandes 16](../k06/lisa.md#16-neli-silma-ja-muudatuse-kirje). CMDB kui inventory allikas ja platvormi RBAC, sama küsimus teenusepakkuja ligipääsu kohta, on [2. kohtumise loengu osas 7](../k02/loeng.md#7-kes-kaivitab-platvorm-rbac-cmdb-ja-sundmused).
-
 ## Kontrolli ennast
 
 ??? question "Hüperviisori veebiliidesel on REST API, aga meeskond tahab VM-ide loomiseks RPA robotit, sest see on kiirem teha. Mida vastad?"

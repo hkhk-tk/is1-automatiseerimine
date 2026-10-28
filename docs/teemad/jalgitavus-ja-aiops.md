@@ -71,10 +71,6 @@ Signaal oli olemas, aga teavitustee polnud kontrollitud. Sama riski näed labori
 - **Hilinenud ja aegunud signaal.** `resolved` võib jõuda kohale pärast seda, kui tegevus juba käivitus. Tegevus kontrollib seisu enne muutmist uuesti ja sel on sageduspiir.
 - **Logid on sisend.** AI-tööriist, mis loeb logisid, loeb ka ründaja kirjutatud teksti. Logist tulnud juhist ei täideta ja tööriistal on ainult lugemisõigus.
 
-## Kus see kursusel tuleb
-
-[1. kohtumise laboris Operatsioon](../k01/lab-7-operatsioon.md#checksh-systemd-timeriga) paned `check.sh` tööle systemd timer'iga, loed journal'ist ajajoone rikkest taastumiseni ja näed, kuidas tuvastusaeg sõltub intervallist. [Monitooringu lisaülesannetes](../kodutood/monitooring.md) kasvavad neli golden signal'it Bashis kohtumiste kaupa kuni 7. kohtumiseni, kus Kubernetes taaskäivitab pod'i ise. [2. kohtumise lisaülesandes 19](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus) käivitab ansible-rulebook koristuse ja nõuab inimese kinnitust. Signaalist tegevuseni, AIOps ja AI-agendi piirid on [7. kohtumise loengu osas 7](../k07/loeng.md#7-signaalist-tegevuseni-sundmuspohine-automaatika-ja-ai) ning laboris [Neli riket](../k07/lab-5-neli-riket.md) paned ajajoone kokku Events'ist.
-
 ## Kontrolli ennast
 
 ??? question "Võrgulüliti rikke ajal saab valvaja 60 `HostDown` teavitust ja ühe `SwitchDown` teavituse. Mida muudad Alertmanageris?"

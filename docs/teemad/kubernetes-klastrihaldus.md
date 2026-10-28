@@ -76,10 +76,6 @@ Haldusklastril ja mitme klastri haldustööriistal on kõigi klastrite õigused:
 
 Edge'il on oht, et uuendus muudab kauge seadme kasutuskõlbmatuks ja kohapeal pole kedagi, kes selle taastaks. Uuendus viiakse kõigepealt mõnele asukohale, A/B partitsiooniga OS-i või muutumatute node'idega on tagasiminek lihtsam. Füüsiline ligipääs tähendab ka, et kettad krüpteeritakse ja saladused ei ole kettal lihttekstina.
 
-## Kus see kursusel tuleb
-
-Kontrolltsüklit ([ptk 1](../k07/loeng.md#1-soovitud-seis-ja-control-loop)), klastri elutsüklit, version skew'd ja hallatud klastreid ([ptk 5](../k07/loeng.md#5-klastri-elutsukkel-ja-cloudops)) käsitleb [7. kohtumise loeng](../k07/loeng.md). Laboris [Oma klaster](../k07/lab-1-oma-klaster.md) lood VM-i k3s01 OpenTofuga ja laboris [GitOps Argo CD-ga](../k07/lab-7-argocd.md) annad klastri sisu Gitile; edasi viivad lisaülesanded [6. Oma klaster edasi](../k07/lisa.md#6-oma-klaster-edasi), [11. Oma klastri admini vaade](../k07/lisa.md#11-oma-klastri-admini-vaade) (cordon ja PodDisruptionBudget) ja [16. Oma app01 klastri node'iks](../k07/lisa.md#16-oma-app01-klastri-nodeiks). Node'ide patch'imise muster (`serial`, paigad ja reboot lainetena) on Ansible'i poolel laboris [Deploy ja rolling](../k02/lab-6-deploy.md), pilves töötab k3s EC2-l samade manifestidega [7. kohtumise kodutöös](../kodutood/k07-aws.md).
-
 ## Kontrolli ennast
 
 ??? question "Miks paigaldab k3s-i Ansible, aga Ingress'i ja cert-manager'i Argo CD?"

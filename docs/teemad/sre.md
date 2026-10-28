@@ -71,10 +71,6 @@ Postmortem näitab SRE tava: avalik ajajoon minutite kaupa, tehniline juurpõhju
 - **Postmortem süüdistusena.** Kui postmortem'i järel otsitakse süüdlast, hakkavad inimesed infot varjama ja järgmine ajajoon on puudulik.
 - **Toil'i automatiseerimine ilma omanikuta.** Automaatika, mida keegi ei hoolda, muutub uueks toil'iks.
 
-## Kus see kursusel tuleb
-
-SLI, SLO, error budget, kahe aknaga burn rate'i alert, toil ja postmortem on [7. kohtumise loengu osas 6](../k07/loeng.md#6-sre-moodetud-tookindlus). [7. kohtumise lisaülesandes 17](../k07/lisa.md#17-slo-ja-error-budget-labori-seisule) mõõdad Labori seisu SLI-d Ingress'i kaudu ja arvutad, kui palju eelarvest kulutavad rolling update ja andmebaasi restart. Ajajoone ja lühikese postmortem'i kirjutad 2. kohtumise laboris [Intsident](../k02/lab-8-intsident.md#regressioonikontroll-ja-luhike-postmortem) ja 7. kohtumise laboris [Neli riket](../k07/lab-5-neli-riket.md#ajajoon-ja-jareldused). Sama tasuvusarvutus, mille järgi toil'i automatiseerimist järjestada, on [1. kohtumise loengu osas 1](../k01/loeng.md#1-mida-automatiseerida-ja-millises-jarjekorras).
-
 ## Kontrolli ennast
 
 ??? question "Teenuse SLA kliendiga on 99,5% kuus. Millise SLO valid ja miks mitte sama numbri?"

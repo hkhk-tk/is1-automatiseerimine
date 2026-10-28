@@ -75,10 +75,6 @@ Poliitika annab vale kindlustunde, kui see ei arvesta teadmata väärtusi, kui e
 
 Õppida on palju. HCL, state'i operatsioonid (`moved`, `import`, `state rm`), provider'ite versioonid ja `.terraform.lock.hcl` lisanduvad sellele, mida admin juba teab. Väikese ja harva muutuva keskkonna puhul võib hästi hoitud runbook olla odavam. IaC tasub end ära siis, kui keskkondi on mitu, muudatusi on sageli või audit küsib muudatuste jälge.
 
-## Kus see kursusel tuleb
-
-[4. kohtumise loeng](../k04/loeng.md) käsitleb state'i, plaani ja poliitikat ([ptk 3](../k04/loeng.md#3-plaan-ja-poliitika-enne-muudatust)) ning Ansible't ja OpenTofut koos ([ptk 6](../k04/loeng.md#6-orkestreerimine-ansible-ja-opentofu-koos)). Laborites teed [Üks VM koodist](../k04/lab-1-uks-vm.md), [Moodul, moved ja state](../k04/lab-3-moodul-state.md), [Üks käsk](../k04/lab-4-uks-kask.md) (inventory Tofu väljundist) ja [Import, drift ja keskkonnad](../k04/lab-6-import-drift.md); lisaülesanded on [12. Poliitika plaanile Conftestiga](../k04/lisa.md#12-poliitika-plaanile-conftestiga), [6. Provisioner võrdluseks](../k04/lisa.md#6-provisioner-vordluseks) ja [7. Sama kood Terraformiga](../k04/lisa.md#7-sama-kood-terraformiga). Pilves kordab sama struktuuri `aws` provideriga [4. kohtumise kodutöö](../kodutood/k04-aws.md).
-
 ## Kontrolli ennast
 
 ??? question "Kolleeg ütleb, et tema Bashi skript `create-vms.sh` on Gitis, nii et see on IaC. Mida sa küsid?"

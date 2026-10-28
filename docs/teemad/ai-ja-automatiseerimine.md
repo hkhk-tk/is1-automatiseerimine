@@ -78,10 +78,6 @@ Sama tabeli esimene risk (LLM01) on *prompt injection*. Agent, mis loeb logisid,
 - **Andmed lähevad välja.** Pilvemudelile saadetud logid võivad sisaldada isikuandmeid ja saladusi. Enne saatmist anonümiseeritakse andmed, kasutatakse kohalikku mudelit või kitsendatakse saadetavaid välju.
 - **Turundusnumbrid.** E-raamat viitab Gartneri [prognoosile](https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027), mille järgi tühistatakse 2027. aasta lõpuks üle 40% agentse AI projektidest kulu, ebaselge väärtuse või puuduliku riskikontrolli tõttu, ja Deloitte'i uuringule, mille järgi on küpse juhtimisega vaid 21% ettevõtetest. Tootjate ROI- ja MTTR-numbreid loe kui tootja väidet, mitte mõõtmistulemust.
 
-## Kus see kursusel tuleb
-
-Kolm režiimi tabelina ja piirid enne agenti on [1. kohtumise loengu osas 7](../k01/loeng.md#7-kolm-automatiseerimise-reziimi-ja-heakskiidetud-tegevused). [1. kohtumise lisaülesandes 20](../k01/lisa.md#20-heakskiidetud-tegevuste-kataloog) ehitad heakskiidetud tegevuste kataloogi Bashis: ainult commit'itud tegevus käivitub, kinnitust nõudev tegevus ei käivitu ilma inimeseta ja iga katse läheb journal'isse. Sama mudel Semaphore'i ja ansible-rulebook'iga on [2. kohtumise lisaülesannetes 18](../k02/lisa.md#18-ansible-teenusena-semaphore) ja [19](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus). Kolm nõuet Jenkinsi deploy'l on [6. kohtumise loengu osas 6](../k06/loeng.md#6-juhtimine-kes-kinnitab-ja-kus-on-logi), agendi ServiceAccount, Role, kinnitus ja API serveri audit log [7. kohtumise loengu osas 7](../k07/loeng.md#7-signaalist-tegevuseni-sundmuspohine-automaatika-ja-ai).
-
 ## Kontrolli ennast
 
 ??? question "Agendi süsteemiprompt ütleb „Ära kunagi kustuta PVC-sid“. Kas see on piir?"

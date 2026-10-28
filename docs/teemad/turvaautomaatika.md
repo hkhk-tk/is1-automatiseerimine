@@ -73,10 +73,6 @@ Tuvastus töötas, katki oli samm tuvastusest tegevuseni. Selles vahes on SOAR-i
 - **Skänneri õigused.** Autenditud skänn ja SOAR-i integratsioonid vajavad laia ligipääsu kõikjale. Nende kontod on ründaja jaoks väärtuslikud: eraldi identiteet, kitsas sudo-reegel ja logi väljaspool hosti.
 - **Automaatika kiirus ja tõendid.** Automaatne isoleerimine või kustutamine võib hävitada tõendid, mida forensics vajab. Enne muutvat sammu kogub töövoog andmed (mälu, protsessid, ühendused).
 
-## Kus see kursusel tuleb
-
-Patch'imise elutsükkel, `--check` audit vs OpenSCAP, ComplianceAsCode ja hardening reeglite kaupa on [2. kohtumise loengu osas 5](../k02/loeng.md#5-patch-haldus-ja-compliance). Üht hardening'u teemat koodina, nii et ennast välja ei lukusta, teed [2. kohtumise lisaülesannetes 16](../k02/lisa.md#16-ssh-hardening-ilma-end-valja-lukustamata) ja [17](../k02/lisa.md#17-selinux-praktikas-oma-veebijuur-ja-port). Image'i skänn ja SBOM on 3. kohtumise laboris [Registry, Trivy ja SBOM](../k03/lab-6-registry.md#trivy-imageitele). Skännid pipeline'is, erandite poliitika ja allkirja kontroll enne deploy'd on [5. kohtumise loengu osas 4](../k05/loeng.md#4-tarneahela-usaldus-ja-automaatsed-turvakontrollid) ning lisaülesannetes [10](../k05/lisa.md#10-trivy-poliitika) ja [17](../k05/lisa.md#17-allkirjastatud-image-ja-deploy-mis-allkirja-kontrollib).
-
 ## Kontrolli ennast
 
 ??? question "Öine `ansible-playbook --check` annab kõigil hostidel `changed=0`, aga E-ITS-i audiitor leiab, et paroolipoliitika ei vasta nõudele. Kuidas see on võimalik ja mida muudad?"

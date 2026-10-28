@@ -66,10 +66,6 @@ flowchart LR
 - **Double hop'i lahendus nõrgendab turvet.** CredSSP ja `runas` koos võrgumandaadiga annavad hostile mandaadi, mida saab edasi kasutada. Parem on andmed tuua hosti control node'ilt (`win_copy`, HTTP-allikas) kui lasta hostil endal võrgust lugeda.
 - **DSC v3 on uus.** Ressursside valik ja tööriistade tugi kasvavad alles. Olemasolev PSDSC kood töötab adapteri kaudu, aga LCM-i automaatset drift'i parandust enam pole: see tuleb ajakavast või pipeline'ist.
 
-## Kus see kursusel tuleb
-
-WinRM-i ja SSH transporti ning `ansible.windows.win_*` mooduleid käsitleb [2. kohtumise loengu osa 6](../k02/loeng.md#6-vorguseadmed-ja-windows). Laboris Windowsi hosti pole, aga samad mustrid on Linuxi peal olemas: [Deploy ja rolling](../k02/lab-6-deploy.md#paigad-ja-reboot-lainetena) paikab ja reboot'ib lainetena, mis on `win_updates`-i ja `serial`-i loogika, ning [lisaülesanne 18](../k02/lisa.md#18-ansible-teenusena-semaphore) annab sama RBAC-i, mis Windowsi hostidele kehtiks. CrowdStrike'i juhtumit vaatab tarne ja rollback'i poolelt [5. kohtumise loengu osa 5](../k05/loeng.md#5-deployment-automation-risk-ja-rollback).
-
 ## Kontrolli ennast
 
 ??? question "Playbook paigaldab `win_package`-iga MSI faili failiserveri UNC-teelt ja saab vea „Access denied“. RDP-s töötab sama käsk. Miks?"

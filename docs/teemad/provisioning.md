@@ -93,10 +93,6 @@ Cisco dokumenteerib ZTP-d Catalyst 9300 kommutaatoril: tehase seadetega seade bo
 
 **Palju eraldi tööriistu.** Bare metal provisioning vajab DHCP-d, TFTP-d/HTTP-d, DNS-i, BMC ligipääsu ja paigaldaja malle. Foreman või MAAS koondab need, aga on ise keerukas süsteem, mida tuleb uuendada ja varundada.
 
-## Kus see kursusel tuleb
-
-SOE, provisioning ja drift on [1. kohtumise loengu](../k01/loeng.md) ptk 2-s ning Proxmoxi Cloud-Init vahekaarti ja `cloud-init status --wait`-i kasutad [1. kohtumise laboris 1: keskkond](../k01/lab-1-keskkond.md). Provisioning taristu tasemel ja SDDC on [4. kohtumise loengu](../k04/loeng.md) ptk 1-s. VM-i, võrgu ja võtme lood koodist [4. kohtumise laboris 1: üks VM koodist](../k04/lab-1-uks-vm.md), inventory tuleb Tofu väljundist [laboris 4: üks käsk](../k04/lab-4-uks-kask.md), ja user-data malli teed [4. kohtumise lisaülesandes 8: user-data templatefile'iga](../k04/lisa.md#8-user-data-templatefileiga).
-
 ## Kontrolli ennast
 
 ??? question "Kloonitud VM bootib, aga SSH host key on sama mis mallil ja kasutaja `kasutaja` võti on vana. Mis läks valesti?"

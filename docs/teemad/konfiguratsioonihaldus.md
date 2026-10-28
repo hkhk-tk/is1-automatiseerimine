@@ -107,10 +107,6 @@ Facebook kirjeldas 2014. aastal, kuidas ta haldab Chefiga [sadu tuhandeid server
 
 **Lock-in ja litsents.** Puppeti ja Chefi omanike litsentsi- ja levitusmuudatused tõid kaasa kogukonna harud ja build'id (OpenVox, Cinc). Kood kandub haru vahel üle, aga kommertsmoodulid ja konsoolid mitte.
 
-## Kus see kursusel tuleb
-
-Soovitud seisu ja `changed`-i näed esimest korda [1. kohtumise laboris 6: sama töö Ansible'iga](../k01/lab-6-ansible.md). 2. kohtumisel teed hallatud ploki ja käsitsi rea [laboris 3: rollid ja muutujad](../k02/lab-3-rollid.md) ning `--check --diff`-i, drift'i ja lint'i [laboris 5: kontroll enne muudatust](../k02/lab-5-kontroll.md). [2. kohtumise lisaülesannetes](../k02/lisa.md) on sama teema edasi: [5. YAML-viga ja -vvv](../k02/lisa.md#5-yaml-viga-ja-vvv), [9. drift'i öine kontroll](../k02/lisa.md#9-drifti-oine-kontroll) ja [13. pull-mudel: ansible-pull](../k02/lisa.md#13-pull-mudel-ansible-pull).
-
 ## Kontrolli ennast
 
 ??? question "Playbook paneb sshd seadistuse drop-in faili ja kasutab `validate: sshd -t -f %s`. Kas see kaitseb välja lukustamise eest täielikult?"

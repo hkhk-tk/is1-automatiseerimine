@@ -71,10 +71,6 @@ Liigne orkestreerimine on samuti risk. Kolmekümne sammuga workflow, millest iga
 
 Pilve enda orkestreerijad (CloudFormation, AWS Step Functions, Azure Logic Apps) seovad töövoo ühe pakkujaga. Ühes pilves töötamiseks on see mugav, aga mitme platvormi töövoog tuleb kirjutada teise tööriistaga.
 
-## Kus see kursusel tuleb
-
-Automatiseerimise ja orkestreerimise vahet ning Tofut ja Ansible't koos käsitleb [4. kohtumise loengu ptk 6](../k04/loeng.md#6-orkestreerimine-ansible-ja-opentofu-koos), Kubernetest käituse orkestreerijana [7. kohtumise loeng](../k07/loeng.md) ([ptk 1](../k07/loeng.md#1-soovitud-seis-ja-control-loop)) koos CloudOpsi ja hallatud klastritega ([ptk 5](../k07/loeng.md#5-klastri-elutsukkel-ja-cloudops)). Laborites ehitad Bashi orkestreerija ([Viis teenust ühe käsuga](../k01/lab-4-viis-teenust.md)), seod `up.sh`-iga Tofu ja Ansible'i ([Üks käsk](../k04/lab-4-uks-kask.md)) ja teed [GitOps Argo CD-ga](../k07/lab-7-argocd.md); sündmuspõhist käivitust proovib 2. kohtumise lisaülesanne [19. Sündmuspõhine koristus](../k02/lisa.md#19-sundmuspohine-koristus-ketas-ule-90-ja-inimese-kinnitus).
-
 ## Kontrolli ennast
 
 ??? question "Mille poolest erineb cron, mis käivitab järjest `create.sh`, `configure.sh` ja `register.sh`, orkestreeritud töövoost?"

@@ -89,10 +89,6 @@ Eesti avalikus sektoris on sama küsimus [E-ITS](https://eits.ria.ee/)-i auditi 
 
 **Packeri litsents.** Packer on BSL 1.1 all nagu Terraform. Oma taristu jaoks see kasutust ei piira, aga konkureeriva toote ehitajale on see piirang. Avatud lähtekoodiga alternatiivid on diskimage-builder, mkosi ja virt-sysprep koos skriptiga.
 
-## Kus see kursusel tuleb
-
-SOE, provisioning, drift ja snowflake server on [1. kohtumise loengu](../k01/loeng.md) ptk 2-s, süsteemi elutsükkel, golden image ja asendus [4. kohtumise loengu](../k04/loeng.md) ptk 5-s. `protection`-i, `prevent_destroy`-d ja `create_before_destroy`-d proovid [4. kohtumise laboris 5: elutsükkel ja kaitsed](../k04/lab-5-elutsukkel.md), malli koodina ja esmalt ühele hostile [laboris 7: golden image Packeriga](../k04/lab-7-kuldne-mall.md) ning Rocky malli [4. kohtumise lisaülesandes 13](../k04/lisa.md#13-golden-image-rockyle-ja-uhe-hosti-kaupa). SOE konteinerite jaoks on [3. kohtumise lisaülesanne 12: oma baas-image ja selle elutsükkel](../k03/lisa.md#12-oma-baas-image-ja-selle-elutsukkel).
-
 ## Kontrolli ennast
 
 ??? question "Mis vahe on SOE-l ja golden image'il?"

@@ -73,10 +73,6 @@ Tokeni ja kasutaja õigused määravad SDDC-s mõjuala. Token õigusega `/` peal
 
 Platvormi vahetus on alati ka litsentsirisk. Ka avatud lähtekoodiga platvormil maksab tugi ja väljaõpe. Lock-in'i vähendab see, et VM-id, võrgud ja õigused on kirjeldatud koodis, mida saab teisele providerile ümber kirjutada.
 
-## Kus see kursusel tuleb
-
-SDDC-d, tokeni õigusi ja SDN-i ootel muudatusi käsitleb [4. kohtumise loengu ptk 1](../k04/loeng.md#1-provisioning-ja-soovitud-seis-taristu-tasemel). Proxmoxi, snapshot'i ja backup'iga töötad laboris [Keskkond](../k01/lab-1-keskkond.md), tokeni ja malliga laboris [Üks VM koodist](../k04/lab-1-uks-vm.md), `protection` lipuga laboris [Elutsükkel ja kaitsed](../k04/lab-5-elutsukkel.md) ning malli ehitad laboris [Golden image Packeriga](../k04/lab-7-kuldne-mall.md); lisaülesanded on [Lisaprojekt: tulemüür koodis](../k04/lisa.md#lisaprojekt-tulemuur-koodis) ja [14. mc01 ja rmq01 LXC-na](../k04/lisa.md#14-mc01-ja-rmq01-lxc-na).
-
 ## Kontrolli ennast
 
 ??? question "Kolmest Proxmoxi node'ist kaks kaotavad võrgu. Mis juhtub üksi jäänud node'il töötavate VM-idega ja miks?"
