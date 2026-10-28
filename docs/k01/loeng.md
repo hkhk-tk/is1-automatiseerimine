@@ -426,9 +426,21 @@ Omadust, et korduv käivitus ei muuda enam midagi, kui soovitud seis on juba ole
 
 **Küsimus:** kuidas kirjeldada ja hallata seadistust, mida tahame?
 
-Ülesanne jääb samaks. Kaust ja fail on tuttavad, uus on ainult see, kuidas Ansible tööd kirjeldab ja teeb. Nii ei pea korraga õppima uut rakendust, uut võrku ja uut tööriista.
+### Mis on Ansible
 
-Ansible'i dokumentatsioon kirjeldab seda tööriistana, mis automatiseerib süsteemide haldust ja hoiab neid **soovitud seisus**. Linuxi teadmisi on endiselt vaja: teed, kasutajad ja õigused ei kao kuhugi. Muutub see, kuidas tööd kirjeldad.
+**Ansible** on avatud lähtekoodiga programm serverite seadistamiseks. Sa kirjutad tekstifaili, milline peab masin olema: millised paketid on paigaldatud, millised failid on olemas, millised teenused töötavad. Ansible loeb selle faili, ühendub SSH-ga masinatesse ja teeb seal ainult need muudatused, mis on puudu.
+
+Ansible'i lõi Michael DeHaan 2012. aastal ja alates 2015. aastast arendab seda Red Hat koos kogukonnaga. Seda kasutatakse serverite seadistamiseks, rakenduste paigaldamiseks, uuenduste levitamiseks ning võrguseadmete ja pilveressursside haldamiseks. Põhimõte on igal pool sama: **kirjeldad soovitud seisu, Ansible viib masina sinna**.
+
+Kolm asja eristavad Ansible'it Bashi skriptist:
+
+- **Soovitud seis, mitte käsud.** Kirjutad „kaust on olemas õigustega 0750“, mitte „tee kaust, siis muuda õigusi“. Kontrolli, kas muutmine on vaja, teeb Ansible.
+- **Mitu masinat korraga.** Sama faili saab käivitada ühe või saja masina vastu.
+- **Agenti pole vaja.** Hallatavasse masinasse ei paigaldata midagi lisaks, piisab SSH-st ja Pythonist.
+
+Ansible ei ole operatsioonisüsteem, veebiteenus ega asendus Linuxi teadmistele. See on käsurea programm, mis käivitub control node'il. Teed, kasutajad ja õigused tuleb endiselt ise mõista; muutub see, kuidas tööd kirjeldad.
+
+Meie ülesanne jääb samaks: sama kaust ja sama fail web01-s. Uus on ainult see, kuidas Ansible tööd kirjeldab ja teeb.
 
 ### Kus Ansible jookseb
 
