@@ -17,9 +17,9 @@
 <rect x="505" y="210" width="150" height="55" rx="8" class="box"/>
 <text x="580" y="233" text-anchor="middle" class="b">rmq01</text><text x="580" y="254" text-anchor="middle">Ubuntu 24.04</text>
 <rect x="665" y="70" width="150" height="55" rx="8" class="box"/>
-<text x="740" y="93" text-anchor="middle" class="b">mc01</text><text x="740" y="114" text-anchor="middle">Rocky 9</text>
+<text x="740" y="93" text-anchor="middle" class="b">mc01</text><text x="740" y="114" text-anchor="middle">AlmaLinux 9</text>
 <rect x="665" y="140" width="150" height="55" rx="8" class="box"/>
-<text x="740" y="163" text-anchor="middle" class="b">db01</text><text x="740" y="184" text-anchor="middle">Rocky 9</text>
+<text x="740" y="163" text-anchor="middle" class="b">db01</text><text x="740" y="184" text-anchor="middle">AlmaLinux 9</text>
 <text x="657" y="300" text-anchor="middle">mall + cloud-init · snapshot'id</text>
 <line x1="180" y1="185" x2="247" y2="185" class="ln" marker-end="url(#a)"/>
 <text x="214" y="176" text-anchor="middle" class="p">VPN</text>

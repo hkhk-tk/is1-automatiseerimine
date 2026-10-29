@@ -9,7 +9,7 @@ Kolmapäeval tuleb OpenSSH turvateade, neljapäeval küsib infoturbejuht, mitu h
 ## Piirid ja errata
 
 - **Haavatavuste haldus** leiab ja hindab nõrkusi (skännerid, CVE-d, riskihinnang), patch-haldus on üks viis neid kõrvaldada. Mõne haavatavuse vastu on lahendus seadistuse muudatus, mitte pakett.
-- **Versiooniuuendus** (Ubuntu 22.04 → 24.04 või Rocky 8 → 9) on eraldi projekt, mille kohta loe lehte [SOE ja elutsükkel](soe-ja-elutsukkel.md).
+- **Versiooniuuendus** (Ubuntu 22.04 → 24.04 või AlmaLinux 8 → 9) on eraldi projekt, mille kohta loe lehte [SOE ja elutsükkel](soe-ja-elutsukkel.md).
 - **Rakenduse deploy** käib läbi pipeline'i. OS-i paketid ja rakendus jagavad küll hooldusakent, aga mitte tööriista.
 
 **Errata** või **advisory** on distributsiooni teade, mis seob paketiversioonid CVE-de ja tõsidusega: Red Hati perekonnas RHSA/RLSA, Ubuntul USN. **Laine** on hostide osa, mida paigatakse korraga, enne kui järgmine algab.
@@ -33,7 +33,7 @@ flowchart LR
   <figcaption>Joonis 1. Paikamise tsükkel. Iga lainet lubab järgmine health check, mitte kellaaeg.</figcaption>
 </figure>
 
-**Inventuur.** Kõigepealt küsimus, mis on saadaval ja kui tõsine see on. Rockyl annab `dnf updateinfo list --security` iga hosti kohta advisory'te nimekirja, Ubuntul `apt list --upgradable` ja security pocket'i paketid. Ansible'iga kogutakse see kõigist hostidest korraga ja tulemus on tabel host × advisory × tõsidus.
+**Inventuur.** Kõigepealt küsimus, mis on saadaval ja kui tõsine see on. AlmaLinuxil annab `dnf updateinfo list --security` iga hosti kohta advisory'te nimekirja, Ubuntul `apt list --upgradable` ja security pocket'i paketid. Ansible'iga kogutakse see kõigist hostidest korraga ja tulemus on tabel host × advisory × tõsidus.
 
 **Valik.** Kas paigaldad kõik uuendused või ainult turvauuendused? Ainult turvauuendused (`dnf upgrade --security`) vähendavad muudatuse mahtu, aga jätavad vigade parandused hiljemaks ja kuhjavad neid. Paljud meeskonnad paigaldavad iga kuu kõik ja kriitilise turvateate korral ainult selle paketi kohe.
 
@@ -41,13 +41,13 @@ flowchart LR
 
 **Hooldusaken ja lained.** Aken lepitakse kokku teenuse omanikuga, mitte valvuriga öösel. Lainete suurus tuleb teenuse lubatud katkestusest: kolmest rakendushostist tohib korraga maas olla üks, andmebaasi primary paigatakse pärast replikat. Ansible'is on selleks `serial`, `max_fail_percentage` ja health check iga laine järel. Enne lainet tehakse snapshot või kontrollitakse varukoopiat, sest paketiuuendust ei saa Ansible'iga tagasi võtta.
 
-**Reboot.** Kerneli, glibc, systemd või OpenSSL-i uuendus jõuab protsessidesse alles pärast restart'i. Rockyl ütleb `dnf needs-restarting -r` [väljumiskoodiga 1](https://www.mankier.com/1/needs-restarting), et reboot on vaja, ja koodiga 0, et pole. Ubuntul tekib fail `/var/run/reboot-required`. Reboot ainult vajaduse korral hoiab katkestused väikesed. Teenuse restart ilma reboot'ita on vahepealne tee: `needs-restarting -s` või Ubuntul `needrestart` näitab teenuseid, mis kasutavad vana teeki. Kerneli livepatch (Canonical Livepatch, kpatch) lükkab reboot'i edasi, aga ei asenda seda.
+**Reboot.** Kerneli, glibc, systemd või OpenSSL-i uuendus jõuab protsessidesse alles pärast restart'i. AlmaLinuxil ütleb `dnf needs-restarting -r` [väljumiskoodiga 1](https://www.mankier.com/1/needs-restarting), et reboot on vaja, ja koodiga 0, et pole. Ubuntul tekib fail `/var/run/reboot-required`. Reboot ainult vajaduse korral hoiab katkestused väikesed. Teenuse restart ilma reboot'ita on vahepealne tee: `needs-restarting -s` või Ubuntul `needrestart` näitab teenuseid, mis kasutavad vana teeki. Kerneli livepatch (Canonical Livepatch, kpatch) lükkab reboot'i edasi, aga ei asenda seda.
 
 **Raport.** Raport vastab kolmele küsimusele: milline host on millisel tasemel (`package_facts`, `uname -r`, viimase reboot'i aeg), kes jäi aknast välja ja miks, ning millised advisory'd on endiselt avatud. Hostid, mis ebaõnnestusid või olid `UNREACHABLE`, peavad raportis olema eraldi real, mitte kaduma koguarvu sisse.
 
 ## Iseseisev paikamine: unattended-upgrades ja dnf-automatic
 
-Kõik hostid ei vaja keskset orkestreerimist. Ubuntul paikab [`unattended-upgrades`](https://sleeplessbeastie.eu/2024/10/08/how-to-configure-unattended-upgrades/): sagedus on failis `/etc/apt/apt.conf.d/20auto-upgrades`, poliitika failis `50unattended-upgrades`, käivitab `apt-daily-upgrade.timer` ja `Automatic-Reboot` on vaikimisi `false`. Rocky 9-l on sama töö `dnf-automatic` ja selle timerid. dnf5 versioonis on [`dnf5-automatic`](https://dnf5.readthedocs.io/en/latest/dnf5_plugins/automatic.8.html)-il valik `reboot` väärtustega `never`, `when-changed` ja `when-needed`, vaikimisi `never`, ning `upgrade_type = security` piirab uuendused turvateadetega.
+Kõik hostid ei vaja keskset orkestreerimist. Ubuntul paikab [`unattended-upgrades`](https://sleeplessbeastie.eu/2024/10/08/how-to-configure-unattended-upgrades/): sagedus on failis `/etc/apt/apt.conf.d/20auto-upgrades`, poliitika failis `50unattended-upgrades`, käivitab `apt-daily-upgrade.timer` ja `Automatic-Reboot` on vaikimisi `false`. AlmaLinux 9-l on sama töö `dnf-automatic` ja selle timerid. dnf5 versioonis on [`dnf5-automatic`](https://dnf5.readthedocs.io/en/latest/dnf5_plugins/automatic.8.html)-il valik `reboot` väärtustega `never`, `when-changed` ja `when-needed`, vaikimisi `never`, ning `upgrade_type = security` piirab uuendused turvateadetega.
 
 ```ini
 # /etc/dnf/automatic.conf (dnf5)
@@ -66,7 +66,7 @@ Nii saavad hostid paigad kiiresti, aga reboot ja teenuse restart tulevad hosti o
 | Ansible (`dnf`, `apt`, `reboot`, `serial`) | paikamine lainetena koos health check'iga | GPLv3, tasuta | olemasolev Ansible, lained ja kontroll on vajalikud |
 | [Foreman](https://docs.theforeman.org/3.18/Planning_for_Project/index-foreman-el.html) + Katello | hoidlate snapshot'id, errata, lifecycle environment'id, remote execution | Foreman GPLv3+, Katello GPLv2, tasuta | kümned kuni tuhanded RHEL-i perekonna hostid, sama sisu igas keskkonnas |
 | `unattended-upgrades` | Ubuntu/Debiani iseseisev turvapaikamine | GPLv2+, tasuta | üksikud hostid ja tööjaamad, reboot'i aeg ei ole kriitiline |
-| `dnf-automatic` / `dnf5-automatic` | Rocky/RHEL/Fedora iseseisev paikamine | GPLv2+, tasuta | sama, RPM-põhistel hostidel |
+| `dnf-automatic` / `dnf5-automatic` | AlmaLinux/RHEL/Fedora iseseisev paikamine | GPLv2+, tasuta | sama, RPM-põhistel hostidel |
 | [OpenSCAP](https://www.open-scap.org/) | OVAL-põhine haavatavuste ja seadistuse kontroll | LGPL, tasuta | tõend auditile, et paik on paigaldatud |
 | Red Hat Satellite, Ubuntu Landscape | kommertslahendused hoidlate ja paikamise juhtimiseks | tellimus | võrdluseks: Satellite on Foremani ja Katello toote versioon |
 

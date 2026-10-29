@@ -11,7 +11,7 @@
 <text x="36" y="234" class="b">group_vars/ ja host_vars/</text>
 <text x="40" y="264" class="s">all/main.yml: ühised väärtused</text>
 <text x="40" y="288" class="s">all/vault.yml: saladused, krüpteeritud</text>
-<text x="40" y="312" class="s">rocky.yml, ubuntu.yml: OS-grupp</text>
+<text x="40" y="312" class="s">alma.yml, ubuntu.yml: OS-grupp</text>
 <text x="40" y="336" class="s">host_vars/app01.yml: ühe hosti erand</text>
 <rect x="420" y="15" width="360" height="340" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
 <text x="436" y="42" class="b">roles/&lt;roll&gt;/</text>

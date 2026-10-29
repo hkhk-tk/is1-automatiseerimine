@@ -10,7 +10,7 @@
 <rect class="o" x="215" y="75" width="155" height="190" rx="8"/>
 <text class="b c" x="292" y="110">MariaDB</text>
 <line x1="225" y1="135" x2="360" y2="135" stroke="#ff9100"/>
-<text class="c" x="292" y="185">Rocky tuum</text><text class="c" x="292" y="207">+ terve OS</text>
+<text class="c" x="292" y="185">AlmaLinuxi tuum</text><text class="c" x="292" y="207">+ terve OS</text>
 <text class="c s" x="292" y="245">1–2 GB RAM</text>
 <rect class="p" x="40" y="285" width="330" height="55" rx="8"/>
 <text class="c" x="205" y="318">Proxmox / hüperviisor</text>

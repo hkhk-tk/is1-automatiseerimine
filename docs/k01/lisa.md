@@ -37,7 +37,7 @@ Paigalda `ansible-lint` ja lase sellel oma playbook'id läbi vaadata:
     sudo apt install -y ansible-lint
     ```
 
-=== "AlmaLinux / Rocky"
+=== "AlmaLinux"
 
     ```bash
     sudo dnf install -y python3-pip && pip3 install --user ansible-lint

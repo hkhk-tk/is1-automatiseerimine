@@ -119,7 +119,7 @@ Sinu arvutis.
 
 ```text
 Host control
-    HostName 192.168.124.51
+    HostName 192.168.125.10
     User kasutaja
 ```
 
@@ -143,7 +143,7 @@ Host control
 
     ```text
     Host web01
-        HostName 192.168.124.52
+        HostName 192.168.125.11
         User kasutaja
         ProxyJump control
     ```
@@ -181,7 +181,7 @@ Host control
 
     ```bash
     echo "PasswordAuthentication yes" | sudo tee /etc/ssh/sshd_config.d/01-parool.conf
-    sudo systemctl restart ssh      # Rocky Linuxis: sudo systemctl restart sshd
+    sudo systemctl restart ssh      # AlmaLinuxis: sudo systemctl restart sshd
     ```
 
     !!! danger "Ainult laboris"

@@ -10,7 +10,7 @@ tags:
 !!! abstract "Eesmärgid"
 
     - paigaldad kogu `ansible.mysql` faili `requirements.yml` kaudu;
-    - paigaldad MariaDB db01-le (Rocky);
+    - paigaldad MariaDB db01-le (AlmaLinux);
     - hoiad andmebaasi kasutaja parooli Vaultis.
 
 Kõik käsud käivad control node'il kaustas `~/kursus/k02`.

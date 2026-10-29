@@ -14,11 +14,11 @@
 <rect x="610" y="15" width="170" height="80" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
 <text x="695" y="42" text-anchor="middle" class="b">db01</text>
 <text x="695" y="64" text-anchor="middle" class="s">MariaDB :3306</text>
-<text x="695" y="84" text-anchor="middle" class="s">Rocky</text>
+<text x="695" y="84" text-anchor="middle" class="s">AlmaLinux</text>
 <rect x="610" y="125" width="170" height="80" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
 <text x="695" y="152" text-anchor="middle" class="b">mc01</text>
 <text x="695" y="174" text-anchor="middle" class="s">Memcached :11211</text>
-<text x="695" y="194" text-anchor="middle" class="s">Rocky</text>
+<text x="695" y="194" text-anchor="middle" class="s">AlmaLinux</text>
 <rect x="610" y="235" width="170" height="80" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
 <text x="695" y="262" text-anchor="middle" class="b">rmq01</text>
 <text x="695" y="284" text-anchor="middle" class="s">RabbitMQ :5672</text>

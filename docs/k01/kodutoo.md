@@ -47,7 +47,7 @@ ansible-playbook training.yml
 
 ## H3 · Boonus: sama tööriist, eri nimi
 
-Lisa `tools.yml`-i tööriist `dig` (DNS-päringud). Ubuntul on see paketis `dnsutils`, Rockyl `bind-utils`. Kasuta sama mustrit nagu `vim`-i puhul: kaks ülesannet, `when` ja silt `paketid`.
+Lisa `tools.yml`-i tööriist `dig` (DNS-päringud). Ubuntul on see paketis `dnsutils`, AlmaLinuxil `bind-utils`. Kasuta sama mustrit nagu `vim`-i puhul: kaks ülesannet, `when` ja silt `paketid`.
 
 ```bash
 ansible-playbook tools.yml -K --tags paketid
@@ -56,7 +56,7 @@ ansible all -m ansible.builtin.command -a "dig +short github.com"
 
 ??? success "Oodatav tulemus"
 
-    Esimene käsk: Ubuntu masinatel `dnsutils` `changed`, Rocky masinatel `bind-utils` `changed`, vastupidised ülesanded `skipping`. Teine käsk: igast masinast üks või mitu IP-aadressi.
+    Esimene käsk: Ubuntu masinatel `dnsutils` `changed`, AlmaLinuxi masinatel `bind-utils` `changed`, vastupidised ülesanded `skipping`. Teine käsk: igast masinast üks või mitu IP-aadressi.
 
 `git push`.
 

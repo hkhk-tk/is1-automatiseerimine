@@ -20,7 +20,7 @@ Esimesena kaob käsitsi hallatav IP-de nimekiri. IP-d on nüüd kirjas ainult `t
 Nõuded:
 
 - `inventory.tftpl` Tofu template'i süntaksiga (`%{ for … }`, mitte Jinja): esimene rida on kommentaar, et fail on genereeritud ja käsitsi ei muudeta; iga grupi all read `nimi ansible_host=IP`
-- grupid `db`, `cache`, `queue`, `app`, `web` ja distro järgi `ubuntu`, `rocky`; `local.groups` (grupp → { nimi → IP }) arvutatakse `locals.tf`-is **mooduli väljunditest**
+- grupid `db`, `cache`, `queue`, `app`, `web` ja distro järgi `ubuntu`, `alma`; `local.groups` (grupp → { nimi → IP }) arvutatakse `locals.tf`-is **mooduli väljunditest**
 - muutuja `inventory_path` vaikeväärtusega `"../k02-ansible/inventory.ini"` (dev-keskkond vajab hiljem oma faili)
 - `inventory.tf`-is `local_file`, mis kirjutab `templatefile()` tulemuse sellele teele
 
@@ -81,7 +81,7 @@ Template'is on kõige lihtsam teha viga, mida keegi ei näe: puuduv reavahetus, 
 Lisa `tests/vms.tftest.hcl`-i:
 
 - faili tasemel `variables`-isse `inventory_path = "build/inventory-test.ini"`, et test ei puutuks Ansible'i inventory't
-- `run "inventory_grupid"` (`command = plan`): `assert`, et `local_file.inventory.content` sisaldab `"[db]\ndb01 ansible_host=…"` ja sama `[rocky]` grupi all
+- `run "inventory_grupid"` (`command = plan`): `assert`, et `local_file.inventory.content` sisaldab `"[db]\ndb01 ansible_host=…"` ja sama `[alma]` grupi all
 
 ```bash
 cd ~/labori-seis/k04-tofu
@@ -152,7 +152,7 @@ Kõige tavalisem põhjus ootamatuks asenduseks on muudatus, mis näeb välja sü
     tofu plan | grep -E 'forces replacement|Plan:'
     ```
 
-2. Pane `distro = "rocky"` tagasi ja kontrolli, et `./up.sh` ütleb jälle, et taristu klapib.
+2. Pane `distro = "alma"` tagasi ja kontrolli, et `./up.sh` ütleb jälle, et taristu klapib.
 
 Skript väljastas, et plaanis on üks kustutamine, ja lõpetas koodiga 1, enne kui `apply` või Ansible käivitus. Teine käsk näitab põhjust: mall on `clone` plokis ja selle muutus nõuab asendust. Proxmoxis ei muutunud midagi, plaanifail kustutati `trap`-iga.
 

@@ -8,7 +8,7 @@ tags:
 
 # 7. Sama teenus Podmaniga
 
-Rocky ja RHEL serveris Dockerit vaikimisi pole: `dnf install docker` paigaldab `podman-docker`-i ja turvanõue keelab tihti root-daemoni, mille socket'i omanik on hostis sisuliselt root. Kui tiim tahab sinna konteinerit, pead oskama teenust käivitada ilma daemonita, systemd all, SELinuxi sees. Viid Labori seisu mc01 ja db01 teenused nende samade Rocky hostide peal rootless Podmani konteineritesse, image'id tulevad kooli registry'st ja app01 jõuab neisse ilma restardita. Kõik käsud on kasutajana `kasutaja`, `sudo` ainult seal, kus see on kirjas.
+AlmaLinux ja RHEL serveris Dockerit vaikimisi pole: `dnf install docker` paigaldab `podman-docker`-i ja turvanõue keelab tihti root-daemoni, mille socket'i omanik on hostis sisuliselt root. Kui tiim tahab sinna konteinerit, pead oskama teenust käivitada ilma daemonita, systemd all, SELinuxi sees. Viid Labori seisu mc01 ja db01 teenused nende samade AlmaLinuxi hostide peal rootless Podmani konteineritesse, image'id tulevad kooli registry'st ja app01 jõuab neisse ilma restardita. Kõik käsud on kasutajana `kasutaja`, `sudo` ainult seal, kus see on kirjas.
 
 **Kui teed seda tööl iga päev:** sinu serverites käivad konteinerid Quadleti unit'itena ja `loginctl show-user <kasutaja> -p Linger` annab `Linger=yes`. Kui see on sul juba korras, kirjuta mc01 Quadlet etapi „[Quadlet: konteiner systemd teenusena](#quadlet-konteiner-systemd-teenusena)“ nõuete järgi ise ja mine otse etappi „[db01 SELinuxiga](#db01-selinuxiga)“.
 
@@ -47,7 +47,7 @@ Rootless tähendab, et kõik konteinerid elavad kasutaja `kasutaja` user namespa
 
 ## Image registry'st
 
-Rocky host tõmbab samad image'id samast registry'st kui control node, aga Podmani seadistus on teises kohas. Docker Hubi image'id tulevad kooli peegli kaudu, Gitea image'id kooli CA-ga ja ainult lugemisõigusega tokeniga: server ei vaja õigust image'eid lükata ega kustutada.
+AlmaLinuxi host tõmbab samad image'id samast registry'st kui control node, aga Podmani seadistus on teises kohas. Docker Hubi image'id tulevad kooli peegli kaudu, Gitea image'id kooli CA-ga ja ainult lugemisõigusega tokeniga: server ei vaja õigust image'eid lükata ega kustutada.
 
 1. Loo Gitea's teine token õigusega `read:package` (nimi `podman-read`).
 2. Seadista mõlemas hostis peegel ja Gitea CA nõuete järgi:
@@ -241,12 +241,12 @@ Quadleti failid lähevad Giti ja hostid lähevad tagasi native teenustele: 4. ko
 
 **Linger.** Kasutaja systemd (`user@<UID>.service`) käivitub tavaliselt esimese sisselogimisega ja lõpetab viimase väljalogimisega. `loginctl enable-linger` loob faili `/var/lib/systemd/linger/<kasutaja>`, ja siis käivitub kasutaja systemd boot'il ning `default.target` tõstab Quadleti teenused üles.
 
-**SELinuxi sildid.** Rocky poliitikas tohib `container_t` lugeda ja kirjutada ainult `container_file_t` silti. Podman paneb `:Z` sildi iga konteineri stardil uuesti, `:z` annab ühise sildi ilma MCS kategooriateta. Kodukausta või `/etc` alla ei panda `:Z`-ga laia kausta: silt muutub kogu puul ja hosti teised teenused võivad ligipääsu kaotada. Kui dump'i hiljem kustutad, eemalda ka `Volume=` rida, muidu ei käivitu konteiner, sest bind mount'i allikas puudub.
+**SELinuxi sildid.** AlmaLinuxi poliitikas tohib `container_t` lugeda ja kirjutada ainult `container_file_t` silti. Podman paneb `:Z` sildi iga konteineri stardil uuesti, `:z` annab ühise sildi ilma MCS kategooriateta. Kodukausta või `/etc` alla ei panda `:Z`-ga laia kausta: silt muutub kogu puul ja hosti teised teenused võivad ligipääsu kaotada. Kui dump'i hiljem kustutad, eemalda ka `Volume=` rida, muidu ei käivitu konteiner, sest bind mount'i allikas puudub.
 
 **Rootless võrk.** `pasta` tõlgib konteineri namespace'i võrgupaketid hosti tavalisteks socket'iteks kasutaja õigustega. Sissetulev ühendus läbib hosti `firewalld`-i nagu native teenuse puhul, nii et 2. kohtumisel avatud pordid kehtivad ka konteinerile. Rootful Dockeri NAT-reegleid, mis lähevad tulemüürist mööda, siin pole.
 
 **Healthcheck Podmanis.** Podman käivitab healthcheck'i systemd taimeriga, mitte daemoni sees. `HealthOnFailure=kill` lõpetab `unhealthy` konteineri ja unit'i `Restart=` tõstab selle uuesti: see on käitumine, mida Docker Compose'il pole. `Notify=healthy` hoiab unit'i olekus `activating`, kuni healthcheck läbib, nii et teised unit'id saavad sellest `After=`-iga sõltuda.
 
-**Kahe tööriista hind.** Podman sobib serverisse, kus töötab üks või paar teenust ja Rocky/RHEL on standard: systemd, journald, SELinux ja auditilogi on samad mis teistel teenustel. Docker jääb arendusmasinasse, CI-sse ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it. Kubernetes võtab mõlemast sama OCI image'i.
+**Kahe tööriista hind.** Podman sobib serverisse, kus töötab üks või paar teenust ja AlmaLinux/RHEL on standard: systemd, journald, SELinux ja auditilogi on samad mis teistel teenustel. Docker jääb arendusmasinasse, CI-sse ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it. Kubernetes võtab mõlemast sama OCI image'i.
 
 Kui jõudsid kiiremini: [Lisaülesanded → Lisaprojekt: rootless Docker](lisa.md#lisaprojekt-rootless-docker), käivitad sama db-image'i control node'is rootless Dockeriga ja võrdled, mida Docker ilma root-daemonita teisiti teeb.

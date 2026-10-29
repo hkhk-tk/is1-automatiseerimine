@@ -8,7 +8,7 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - kirjutad playbook'i, mis teeb Ubuntul ja Rockyl õiget asja (`when`);
+    - kirjutad playbook'i, mis teeb Ubuntul ja AlmaLinuxil õiget asja (`when`);
     - valid, millistes masinates töö tehakse (`hosts`, `--limit`);
     - käivitad ainult osa ülesandeid (`tags`).
 
@@ -16,7 +16,7 @@ Kõik käsud käivad control node'il kaustas `~/kursus/k01`.
 
 ## A1 · Probleem: sama programm, eri paketinimi
 
-Tekstiredaktor `vim` on Ubuntul pakett `vim`, Rockyl `vim-enhanced`. Üks ülesanne ühe nimega ei tööta mõlemal. Fakt `ansible_facts['os_family']` ütleb, kumb on kumb: Ubuntul `Debian`, Rockyl `RedHat`.
+Tekstiredaktor `vim` on Ubuntul pakett `vim`, AlmaLinuxil `vim-enhanced`. Üks ülesanne ühe nimega ei tööta mõlemal. Fakt `ansible_facts['os_family']` ütleb, kumb on kumb: Ubuntul `Debian`, AlmaLinuxil `RedHat`.
 
 ```bash
 ansible all -m ansible.builtin.setup -a 'filter=ansible_os_family'
@@ -45,7 +45,7 @@ Loo fail `tools.yml`:
       when: ansible_facts['os_family'] == "Debian"
       tags: paketid
 
-    - name: vim on paigaldatud (Rocky)
+    - name: vim on paigaldatud (AlmaLinux)
       ansible.builtin.package:
         name: vim-enhanced
         state: present
@@ -69,7 +69,7 @@ ansible-playbook tools.yml -K
 
 ??? success "Oodatav tulemus"
 
-    Ubuntu masinatel on Rocky ülesanne `skipping`, Rocky masinatel Ubuntu omad `skipping`. PLAY RECAP reas on `skipped` väljal vahele jäetud ülesannete arv.
+    Ubuntu masinatel on AlmaLinuxi ülesanne `skipping`, AlmaLinuxi masinatel Ubuntu omad `skipping`. PLAY RECAP reas on `skipped` väljal vahele jäetud ülesannete arv.
 
 Logi mõnda masinasse ja vaata teadet:
 
@@ -86,7 +86,7 @@ ssh mc01
 Sama playbook ainult ühe grupi või ühe masina vastu, ilma faili muutmata:
 
 ```bash
-ansible-playbook tools.yml -K --limit rocky
+ansible-playbook tools.yml -K --limit alma
 ansible-playbook tools.yml -K --limit web01
 ```
 

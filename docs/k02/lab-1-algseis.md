@@ -48,7 +48,7 @@ ansible-inventory --graph
 
 ??? success "Oodatav tulemus"
 
-    web01 on nii grupis `ubuntu` kui ka `veeb`, db01 grupis `rocky` ja `andmebaas`.
+    web01 on nii grupis `ubuntu` kui ka `veeb`, db01 grupis `alma` ja `andmebaas`.
 
 ## A3 · Muutujad gruppidele
 

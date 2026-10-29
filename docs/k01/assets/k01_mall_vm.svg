@@ -4,7 +4,7 @@
 <text x="380" y="76" text-anchor="middle">IP, kasutaja, SSH võti</text>
 <rect x="20" y="150" width="180" height="80" rx="8" class="box"/>
 <text x="110" y="182" text-anchor="middle" class="b">Mall</text>
-<text x="110" y="206" text-anchor="middle">Ubuntu 24.04 / Rocky 9</text>
+<text x="110" y="206" text-anchor="middle" style="font-size:11.5px">Ubuntu 24.04 / AlmaLinux 9</text>
 <rect x="290" y="150" width="180" height="80" rx="8" class="box"/>
 <text x="380" y="182" text-anchor="middle" class="b">VM web01</text>
 <text x="380" y="206" text-anchor="middle">malli kloon</text>

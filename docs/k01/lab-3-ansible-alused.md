@@ -23,7 +23,7 @@ Kõik käsud käivad control node'il kaustas `~/kursus/k01`.
     sudo apt install -y ansible-core
     ```
 
-=== "AlmaLinux / Rocky"
+=== "AlmaLinux"
 
     ```bash
     sudo dnf install -y ansible-core
@@ -58,7 +58,7 @@ web01
 app01
 rmq01
 
-[rocky]
+[alma]
 mc01
 db01
 
@@ -66,7 +66,7 @@ db01
 ansible_user=kasutaja
 ```
 
-Nimed `web01` jne töötavad ilma IP-deta, sest [1. Keskkonna](lab-1-keskkond.md) skript kirjutas need faili `~/.ssh/config`. Grupid `ubuntu` ja `rocky` lubavad hiljem käivitada töö ühe distro masinatel.
+Nimed `web01` jne töötavad ilma IP-deta, sest [1. Keskkonna](lab-1-keskkond.md) skript kirjutas need faili `~/.ssh/config`. Grupid `ubuntu` ja `alma` lubavad hiljem käivitada töö ühe distro masinatel.
 
 ```bash
 ansible --version | grep 'config file'
@@ -83,7 +83,7 @@ ansible-inventory --graph
       |  |--web01
       |  |--app01
       |  |--rmq01
-      |--@rocky:
+      |--@alma:
       |  |--mc01
       |  |--db01
     ```
@@ -102,7 +102,7 @@ Käsk kõigis masinates korraga ja ainult ühes grupis:
 
 ```bash
 ansible all -m ansible.builtin.command -a uptime
-ansible rocky -m ansible.builtin.command -a "df -h /"
+ansible alma -m ansible.builtin.command -a "df -h /"
 ```
 
 Faktid: mis OS igas masinas on?
@@ -113,7 +113,7 @@ ansible all -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 
 ??? success "Oodatav tulemus"
 
-    web01, app01, rmq01: `"ansible_distribution": "Ubuntu"`. mc01, db01: `"Rocky"` (või `"AlmaLinux"`). Neid fakte kasutad lehel 5, et teha Ubuntul ja Rockyl õiget asja.
+    web01, app01, rmq01: `"ansible_distribution": "Ubuntu"`. mc01, db01: `"AlmaLinux"`. Neid fakte kasutad lehel 5, et teha Ubuntul ja AlmaLinuxil õiget asja.
 
 ??? question "Mõtle"
 
@@ -129,7 +129,7 @@ ansible all -m ansible.builtin.package -a "name=tree state=present" -b -K
 
 ??? success "Oodatav tulemus"
 
-    `BECOME password:` küsib parooli. Seejärel viis plokki `CHANGED`: Ubuntul paigaldas `apt`, Rockyl `dnf`. Moodul `package` valis paketihalduri ise.
+    `BECOME password:` küsib parooli. Seejärel viis plokki `CHANGED`: Ubuntul paigaldas `apt`, AlmaLinuxil `dnf`. Moodul `package` valis paketihalduri ise.
 
 Käivita sama käsk uuesti.
 

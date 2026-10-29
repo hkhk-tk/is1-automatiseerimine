@@ -4,7 +4,7 @@ tags: [SOE, golden image, elutsükkel, Packer]
 
 # Standard Operating Environment ja IT-süsteemi elutsükkel
 
-Pool'is on 140 VM-i ja neist kuus eri Ubuntu ja Rocky versiooni, kolm eri hardening'u taset ja üksteist masinat, mille omanikku keegi ei tea. Iga skript kontrollib OS-i versiooni, iga paikamise tsükkel leiab mõne masina, millele paika ei ole, ja audit küsib, millal kõige vanem server maha võetakse. SOE määrab, millest iga süsteem algab, ja elutsükli haldus määrab, kuidas see muutub ja millal see lõpeb.
+Pool'is on 140 VM-i ja neist kuus eri Ubuntu ja AlmaLinuxi versiooni, kolm eri hardening'u taset ja üksteist masinat, mille omanikku keegi ei tea. Iga skript kontrollib OS-i versiooni, iga paikamise tsükkel leiab mõne masina, millele paika ei ole, ja audit küsib, millal kõige vanem server maha võetakse. SOE määrab, millest iga süsteem algab, ja elutsükli haldus määrab, kuidas see muutub ja millal see lõpeb.
 
 ## SOE, selle artefaktid ja elutsükli kaks taset
 
@@ -69,7 +69,7 @@ SOE versioonid järgivad OS-i toetusaega. Ubuntu LTS saab [5 aastat tavalist tur
 
 ## CentOS 7 toetuse lõpp 30.06.2024
 
-CentOS Linux 7 toetus lõppes [30. juunil 2024](https://docs.cloud.google.com/compute/docs/eol/centos-eol-guidance?hl=en). Pärast seda ei tule ühtki turvauuendust, pilvepakkujad märkisid image'id aegunuks ja peeglid kolisid arhiivi, nii et `yum` vanades masinates enam ei töötanud. Organisatsioonid, kelle SOE-s oli CentOS 7 kuupäev kirjas, olid kolinud Rocky, Alma, RHEL-i või Ubuntu peale juba varem. Need, kellel polnud, avastasid sel suvel servereid, mida keegi ei tundnud, ja rakendusi, mille paigaldusjuhend eeldas CentOS 7 pakette. Kolimine tähendas uut SOE-d: teine paketihaldur, teine SELinuxi poliitika versioon, teised teenuste nimed.
+CentOS Linux 7 toetus lõppes [30. juunil 2024](https://docs.cloud.google.com/compute/docs/eol/centos-eol-guidance?hl=en). Pärast seda ei tule ühtki turvauuendust, pilvepakkujad märkisid image'id aegunuks ja peeglid kolisid arhiivi, nii et `yum` vanades masinates enam ei töötanud. Organisatsioonid, kelle SOE-s oli CentOS 7 kuupäev kirjas, olid kolinud AlmaLinux, Alma, RHEL-i või Ubuntu peale juba varem. Need, kellel polnud, avastasid sel suvel servereid, mida keegi ei tundnud, ja rakendusi, mille paigaldusjuhend eeldas CentOS 7 pakette. Kolimine tähendas uut SOE-d: teine paketihaldur, teine SELinuxi poliitika versioon, teised teenuste nimed.
 
 Eesti avalikus sektoris on sama küsimus [E-ITS](https://eits.ria.ee/)-i auditi osa: toetuseta OS on paikamata OS. Kui asutuses on serverite nimekiri koos OS-i versiooni ja toetuse lõpu kuupäevaga, on vastus auditile päring, mitte projekt. Kui sellist nimekirja ei ole, on see esimene elutsükli halduse töö.
 

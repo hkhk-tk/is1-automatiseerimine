@@ -102,7 +102,7 @@ Malli nimi koodis tähendab, et iga malli vahetus on commit ja PR. Kui keegi kü
 
 Nõuded:
 
-- `variables.tf`: `template_names`, tüüp `map(string)`, vaikimisi `{}`; `validation`, et võti on `ubuntu` või `rocky` ja nimi algab `labseis-base-`
+- `variables.tf`: `template_names`, tüüp `map(string)`, vaikimisi `{}`; `validation`, et võti on `ubuntu` või `alma` ja nimi algab `labseis-base-`
 - `data.tf`: `tags` on tingimusavaldis `? :`: kui `lookup(var.template_names, each.key, null)` on `null`, siis `[var.template_tag, each.key]`, muidu ainult `[each.key]`
 - samas data source'is `dynamic "filter"` (`name = "name"`, `values = [<malli nimi>]`), mis tekib ainult siis, kui distrol on golden image
 - `outputs.tf`: `template_source`, mis annab iga distro kohta `try(var.template_names[d], "pilvemall (tagid)")`
@@ -112,8 +112,8 @@ Nõuded:
 
     ```bash
     cd ~/labori-seis/k04-tofu
-    echo 'lookup({ ubuntu = "labseis-base-1" }, "rocky", null) == null ? "tagid" : "nimi"' | tofu console
-    echo 'try({ ubuntu = "x" }["rocky"], "pilvemall")' | tofu console
+    echo 'lookup({ ubuntu = "labseis-base-1" }, "alma", null) == null ? "tagid" : "nimi"' | tofu console
+    echo 'try({ ubuntu = "x" }["alma"], "pilvemall")' | tofu console
     ```
 
 2. Kirjuta muudatused, siis kontrolli.
@@ -201,7 +201,7 @@ Piirang: korraga on asendamisel üks host, teised töötavad edasi ja enne järg
 
 Nüüd viid ülejäänud Ubuntu masinad uuele mallile ja paned malli nime koodi. Mall on `clone` ploki osa, nii et `test01` katsetest tead juba, mida plaan sellest arvab. Siin näed, kuidas `up.sh` kaitse ja golden image koos töötavad: kaitse peatab, inimene loeb plaani ja lubab teadlikult.
 
-Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et keegi plaani loeks, kaovad ka andmed, mis olid VM-i kettal. Meil on andmed ainult db01-l, mis on Rocky ja jääb pilvemallile.
+Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et keegi plaani loeks, kaovad ka andmed, mis olid VM-i kettal. Meil on andmed ainult db01-l, mis on AlmaLinux ja jääb pilvemallile.
 
 1. Pane `terraform.tfvars`-i `template_names = { ubuntu = "<nimi>" }` ja proovi.
 
@@ -220,7 +220,7 @@ Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et
 
 4. Võrdle `NOTES.md`-s seda aega esimese `time ./up.sh` tulemusega ja Ansible'i `PLAY RECAP`-i `changed` arvu Ubuntu hostidel.
 
-Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks Rocky masinat rahule: rmq01 on juba uuel mallil ja `template_names`-is on ainult `ubuntu`. Pärast seda `apply`-d vastab kood jälle tegelikkusele ja canary aken on suletud. Ansible'i esimene play andis Ubuntu hostidel vähem `changed`-e kui esimesel `up.sh` jooksul, sest kasutajad, motd ja paketid olid juba olemas. `/etc/hosts` plokk ja hosti roll tulevad endiselt Ansible'ist, sest need sõltuvad sellest, millised masinad Labori seisus on.
+Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks AlmaLinuxi masinat rahule: rmq01 on juba uuel mallil ja `template_names`-is on ainult `ubuntu`. Pärast seda `apply`-d vastab kood jälle tegelikkusele ja canary aken on suletud. Ansible'i esimene play andis Ubuntu hostidel vähem `changed`-e kui esimesel `up.sh` jooksul, sest kasutajad, motd ja paketid olid juba olemas. `/etc/hosts` plokk ja hosti roll tulevad endiselt Ansible'ist, sest need sõltuvad sellest, millised masinad Labori seisus on.
 
 > Rollback käib sama teed teistpidi: eemalda `template_names` või pane eelmise malli nimi ja `ALLOW_DESTROY=1 ./up.sh`. Seepärast ära kustuta eelmist malli enne, kui uus on vähemalt korra Labori seisus töötanud.
 
@@ -276,4 +276,4 @@ git push
 
 **Üks host enne kõiki.** See on canary release'i lihtsaim kuju. Kui see host töötab päeva uue malliga ilma probleemideta, tulevad järgmised. Kui mitte, on rollback üks rida `terraform.tfvars`-is ja üks asendus.
 
-Kui jõudsid kiiremini: [Lisaülesanded → 13. Golden image Rockyle ja ühe hosti kaupa](lisa.md#13-golden-image-rockyle-ja-uhe-hosti-kaupa), ehitad Rocky malli ja viid selle ühele hostile, enne kui teised järgnevad.
+Kui jõudsid kiiremini: [Lisaülesanded → 13. Golden image AlmaLinuxile ja ühe hosti kaupa](lisa.md#13-golden-image-almalinuxile-ja-uhe-hosti-kaupa), ehitad AlmaLinuxi malli ja viid selle ühele hostile, enne kui teised järgnevad.

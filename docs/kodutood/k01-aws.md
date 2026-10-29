@@ -182,7 +182,7 @@ ansible-playbook tools.yml -K --limit aws
 ansible-playbook training.yml --limit aws
 ```
 
-**Ennusta enne:** `tools.yml` töötab (Ubuntu ülesanded käivad, Rocky omad jäävad vahele). `training.yml` aga kukub: kaust `/home/kasutaja/automation-lab` ei ole EC2-l lubatud, sest seal pole kasutajat `kasutaja`.
+**Ennusta enne:** `tools.yml` töötab (Ubuntu ülesanded käivad, AlmaLinuxi omad jäävad vahele). `training.yml` aga kukub: kaust `/home/kasutaja/automation-lab` ei ole EC2-l lubatud, sest seal pole kasutajat `kasutaja`.
 
 See on eeldus, mis oli playbook'is peidus: **tee sõltus meie labori kasutajanimest**. Paranda `training.yml`-is mõlemad teed nii, et need võtavad kodukausta masina faktist:
 

@@ -63,7 +63,7 @@ Tofu loob `for_each` eksemplarid paralleelselt (vaikimisi kümme korraga), nii e
 tofu plan
 ```
 
-Aadress `lab["web01"]` ütleb, et VM-i identiteet Tofu jaoks on võti `web01`, mitte järjekorranumber ega Proxmoxi ID. Data source loeb ainult Ubuntu malli, sest `vms`-is pole veel ühtki Rockyt. Nii ei sõltu plaan mallist, mida keegi ei kasuta.
+Aadress `lab["web01"]` ütleb, et VM-i identiteet Tofu jaoks on võti `web01`, mitte järjekorranumber ega Proxmoxi ID. Data source loeb ainult Ubuntu malli, sest `vms`-is pole veel ühtki AlmaLinuxit. Nii ei sõltu plaan mallist, mida keegi ei kasuta.
 
 > `vm_id ... already exists`: sinu vana VM samal ID-l on alles või `test01` jäi kustutamata, vaata UI-st. `403 Permission check failed (/storage/..., Datastore.AllocateSpace)`: kopeeri veateade täpselt koolitajale, ära proovi teist storage'it.
 
@@ -77,7 +77,7 @@ Paned muutujale reeglid, mis lükkavad vigase sisendi tagasi enne, kui Proxmoxi 
 
 Lisa `vms`-ile `validation` plokid:
 
-- `distro` on `ubuntu` või `rocky`
+- `distro` on `ubuntu` või `alma`
 - `ip` on maskiga: `can(cidrnetmask(v.ip))`
 - IP-d ja `vm_id`-d on unikaalsed (`distinct` ja `length`)
 - igal plokil on oma `error_message`, mis ütleb, mida parandada
@@ -98,7 +98,7 @@ Tavaline `apply` arvutab plaani uuesti. Kui vahepeal muutis keegi midagi, teeb `
 
 Nõuded:
 
-- web01, app01, rmq01 on Ubuntu, mc01 ja db01 Rocky; `group` on `web`, `app`, `queue`, `cache`, `db`
+- web01, app01, rmq01 on Ubuntu, mc01 ja db01 AlmaLinux; `group` on `web`, `app`, `queue`, `cache`, `db`
 - `vm_id` = `IS1_VMID_BASE` + 1…5, IP lõpp `.11…15`
 - RAM: web01 512, app01 1536, rmq01 1024, mc01 512, db01 1024; app01 ja db01 ketas 12 GB
 - `apply` käib plaanifailist, mille enne läbi lugesid (`tofu plan -out=…`, `tofu apply <fail>`); plaanifail ei lähe Giti
@@ -119,7 +119,7 @@ git status --short
 
 Data source loeb nüüd kaks malli, sest `vms`-is on mõlemad distrod. Teine `plan` pärast `apply`-d ütleb "No changes" ainult siis, kui tag'id, CPU ja ketas on kõigil viiel nii, nagu Proxmox need tagasi annab. Edaspidi on uus rida `tfvars`-is uus masin ja olemasolevad jäävad rahule.
 
-> Rocky masinad jäävad agenti ootama: CPU tüüp puudub (vt [Üks VM koodist](lab-1-uks-vm.md), "Tee VM uuesti").
+> AlmaLinuxi masinad jäävad agenti ootama: CPU tüüp puudub (vt [Üks VM koodist](lab-1-uks-vm.md), "Tee VM uuesti").
 
 ✅ **Edasi saad minna, kui** UI-s töötavad viis VM-i, `tofu plan` ütleb "No changes", `state list` näitab viit `lab[...]` aadressi ja `git status` ei näita plaanifaili.
 
@@ -201,7 +201,7 @@ Käivita `tofu console` ja proovi ridu ükshaaval. Kirjuta iga rea juurde `NOTES
 1. `for` avaldised: list ja map, filtriga ja ilma.
 
     ```hcl
-    [for k, v in var.vms : k if v.distro == "rocky"]
+    [for k, v in var.vms : k if v.distro == "alma"]
     { for k, v in var.vms : k => v.memory }
     sum([for v in var.vms : v.memory])
     ```
@@ -310,7 +310,7 @@ git push -u origin k04-tofu
 
 **Argument ja atribuut.** Argument on see, mille sina kirjutasid (`ip_config` aadress), atribuut see, mille ressurss tagasi andis (`ipv4_addresses` agendilt, `vm_id`). Muutujast tulev output on teada ka siis, kui VM-i veel pole. Ressursist tulev output tekitab sõltuvuse ja on teada alles pärast loomist; inventory jaoks tahame just seda, sest siis kirjutatakse fail alles pärast VM-ide loomist.
 
-**`tofu console`.** `tofu console` hindab avaldisi samas kontekstis nagu plaan (muutujad, locals, state), aga ei arvuta muudatusi: `var.vms["db01"].ip`, `[for k, v in var.vms : k if v.distro == "rocky"]`, `local.groups`. See hoiab state'i lukku kogu sessiooni ajal.
+**`tofu console`.** `tofu console` hindab avaldisi samas kontekstis nagu plaan (muutujad, locals, state), aga ei arvuta muudatusi: `var.vms["db01"].ip`, `[for k, v in var.vms : k if v.distro == "alma"]`, `local.groups`. See hoiab state'i lukku kogu sessiooni ajal.
 
 **`mock_provider`.** `mock_provider` annab ressursside arvutatud atribuutidele juhuslikud väärtused. Seepärast testi argumente (näiteks IP, mille andsid sina), mitte arvutatud atribuute (näiteks QEMU agendi teatatud IP). `command = apply` testis teeks VM-i ja kustutaks selle lõpus; see on aeglasem ja sobib öiseks pipeline'iks.
 

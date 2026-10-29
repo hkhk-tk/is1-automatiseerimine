@@ -20,7 +20,7 @@ tags:
 
 [Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il.
 
-Hoia Proxmox brauseris lahti. Viie masina IP-d leiad sealt: masin → **Summary** → rida **IPs**. Kirjutad need sammus A3 otse skripti. Kasutaja kõigis masinates on `kasutaja`. Ubuntu masinad on `web01`, `app01` ja `rmq01`, Rocky Linuxi masinad `mc01` ja `db01`.
+Hoia Proxmox brauseris lahti. Viie masina IP-d leiad sealt: masin → **Summary** → rida **IPs**. Kirjutad need sammus A3 otse skripti. Kasutaja kõigis masinates on `kasutaja`. Ubuntu masinad on `web01`, `app01` ja `rmq01`, AlmaLinuxi masinad `mc01` ja `db01`.
 
 Kõik käsud käivad **control node'il**, VS Code'i terminalis.
 
@@ -79,11 +79,11 @@ Loo control node'il fail `~/ssh-seadistus.sh` (VS Code: **File → New File**, s
 #   bash ~/ssh-seadistus.sh
 
 # --- Sinu VM-ide IP-d (Proxmoxist). Muuda need! ---
-WEB01_IP="10.10.N.11"
-APP01_IP="10.10.N.12"
-RMQ01_IP="10.10.N.13"
-MC01_IP="10.10.N.14"
-DB01_IP="10.10.N.15"
+WEB01_IP="192.168.125.11"
+APP01_IP="192.168.125.12"
+RMQ01_IP="192.168.125.13"
+MC01_IP="192.168.125.14"
+DB01_IP="192.168.125.15"
 
 ssh_kaust="$HOME/.ssh"
 voti="$ssh_kaust/id_ed25519"
@@ -167,7 +167,7 @@ fi
     | Kirjutis | Tähendus |
     |---|---|
     | `#!/usr/bin/env bash` | shebang: seda faili loeb Bash |
-    | `WEB01_IP="10.10.N.11"` | muutuja; võrdusmärgi ümber pole tühikuid |
+    | `WEB01_IP="192.168.125.11"` | muutuja; võrdusmärgi ümber pole tühikuid |
     | `"$voti"` | muutuja väärtus, jutumärkides, et tee jääks üheks tervikuks |
     | `if [[ -f "$voti" ]]` | kas selline fail on olemas? |
     | `seadista() { ... }` | **funktsioon**: käskude rühm nimega, mida saab mitu korda kasutada |
@@ -195,9 +195,9 @@ Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (et võti 
 ??? success "Oodatav tulemus"
 
     ```
-    === web01 (10.10.N.11) ===
+    === web01 (192.168.125.11) ===
     config: lisatud web01
-    kasutaja@10.10.N.11's password:
+    kasutaja@192.168.125.11's password:
     Number of key(s) added: 1
     [sudo] password for kasutaja:
     hostivõtmed uuendatud: web01

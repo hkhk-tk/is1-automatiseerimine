@@ -5,7 +5,7 @@
 <text x="115" y="188" text-anchor="middle" class="s w">inventory.ini</text>
 <text x="115" y="245" text-anchor="middle" class="s">SSH kasutaja + sudo</text>
 <rect x="300" y="15" width="480" height="125" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
-<text x="316" y="38" class="b">rocky (Rocky 9)</text>
+<text x="316" y="38" class="b">alma (AlmaLinux 9)</text>
 <rect x="330" y="55" width="200" height="65" rx="8" fill="#fff" stroke="#5e35b1"/>
 <text x="430" y="82" text-anchor="middle" class="b">db01</text>
 <text x="430" y="105" text-anchor="middle" class="s">grupp db</text>

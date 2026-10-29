@@ -354,7 +354,7 @@ Ansible paigaldatakse ainult control node'ile. Kaks tavalist teed:
     sudo apt install -y ansible-core
     ```
 
-=== "AlmaLinux, Rocky, RHEL"
+=== "AlmaLinux, AlmaLinux, RHEL"
 
     ```bash
     sudo dnf install -y ansible-core
@@ -401,7 +401,7 @@ web01
 app01
 rmq01
 
-[rocky]
+[alma]
 mc01
 db01
 
@@ -411,14 +411,14 @@ ansible_user=kasutaja
 
 | Osa | Tähendus |
 |---|---|
-| `[ubuntu]`, `[rocky]` | grupid; nii saab käivitada töö ühe grupi kõigi masinate vastu korraga |
+| `[ubuntu]`, `[alma]` | grupid; nii saab käivitada töö ühe grupi kõigi masinate vastu korraga |
 | `web01` | masina nimi; IP tuleb failist `~/.ssh/config` |
 | `[all:vars]` | muutujad, mis kehtivad kõigile masinatele |
 | `ansible_user` | kasutaja, kellena Ansible sisse logib |
 
 *Tabel 6.2. Inventory osad.*
 
-Kui masina nime pole `~/.ssh/config`-is ega DNS-is, kirjuta aadress inventory'sse: `web01 ansible_host=10.10.7.11`. Grupp `all` on alati olemas ja sisaldab kõiki masinaid. Salvesta fail nimega `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada: `ansible -i inventory.ini ...`.
+Kui masina nime pole `~/.ssh/config`-is ega DNS-is, kirjuta aadress inventory'sse: `web01 ansible_host=192.168.125.11`. Grupp `all` on alati olemas ja sisaldab kõiki masinaid. Salvesta fail nimega `inventory.ini`. Võti `-i` ütleb Ansible'ile, millist inventory't kasutada: `ansible -i inventory.ini ...`.
 
 ### `ansible.cfg`: projekti seaded
 
@@ -500,7 +500,7 @@ web01 | SUCCESS => {
         ...
 ```
 
-Rocky masinas oleks `ansible_distribution` väärtus `Rocky`. 2. kohtumisel kasutad seda, et sama playbook teeks Ubuntul ja Rockyl õiget asja.
+AlmaLinuxi masinas oleks `ansible_distribution` väärtus `AlmaLinux`. 2. kohtumisel kasutad seda, et sama playbook teeks Ubuntul ja AlmaLinuxil õiget asja.
 
 ??? question "Kontrolli ennast"
 
@@ -610,10 +610,10 @@ Suuremate projektide jaoks on Red Hatil veel [arendustööriistu](https://www.re
 
 ### Tingimus, sihtmasinad ja sildid
 
-Meie laboris on kaks distrot. Sama programm võib neil olla eri paketinimega: Ubuntul `vim`, Rockyl `vim-enhanced`. Tingimus **`when`** paneb ülesande käima ainult siis, kui see on tõene. Otsus tuleb faktist:
+Meie laboris on kaks distrot. Sama programm võib neil olla eri paketinimega: Ubuntul `vim`, AlmaLinuxil `vim-enhanced`. Tingimus **`when`** paneb ülesande käima ainult siis, kui see on tõene. Otsus tuleb faktist:
 
 ```yaml
-- name: vim on paigaldatud (Rocky)
+- name: vim on paigaldatud (AlmaLinux)
   ansible.builtin.package:
     name: vim-enhanced
     state: present
@@ -624,7 +624,7 @@ Meie laboris on kaks distrot. Sama programm võib neil olla eri paketinimega: Ub
 | Vahend | Mida teeb | Näide |
 |---|---|---|
 | `when` | ülesanne käib ainult siis, kui tingimus on tõene; muidu `skipping` | `when: ansible_facts['os_family'] == "Debian"` |
-| `hosts` | millistes masinates play käib | `hosts: all`, `hosts: rocky` |
+| `hosts` | millistes masinates play käib | `hosts: all`, `hosts: alma` |
 | `--limit` | piirab käivituse osaga masinatest playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
 | `tags` | ülesande silt; `--tags` käivitab ainult need | `ansible-playbook tools.yml --tags motd` |
 

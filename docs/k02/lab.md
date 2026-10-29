@@ -8,7 +8,7 @@ tags:
 
 !!! info "Selle korra töö"
 
-    - **Masinad:** control node ja viis labori VM-i (web01, app01, rmq01 Ubuntu; mc01, db01 Rocky), kasutaja `kasutaja`
+    - **Masinad:** control node ja viis labori VM-i (web01, app01, rmq01 Ubuntu; mc01, db01 AlmaLinux), kasutaja `kasutaja`
     - **Failid:** sinu kursuse repo, kaust `~/kursus/k02/`
     - **Esitamine:** `git push`
 

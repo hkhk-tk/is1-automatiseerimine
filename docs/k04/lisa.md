@@ -21,7 +21,7 @@ tags:
 | [10. Plaani kokkuvõte pipeline'i jaoks](#10-plaani-kokkuvote-pipelinei-jaoks) | keskmine | `plan-summary.sh` annab db01 kustutusel koodi 3 |
 | [11. db01 teine ketas](#11-db01-teine-ketas) | keskmine | db01 andmed eraldi 5 GB kettal |
 | [12. Poliitika plaanile Conftestiga](#12-poliitika-plaanile-conftestiga) | keskmine | Conftest keelab plaanis db VM-i kustutamise |
-| [13. Golden image Rockyle ja ühe hosti kaupa](#13-golden-image-rockyle-ja-uhe-hosti-kaupa) | raske | Rocky mall mc01-l, db01 puutumata |
+| [13. Golden image AlmaLinuxile ja ühe hosti kaupa](#13-golden-image-almalinuxile-ja-uhe-hosti-kaupa) | raske | AlmaLinuxi mall mc01-l, db01 puutumata |
 | [14. mc01 ja rmq01 LXC-na](#14-mc01-ja-rmq01-lxc-na) | raske | mc01 ja rmq01 töötavad LXC-konteineris |
 | [15. Ühe hosti taastamine](#15-uhe-hosti-taastamine) | raske | `rebuild.sh` asendab ühe hosti ohutult |
 | [Lisaprojekt: tulemüür koodis](#lisaprojekt-tulemuur-koodis) | keskmine | web01 SSH ainult control node'ilt |
@@ -211,7 +211,7 @@ cd - && rm -rf /tmp/k04-teine
 Monitooring teatab, et app01 `/` on 90 % täis. Keegi suurendas öösel web01 ketast UI-s, aga `df` näitab ikka vana suurust ja järgmine `tofu plan` tahab ketast tagasi väiksemaks.
 
 - **Drift.** UI-s: web01 → **Hardware → Hard Disk → Disk Action → Resize**, lisa 2 GB. Vaata `tofu plan -refresh-only`-t ja tavalist plaani, proovi `tofu apply`-d ja loe, mida provider ütleb. Vii otsus ellu ainult koodiga.
-- **Koodist lõpuni.** Kasvata app01 (Ubuntu, ext4) ja db01 (Rocky, xfs) ketas koodist 14 GB peale ja failisüsteem töötaval masinal.
+- **Koodist lõpuni.** Kasvata app01 (Ubuntu, ext4) ja db01 (AlmaLinux, xfs) ketas koodist 14 GB peale ja failisüsteem töötaval masinal.
 - Plaanis on ainult `~ update in-place`, ükski VM ei asendu ega taaskäivitu; `/health` on kogu aja UP, db01 andmebaas töötab edasi.
 - Üks skript või Ansible'i task teeb mõlemal distrol sama töö ja teisel käivitusel ei muuda midagi.
 - Sama skript töötab ka LVM-iga serveris (`pvresize` + `lvextend -r`).
@@ -234,7 +234,7 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"              # 0
 - `NOTES.md`-s on kirjas, miks "tagasi koodi seisu" ketta puhul ei tööta.
 
 ??? success "Lahendus"
-    Drift: `-refresh-only` näitab `size` 10 → 12, tavaline plaan tahab 10 peale tagasi ja provider keeldub kahandamast; koodi seisu saaks tagasi ainult VM-i asendusega. Õige otsus on web01 reale `disk = 12`. Koodist kasvatamisel teeb Proxmox ketta suuremaks töötava VM-i all, aga partitsioon ja failisüsteem jäävad samaks, kuni keegi need kasvatab: `growpart` → `resize2fs` (ext4) või `xfs_growfs <ühenduspunkt>` (xfs kasvab ainult ühendatuna), LVM-iga vahepeal `pvresize` ja `lvextend -r`. Skript loeb seadme ja partitsiooni numbri `findmnt`-ist ja `/sys`-ist, sest Rocky ja Ubuntu pilvemallis on juurpartitsioon eri numbriga.
+    Drift: `-refresh-only` näitab `size` 10 → 12, tavaline plaan tahab 10 peale tagasi ja provider keeldub kahandamast; koodi seisu saaks tagasi ainult VM-i asendusega. Õige otsus on web01 reale `disk = 12`. Koodist kasvatamisel teeb Proxmox ketta suuremaks töötava VM-i all, aga partitsioon ja failisüsteem jäävad samaks, kuni keegi need kasvatab: `growpart` → `resize2fs` (ext4) või `xfs_growfs <ühenduspunkt>` (xfs kasvab ainult ühendatuna), LVM-iga vahepeal `pvresize` ja `lvextend -r`. Skript loeb seadme ja partitsiooni numbri `findmnt`-ist ja `/sys`-ist, sest AlmaLinux ja Ubuntu pilvemallis on juurpartitsioon eri numbriga.
 
     ```bash
     # terraform.tfvars: web01 = { ..., disk = 12 }, app01 ja db01 = { ..., disk = 14 }
@@ -637,7 +637,7 @@ curl -s http://<web01 IP>/health; echo
 - MariaDB töötab ja `/health` on UP.
 
 ??? success "Lahendus"
-    Ketas tuleb Tofust, failisüsteem ja mount Ansible'ist, sest ainult Ansible näeb VM-i sisse. Play käib enne rolli `mariadb`, et ka uus db01 saaks andmekausta kohe õigele kettale. db01 on Rocky: uue failisüsteemi juurel pole `mysqld_db_t` silti ja ilma `restorecon`-ita keelab SELinux MariaDB-l sinna kirjutamise. XFS, sest ext4 `lost+found` paistaks MariaDB-s andmebaasina.
+    Ketas tuleb Tofust, failisüsteem ja mount Ansible'ist, sest ainult Ansible näeb VM-i sisse. Play käib enne rolli `mariadb`, et ka uus db01 saaks andmekausta kohe õigele kettale. db01 on AlmaLinux: uue failisüsteemi juurel pole `mysqld_db_t` silti ja ilma `restorecon`-ita keelab SELinux MariaDB-l sinna kirjutamise. XFS, sest ext4 `lost+found` paistaks MariaDB-s andmebaasina.
 
     ```hcl
     # modules/vm/main.tf, pärast esimest disk plokki
@@ -816,13 +816,13 @@ conftest verify --policy policy
 
 ## Rasked ülesanded
 
-### 13. Golden image Rockyle ja ühe hosti kaupa
+### 13. Golden image AlmaLinuxile ja ühe hosti kaupa
 
 **Tase:** raske · **Eeldus:** [Golden image Packeriga](lab-7-kuldne-mall.md)
 
-Laboris viisid Ubuntu malli esmalt rmq01-le `-target`-iga. See jättis koodi ja tegelikkuse vahele akna, mille ajal tavaline plaan tahtis rmq01 tagasi viia. Nüüd peab uus Rocky mall jõudma esmalt ühele masinale ilma `-target`-ita ja rollback olema üks rida.
+Laboris viisid Ubuntu malli esmalt rmq01-le `-target`-iga. See jättis koodi ja tegelikkuse vahele akna, mille ajal tavaline plaan tahtis rmq01 tagasi viia. Nüüd peab uus AlmaLinuxi mall jõudma esmalt ühele masinale ilma `-target`-ita ja rollback olema üks rida.
 
-- Packeri kausta teine `source` (`clone_vm = "tpl-rocky-9"`, `ssh_username = "rocky"`, `tags = "labseis-base;rocky"`) ja teine `build`: `shell` samm `dnf -y upgrade`, `ansible` samm `groups = ["rocky"]` ja `labseis_firewalld=true`. Ehita ainult Rocky mall: `packer build -only='proxmox-clone.labseis_rocky' .`; Ubuntu mall jääb samaks.
+- Packeri kausta teine `source` (`clone_vm = "tpl-alma-9"`, `ssh_username = "almalinux"`, `tags = "labseis-base;alma"`) ja teine `build`: `shell` samm `dnf -y upgrade`, `ansible` samm `groups = ["alma"]` ja `labseis_firewalld=true`. Ehita ainult AlmaLinuxi mall: `packer build -only='proxmox-clone.labseis_rocky' .`; Ubuntu mall jääb samaks.
 - `vms` objektile väli `template = optional(string)`; mooduli `template_id` eelistab hosti välja ja kasutab muidu distro malli.
 - Data source loeb ka hostide malle, mitte ainult distrode omi.
 - Plaanis on täpselt üks asendus (mc01), db01 jääb pilvemallile.
@@ -840,20 +840,20 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"        # 0
 
 **Valmis, kui:**
 
-- `packer build` tegi Rocky malli;
+- `packer build` tegi AlmaLinuxi malli;
 - mc01-l annab `getenforce` `Enforcing` ja `firewalld` on `active`;
 - db01 jäi pilvemallile ja plaani kood on `0`;
 - rollback'i plaan (`template` mc01 realt ära) asendab ainult mc01;
 - `NOTES.md`-s on järjekord, milles viiksid tootmises uue malli db01-le, ja mida enne seda varundad.
 
 ??? tip "Lahenduse suund"
-    - **Packer.** Teine `source "proxmox-clone"` ja teine `build` eraldi failis samas kaustas. Paralleelne ehitus vajab Rockyle oma `vm_id`-d ja ehitus-IP-d (nt `IS1_VMID_BASE` + 8 ja `.18`); Packer nõuab kõiki muutujaid ka `-only`-ga. Malli nimesse pane distro (`labseis-base-rocky-<kuupäev>`): sama kuupäevaga Ubuntu mall annaks nime järgi otsingus kaks vastet. Koristussammus on `/home/rocky/.ssh/authorized_keys`, mitte `ubuntu` oma; manifest eraldi faili ja `.gitignore`-i.
+    - **Packer.** Teine `source "proxmox-clone"` ja teine `build` eraldi failis samas kaustas. Paralleelne ehitus vajab AlmaLinuxile oma `vm_id`-d ja ehitus-IP-d (nt `IS1_VMID_BASE` + 8 ja `.18`); Packer nõuab kõiki muutujaid ka `-only`-ga. Malli nimesse pane distro (`labseis-base-rocky-<kuupäev>`): sama kuupäevaga Ubuntu mall annaks nime järgi otsingus kaks vastet. Koristussammus on `/home/alma/.ssh/authorized_keys`, mitte `ubuntu` oma; manifest eraldi faili ja `.gitignore`-i.
     - **Data source.** Teine `data "proxmox_virtual_environment_vms"`, mille `for_each` on hostid, kellel on `template` (võti host, mitte malli nimi). Siis saab `tags = ["labseis-base", each.value.distro]` koos nime `filter`-iga ja `postcondition` `length(self.vms) == 1` peatada vale distro malli.
     - **Valik.** `locals`-is map host → mall: `v.template != null ? data…host_template[name].vms[0] : local.templates[v.distro]`. `coalesce`-iga map'i otsing ebaõnnestub, kui hosti malli data source'i pole.
     - **Test.** `override_data` hosti malli data source'ile (sihtmärk on ressurss, mitte instants: ilma `["mc01"]`-ta) ja `assert`, et mc01 `template_id` on uue malli ID ja db01 oma pilvemalli ID.
-    - **Lõks.** `template_names = { rocky = … }` tundub lihtsam, aga asendaks db01 ja `apply` jääks pooleli: mc01 on asendatud, db01 juures Proxmox keeldub.
+    - **Lõks.** `template_names = { alma = … }` tundub lihtsam, aga asendaks db01 ja `apply` jääks pooleli: mc01 on asendatud, db01 juures Proxmox keeldub.
 
-    **Miks nii.** Rocky mall erineb Ubuntu omast kolmes kohas: pilvemalli vaikekasutaja on `rocky`, pakette haldab `dnf` ja rollis `common` on Rockyl tulemüür `firewalld` sees ning SELinux peab olema `Enforcing`. Ühe kausta kaks allikat ehitab Packer paralleelselt, `-only` ehitab ühe. Rocky mallis on db01, millel on `protection`: kui paned `template_names`-isse `rocky`, tahab plaan asendada ka db01 ja Proxmox keeldub poole `apply` pealt. Seepärast valitakse mall hosti, mitte distro kaupa.
+    **Miks nii.** AlmaLinuxi mall erineb Ubuntu omast kolmes kohas: pilvemalli vaikekasutaja on `alma`, pakette haldab `dnf` ja rollis `common` on AlmaLinuxil tulemüür `firewalld` sees ning SELinux peab olema `Enforcing`. Ühe kausta kaks allikat ehitab Packer paralleelselt, `-only` ehitab ühe. AlmaLinuxi mallis on db01, millel on `protection`: kui paned `template_names`-isse `alma`, tahab plaan asendada ka db01 ja Proxmox keeldub poole `apply` pealt. Seepärast valitakse mall hosti, mitte distro kaupa.
 
 ### 14. mc01 ja rmq01 LXC-na
 
@@ -888,8 +888,8 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"           # 0
 
 ??? tip "Lahenduse suund"
     - **Kaks `apply`-d.** Tofu ei tea, et VM ja konteiner jagavad `vm_id`-d ja IP-d, sest nende vahel pole sõltuvust. Esimene samm: eemalda mc01 ja rmq01 `vms`-ist ja tee `tofu apply` (mitte `up.sh`: inventory's pole siis `cache`/`queue` gruppi ja `site.yml` ebaõnnestuks). Teine samm: lisa `containers` ja `./up.sh`. Vahepeal on teenused maas: see on hooldusaken.
-    - **Muutuja.** `containers` objektis on `distro`, millest tuleb `operating_system.type` (`centos` Rockyle, `ubuntu` Ubuntule) ja inventory distro grupp. `validation`, et konteineri ja VM-i nimed ega `vm_id`-d ei kattu.
-    - **Inventory.** `locals`-is üks map kõigist hostidest (VM-id mooduli väljunditest, konteinerid ressursi `initialization` IP-st) koos hostipõhiste muutujatega; template kirjutab need rea lõppu. `labseis_firewalld=false` hostimuutujana, sest grupimuutujas võidaks sama sügavusega `rocky` grupp tähestiku järgi.
+    - **Muutuja.** `containers` objektis on `distro`, millest tuleb `operating_system.type` (`centos` AlmaLinuxile, `ubuntu` Ubuntule) ja inventory distro grupp. `validation`, et konteineri ja VM-i nimed ega `vm_id`-d ei kattu.
+    - **Inventory.** `locals`-is üks map kõigist hostidest (VM-id mooduli väljunditest, konteinerid ressursi `initialization` IP-st) koos hostipõhiste muutujatega; template kirjutab need rea lõppu. `labseis_firewalld=false` hostimuutujana, sest grupimuutujas võidaks sama sügavusega `alma` grupp tähestiku järgi.
     - **Roll `common`.** SELinuxi kontrolli tingimusele `ansible_facts['virtualization_type'] != "lxc"`. Konteinerit piirab hosti AppArmor ja võrku Proxmoxi tulemüür (lisaprojekt "Tulemüür koodis", `network_interface { firewall = true }`).
     - **Kontroll ja lõks.** `tofu test` mock'iga: konteiner on õiges grupis õigete muutujatega. Unustatud `ssh-keygen -R` annab Ansible'is host key vea ainult siis, kui `host_key_checking` on sees; käsitsi `ssh` annab selle kindlasti.
 

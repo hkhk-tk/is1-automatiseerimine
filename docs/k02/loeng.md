@@ -54,7 +54,7 @@ web01
 app01
 rmq01
 
-[rocky]
+[alma]
 mc01
 db01
 
@@ -165,7 +165,7 @@ ansible web01 -m ansible.builtin.debug -a "var=veeb_pealkiri"
 | Fakt | Näide |
 |---|---|
 | `ansible_facts['os_family']` | `Debian`, `RedHat` |
-| `ansible_facts['distribution']` | `Ubuntu`, `Rocky` |
+| `ansible_facts['distribution']` | `Ubuntu`, `AlmaLinux` |
 | `ansible_facts['default_ipv4']['address']` | masina IP |
 | `ansible_facts['memtotal_mb']` | mälu megabaitides |
 
@@ -571,7 +571,7 @@ Kogud lähevad vaikimisi kausta `~/.ansible/collections/`. Mooduli juhendi näed
     login_unix_socket: /var/lib/mysql/mysql.sock
 ```
 
-Rocky MariaDB-s logib `root` sisse sokli kaudu ilma paroolita, kui ühendus tuleb sama masina `root`-kasutajalt. `become: true` annab just selle.
+AlmaLinuxi MariaDB-s logib `root` sisse sokli kaudu ilma paroolita, kui ühendus tuleb sama masina `root`-kasutajalt. `become: true` annab just selle.
 
 ??? question "Kontrolli ennast"
 

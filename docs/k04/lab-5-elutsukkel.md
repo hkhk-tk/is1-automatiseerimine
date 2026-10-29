@@ -99,7 +99,7 @@ Kolmas `lifecycle` argument muudab asenduse järjekorda. `create_before_destroy`
 Pilves on see viis teha asendus ilma katkestuseta: uus masin tuleb üles, siis kaob vana. Proxmoxis fikseeritud ID ja IP-ga ei ole see võimalik, ja kes seda ei tea, saab poole asenduse pealt ebaõnnestunud `apply`.
 
 1. Lisa mooduli `lifecycle`-isse ajutiselt `create_before_destroy = true`.
-2. Vaata web01 asenduse plaani ja võrdle sümbolit `test01` Rocky-proovi plaaniga.
+2. Vaata web01 asenduse plaani ja võrdle sümbolit `test01` AlmaLinuxi proovi plaaniga.
 
     ```bash
     tofu plan -replace='module.vm["web01"].proxmox_virtual_environment_vm.this' | grep -E 'web01|Plan:'

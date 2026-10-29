@@ -147,7 +147,7 @@ Tootmises tähendab `-/+` andmebaasi masinal kadunud andmeid. Plaan ütleb selle
 
 1. Lisa `memory { dedicated = 768 }`, siis `tofu plan` ja `tofu apply`.
 2. Lisa `cpu { cores = 1, type = "x86-64-v2-AES" }` ja `agent { enabled = true, timeout = "3m" }`, siis `tofu plan` ja `tofu apply`.
-3. Lisa teine data source tag'iga `rocky` ja vaheta `clone` plokis mall Rockyks. Käivita ainult `tofu plan`, `apply` mitte.
+3. Lisa teine data source tag'iga `alma` ja vaheta `clone` plokis mall AlmaLinuxiks. Käivita ainult `tofu plan`, `apply` mitte.
 4. Võta muudatus 3 tagasi ja käivita `tofu plan`.
 
 Rida `# forces replacement` näitab täpselt, milline argument asenduse põhjustas. Kui plaanis on mitu muudatust ja üks neist asendab, otsi just seda rida. Mälu ja CPU muutus võib VM-i taaskäivitada, aga ketas jääb samaks. Asendus annab uue ketta ja kõik, mis vanal oli, kaob.
@@ -205,14 +205,14 @@ Iga asendus annab samale IP-le uue host key. Et `ssh-keygen -R` ei muutuks pimes
 
 Konsool tuleb Proxmoxi API kaudu, mitte VM-i võrgust. Sõrmejäljed väljastab sinna cloud-init'i moodul `keys_to_console` esimese boodi lõpus.
 
-<!-- EKRAANIPILT: Proxmoxi UI, Rocky VM (nt ajutine test Rocky mallist ilma cpu.type'ita) → Console (xterm.js/serial). Näha kerneli viga, et CPU ei toeta x86-64-v2 (nt "Fatal glibc error: CPU does not support x86-64-v2" või kernel panic). Tehakse ettevalmistusel, mitte õppija sammuna.
+<!-- EKRAANIPILT: Proxmoxi UI, AlmaLinuxi VM (nt ajutine test AlmaLinuxi mallist ilma cpu.type'ita) → Console (xterm.js/serial). Näha kerneli viga, et CPU ei toeta x86-64-v2 (nt "Fatal glibc error: CPU does not support x86-64-v2" või kernel panic). Tehakse ettevalmistusel, mitte õppija sammuna.
 <figure markdown="span">
-  ![Rocky 9 serial-konsool qemu64 CPU-ga, boot katkeb](assets/k04_ui_rocky_qemu64.png)
-  <figcaption>Joonis L4.3. Rocky 9 vaikimisi <code>qemu64</code> CPU-ga: boot katkeb, agent ei vasta kunagi.</figcaption>
+  ![AlmaLinux 9 serial-konsool qemu64 CPU-ga, boot katkeb](assets/k04_ui_rocky_qemu64.png)
+  <figcaption>Joonis L4.3. AlmaLinux 9 vaikimisi <code>qemu64</code> CPU-ga: boot katkeb, agent ei vasta kunagi.</figcaption>
 </figure>
 -->
 
-> Kui `apply` ootab "waiting for QEMU agent" kuni timeout'ini ja ebaõnnestub, ava UI-s VM-i konsool ja vaata, kas masin boodib. Rocky vajab `cpu.type = "x86-64-v2-AES"`.
+> Kui `apply` ootab "waiting for QEMU agent" kuni timeout'ini ja ebaõnnestub, ava UI-s VM-i konsool ja vaata, kas masin boodib. AlmaLinux vajab `cpu.type = "x86-64-v2-AES"`.
 
 ✅ **Edasi saad minna, kui** `ssh kasutaja@<IS1_NET>.19 hostname` vastab `test01` ilma parooli küsimata ja konsooli ED25519 sõrmejälg klapib `ssh-keygen -l -F` väljundiga.
 

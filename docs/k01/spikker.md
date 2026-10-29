@@ -6,7 +6,7 @@ tags:
 
 # Linux + Bash spikker
 
-Testitud Ubuntu 24.04 (Bash 5.2, systemd 255) ja Rocky 9 (Bash 5.1, systemd 252) peal.
+Testitud Ubuntu 24.04 (Bash 5.2, systemd 255) ja AlmaLinux 9 (Bash 5.1, systemd 252) peal.
 
 <div class="spikker" markdown>
 
@@ -50,7 +50,7 @@ Testitud Ubuntu 24.04 (Bash 5.2, systemd 255) ja Rocky 9 (Bash 5.1, systemd 252)
 | `umask 077` | uued failid ainult omanikule (saladused) |
 | `type -a ansible` · `command -v jq` · `hash -r` | milline fail käivitub · kas tööriist on · unusta vahemälu |
 | `sudo sh -c 'echo $PATH'` · `sudo -l` | sudo `secure_path` erineb sinu PATH-ist · mida tohid |
-| `restorecon -Rnv /var/www` · `ls -Z` | SELinuxi konteksti kontroll enne parandust (Rocky) |
+| `restorecon -Rnv /var/www` · `ls -Z` | SELinuxi konteksti kontroll enne parandust (AlmaLinux) |
 | `df -h --output=pcent,target` · `du -xsh /var/log/*` · `findmnt /var` | ketas, kes selle täitis, mis on monteeritud |
 
 **systemd ja logid**
@@ -76,7 +76,7 @@ Testitud Ubuntu 24.04 (Bash 5.2, systemd 255) ja Rocky 9 (Bash 5.1, systemd 252)
 | `sshd -t` · `sshd -T | grep -i passwordauth` · `ssh-keygen -lf ~/.ssh/id_ed25519.pub` | konf enne reload'i · kehtiv väärtus · võtme sõrmejälg logis |
 | `. /etc/os-release; echo "$ID $VERSION_ID"` | distro skriptis |
 | `apt-get -o DPkg::Lock::Timeout=120 install -y …` · `dpkg-query -W -f='${Status}' pkg` | ootab lukku · kas pakk on paigas |
-| `dnf -yq install …` · `rpm -q pkg` · `dnf needs-restarting -r` | sama Rocky's · kas reboot on vaja |
+| `dnf -yq install …` · `rpm -q pkg` · `dnf needs-restarting -r` | sama AlmaLinuxis · kas reboot on vaja |
 | `cloud-init status --wait` | esimene boot on lõppenud |
 | `jq -r '.db // "puudub"' health.json` | JSON-väli ilma `grep`-ita |
 

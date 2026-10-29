@@ -209,7 +209,7 @@ Iseseisvaks lugemiseks: [Turvaautomaatika, compliance ja riskihaldus](../teemad/
 
 ## 7. Konteiner ilma daemonita: Podman ja systemd
 
-Rocky ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab `podman-docker`-i. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
+AlmaLinux ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab `podman-docker`-i. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
 
 <figure markdown="span">
   ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
@@ -220,7 +220,7 @@ Rocky ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Doc
 
 **Rootless.** Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on hostis see kasutaja, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. Konteinerist välja pääsenud ründaja saab tavakasutaja õigused. Piirid tulevad tuumast: port alla 1024 vajab sysctl'i `ip_unprivileged_port_start`, võrk käib kasutajaruumi `pasta` kaudu ja cgroup v2 piirangud kehtivad ainult kontrolleritega, mille systemd on kasutajale delegeerinud.
 
-**SELinux.** Konteineri protsess töötab domeenis `container_t` ja loeb ainult silti `container_file_t`. Bind mount kodukaustast annab AVC keelu, kuigi failiõigused lubavad. `:Z` annab failile selle konteineri privaatse sildi (MCS kategooriad), `:z` jagatud sildi. Ubuntus testitud Compose ebaõnnestub seepärast Rockyl esimese bind mount'iga.
+**SELinux.** Konteineri protsess töötab domeenis `container_t` ja loeb ainult silti `container_file_t`. Bind mount kodukaustast annab AVC keelu, kuigi failiõigused lubavad. `:Z` annab failile selle konteineri privaatse sildi (MCS kategooriad), `:z` jagatud sildi. Ubuntus testitud Compose ebaõnnestub seepärast AlmaLinuxil esimese bind mount'iga.
 
 **Quadlet.** Fail `~/.config/containers/systemd/labseis-db.container` (`Image=`, `PublishPort=`, `Volume=`, `Secret=`, `[Install]`) muutub `systemctl --user daemon-reload`-il generaatori abil unit'iks `labseis-db.service`. Taaskäivituse, `MemoryMax=`, logid ja sõltuvused annab systemd. Kasutaja teenus käivitub boot'il ainult `loginctl enable-linger`-iga. `podman generate systemd` on aegunud.
 
@@ -279,5 +279,5 @@ Rocky ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Doc
 ??? question "app01 lõpeb iga paari minuti järel koodiga 137. Mida see kood ütleb ja millised on kaks tõenäolist põhjust?"
     137 = 128 + 9, protsess sai `SIGKILL`-i. Kas tuum tappis protsessi cgroup'i mälupiiri ületamise tõttu (`docker inspect` näitab `OOMKilled: true`), või saatis `SIGKILL`-i `docker stop`, sest PID 1 ei reageerinud kümne sekundi jooksul `SIGTERM`-ile.
 
-??? question "Rocky serveris töötab Quadleti teenus pärast `systemctl --user start`-i, aga pärast reboot'i mitte, kuni keegi sisse logib. Miks ja mis on parandus?"
+??? question "AlmaLinuxi serveris töötab Quadleti teenus pärast `systemctl --user start`-i, aga pärast reboot'i mitte, kuni keegi sisse logib. Miks ja mis on parandus?"
     Kasutaja systemd (`user@<UID>.service`) käivitub alles sisselogimisel, nii et `default.target` ja Quadleti teenused ootavad seda. `loginctl enable-linger <kasutaja>` käivitab kasutaja systemd boot'il. Kontrolli väljast, enne SSH-sisselogimist, sest sisselogimine ise peidaks vea.
