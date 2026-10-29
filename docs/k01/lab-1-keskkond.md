@@ -39,7 +39,7 @@ exec bash
     kasutaja@control:~$
     ```
 
-    `sudo` küsib sinu parooli. `hostnamectl` muudab masina nime jäädavalt, ka pärast taaskäivitust.
+    Laboris `sudo` parooli ei küsi, sest mall lubab seda kasutajale `kasutaja`. `hostnamectl` muudab masina nime jäädavalt, ka pärast taaskäivitust.
 
 ## A2 · Mida skript teeb
 
@@ -49,7 +49,7 @@ Viie masina seadistamine käsitsi tähendab viis korda samu käske. Just sellist
 2. **Võtmepaar.** `ssh-keygen` teeb kaks faili: privaatvõti `id_ed25519` jääb control node'ile, avalik võti `id_ed25519.pub` läheb teistesse masinatesse. Kui võti on juba olemas, skript uut ei tee.
 3. **`~/.ssh/config`.** Siia kirjutab skript iga masina kohta nime ja IP. Pärast seda piisab käsust `ssh web01`, IP-d pole vaja meeles pidada. Kui nimi on failis juba olemas, skript seda teist korda ei lisa.
 4. **Võti masinasse.** `ssh-copy-id` küsib masina parooli **üks kord** ja lisab sinu avaliku võtme sinna. Edaspidi parooli ei küsita.
-5. **Masina nimi ja hostivõtmed.** Skript paneb masinale nime ja teeb esimesel korral uued SSH hostivõtmed, sest kõik masinad on samast mallist ja neil on sama võti. `sudo` küsib parooli.
+5. **Masina nimi ja hostivõtmed.** Skript paneb masinale nime ja teeb esimesel korral uued SSH hostivõtmed, sest kõik masinad on samast mallist ja neil on sama võti.
 6. **Kontroll.** Lõpus küsib skript igalt masinalt nime ilma paroolita. Kui mõni küsib parooli või ei vasta, on seadistus pooleli.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
@@ -126,7 +126,7 @@ seadista() {
         return 1
     fi
 
-    # Masina nimi ja (ainult esimesel korral) uued hostivõtmed. sudo küsib parooli.
+    # Masina nimi ja (ainult esimesel korral) uued hostivõtmed. Laboris sudo parooli ei küsi.
     if ssh -t "$nimi" "sudo sh -c 'hostnamectl set-hostname $nimi; if [ ! -f /etc/ssh/.hostvotmed-uued ]; then rm -f /etc/ssh/ssh_host_* && ssh-keygen -A > /dev/null && touch /etc/ssh/.hostvotmed-uued && echo UUED_VOTMED && (systemctl restart ssh 2> /dev/null || systemctl restart sshd); fi'" | grep -q UUED_VOTMED; then
         ssh-keygen -R "$ip" > /dev/null 2>&1
         ssh-keygen -R "$nimi" > /dev/null 2>&1
@@ -190,7 +190,7 @@ bash -n ~/ssh-seadistus.sh && echo "süntaks korras"
 bash ~/ssh-seadistus.sh
 ```
 
-Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (et võti masinasse viia), siis `sudo` (et panna nimi ja uued hostivõtmed). Sisesta ühine parool, mille said juhendajalt.
+Iga masina juures küsib `ssh-copy-id` parooli üks kord, et võti masinasse viia. Sisesta ühine parool, mille said juhendajalt. `sudo` laboris parooli ei küsi.
 
 ??? success "Oodatav tulemus"
 
@@ -199,7 +199,6 @@ Iga masina juures küsitakse parooli kaks korda: esmalt `ssh-copy-id` (et võti 
     config: lisatud web01
     kasutaja@192.168.125.11's password:
     Number of key(s) added: 1
-    [sudo] password for kasutaja:
     hostivõtmed uuendatud: web01
     ...
     === Kontroll ===
@@ -233,7 +232,7 @@ grep -c '^Host ' ~/.ssh/config
     5
     ```
 
-    Võtit ei tehta uuesti, config-faili ei lisata midagi ja `ssh-copy-id` ei küsi parooli, sest võti on juba masinas. `sudo` võib parooli veel küsida, sest nime panemine ei kontrolli enne, kas nimi on juba õige. Skript on peaaegu idempotentne: teine käivitus ei muuda midagi, aga teeb osa tööd siiski uuesti.
+    Võtit ei tehta uuesti, config-faili ei lisata midagi ja `ssh-copy-id` ei küsi parooli, sest võti on juba masinas. Nimi pannakse siiski uuesti, sest nime panemine ei kontrolli enne, kas nimi on juba õige. Skript on peaaegu idempotentne: teine käivitus ei muuda midagi, aga teeb osa tööd siiski uuesti.
 
 ??? question "Mõtle (valikuline)"
 

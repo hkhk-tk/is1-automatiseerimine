@@ -129,7 +129,7 @@ ansible all -m ansible.builtin.package -a "name=tree state=present" -b -K
 
 ??? success "Oodatav tulemus"
 
-    `BECOME password:` küsib parooli. Seejärel viis plokki `CHANGED`: Ubuntul paigaldas `apt`, AlmaLinuxil `dnf`. Moodul `package` valis paketihalduri ise.
+    `BECOME password:` küsib parooli: sisesta ühine parool (laboris `sudo` seda ei kontrolli, töökohas kontrollib). Seejärel viis plokki `CHANGED`: Ubuntul paigaldas `apt`, AlmaLinuxil `dnf`. Moodul `package` valis paketihalduri ise.
 
 Käivita sama käsk uuesti.
 
