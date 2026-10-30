@@ -5,7 +5,7 @@ tags:
   - Praktikum
 ---
 
-# 2. Käsitsi ja skriptina
+# 2. Käsitsi ja skriptiga
 
 Teed päeva ülesande kõigepealt käsitsi, siis Bashi skriptiga, ja vaatad, mis juhtub skripti teisel käivitusel.
 

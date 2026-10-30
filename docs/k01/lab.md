@@ -16,7 +16,7 @@ tags:
 | Etapp | Mida teed | Valmis, kui |
 |---|---|---|
 | [1. Keskkond](lab-1-keskkond.md) | SSH-võti, masinate nimed, repo | `ssh web01` töötab parooli küsimata |
-| [2. Käsitsi ja skriptina](lab-2-kasitsi.md) | sama ülesanne esmalt käsitsi ja seejärel Bashi skriptiga | oskad selgitada, miks skript kirjutab faili teisel käivitusel uuesti üle |
+| [2. Käsitsi ja skriptiga](lab-2-kasitsi.md) | sama ülesanne esmalt käsitsi ja seejärel Bashi skriptiga | oskad selgitada, miks skript kirjutab faili teisel käivitusel uuesti üle |
 | [3. Ansible'i alused](lab-3-ansible-alused.md) | paigaldus, `ansible.cfg`, inventory, ad-hoc käsud | kõik viis masinat vastavad `pong` |
 | [4. Esimene playbook](lab-4-playbook.md) | päeva ülesanne playbook'ina, triiv | teine käivitus annab `changed=0` |
 | [5. Playbook viiele masinale](lab-5-parem-playbook.md) | `when`, `--limit`, `tags` | `tools.yml` teine käivitus annab `changed=0` |

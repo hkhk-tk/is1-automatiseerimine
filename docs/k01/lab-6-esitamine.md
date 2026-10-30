@@ -60,7 +60,7 @@ Ava oma repositoorium GitHubis ja kontrolli, et kaustas `k01/` on järgmised fai
 
 | Fail | Kus see valmib |
 |---|---|
-| `prepare-training.sh` | [2. Käsitsi ja skriptina](lab-2-kasitsi.md) |
+| `prepare-training.sh` | [2. Käsitsi ja skriptiga](lab-2-kasitsi.md) |
 | `ansible.cfg`, `inventory.ini` | [3. Ansible'i alused](lab-3-ansible-alused.md) |
 | `training.yml` | [4. Esimene playbook](lab-4-playbook.md) ja selle lehe A1 |
 | `tools.yml` | [5. Playbook viiele masinale](lab-5-parem-playbook.md) |

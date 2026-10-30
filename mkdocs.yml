@@ -90,7 +90,7 @@ nav:
           - Praktikum:
               - k01/lab.md
               - 1. Keskkond: k01/lab-1-keskkond.md
-              - 2. Käsitsi ja skriptina: k01/lab-2-kasitsi.md
+              - 2. Käsitsi ja skriptiga: k01/lab-2-kasitsi.md
               - 3. Ansible'i alused: k01/lab-3-ansible-alused.md
               - 4. Esimene playbook: k01/lab-4-playbook.md
               - 5. Playbook viiele masinale: k01/lab-5-parem-playbook.md
