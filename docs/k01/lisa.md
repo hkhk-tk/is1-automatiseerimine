@@ -49,3 +49,20 @@ Moodul `ansible.builtin.fetch` kopeerib faili hallatavast masinast control node'
     Vaata käsuga `find os -type f`, millise kaustastruktuuri `fetch` lõi.
 
 `fetch` sobib näiteks konfiguratsioonifailide, logide või muu kontrollimiseks vajaliku info kogumiseks hallatavatest masinatest.
+
+## L4 · Automatiseeri üks oma töö ülesanne
+
+Vali üks ülesanne, mida teed tööl käsitsi ja korduvalt: näiteks kasutajate loomine, teenuse seadistus, logide puhastamine, sertifikaadi või konfiguratsioonifaili uuendamine. Kirjuta sellest playbook `minu.yml` labori masinatele.
+
+Enne kirjutamist pane mõtteis paika kolm asja: millistes masinates see käib, milline on soovitud olek (mitte käsud) ja kuidas kontrollid, et tulemus on õige. Sobivad moodulid leiad loendist [`ansible.builtin`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/index.html) ja nende kasutuse käsuga `ansible-doc <moodul>`.
+
+```bash
+ansible-playbook minu.yml --check --diff
+ansible-playbook minu.yml
+ansible-playbook minu.yml
+```
+
+Teine käivitus peab andma `changed=0`. Kui mõni ülesanne annab ikka `changed`, kontrolli, kas kasutasid moodulit `command` või `shell` ja kas mõni muu moodul teeks sama tööd olekut kontrollides.
+
+Too oma playbook järgmisele kohtumisele kaasa: 2. kohtumisel muudad selle rolliks.
+
