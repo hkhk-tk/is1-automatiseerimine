@@ -64,7 +64,7 @@ Need sammud teed oma arvutis. Klassi arvutites on OpenVPN juba paigaldatud, seal
 
     `sudo apt install -y network-manager-openvpn-gnome`
 
-**1.2 Lisa e-kirjaga saadud `.ovpn` fail**
+**1.2 Lisa VPN-i profiilifail.** Laadi alla manus `HKHK-OpenVPN.zip` arutelu teatest [„VPN-i profiilifail“](https://github.com/hkhk-tk/is126-arutelu/discussions/2), paki see lahti ja lisa `.ovpn` fail OpenVPN-i:
 
 === "Windows"
 

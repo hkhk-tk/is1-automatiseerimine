@@ -46,11 +46,11 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 <line class="ln" x1="54" y1="30" x2="706" y2="30"/>
 <a href="k01/"><circle class="c on" cx="54" cy="30" r="20"/><text class="non" x="54" y="35" text-anchor="middle">1</text><text class="t" x="54" y="72" text-anchor="middle">Bash</text><text class="s" x="54" y="89" text-anchor="middle">ja Ansible</text></a>
 <a href="k02/"><circle class="c on" cx="163" cy="30" r="20"/><text class="non" x="163" y="35" text-anchor="middle">2</text><text class="t" x="163" y="72" text-anchor="middle">Ansible</text><text class="s" x="163" y="89" text-anchor="middle">mitu masinat</text></a>
-<circle class="c" cx="271" cy="30" r="20"/><text class="n" x="271" y="35" text-anchor="middle">3</text><text class="t" x="271" y="72" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="89" text-anchor="middle">Docker, Podman</text>
-<circle class="c" cx="380" cy="30" r="20"/><text class="n" x="380" y="35" text-anchor="middle">4</text><text class="t" x="380" y="72" text-anchor="middle">Taristu</text><text class="s" x="380" y="89" text-anchor="middle">OpenTofu</text>
-<circle class="c" cx="489" cy="30" r="20"/><text class="n" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="89" text-anchor="middle">GitHub Actions</text>
-<circle class="c" cx="597" cy="30" r="20"/><text class="n" x="597" y="35" text-anchor="middle">6</text><text class="t" x="597" y="72" text-anchor="middle">Jenkins</text><text class="s" x="597" y="89" text-anchor="middle">kvaliteedivärav</text>
-<circle class="c" cx="706" cy="30" r="20"/><text class="n" x="706" y="35" text-anchor="middle">7</text><text class="t" x="706" y="72" text-anchor="middle">Kubernetes</text><text class="s" x="706" y="89" text-anchor="middle">GitOps</text>
+<a href="k03/loeng/"><circle class="c on" cx="271" cy="30" r="20"/><text class="non" x="271" y="35" text-anchor="middle">3</text><text class="t" x="271" y="72" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="89" text-anchor="middle">Docker, Podman</text></a>
+<a href="k04/loeng/"><circle class="c on" cx="380" cy="30" r="20"/><text class="non" x="380" y="35" text-anchor="middle">4</text><text class="t" x="380" y="72" text-anchor="middle">Taristu</text><text class="s" x="380" y="89" text-anchor="middle">OpenTofu</text></a>
+<a href="k05/loeng/"><circle class="c on" cx="489" cy="30" r="20"/><text class="non" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="89" text-anchor="middle">GitHub Actions</text></a>
+<a href="k06/loeng/"><circle class="c on" cx="597" cy="30" r="20"/><text class="non" x="597" y="35" text-anchor="middle">6</text><text class="t" x="597" y="72" text-anchor="middle">Jenkins</text><text class="s" x="597" y="89" text-anchor="middle">kvaliteedivärav</text></a>
+<a href="k07/loeng/"><circle class="c on" cx="706" cy="30" r="20"/><text class="non" x="706" y="35" text-anchor="middle">7</text><text class="t" x="706" y="72" text-anchor="middle">Kubernetes</text><text class="s" x="706" y="89" text-anchor="middle">GitOps</text></a>
 </svg>
 </figure>
 
@@ -80,7 +80,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     Pakid rakenduse koos vajaliku käituskeskkonnaga konteinerisse.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k03/loeng.md)
 
 -   <span class="paev-nr">04 · Taristu koodina</span>
 
@@ -88,7 +88,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     Lood virtuaalmasinad koodis kirjeldatud plaani järgi.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k04/loeng.md)
 
 -   <span class="paev-nr">05 · Tarneahel</span>
 
@@ -96,7 +96,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     Töövoog, mis kontrollib muudatusi ning ehitab ja tarnib kokkulepitud tingimustel.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k05/loeng.md)
 
 -   <span class="paev-nr">06 · Kvaliteet</span>
 
@@ -104,7 +104,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     Pipeline kvaliteediväravaga ja versioonitud artefakt.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k06/loeng.md)
 
 -   <span class="paev-nr">07 · Klaster</span>
 
@@ -112,7 +112,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     Rakendus töötab klastris ja Git on tõe allikas.
 
-    <span class="tuleb">Avaneb enne kohtumist</span>
+    [Ava õppepäev →](k07/loeng.md)
 
 </div>
 
