@@ -43,7 +43,7 @@ Kõik kursuse käsud käivitad control node'is. Oma arvutisse on vaja paigaldada
 
 Kursusel on kaks parooli. Kumbagi ei ole vaja muuta:
 
-- **kooli konto** (näiteks `maasikas.is126`) on VPN-i ja Proxmoxi jaoks;
+- **kooli konto** (näiteks `maasikas.is126`): kasutajanimi ja parool, mille said kooli e-kirjaga. Sama kontoga logid sisse kooli Gmaili, VPN-i ja Proxmoxi;
 - **virtuaalmasinate kasutaja** `kasutaja` parooli leiad [arutelu teatest „Virtuaalmasinate kasutaja ja parool“](https://github.com/hkhk-tk/is126-arutelu/discussions/categories/teated).
 
 ## 1 · VPN
@@ -177,7 +177,7 @@ Host control
 
 ??? failure "VPN ei ühendu"
 
-    Kasutajanimi on kujul `perekonnanimi.is126` ja parool on sama mis kooli e-postil. macOS-is tuleb ühendus lubada: **System Settings → Privacy & Security → Allow**.
+    Kasutajanimi on kujul `perekonnanimi.is126` ja parool on sama mis kooli Gmailis (kooli konto, mille andmed said e-kirjaga). macOS-is tuleb ühendus lubada: **System Settings → Privacy & Security → Allow**.
 
 ??? failure "`Connection timed out`"
 
