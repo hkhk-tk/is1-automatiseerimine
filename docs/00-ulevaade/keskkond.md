@@ -125,7 +125,7 @@ Host control
     User kasutaja
 ```
 
-**3.3 Ühendu control node'iga.** Ava vasakul **Remote Explorer**, vali `control` ja vajuta **Connect**. Kui VS Code küsib serveri platvormi, vali `Linux`. Seejärel kinnita ühendus (**Continue**) ja sisesta kasutaja `kasutaja` parool.
+**3.3 Ühendu control node'iga.** Ava vasakul **Remote Explorer**, vali `control` ja vajuta **Connect**. Kui VS Code küsib serveri platvormi, vali `Linux`. Seejärel kinnita ühendus (**Continue**) ja sisesta virtuaalmasinate parool (mitte kooli konto parool).
 
 **3.4 Ava terminal.** Vali menüüst **Terminal → New Terminal**.
 

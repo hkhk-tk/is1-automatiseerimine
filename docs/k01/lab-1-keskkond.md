@@ -48,7 +48,7 @@ ssh web01 "sudo hostnamectl set-hostname web01"
 ssh web01 hostname
 ```
 
-`ssh-copy-id` küsib esimesel korral kinnitust (`yes`) ja parooli. Viimane käsk peab kuvama `web01` ilma parooli küsimata.
+`ssh-copy-id` küsib esimesel korral kinnitust (`yes`) ja virtuaalmasinate parooli (mitte kooli konto parooli). Viimane käsk peab kuvama `web01` ilma parooli küsimata.
 
 ## A3 · Ülejäänud masinad skriptiga
 
@@ -188,7 +188,7 @@ Selle kohtumise failid lähevad kausta `~/kursus/k01/`.
 | Viga | Mida teha |
 |---|---|
 | `Connection timed out` | kontrolli IP-aadressi Proxmoxis ja et masin töötab |
-| `Permission denied` | kontrolli parooli ja kasutajanime `kasutaja` |
+| `Permission denied` | kasuta kasutajat `kasutaja` ja virtuaalmasinate parooli, mitte kooli konto parooli |
 | `REMOTE HOST IDENTIFICATION HAS CHANGED` | `ssh-keygen -R <ip>` ja proovi uuesti |
 
 *Tabel 1. Levinud vead.*
