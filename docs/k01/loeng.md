@@ -40,12 +40,12 @@ tags:
 <line class="a" x1="550" y1="50" x2="578" y2="50" marker-end="url(#lxt)"/>
 <rect class="hi" x="580" y="20" width="130" height="60" rx="8"/><text class="b" x="645" y="47" text-anchor="middle">Kontroll</text><text class="s" x="645" y="66" text-anchor="middle">cat, stat</text>
 </svg>
-<figcaption>Joonis 1.1. Päeva lugu: üks ülesanne, kolm teostust, üks kontroll.</figcaption>
+<figcaption>Joonis 1.1. Päeva ülesanne lahendatakse kolmel viisil ja tulemust kontrollitakse iga kord samamoodi.</figcaption>
 </figure>
 
 ## 1. Miks automatiseerida?
 
-**Küsimus:** ma oskan Linuxit hallata. Milleks mulle veel üks töötamise viis?
+**Küsimus:** Linuxi haldamist ma juba oskan. Miks peaksin midagi teisiti tegema?
 
 ### Miks korduvat tööd automatiseerida?
 
@@ -76,9 +76,9 @@ Harva tehtava, lihtsa ja väikese riskiga töö puhul võib piisata juhendist. A
     - [Google SRE: Eliminating Toil](https://sre.google/sre-book/eliminating-toil/)
     - [Google SRE: Lessons Learned from Other Industries](https://sre.google/sre-book/lessons-learned/)
 
-## 2. Kuidas töötamise viis on muutunud
+## 2. Kuidas haldustöö on muutunud
 
-**Küsimus:** miks inimesed käsitsi haldusest kaugemale liikusid?
+**Küsimus:** miks ei piisa enam käsitsi haldusest?
 
 Lihtsustatult on haldustöö arenenud viie sammuna: käsitsi tehtud töö, kirjalik juhend, skript, konfiguratsioonihaldus ja lõpuks Gitis hoitav kood, mille kolleeg enne käivitamist üle vaatab. Iga järgmise sammuga on rohkem teadmisi kirja pandud ja vähem jääb inimese mällu.
 
@@ -105,16 +105,16 @@ Lihtsustatult on haldustöö arenenud viie sammuna: käsitsi tehtud töö, kirja
 | Käsitsi | ei midagi, teadmine on peas | inimene | keegi ei tea, mis tehti |
 | Juhend | samme inimesele | inimene igal sammul | samm jääb vahele |
 | Skript | käskude järjekorda | skripti autor, kui ta kontrolli kirjutas | teine käivitus teeb sama töö uuesti |
-| Konfiguratsioonihaldus | soovitud olekut | tööriista moodul | toores käsk ilma kontrollita |
+| Konfiguratsioonihaldus | soovitud olekut | tööriista moodul | käsk, mis ei kontrolli olekut |
 | Kood Gitis | kõike ülaltoodut koos ajalooga | ülevaataja enne käivitamist | ülevaatus jääb formaalseks |
 
 *Tabel 2.1. Mida iga samm kirjeldab ja kus on risk.*
 
-Ükski samm ei asenda eelmisi. Näiteks Eesti X-tee avalikus repositooriumis on kõrvuti paigaldusjuhend inimesele ja Ansible'i playbook'id meeskonnale, kes ehitab sama keskkonda kümneid kordi. Järjekord on sama: **tee kõigepealt käsitsi, siis kirjuta üles, siis automatiseeri.**
+Ükski samm ei asenda eelmisi. Näiteks Eesti X-tee avalikus repositooriumis on kõrvuti paigaldusjuhend inimesele ja Ansible'i playbook'id meeskonnale, kes paigaldab sama keskkonna kümneid kordi. Põhimõte on sama: **tee kõigepealt käsitsi, siis kirjuta üles, siis automatiseeri.**
 
 ??? note "Süvenemiseks: snowflake server ja drift"
 
-    Kolm aastat töötanud serveris on keegi kunagi lisanud `/etc/hosts`-i rea, muutnud mõnda seadet ja paigaldanud paketi, mida keegi enam ei mäleta. Martin Fowler nimetab sellist masinat *snowflake server*'iks: see on ainulaadne ja keegi ei julge seda uuesti ehitada.
+    Kolm aastat töötanud serveris on keegi kunagi lisanud `/etc/hosts`-i rea, muutnud mõnda seadet ja paigaldanud paketi, mida keegi enam ei mäleta. Martin Fowler nimetab sellist masinat *snowflake server*'iks: see on ainulaadne ja keegi ei julge seda uuesti üles seada.
 
     Masinate vahelisi väikeseid erinevusi nimetatakse **triiviks** (drift). Triivi ei hoia ära ka suur hoolikus, sest inimesed unustavad. Aitab see, kui masina soovitud olek on kirjas ja seda kirjeldust rakendatakse korduvalt.
 
@@ -129,7 +129,7 @@ Lihtsustatult on haldustöö arenenud viie sammuna: käsitsi tehtud töö, kirja
 
 ??? example "Knight Capital 2012: üks server kaheksast"
 
-    Uus kood pidi käsitsi jõudma kaheksasse serverisse. Ühte jäi see kopeerimata ja seal käivitus vana funktsioon. USA väärtpaberikomisjoni [otsuse](https://www.sec.gov/litigation/admin/2013/34-70694.pdf) järgi kaotas firma 45 minutiga üle 460 miljoni dollari.
+    Uus kood tuli käsitsi paigaldada kaheksasse serverisse. Ühte serverisse jäi see paigaldamata ja seal käivitus vana funktsioon. USA väärtpaberikomisjoni [otsuse](https://www.sec.gov/litigation/admin/2013/34-70694.pdf) järgi kaotas firma 45 minutiga üle 460 miljoni dollari.
 
 ??? question "Mõtle: vastutus ja töökohad"
 
@@ -137,7 +137,7 @@ Lihtsustatult on haldustöö arenenud viie sammuna: käsitsi tehtud töö, kirja
 
 ## 3. Päeva ülesanne ja töökeskkond
 
-**Küsimus:** mis peab tulemuseks olema ja kuidas seda kontrollime?
+**Küsimus:** milline peab olema tulemus ja kuidas seda kontrollida?
 
 ### Ülesanne ja kontrollnimekiri
 
@@ -196,7 +196,7 @@ Esimene rida määrab, et skripti käivitab Bash. Skripti käivitad käsuga `bas
 
 - **Teine käivitus kirjutab faili uuesti üle**, kuigi sisu on juba õige. Sama lõpptulemus ei tähenda, et midagi ei tehtud.
 - **Kui üks käsk ebaõnnestub, jätkab skript järgmisega.** Pooleli jäänud töö jääb masinasse.
-- **Iga kontrolli pead ise kirjutama.** Kas kaust on olemas, kas sisu on juba õige, kas õigused klapivad: igaüks on eraldi `if`.
+- **Iga kontrolli pead ise kirjutama.** Kas kaust on olemas, kas sisu on juba õige, kas õigused klapivad: iga kontroll on eraldi `if`-lause.
 
 Omadust, et korduv käivitus ei muuda midagi, kui soovitud olek on juba saavutatud, nimetatakse **idempotentsuseks**. Skriptis tuleb iga selline kontroll ise kirjutada. Ansible'i moodulites on need kontrollid juba olemas.
 
@@ -207,7 +207,7 @@ Omadust, et korduv käivitus ei muuda midagi, kui soovitud olek on juba saavutat
 
 ## 5. Ansible'i tutvustus
 
-**Küsimus:** mis tööriist Ansible on ja kuidas see masinani jõuab?
+**Küsimus:** mis tööriist on Ansible ja kuidas see hallatava masinaga suhtleb?
 
 **Ansible** on avatud lähtekoodiga tööriist serverite seadistamiseks. Tekstifailis kirjeldad, milline peab masin olema: millised paketid on paigaldatud, millised failid on olemas ja millised teenused töötavad. Ansible loeb faili, ühendub SSH kaudu masinatesse ja teeb seal ainult need muudatused, mis on vajalikud.
 
@@ -223,9 +223,9 @@ Kolm asja eristavad Ansible'it Bashi skriptist:
 - **Mitu masinat korraga.** Sama playbook'i saab käivitada nii ühes kui ka sajas masinas.
 - **Agenti pole vaja.** Hallatavasse masinasse ei ole vaja paigaldada püsivat Ansible'i agenti, piisab SSH-st ja Pythonist.
 
-Ansible ei ole operatsioonisüsteem, veebiteenus ega asendus Linuxi teadmistele. See on käsurea programm, mis töötab control node'is. Failiteid, kasutajaid ja õigusi tuleb endiselt ise mõista. Muutub see, kuidas tööd kirjeldad.
+Ansible ei ole operatsioonisüsteem ega veebiteenus ega asenda Linuxi teadmisi. See on käsurea programm, mis töötab control node'is. Failiteid, kasutajaid ja õigusi tuleb endiselt ise mõista. Muutub see, kuidas tööd kirjeldad.
 
-Meie ülesanne jääb samaks: sama kaust ja sama fail web01-s. Uus on ainult see, kuidas Ansible tööd kirjeldab ja teeb.
+Meie ülesanne jääb samaks: sama kaust ja sama fail web01-s. Uus on see, kuidas töö kirjeldatakse ja kuidas Ansible selle teeb.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 220" role="img" aria-label="Control node'il on inventory, playbook ja ansible-playbook; Ansible saadab mooduli SSH-ga web01-le, kus Python võrdleb soovitud ja tegelikku olekut ning tagastab ok või changed" xmlns="http://www.w3.org/2000/svg">
@@ -243,10 +243,10 @@ Meie ülesanne jääb samaks: sama kaust ja sama fail web01-s. Uus on ainult see
 <text class="b" x="436" y="156">3. muudab ainult erinevuse</text>
 <text class="s" x="436" y="190">pärast tööd moodul kustutatakse</text>
 </svg>
-<figcaption>Joonis 5.1. Ansible jookseb control node'il ja teeb töö hallatavas masinas SSH kaudu.</figcaption>
+<figcaption>Joonis 5.1. Ansible töötab control node'is ja teeb töö hallatavas masinas SSH kaudu.</figcaption>
 </figure>
 
-### Kus Ansible jookseb
+### Kus Ansible töötab
 
 Ansible on paigaldatud ainult **control node**'i. Masinat, mida Ansible seadistab, nimetatakse **hallatavaks masinaks** (managed node). Meie ülesandes on see web01. Hallatavasse masinasse ei ole vaja Ansible'it paigaldada, piisab SSH-st ja Pythonist.
 
@@ -261,7 +261,7 @@ Ansible saab sisse logida ka parooliga (`--ask-pass`), kuid selles laboris kasut
 | **control node** | Linux või macOS, Python 3, `ansible-core` | Windows otse control node'iks ei sobi; Windowsis töötab Ansible WSL-i kaudu |
 | **Linuxi hallatav masin** | SSH ja Python 3 | Ansible'it sinna paigaldada pole vaja |
 | **Windowsi hallatav masin** | WinRM või SSH ja PowerShell | moodulid on eraldi kogus `ansible.windows` |
-| **võrguseade** (ruuter, kommutaator) | SSH või API | Pythonit seadmes pole: moodul jookseb control node'il ja saadab seadmele käsud |
+| **võrguseade** (ruuter, kommutaator) | SSH või API | Seadmes Pythonit pole: moodul töötab control node'is ja saadab seadmele käsud |
 
 *Tabel 5.2. Mida Ansible eri masinatelt eeldab.*
 
@@ -271,7 +271,7 @@ Ansible saab sisse logida ka parooliga (`--ask-pass`), kuid selles laboris kasut
 
 **Suuremas keskkonnas** saab samu playbook'e käivitada tsentraalse platvormi kaudu, näiteks AWX-i või Red Hat Ansible Automation Platformi abil. Platvorm lisab muu hulgas kasutajaõigused, ajastamise, saladuste halduse ja käivituste ajaloo.
 
-Playbook on mõlemas keskkonnas sama. Selle kohtumise teadmised kehtivad ka suures ettevõttes.
+Playbook on mõlemas keskkonnas sama. Sel kohtumisel õpitu kehtib ka suures ettevõttes.
 
 ??? note "Kohalik ühendus ei ole sama mis kaugühendus"
 
@@ -279,7 +279,7 @@ Playbook on mõlemas keskkonnas sama. Selle kohtumise teadmised kehtivad ka suur
 
 ??? question "Kontrolli ennast"
 
-    1. Kus Ansible jookseb ja mida on vaja hallataval masinal?
+    1. Kus Ansible töötab ja mida on vaja hallatavas masinas?
     2. Mis on moodul ja mis juhtub sellega pärast ülesande täitmist?
 
 ??? info "Loe juurde"
@@ -301,7 +301,7 @@ Playbook on mõlemas keskkonnas sama. Selle kohtumise teadmised kehtivad ka suur
 
 ### Paigaldamine
 
-Ansible paigaldatakse ainult control node'ile. Kaks tavalist teed:
+Ansible paigaldatakse ainult control node'ile, kas paketihalduriga või `pipx`-iga:
 
 === "Ubuntu, Debian"
 
@@ -342,14 +342,14 @@ ansible [core 2.16.3]
 |---|---|
 | `ansible [core 2.16.3]` | `ansible-core`'i versioon; sellest sõltub, millised moodulid ja võtmed on olemas |
 | `config file` | milline `ansible.cfg` on kasutusel; `None` tähendab, et ühtegi ei leitud |
-| `python version` | Python, millega Ansible control node'il jookseb |
+| `python version` | Pythoni versioon, millega Ansible control node'is töötab |
 | `jinja version` | mallimootor, mida läheb vaja 2. kohtumisel |
 
 *Tabel 6.1. `ansible --version` väljund.*
 
 ### Inventory: hallatavate masinate loend
 
-**Inventory** on fail, kus on kirjas masinad, mida Ansible haldab, ja kuidas nendega ühenduda. Meie laboris:
+**Inventory** on fail, kus on kirjas hallatavad masinad ja andmed nendega ühendumiseks. Meie laboris:
 
 ```ini
 [ubuntu]
@@ -400,9 +400,9 @@ Millist faili Ansible parasjagu kasutab, näed käsu `ansible --version` väljun
 
 ### Kasutaja ja õigused
 
-Ansible teeb hallatavas masinas tööd selle kasutajana, kellena ta SSH-ga sisse logib. Meil on see `kasutaja` (inventory's `ansible_user=kasutaja`) ja sisselogimine käib SSH-võtmega. Kõik, mida see kasutaja tohib, tohib ka Ansible. Meie päeva ülesanne käib kasutaja kodukaustas ja administraatori õigusi ei vaja.
+Ansible teeb hallatavas masinas tööd selle kasutajana, kellena ta SSH-ga sisse logib. Meil on see `kasutaja` (inventory's `ansible_user=kasutaja`) ja sisse logitakse SSH-võtmega. Kõik, mida see kasutaja tohib, tohib ka Ansible. Päeva ülesanne puudutab ainult kasutaja kodukausta ega vaja administraatori õigusi.
 
-Paketi paigaldamiseks, teenuse käivitamiseks või `/etc` all oleva faili muutmiseks on vaja administraatori õigusi. Selleks on **`become`**: Ansible logib sisse tavakasutajana ja käivitab ainult neid ülesandeid, kus see on vajalik, `sudo` kaudu kõrgemate õigustega.
+Paketi paigaldamiseks, teenuse käivitamiseks või `/etc` all oleva faili muutmiseks on vaja administraatori õigusi. Selleks on **`become`**: Ansible logib sisse tavakasutajana ja käivitab `sudo` kaudu kõrgemate õigustega ainult need ülesanded, mis seda vajavad.
 
 ```yaml
 - name: Tööriistad on paigaldatud
@@ -421,11 +421,11 @@ ansible-playbook tools.yml
 
 | Võti | Tähendus |
 |---|---|
-| `become: true` | selle play (või ühe ülesande) ajal tööta `sudo` kaudu |
-| `become_user: postgres` | tõsta õigused mõne teise kasutajani, vaikimisi `root` |
+| `become: true` | käivita selle play (või ühe ülesande) ülesanded `sudo` kaudu |
+| `become_user: postgres` | käivita ülesanne teise kasutajana; vaikimisi `root` |
 | `-K` | küsib käivitamise alguses `sudo` parooli; vajalik, kui `sudo` nõuab parooli |
 
-*Tabel 6.4. Õiguste tõstmine.*
+*Tabel 6.4. Kõrgemad õigused (`become`).*
 
 Labori virtuaalmasinates ei küsi `sudo` parooli, seetõttu käivitame playbook'e ilma võtmeta `-K`. Töökohas nõuab `sudo` tavaliselt parooli ja siis lisatakse käsule `-K`.
 
@@ -462,7 +462,7 @@ AlmaLinuxi masinas on `ansible_distribution` väärtus `AlmaLinux`. Hiljem kasut
 
 ??? question "Kontrolli ennast"
 
-    1. Mida tähendab inventory reas `ansible_host` ja mida `[veeb]`?
+    1. Mida tähendab inventory reas `ansible_host` ja mida `[alma]`?
     2. Milleks on `ansible.cfg` ja kuidas näed, millist konfiguratsioonifaili Ansible kasutab?
     3. Mis vahe on käskudel `ansible` ja `ansible-playbook`?
 
@@ -490,7 +490,7 @@ Ansible'i **moodulid** täidavad konkreetseid haldusülesandeid. Alustamiseks pi
 | `ansible.builtin.service` | teenuse käivitamine, peatamine ja automaatne käivitamine süsteemi käivitumisel |
 | `ansible.builtin.user` | kasutajad |
 | `ansible.builtin.template` | failid mallist, kuhu tulevad muutujate väärtused (2. kohtumine) |
-| `ansible.builtin.command` | toores käsk; Ansible ei tea, milline on soovitud olek |
+| `ansible.builtin.command` | käivitab käsu; soovitud olekut Ansible ei tea |
 
 *Tabel 7.1. Sagedasemad moodulid.*
 
@@ -514,7 +514,7 @@ Juhendi lõpus on näited (`EXAMPLES`), millest on kõige lihtsam alustada.
 <rect class="box" x="42" y="82" width="310" height="110" rx="6"/><text class="b" x="56" y="104">ülesanne: Kaust on olemas</text><text class="c" x="56" y="132">ansible.builtin.file</text><text class="s" x="56" y="160">path · state: directory · mode</text><text class="s" x="56" y="180">moodul + parameetrid</text>
 <rect class="box" x="368" y="82" width="310" height="110" rx="6"/><text class="b" x="382" y="104">ülesanne: Konfiguratsioonifail …</text><text class="c" x="382" y="132">ansible.builtin.copy</text><text class="s" x="382" y="160">dest · content · mode</text><text class="s" x="382" y="180">moodul + parameetrid</text>
 </svg>
-<figcaption>Joonis 7.1. Playbook'is on play, play'l sihtmasinad ja ülesanded, igal ülesandel üks moodul.</figcaption>
+<figcaption>Joonis 7.1. Playbook koosneb play'dest. Igal play'l on sihtmasinad ja ülesanded ning iga ülesanne kasutab üht moodulit.</figcaption>
 </figure>
 
 ```yaml
@@ -540,7 +540,7 @@ Pane tähele ülesannete nimesid: „Kaust **on** olemas“, mitte „Tee kaust�
 
 ### YAML-i põhireeglid
 
-YAML on lihtne tekstivorming, kus struktuur tuleb **taandest**. Kolm reeglit katavad meie playbook'i:
+YAML on lihtne tekstivorming, kus struktuuri määrab **taane**. Meie playbook'i jaoks piisab kolmest reeglist:
 
 - võtme ja väärtuse paar kujul `võti: väärtus`, kooloni järel on tühik;
 - `-` alustab loendi elementi (iga ülesanne on loendi element);
@@ -552,7 +552,7 @@ Kõige sagedasem viga on vale taane. Sel juhul annab Ansible teate `Syntax Error
 
 | Tööriist | Mida teeb |
 |---|---|
-| VS Code'i laiendus **Ansible** (`redhat.ansible`) | värvib YAML-i, näitab vigu kirjutamise ajal, pakub mooduli parameetreid |
+| VS Code'i laiendus **Ansible** (`redhat.ansible`) | tõstab YAML-i süntaksi esile, näitab vigu kirjutamise ajal ja pakub mooduli parameetreid |
 | `ansible-doc <moodul>` | mooduli juhend ja näited käsureal |
 | `ansible-playbook --syntax-check` | kontrollib, kas YAML ja playbook'i ülesehitus on korrektsed |
 | **ansible-lint** | kontrollib playbook'e levinud vigade ja soovitatud stiilireeglite suhtes, näiteks moodul ilma eesliiteta `ansible.builtin.` või `mode` ilma jutumärkideta |
@@ -638,7 +638,7 @@ Kui muudad web01-s faili käsitsi ja käivitad playbook'i uuesti, on `changed` a
 
 ### Idempotentsus sõltub lahendusest
 
-Enamik mooduleid kontrollib ise, kas muudatus on vajalik. Toore käsu puhul (`ansible.builtin.command`, `ansible.builtin.shell`) Ansible soovitud olekut ei tea. Ilma lisakontrollita võib selline ülesanne anda tulemuse `changed` igal käivitusel.
+Enamik mooduleid kontrollib ise, kas muudatus on vajalik. Käsumoodulite (`ansible.builtin.command`, `ansible.builtin.shell`) puhul ei tea Ansible soovitud olekut. Ilma lisakontrollita võib selline ülesanne anda tulemuse `changed` igal käivitusel.
 
 Seepärast ei ole õige öelda, et Ansible on idempotentne ja Bash mitte. Võrrelda tuleb konkreetseid lahendusi: Bashi skripti saab kirjutada idempotentseks ja playbook'i saab kirjutada nii, et see ei ole idempotentne.
 
@@ -664,7 +664,7 @@ Seepärast ei ole õige öelda, et Ansible on idempotentne ja Bash mitte. Võrre
 
 ### Aruanne ei ole tulemus
 
-Tööriista aruanne kirjeldab käivitamist. Kontroll peab vaatama, kas soovitud olek on saavutatud. Need on kaks eri küsimust:
+Tööriista aruanne kirjeldab käivitamist. Kontroll peab näitama, kas soovitud olek on saavutatud. Need on kaks eri küsimust:
 
 > Kas automaatika teatas, et sai valmis?
 
@@ -677,7 +677,7 @@ cat ~/automation-lab/training.conf
 stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
 ```
 
-Õige fail vales kohas ei ole nõutud tulemus. Õige sisu valede õigustega ei ole veel valmis. Õnnestunud käivitus vale masina vastu ei täida ülesannet.
+Õige fail vales kohas ei ole nõutud tulemus. Õige sisu valede õigustega ei ole veel valmis. Õnnestunud käivitus vales masinas ei täida ülesannet.
 
 ### Enne käivitamist: kus, mida, kelle õigustega
 
@@ -685,7 +685,7 @@ Enne kui käivitad midagi, mis muudab masinat, vasta endale:
 
 - **Kus?** Millises masinas see töö tehakse? Kas inventory's on õige masin?
 - **Mida?** Millist teed see muudab?
-- **Kellena?** Mis kasutajana ja kas `sudo`-t on vaja? Meie ülesanne ei vaja `sudo`-t.
+- **Kellena?** Millise kasutajana ja kas `sudo`-t on vaja? Meie ülesanne ei vaja `sudo`-t.
 - **Mis siis, kui midagi läheb valesti?** Kas tead, kuidas olekut kontrollida ja parandada?
 
 Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne selle tegemist ja `--limit web01` piirab käivitamise ühe masinaga, isegi kui inventory's on masinaid rohkem.
@@ -702,19 +702,19 @@ Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne selle te
 ## 9. Kokkuvõte
 
 - **Tulemus enne käske:** kirjuta enne, mis peab olema ja kuidas seda kontrollid.
-- **Käsitsi enne automaatikat:** mõista tööd enne, kui annad selle arvutile.
+- **Käsitsi enne automaatikat:** mõista tööd enne, kui selle automatiseerid.
 - **Skriptis tuleb iga kontroll ise kirjutada:** Ansible'i moodulites on need kontrollid olemas.
 - **Korduv käivitamine on eraldi nõue:** sama lõpptulemus ei tähenda, et midagi ei tehtud.
 - **Playbook kirjeldab soovitud olekut:** inventory määrab masinad, playbook ülesanded ja moodul võrdleb soovitud olekut tegelikuga.
 - **Aruanne ei ole tulemus:** kontrolli masina olekut.
 
-Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel laiendame selle mitme masina seadistamiseks: lisanduvad grupid, muutujad, mallid ja rollid.
+Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel seadistad playbook'iga mitut masinat korraga ning lisanduvad grupid, muutujad, mallid ja rollid.
 
 ## Süvenemiseks
 
 ??? info "Konfiguratsioonihalduse tööriistade ajalugu"
 
-    Varasemad tööriistad töötasid **agendiga**: igasse hallatavasse masinasse paigaldati eraldi programm, mis küsis serverilt, milline masin peab olema.
+    Varasemad tööriistad töötasid **agendiga**: igasse hallatavasse masinasse paigaldati eraldi programm, mis küsis serverilt masina soovitud olekut.
 
     | Aasta | Mis juhtus |
     |---|---|
@@ -722,7 +722,7 @@ Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel lai
     | 2005 | **Puppet**: oma keel soovitud oleku kirjeldamiseks, agent ja server |
     | 2009 | **Chef**: seadistus Ruby keeles, agent ja server |
     | 2011 | **Salt**: kiire sõnumside agentide ja serveri vahel |
-    | 2012 | **Ansible**: Michael DeHaan teeb tööriista, mis ei vaja agenti ega serverit, kasutab olemasolevat SSH-d ja kirjeldab olekut YAML-is |
+    | 2012 | **Ansible**: Michael DeHaan loob tööriista, mis ei vaja agenti ega serverit, kasutab olemasolevat SSH-d ja kirjeldab olekut YAML-is |
     | 2015 | Red Hat ostab Ansible'it arendava firma |
     | 2017 | Red Hat avaldab oma veebiplatvormi (Ansible Tower) lähtekoodi nime all **AWX** |
     | 2020 | Ansible jaguneb: tuum **`ansible-core`** ja eraldi **kogud** (collections) moodulitega |
@@ -737,7 +737,7 @@ Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel lai
 
 ??? info "Tsentraalne platvorm suures ettevõttes"
 
-    **Suures ettevõttes** käivitatakse sama playbook'i tsentraalsel platvormil, näiteks Red Hat **Ansible Automation Platform** või selle tasuta vaste **AWX**. Platvorm on paigaldatud eraldi serveritesse (Red Hati juhendi järgi RHEL 9, andmebaasiks PostgreSQL) ja lisab:
+    **Suures ettevõttes** käivitatakse samu playbook'e tsentraalsel platvormil, näiteks Red Hat **Ansible Automation Platform** või selle tasuta vaste **AWX**. Platvorm on paigaldatud eraldi serveritesse (Red Hati juhendi järgi RHEL 9, andmebaasiks PostgreSQL) ja lisab:
 
     - **veebiliidese ja API:** playbook'i saab käivitada nupuvajutusega, ajakava järgi või teise süsteemi kaudu (näiteks ServiceNow);
     - **õigused (RBAC):** kes tohib millist playbook'i millise inventory vastu käivitada;
@@ -747,7 +747,7 @@ Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel lai
 
 ??? info "Ansible ja Ansible Automation Platform"
 
-    Meie kasutame **Ansible'it** (täpsemalt `ansible-core`): tasuta käsurea tööriista. Red Hat müüb selle ümber ettevõtte platvormi **Ansible Automation Platform**. Platvormi komponendid lahendavad suure organisatsiooni muresid: kes tohib mida käivitada, kus on heakskiidetud kood, kuidas töö jõuab tuhandetesse masinatesse.
+    Meie kasutame **Ansible'it** (täpsemalt `ansible-core`): tasuta käsurea tööriista. Red Hat müüb selle ümber ettevõtte platvormi **Ansible Automation Platform**. Platvormi komponendid lahendavad suure organisatsiooni probleeme: kes tohib mida käivitada, kus on heakskiidetud kood, kuidas töö jõuab tuhandetesse masinatesse.
 
     | Komponent | Mida teeb | Tasuta vaste |
     |---|---|---|
