@@ -48,11 +48,9 @@ exec bash
 
     Laboris `sudo` parooli ei küsi, sest virtuaalmasinate mallis on kasutajal `kasutaja` lubatud kasutada `sudo`-t ilma paroolita. `hostnamectl` muudab hostinime püsivalt, nii et see jääb alles ka pärast taaskäivitust.
 
-## A2 · Seadista SSH-ühendus
+## A2 · SSH-võti ja ühendus masinatega
 
-Selles sammus seadistad control node'ist SSH-ühenduse viie virtuaalmasinaga, nii et saad nendega ühenduda nime järgi ja ilma paroolita. Allpool on kirjeldatud, mida tuleb teha. Iga sammu juures on käsk masina web01 näitel. Sammud 1 ja 2 teed üks kord, sammud 3–6 iga masinaga eraldi.
-
-Kui ei soovi viit masinat käsitsi seadistada, kasuta lehe lõpus olevat [skripti](#skript-koik-viis-masinat-korraga), mis teeb kõik sammud korraga.
+Loo control node'is SSH-võtmepaar ja lisa avalik võti viide masinasse. Siis saad masinatesse sisse logida nime järgi ja ilma paroolita.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 210" role="img" aria-label="control node'is on võtmepaar ja SSH konfiguratsioonifail; avalik võti lisatakse ssh-copy-id abil viide virtuaalmasinasse" xmlns="http://www.w3.org/2000/svg">
@@ -70,76 +68,33 @@ Kui ei soovi viit masinat käsitsi seadistada, kasuta lehe lõpus olevat [skript
 <figcaption>Joonis 1. Privaatvõti jääb control node'i, avalik võti lisatakse igasse virtuaalmasinasse.</figcaption>
 </figure>
 
-### 1. Kaust `~/.ssh`
-
-SSH hoiab kasutaja võtmeid ja seadeid kodukausta peidetud kaustas `.ssh`. Kaustale määratakse õigused `700`, nii et sellele pääseb ligi ainult omanik. Liiga laiade õiguste korral keeldub SSH kausta kasutamast.
+Loo võtmepaar (üks kord):
 
 ```bash
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
 
-### 2. SSH-võtmepaar
-
-`ssh-keygen` loob kaks faili: privaatvõti `id_ed25519` jääb control node'i, avalik võti `id_ed25519.pub` lisatakse teistesse masinatesse. Kui võtmepaar on juba olemas, ära seda käsku uuesti käivita.
-
-```bash
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 -C "kasutaja@control"
-```
-
-### 3. Masin SSH konfiguratsioonifaili
-
-SSH konfiguratsioonifaili `~/.ssh/config` lisad iga masina nime ja IP-aadressi. Seejärel piisab käsust `ssh web01` ja IP-aadressi ei pea meeles pidama. Ava fail VS Code'is:
-
-```bash
-touch ~/.ssh/config
-chmod 600 ~/.ssh/config
-code ~/.ssh/config
-```
-
-Lisa faili kirje ja asenda IP-aadress Proxmoxist leitud aadressiga:
+Ava SSH konfiguratsioonifail (`code ~/.ssh/config`) ja lisa sinna iga masina kohta kirje. IP-aadressi võta Proxmoxist:
 
 ```text
 Host web01
     HostName 192.168.125.11
     User kasutaja
-    IdentityFile ~/.ssh/id_ed25519
 ```
 
-### 4. Avalik võti masinasse
-
-`ssh-copy-id` lisab avaliku võtme hallatava masina faili `~/.ssh/authorized_keys`. Esimesel ühendusel küsitakse, kas usaldad masina hostivõtit (vasta `yes`), ja seejärel kasutaja `kasutaja` parooli. Edaspidi parooli ei küsita.
+Seejärel tee iga masinaga kolm asja: lisa avalik võti (esimesel ühendusel kinnita `yes` ja sisesta parool), määra hostinimi ja kontrolli, et parooli enam ei küsita:
 
 ```bash
 ssh-copy-id web01
-```
-
-### 5. Hostinimi ja SSH hostivõtmed
-
-Määra masinale hostinimi ja loo sellele uued SSH hostivõtmed. Samast mallist kloonitud virtuaalmasinatel võivad alguses olla samad SSH hostivõtmed. Hostivõti on serveri võti, millega klient kontrollib, millise serveriga ta ühendub. Hostivõti ei ole sama mis kasutaja SSH-võti, mille lõid sammus 2.
-
-```bash
-ssh -t web01 "sudo hostnamectl set-hostname web01 && sudo rm -f /etc/ssh/ssh_host_* && sudo ssh-keygen -A && (sudo systemctl restart ssh || sudo systemctl restart sshd)"
-ssh-keygen -R 192.168.125.11
-```
-
-Teine käsk eemaldab control node'i failist `~/.ssh/known_hosts` masina vana hostivõtme, sest masinal on nüüd uus võti. AlmaLinuxi masinates (mc01, db01) on SSH teenuse nimi `sshd`, Ubuntu masinates `ssh`. Käsk proovib mõlemat.
-
-### 6. Kontroll
-
-```bash
+ssh web01 "sudo hostnamectl set-hostname web01"
 ssh web01 hostname
 ```
 
-Kinnita uus hostivõti (`yes`). Käsk peab kuvama `web01` ilma parooli küsimata.
+Viimane käsk peab kuvama `web01`. Korda samu käske masinatega `app01`, `rmq01`, `mc01` ja `db01`.
 
-Korda samme 3–6 masinatega `app01`, `rmq01`, `mc01` ja `db01`.
+??? example "Kõik viis masinat korraga skriptiga"
 
-### Skript: kõik viis masinat korraga
-
-??? example "Ava skript, mis teeb sammud 1–6 kõigi viie masinaga"
-
-    Loo control node'is fail `~/ssh-seadistus.sh` (VS Code'is vali **File → New File** ja salvesta fail kodukausta). Kopeeri faili alljärgnev skript ja **asenda viis IP-aadressi** Proxmoxist leitud aadressidega. Skripti kommentaarides on samad sammude numbrid nagu ülal.
+    Skript teeb sama viie masinaga korraga ja loob lisaks igale masinale uued SSH hostivõtmed. Loo control node'is fail `~/ssh-seadistus.sh`, kopeeri sinna skript ja asenda viis IP-aadressi Proxmoxist leitud aadressidega:
 
     ```bash
     #!/usr/bin/env bash
@@ -231,82 +186,13 @@ Korda samme 3–6 masinatega `app01`, `rmq01`, `mc01` ja `db01`.
     fi
     ```
 
-
-    ??? note "Bashi võtted selles skriptis"
-
-        | Kirjutis | Tähendus |
-        |---|---|
-        | `#!/usr/bin/env bash` | shebang: faili käivitab Bash |
-        | `WEB01_IP="192.168.125.11"` | muutuja; võrdusmärgi ümber pole tühikuid |
-        | `"$voti"` | muutuja väärtus; jutumärgid hoiavad väärtuse ühe tervikuna ka siis, kui selles on tühik |
-        | `if [[ -f "$voti" ]]` | kas selline fail on olemas? |
-        | `seadista() { ... }` | **funktsioon**: käskude rühm nimega, mida saab mitu korda kasutada |
-        | `$1`, `$2` | funktsiooni esimene ja teine argument: `seadista web01 "$WEB01_IP"` |
-        | `>>` | lisab faili lõppu (`>` kirjutaks üle) |
-        | `|| vigu=$((vigu + 1))` | kui eelmine käsk ebaõnnestus, suurenda vigade arvu |
-        | `exit 1` | skript lõpetab veakoodiga 1, et seda käivitav programm saaks vea tuvastada |
-
-        Skripti piirid on [loengu](loeng.md#4-skripti-piirid) 4. peatükis.
-
-    Enne käivitamist kontrolli skripti süntaksit. Käsk loeb skripti läbi, kuid ei käivita seda:
-
-    ```bash
-    bash -n ~/ssh-seadistus.sh && echo "süntaks korras"
-    ```
-
-    Käivita skript:
+    Käivita skript. Iga masina juures küsitakse parooli üks kord:
 
     ```bash
     bash ~/ssh-seadistus.sh
     ```
 
-    Iga masina juures küsib `ssh-copy-id` üks kord parooli, et lisada avalik võti masinasse. Sisesta kasutaja `kasutaja` parool, mille said juhendajalt. `sudo` laboris parooli ei küsi.
-
-    ??? success "Oodatav tulemus"
-
-        ```
-        === web01 (192.168.125.11) ===
-        config: lisatud web01
-        kasutaja@192.168.125.11's password:
-        Number of key(s) added: 1
-        hostivõtmed uuendatud: web01
-        ...
-        === Kontroll ===
-        OK    web01 vastab: web01
-        OK    app01 vastab: app01
-        OK    rmq01 vastab: rmq01
-        OK    mc01 vastab: mc01
-        OK    db01 vastab: db01
-
-        Valmis: kõik viis masinat töötavad.
-        ```
-
-    Käivita skript teist korda:
-
-    Enne käivitamist ennusta tulemust. Mida skript teisel käivitusel teeb? Kas see küsib parooli? Kas see lisab SSH konfiguratsioonifaili samad read teist korda?
-
-    ```bash
-    bash ~/ssh-seadistus.sh
-    grep -c '^Host ' ~/.ssh/config
-    ```
-
-    ??? success "Oodatav tulemus"
-
-        ```
-        Võti on juba olemas: /home/kasutaja/.ssh/id_ed25519
-        config: web01 on juba olemas
-        ...
-        All keys were skipped because they already exist on the remote system.
-        ...
-        Valmis: kõik viis masinat töötavad.
-        5
-        ```
-
-        Uut võtmepaari ei looda, konfiguratsioonifaili midagi ei lisata ja `ssh-copy-id` ei küsi parooli, sest avalik võti on juba masinas. Hostinimi määratakse siiski uuesti, sest skript ei kontrolli enne, kas hostinimi on juba õige. Teine käivitus jätab lõpptulemuse samaks, kuid osa käske käivitatakse siiski uuesti. Järgmises osas võrdled seda Ansible'i moodulite käitumisega.
-
-    ??? question "Mõtle (valikuline)"
-
-        Kuidas muudaksid funktsiooni nii, et `hostnamectl` käivitatakse ainult siis, kui hostinimi ei ole veel õige? Vihje: `ssh -n "$nimi" hostname` kuvab praeguse hostinime.
+    Lõpus peab olema rida `Valmis: kõik viis masinat töötavad.`
 
 ## A3 · Proovi ise
 
