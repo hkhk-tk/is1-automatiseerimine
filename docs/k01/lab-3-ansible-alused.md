@@ -55,7 +55,7 @@ db01
 ansible_user=kasutaja
 ```
 
-IP-aadresse inventory's ei ole, sest masinate nimed on juba failis `~/.ssh/config`. Kontrolli, et Ansible leiab mõlemad failid:
+IP-aadresse inventory's ei ole, sest masinate nimed on juba failis `~/.ssh/config`. Dokumentatsiooni näidetes on igal käsul `-i inventory.ini`, meil teeb seda `ansible.cfg`. Kontrolli, et Ansible leiab mõlemad failid:
 
 ```bash
 ansible --version | grep 'config file'

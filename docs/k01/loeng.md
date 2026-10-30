@@ -100,11 +100,20 @@ Ansible'is kirjeldad failis, milline peab masin olema, ja Ansible teeb masinas a
 
 Ansible'i ametlik dokumentatsioon on kursuse põhiallikas. Selle [Getting started](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html) osa käsitleb samu teemasid samas järjekorras nagu tänane päev: control node, inventory, ad-hoc käsud ja playbook. Iga praktikumi osa alguses on link vastavale dokumentatsiooni peatükile.
 
-Bashi skriptist eristavad Ansible'it kolm asja:
+Dokumentatsioon nimetab Ansible'i tüüpilisteks kasutusjuhtudeks korduva töö kõrvaldamist, süsteemide konfiguratsiooni haldamist, keeruka tarkvara pidevat paigaldamist ja uuendamist ilma teenuse katkestuseta (*rolling update*). Esimesed kaks teed täna, paigaldamist ja uuendamist järgmisel kohtumisel.
 
-- **Soovitud olek, mitte käsud.** Kirjutad „kaust on olemas õigustega 0750“, mitte „tee kaust, siis muuda õigusi“.
-- **Mitu masinat korraga.** Sama playbook'i saab käivitada ühes või sajas masinas.
-- **Agenti pole vaja.** Hallatavas masinas piisab SSH-st ja Pythonist.
+Ansible on ehitatud nelja põhimõtte järgi ([Introduction to Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/introduction.html)):
+
+| Põhimõte | Mida see tähendab | Erinevus Bashi skriptist |
+|---|---|---|
+| **Agenti pole vaja** | hallatavasse masinasse ei paigaldata lisatarkvara, piisab SSH-st ja Pythonist | sama: ka skript töötab üle SSH |
+| **Lihtsus** | playbook on YAML ja loetav nagu dokumentatsioon; ühendus kasutab olemasolevaid SSH kontosid | skriptist tuleb välja lugeda, mida see teeb |
+| **Skaleeritavus** | sama playbook töötab ühes või sajas masinas, moodulid on olemas paljudele OS-idele, pilvedele ja võrguseadmetele | skript tuleb igasse masinasse eraldi viia ja käivitada |
+| **Idempotentsus** | kui masin on juba soovitud olekus, ei muuda Ansible midagi, ka mitmendal käivitusel | iga kontroll tuleb skripti ise kirjutada |
+
+*Tabel 3. Ansible'i põhimõtted.*
+
+Neist kõige tähtsam on viimane: playbook kirjeldab **soovitud olekut**, mitte käske. Kirjutad „kaust on olemas õigustega 0750“, mitte „tee kaust, siis muuda õigusi“.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 220" role="img" aria-label="Control node'il on inventory, playbook ja ansible-playbook; Ansible saadab mooduli SSH-ga web01-le, kus Python võrdleb soovitud ja tegelikku olekut ning tagastab ok või changed" xmlns="http://www.w3.org/2000/svg">
@@ -151,7 +160,7 @@ ansible_user=kasutaja
 | `web01` | masina nimi; IP-aadress tuleb SSH konfiguratsioonifailist |
 | `[all:vars]`, `ansible_user` | kõigile masinatele kehtiv muutuja: kasutaja, kellena Ansible sisse logib |
 
-*Tabel 3. Inventory osad.*
+*Tabel 4. Inventory osad.*
 
 Fail `ansible.cfg` projekti kaustas ütleb, millist inventory't kasutada, nii et seda ei pea iga käsu juurde kirjutama:
 
@@ -160,7 +169,36 @@ Fail `ansible.cfg` projekti kaustas ütleb, millist inventory't kasutada, nii et
 inventory = inventory.ini
 ```
 
-Hoia `ansible.cfg`, inventory ja playbook'id koos samas kaustas ja Gitis.
+Hoia `ansible.cfg`, inventory ja playbook'id koos samas kaustas ja Gitis. Dokumentatsiooni näidetes on inventory antud iga käsu juures võtmega `-i inventory.ini`. Meil teeb seda `ansible.cfg`, tulemus on sama.
+
+Dokumentatsioon ([Building an inventory](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html)) soovitab grupeerida masinaid kolme küsimuse järgi:
+
+| Küsimus | Grupid | Näide |
+|---|---|---|
+| **Mis** masin on | roll topoloogias | `web`, `db`, `cache` (2. kohtumine) |
+| **Kus** see asub | asukoht | `tallinn`, `haapsalu`, `serveriruum` |
+| **Millal** seda kasutatakse | keskkond | `test`, `staging`, `production` |
+
+*Tabel 5. Gruppide liigid.*
+
+Täna on meil veel neljas liik, distributsioon (`ubuntu`, `alma`), sest selle järgi erinevad paketinimed. Üks masin võib olla mitmes grupis korraga. Grupi nimes ära kasuta tühikuid, sidekriipse ega numbrit alguses (`korrus_19`, mitte `19-korrus`). Nimed on tõstutundlikud.
+
+Sama inventory saab kirjutada ka YAML-is. Väikese masinahulga puhul on INI loetavam, suurema puhul ja automaatselt genereeritud inventory puhul kasutatakse sageli YAML-i (4. kohtumisel genereerib OpenTofu inventory ise):
+
+```yaml
+ubuntu:
+  hosts:
+    web01:
+    app01:
+    rmq01:
+alma:
+  hosts:
+    mc01:
+    db01:
+all:
+  vars:
+    ansible_user: kasutaja
+```
 
 ## 5. Ad-hoc käsk ja moodulid
 
@@ -171,7 +209,7 @@ Ansible'il on kaks põhikäsku. Üks käivitab ühe mooduli kohe, teine terve pl
 | `ansible` | käivitab ühe mooduli kohe (ad-hoc) | `ansible all -m ansible.builtin.ping` |
 | `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook training.yml` |
 
-*Tabel 4. Ansible'i kaks põhikäsku.*
+*Tabel 6. Ansible'i kaks põhikäsku.*
 
 Moodul `ping` vastab `pong`, kui Ansible jõuab SSH kaudu masinasse ja seal töötab Python. Ad-hoc käsk sobib kiireks kontrolliks. Seadistuse, mida soovid korrata, kirjuta playbook'i.
 
@@ -185,7 +223,7 @@ Iga moodul täidab üht kindlat haldusülesannet. Alustamiseks piisab mõnest:
 | `ansible.builtin.service` | teenused |
 | `ansible.builtin.command` | käivitab käsu; soovitud olekut Ansible ei tea |
 
-*Tabel 5. Sagedasemad moodulid.*
+*Tabel 7. Sagedasemad moodulid.*
 
 Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
@@ -243,7 +281,7 @@ Labori masinates on kaks distributsiooni ja samal programmil võib olla eri pake
 | `--limit` | käivitab playbook'i ainult osas masinatest, playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
 | `tags` | ülesande silt; `--tags` käivitab ainult valitud siltidega ülesanded | `ansible-playbook tools.yml --tags motd` |
 
-*Tabel 6. Tingimus, sihtmasinad ja sildid.*
+*Tabel 8. Tingimus, sihtmasinad ja sildid.*
 
 Tingimus põhineb **faktidel**: andmetel, mida Ansible kogub masinast enne ülesandeid (operatsioonisüsteem, versioon, võrk). Ubuntus on `ansible_facts['os_family']` väärtus `Debian`, AlmaLinuxis `RedHat`.
 
@@ -275,7 +313,7 @@ Muutuja väärtuse saab määrata mitmes kohas:
 | `group_vars/<grupp>.yml` | inventory grupi masinatele | `group_vars/alma.yml`: `admin_grupp: wheel` |
 | `host_vars/<masin>.yml` | ühele masinale | erand ühele masinale |
 
-*Tabel 7. Muutujate asukohad.*
+*Tabel 9. Muutujate asukohad.*
 
 Kaustad `group_vars` ja `host_vars` asuvad inventory faili kõrval ja Ansible loeb need ise. Kui sama muutuja on mitmes kohas, kehtib täpsem väärtus: masina muutuja on tähtsam kui grupi oma ja grupi muutuja tähtsam kui `all`. Nii kirjeldab playbook, *mida* teha, ja inventory, *milline* on iga masin. Sama playbook töötab uues distributsioonis, kui lisad sellele grupi ja grupimuutujate faili.
 
@@ -304,7 +342,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus |
 | `skipped` | ülesanne jäeti tingimuse (`when`) tõttu vahele |
 
-*Tabel 8. PLAY RECAP väljad.*
+*Tabel 10. PLAY RECAP väljad.*
 
 Kui kaust ja fail on juba olemas ja õiged, on tulemus `ok` ja `changed=0`: Ansible ei muuda midagi ainult seetõttu, et playbook käivitati.
 
