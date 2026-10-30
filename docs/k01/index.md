@@ -18,7 +18,8 @@ Päeva lõpuks oskad:
 - käivitada Ansible'i ad-hoc käske mitmes masinas korraga;
 - käivitada Ansible'i playbook'i ja lugeda käivituse tulemust;
 - kontrollida, mis juhtub playbook'i korduval käivitamisel;
-- kontrollida, kuidas Ansible reageerib käsitsi tehtud muudatusele.
+- kontrollida, kuidas Ansible reageerib käsitsi tehtud muudatusele;
+- kirjutada playbook'i, mis töötab mitmes distributsioonis grupimuutujate abil.
 
 ## Päeva käik
 
@@ -30,7 +31,8 @@ Päeva lõpuks oskad:
 | 4 | [Ansible'i alused](lab-3-ansible-alused.md): ad-hoc käsud viiel masinal |
 | 5 | [Esimene playbook](lab-4-playbook.md) |
 | 6 | [Playbook viiele masinale](lab-5-parem-playbook.md): `when`, `--limit` ja `tags` |
-| 7 | [Iseseisev ülesanne ja töö esitamine](lab-6-esitamine.md) |
+| 7 | [Muutujad ja grupimuutujad](lab-6-muutujad.md): `vars`, `loop`, `group_vars` |
+| 8 | [Iseseisev ülesanne ja töö esitamine](lab-7-esitamine.md) |
 
 *Tabel 1. Päeva tegevused.*
 
@@ -43,6 +45,7 @@ Kaustas `k01/` peavad olema järgmised failid:
 - `inventory.ini`
 - `training.yml`
 - `tools.yml`
+- `haldus.yml`, `ajasunk.yml` ja kaust `group_vars`
 
 Töö esitatakse tag'iga `k01`. Automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemuse näed Classroom 50-s. Päeva jooksul näitab laboritahvel, millised sammud on sinu masinates tehtud.
 

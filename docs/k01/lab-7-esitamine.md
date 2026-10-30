@@ -4,11 +4,11 @@ tags:
   - Praktikum
 ---
 
-# 6. Iseseisev ülesanne ja töö esitamine
+# 7. Iseseisev ülesanne ja töö esitamine
 
-Viimases osas lisad playbook'i ise ühe ülesande ja esitad seejärel päeva töö.
+Viimases osas kirjutad ilma valmis näiteta ühe ülesande olemasolevasse playbook'i ja ühe uue playbook'i. Seejärel esitad päeva töö.
 
-## A1 · Iseseisev ülesanne
+## A1 · Ülesanne olemasolevas playbook'is
 
 Lisa playbook'i `training.yml` kolmas ülesanne: kaustas `automation-lab` peab olema fail `README.txt` õigustega `0644` ja sisuga:
 
@@ -34,14 +34,30 @@ ssh web01 "cat automation-lab/README.txt; stat -c '%a %n' automation-lab/README.
 
     Kopeeri `ansible.builtin.copy` ülesanne ja muuda väärtusi `name`, `dest`, `content` ja `mode`.
 
-## A2 · Töö esitamine
+## A2 · Uus playbook: aja sünkroniseerimine
+
+Kirjuta playbook `ajasunk.yml`, mis paigaldab kõigisse viide masinasse paketi `chrony` ja hoiab selle teenuse käigus. Teenus peab käivituma ka pärast alglaadimist. Paketi nimi on mõlemas distributsioonis `chrony`, teenuse nimi on Ubuntus `chrony` ja AlmaLinuxis `chronyd`.
+
+Kasuta 6. osa lahendust: distributsioonide erinevus läheb grupimuutujatesse, mitte võtmesse `when`. Enne käivitamist kontrolli playbook'i võtmetega `--check --diff`.
+
+```bash
+ansible-playbook ajasunk.yml
+ansible-playbook ajasunk.yml
+ansible all -a "chronyc tracking"
+```
+
+??? success "Oodatav tulemus"
+
+    Teisel käivitusel on kõigis masinates `changed=0`. `chronyc tracking` näitab igas masinas aja allikat ja rida `Leap status     : Normal`. Ubuntus asendab chrony paketi `systemd-timesyncd`, see on ootuspärane.
+
+## A3 · Töö esitamine
 
 Töö esitatakse tag'iga `k01`. Tee muudatustest commit, saada see GitHubi ja lisa tag:
 
 ```bash
 cd ~/kursus
 git add k01/
-git commit -m "k01: README.txt"
+git commit -m "k01: README.txt ja ajasunk.yml"
 git push
 git tag k01
 git push origin k01

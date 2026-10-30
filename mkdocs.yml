@@ -94,7 +94,8 @@ nav:
               - 3. Ansible'i alused: k01/lab-3-ansible-alused.md
               - 4. Esimene playbook: k01/lab-4-playbook.md
               - 5. Playbook viiele masinale: k01/lab-5-parem-playbook.md
-              - 6. Iseseisev ülesanne ja töö esitamine: k01/lab-6-esitamine.md
+              - 6. Muutujad ja grupimuutujad: k01/lab-6-muutujad.md
+              - 7. Iseseisev ülesanne ja töö esitamine: k01/lab-7-esitamine.md
               - Abi: k01/abi.md
               - Linuxi ja Bashi spikker: k01/spikker.md
               - Linux ja Bash edasijõudnutele: k01/spikker-edasijoudnutele.md

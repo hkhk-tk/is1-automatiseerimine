@@ -24,7 +24,8 @@ Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või
 | [3. Ansible'i alused](lab-3-ansible-alused.md) | paigaldus, `ansible.cfg`, inventory, ad-hoc käsud | kõik viis masinat vastavad `pong` |
 | [4. Esimene playbook](lab-4-playbook.md) | päeva ülesanne playbook'ina, triiv | teine käivitus annab `changed=0` |
 | [5. Playbook viiele masinale](lab-5-parem-playbook.md) | `when`, `--limit`, `tags` | `tools.yml` teine käivitus annab `changed=0` |
-| [6. Iseseisev ülesanne ja töö esitamine](lab-6-esitamine.md) | uus ülesanne playbook'i ja töö esitamine | viis faili ja tag `k01` on GitHubis |
+| [6. Muutujad ja grupimuutujad](lab-6-muutujad.md) | `vars`, `loop`, `group_vars`, moodulid `user` ja `service` | `haldus.yml` ilma võtmeta `when`, teine käivitus annab `changed=0` |
+| [7. Iseseisev ülesanne ja töö esitamine](lab-7-esitamine.md) | ülesanne ja playbook ilma valmis näiteta, töö esitamine | `ajasunk.yml` töötab ja tag `k01` on GitHubis |
 
 *Tabel 1. Praktikumi etapid.*
 

@@ -78,9 +78,25 @@ Skript teeb töö kiiresti ja alati samas järjekorras, kuid see ei kontrolli ma
 
 Omadust, et korduv käivitus ei muuda midagi, kui soovitud olek on juba saavutatud, nimetatakse **idempotentsuseks**. Skriptis tuleb see ise kirjutada, Ansible'i moodulites on see olemas.
 
-## 3. Ansible
+## 3. Infrastruktuur koodina ja Ansible
 
-**Ansible** on avatud lähtekoodiga tööriist serverite seadistamiseks. Failis kirjeldad, milline peab masin olema, ja Ansible teeb masinas ainult need muudatused, mis on selleks vajalikud. Ansible ilmus 2012. aastal ja seda arendab Red Hat.
+**Infrastruktuur koodina** (*Infrastructure as Code*, IaC) tähendab, et serverite, võrkude ja teenuste seadistus on kirjeldatud failides ning tööriist rakendab selle kirjelduse. Failid on Git'is, nii et igal muudatusel on autor, aeg ja põhjus, muudatuse saab enne rakendamist üle vaadata ja vajaduse korral tagasi võtta. Sama kirjeldusega saab luua ühe masina või sada ühesugust masinat.
+
+IaC tööriistad jagunevad selle järgi, mida nad haldavad:
+
+| Liik | Mida teeb | Tööriistad | Kursusel |
+|---|---|---|---|
+| konfiguratsioonihaldus | seadistab olemasolevaid masinaid: paketid, failid, kasutajad, teenused | Ansible, Puppet, Chef, Salt | K1, K2 |
+| ressursside loomine | loob virtuaalmasinad, võrgud ja salvestusruumi | OpenTofu, Terraform, CloudFormation | K4 |
+| konteinerid ja orkestreerimine | kirjeldab rakenduse käivituskeskkonda | Docker, Podman, Kubernetes | K3, K7 |
+
+*Tabel 2. IaC tööriistade liigid.*
+
+Puppet ja Chef vajavad igas hallatavas masinas agenti ja eraldi serverit, **Ansible** mitte. Seepärast on Ansible'iga kõige lihtsam alustada ja see sobib ka masinatele, kuhu agenti paigaldada ei saa, näiteks võrguseadmetele.
+
+Ansible'i kirjutas Michael DeHaan ja see ilmus 2012. aastal. 2015. aastal ostis Ansible'i arendanud ettevõtte Red Hat, mis kuulub omakorda IBM-ile. Ansible'i tuum `ansible-core` on avatud lähtekoodiga (GPLv3) ja tasuta. Red Hat müüb selle peale ehitatud platvormi **Ansible Automation Platform**, mille avatud lähtekoodiga vaste on **AWX**. Platvorm lisab veebiliidese, õigused, ajastamise ja logid, aga käivitab samu playbook'e. Selles kursuses kasutame ainult `ansible-core`'i ja kogumikke.
+
+Ansible'is kirjeldad failis, milline peab masin olema, ja Ansible teeb masinas ainult need muudatused, mis on selleks vajalikud.
 
 Bashi skriptist eristavad Ansible'it kolm asja:
 
@@ -133,7 +149,7 @@ ansible_user=kasutaja
 | `web01` | masina nimi; IP-aadress tuleb SSH konfiguratsioonifailist |
 | `[all:vars]`, `ansible_user` | kõigile masinatele kehtiv muutuja: kasutaja, kellena Ansible sisse logib |
 
-*Tabel 2. Inventory osad.*
+*Tabel 3. Inventory osad.*
 
 Fail `ansible.cfg` projekti kaustas ütleb, millist inventory't kasutada, nii et seda ei pea iga käsu juurde kirjutama:
 
@@ -153,7 +169,7 @@ Ansible'il on kaks põhikäsku. Üks käivitab ühe mooduli kohe, teine terve pl
 | `ansible` | käivitab ühe mooduli kohe (ad-hoc) | `ansible all -m ansible.builtin.ping` |
 | `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook training.yml` |
 
-*Tabel 3. Ansible'i kaks põhikäsku.*
+*Tabel 4. Ansible'i kaks põhikäsku.*
 
 Moodul `ping` vastab `pong`, kui Ansible jõuab SSH kaudu masinasse ja seal töötab Python. Ad-hoc käsk sobib kiireks kontrolliks. Seadistuse, mida soovid korrata, kirjuta playbook'i.
 
@@ -167,7 +183,7 @@ Iga moodul täidab üht kindlat haldusülesannet. Alustamiseks piisab mõnest:
 | `ansible.builtin.service` | teenused |
 | `ansible.builtin.command` | käivitab käsu; soovitud olekut Ansible ei tea |
 
-*Tabel 4. Sagedasemad moodulid.*
+*Tabel 5. Sagedasemad moodulid.*
 
 Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
@@ -225,11 +241,45 @@ Labori masinates on kaks distributsiooni ja samal programmil võib olla eri pake
 | `--limit` | käivitab playbook'i ainult osas masinatest, playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
 | `tags` | ülesande silt; `--tags` käivitab ainult valitud siltidega ülesanded | `ansible-playbook tools.yml --tags motd` |
 
-*Tabel 5. Tingimus, sihtmasinad ja sildid.*
+*Tabel 6. Tingimus, sihtmasinad ja sildid.*
 
 Tingimus põhineb **faktidel**: andmetel, mida Ansible kogub masinast enne ülesandeid (operatsioonisüsteem, versioon, võrk). Ubuntus on `ansible_facts['os_family']` väärtus `Debian`, AlmaLinuxis `RedHat`.
 
-## 8. Käivitamine ja tulemus
+## 8. Muutujad ja grupimuutujad
+
+Tingimus `when` lahendab distributsioonide erinevuse, aga iga erinevus vajab eraldi ülesannet. Kui erinevusi on palju (paketi nimi, teenuse nimi, administraatorite grupp, konfiguratsioonifaili asukoht), muutub playbook raskesti loetavaks. Parem lahendus on hoida ülesanded ühesugused ja panna erinevad väärtused **muutujatesse**.
+
+```yaml
+- name: Haldus
+  hosts: all
+  become: true
+  tasks:
+    - name: Haldurid on olemas
+      ansible.builtin.user:
+        name: "{{ item }}"
+        groups: "{{ admin_grupp }}"
+        append: true
+      loop: "{{ haldurid }}"
+```
+
+Muutuja väärtus asendatakse kujul `{{ muutuja }}`. Võti `loop` käivitab ülesande iga loendi elemendiga ja jooksev element on muutujas `item`.
+
+Muutuja väärtuse saab määrata mitmes kohas:
+
+| Koht | Kehtib | Näide |
+|---|---|---|
+| play osa `vars` | ainult selles playbook'is | `vars:` ja selle all `haldurid:` |
+| `group_vars/all.yml` | kõigile masinatele | haldurite loend |
+| `group_vars/<grupp>.yml` | inventory grupi masinatele | `group_vars/alma.yml`: `admin_grupp: wheel` |
+| `host_vars/<masin>.yml` | ühele masinale | erand ühele masinale |
+
+*Tabel 7. Muutujate asukohad.*
+
+Kaustad `group_vars` ja `host_vars` asuvad inventory faili kõrval ja Ansible loeb need ise. Kui sama muutuja on mitmes kohas, kehtib täpsem väärtus: masina muutuja on tähtsam kui grupi oma ja grupi muutuja tähtsam kui `all`. Nii kirjeldab playbook, *mida* teha, ja inventory, *milline* on iga masin. Sama playbook töötab uues distributsioonis, kui lisad sellele grupi ja grupimuutujate faili.
+
+Käsk `ansible-inventory --graph --vars` näitab, millise väärtuse iga masin saab. Seda tasub käivitada enne playbook'i, kui muutuja tulemus pole kindel.
+
+## 9. Käivitamine ja tulemus
 
 Playbook käivitatakse käsuga `ansible-playbook`:
 
@@ -252,7 +302,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus |
 | `skipped` | ülesanne jäeti tingimuse (`when`) tõttu vahele |
 
-*Tabel 6. PLAY RECAP väljad.*
+*Tabel 8. PLAY RECAP väljad.*
 
 Kui kaust ja fail on juba olemas ja õiged, on tulemus `ok` ja `changed=0`: Ansible ei muuda midagi ainult seetõttu, et playbook käivitati.
 
@@ -275,7 +325,7 @@ Kui keegi muudab faili käsitsi, tekib **triiv (drift)**: tegelik olek erineb so
 
 Idempotentsus sõltub lahendusest, mitte tööriistast. Käsumoodulid (`command`, `shell`) ei tea soovitud olekut ja võivad anda igal käivitusel `changed`. Ka Bashi skripti saab kirjutada idempotentseks.
 
-## 9. Kontrolli tulemust masinas
+## 10. Kontrolli tulemust masinas
 
 Kui Ansible lõpetab vigadeta, tähendab see ainult seda, et ülesanded käivitusid. See ei tõenda, et masinas on vajalik tulemus. Kui playbook'is on vale tee, vale õigus või vale masin, lõpetab Ansible samuti edukalt, aga ülesanne jääb tegemata. Seepärast kontrolli pärast käivitamist masinat ennast:
 
@@ -286,14 +336,15 @@ ssh web01 stat -c '%a %U %n' automation-lab automation-lab/training.conf
 
 Muudatuse mõju saab piirata juba enne käivitamist. Võti `--check --diff` näitab, mida Ansible muudaks, ilma midagi muutmata. Võti `--limit web01` käivitab playbook'i ainult ühes masinas. Nii proovid muudatust enne, kui see jõuab kõigisse masinatesse.
 
-## 10. Kokkuvõte
+## 11. Kokkuvõte
 
 - **Skriptis tuleb iga kontroll ise kirjutada,** Ansible'i moodulites on need olemas.
 - **Playbook kirjeldab soovitud olekut:** inventory määrab masinad, playbook ülesanded ja moodul võrdleb soovitud olekut tegelikuga.
 - **`changed=0` korduval käivitusel** näitab, et playbook käitus idempotentselt.
 - **Edukas käivitus ei tõenda tulemust:** kontrolli masinat ennast.
+- **Distributsioonide erinevused lähevad grupimuutujatesse,** playbook jääb ühesuguseks.
 
-Järgmisel kohtumisel seadistad playbook'iga mitut masinat korraga: lisanduvad grupid, muutujad, mallid ja rollid.
+Järgmisel kohtumisel paigaldad viiele masinale rakenduse Labori seis: lisanduvad grupid otstarbe järgi, mallid, handlerid, rollid ja Vault.
 
 ??? info "Loe juurde"
 
