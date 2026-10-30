@@ -31,7 +31,7 @@ Päeva lõpuks oskad:
 | 4 | [Ansible'i alused](lab-3-ansible-alused.md): ad-hoc käsud viiel masinal |
 | 5 | [Esimene playbook](lab-4-playbook.md) |
 | 6 | [Playbook viiele masinale](lab-5-parem-playbook.md): `when`, `--limit` ja `tags` |
-| 7 | [Lõpuülesanne ja töö esitamine](lab-6-esitamine.md) |
+| 7 | [Iseseisev ülesanne ja töö esitamine](lab-6-esitamine.md) |
 
 *Tabel 1. Päeva tegevused.*
 

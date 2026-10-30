@@ -4,11 +4,11 @@ tags:
   - Praktikum
 ---
 
-# 6. Lõpuülesanne ja esitamine
+# 6. Iseseisev ülesanne ja töö esitamine
 
 Lisad playbook'i iseseisvalt ühe ülesande ja esitad päeva töö.
 
-## A1 · Lõpuülesanne
+## A1 · Iseseisev ülesanne
 
 Lisa playbook'i `training.yml` kolmas ülesanne: kaustas `automation-lab` peab olema fail `README.txt` õigustega `0644` ja sisuga:
 
@@ -39,7 +39,7 @@ Tee muudatustest commit, saada need GitHubi ja lisa tag `k01`:
 ```bash
 cd ~/kursus
 git add k01/
-git commit -m "k01: lõpuülesanne"
+git commit -m "k01: README.txt"
 git push
 git tag k01
 git push origin k01
