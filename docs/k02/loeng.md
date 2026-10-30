@@ -191,7 +191,7 @@ roles/nginx/
     └── labori-seis.conf.j2
 ```
 
-Rolli skeleti loob käsk `ansible-galaxy role init roles/nginx`. Selles projektis on kuus rolli: `common` kõigile masinatele ja üks roll iga teenuse jaoks. Fail `site.yml` määrab, milline roll millises grupis käivitub:
+Rolli skeleti loob käsk `ansible-galaxy role init roles/nginx`. Kogu projekti kaustastruktuur (`inventory`, `group_vars`, `host_vars`, `roles`, `site.yml`) järgib dokumentatsiooni soovitust [Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html), nii et teine Ansible'i kasutaja leiab sinu projektist asjad samast kohast. Selles projektis on kuus rolli: `common` kõigile masinatele ja üks roll iga teenuse jaoks. Fail `site.yml` määrab, milline roll millises grupis käivitub:
 
 ```yaml
 - name: Kõik masinad

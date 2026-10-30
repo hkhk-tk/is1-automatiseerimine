@@ -24,6 +24,19 @@ ansible --version
 
 Esimene rida näitab versiooni (`ansible [core 2.x.y]`). Rida `config file = None` tähendab, et Ansible ei leidnud veel konfiguratsioonifaili. Selle lood järgmises sammus.
 
+Paigaldamiseks on mitu viisi ([Installing Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html)). Valik sõltub sellest, kas tähtsam on lihtsus või kindel versioon:
+
+| Viis | Käsk | Millal |
+|---|---|---|
+| distributsiooni pakett | `sudo apt install ansible-core` | lihtne ja uueneb koos süsteemiga, aga versioon on vanem (Ubuntu 24.04: 2.16) |
+| pipx | `pipx install ansible-core` või `pipx install --include-deps ansible` | dokumentatsiooni soovitus: uusim või valitud versioon, eraldi Pythoni keskkonnas |
+| pip ja venv | `python3 -m venv ~/ansible && ~/ansible/bin/pip install "ansible-core==2.21.*"` | versioon on projektis kinni, nii töötab ka kursuse automaatne hindaja |
+| konteiner (Execution Environment) | `ansible-navigator run site.yml` | Ansible, kogud ja Pythoni teegid ühes konteineris, sama keskkond igal control node'il (3. kohtumine) |
+
+*Tabel 1. Ansible'i paigaldusviisid.*
+
+Pakette on kaks: `ansible-core` sisaldab Ansible'it ja kogu `ansible.builtin`, `ansible` lisab sellele valiku kogukonna kogusid. Kursusel kasutame `ansible-core`'i ja paigaldame vajalikud kogud 2. kohtumisel ise.
+
 ## A2 · Kirjelda masinad: `ansible.cfg` ja inventory
 
 Ansible peab teadma, milliseid masinaid ta haldab. Need on kirjas **inventory** failis. Fail `ansible.cfg` ütleb Ansible'ile, millist inventory't kasutada, nii et seda ei pea iga käsu juurde kirjutama.

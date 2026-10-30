@@ -65,3 +65,20 @@ ansible-playbook site.yml --tags deploy --limit app01
 ```
 
 Mõtle, mis peab juhtuma pärast uue WAR-i paigaldamist ja kuidas seda rollis kirjeldada.
+
+## L5 · Üks krüpteeritud väärtus: `encrypt_string`
+
+`vault.yml` krüpteerib terve faili. Vahel on mugavam krüpteerida ainult üks väärtus ja hoida see tavalises muutujate failis, kus ülejäänu on loetav. Käsk kasutab sama Vaulti parooli, mille `ansible.cfg` ette annab:
+
+```bash
+ansible-vault encrypt_string 'proov123' --name vault_proov
+```
+
+Kopeeri väljund faili `host_vars/db01.yml` ja kontrolli, et Ansible saab väärtuse lahti:
+
+```bash
+ansible db01 -m ansible.builtin.debug -a var=vault_proov
+```
+
+Väljundis on `"vault_proov": "proov123"`. Mõtle: millal on parem krüpteerida terve fail ja millal üks väärtus? Mis juhtub `git diff`-is, kui muudad krüpteeritud faili ühte parooli? Loe edasi: [Encrypting content with Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault_encrypting_content.html). Kustuta katse lõpus fail `host_vars/db01.yml`.
+
