@@ -44,7 +44,7 @@ Kõik kursuse käsud käivitad control node'is. Oma arvutisse on vaja paigaldada
 Kursusel on kaks parooli. Kumbagi ei ole vaja muuta:
 
 - **kooli konto** (näiteks `maasikas.is126`): kasutajanimi ja parool, mille said kooli e-kirjaga. Sama kontoga logid sisse kooli Gmaili, VPN-i ja Proxmoxi;
-- **virtuaalmasinate kasutaja** `kasutaja` parooli leiad [arutelu teatest „Virtuaalmasinate kasutaja ja parool“](https://github.com/hkhk-tk/is126-arutelu/discussions/categories/teated).
+- **virtuaalmasinate kasutaja** `kasutaja` parooli leiad [arutelu teatest „Virtuaalmasinate kasutaja ja parool“](https://github.com/hkhk-tk/is126-arutelu/discussions/5).
 
 ## 1 · VPN
 
