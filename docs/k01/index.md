@@ -15,7 +15,6 @@ Täna lahendad sama ülesande kolmel viisil: kõigepealt käsitsi, seejärel Bas
 
 Päeva lõpuks oskad:
 
-- kirjeldada, milline peab olema ülesande tulemus, ja koostada selle kontrollimiseks kontrollnimekirja;
 - käivitada Ansible'i ad-hoc käske mitmes masinas korraga;
 - käivitada Ansible'i playbook'i ja lugeda käivituse tulemust;
 - kontrollida, mis juhtub playbook'i korduval käivitamisel;

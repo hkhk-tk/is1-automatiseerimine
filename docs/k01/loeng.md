@@ -12,7 +12,6 @@ tags:
     Pärast kohtumist oskad:
 
     - selgitada, millal on korduva töö automatiseerimine mõistlik;
-    - kirjeldada ülesannet soovitud tulemusena ja määrata, kuidas tulemust kontrollida;
     - selgitada Bashi skripti ja Ansible'i playbook'i erinevat tööpõhimõtet;
     - kasutada mõisteid *control node*, *hallatav masin*, *inventory*, *moodul*, *ülesanne* ja *playbook*;
     - käivitada playbook'i ning tõlgendada tulemusi `ok`, `changed` ja `failed`.
@@ -59,18 +58,7 @@ Kõike ei ole mõtet automatiseerida. Automaatika tuleb kirjutada, testida ja ho
 
     Uus kood tuli käsitsi paigaldada kaheksasse serverisse. Ühte serverisse jäi see paigaldamata ja seal käivitus vana funktsioon. Firma kaotas 45 minutiga üle 460 miljoni dollari ([USA väärtpaberikomisjoni otsus](https://www.sec.gov/litigation/admin/2013/34-70694.pdf)).
 
-## 2. Tulemus enne käske
-
-Enne esimest käsku pane kirja, milline peab olema tulemus. „Tee kaust“ on tegevus, „kaust on olemas õigustega 0750“ on tulemus. Kontrollida saab ainult tulemust. Päeva ülesande kontrollnimekiri, mida kasutad kõigi kolme lahenduse järel:
-
-1. Kas kaust `/home/kasutaja/automation-lab` on olemas?
-2. Kas failis `training.conf` on täpselt need kaks rida?
-3. Kas kausta õigused on `750` ja faili õigused `640`?
-4. Kas mõlemad kuuluvad kasutajale `kasutaja`?
-
-Kontrollid tulemust käskudega `cat` ja `stat`. See, et käsk ei väljastanud veateadet, ei tõenda veel, et ülesanne on tehtud.
-
-## 3. Skripti piirid
+## 2. Skripti piirid
 
 Kui paned käsitsi tehtud käsud faili, saad skripti:
 
@@ -90,7 +78,7 @@ Skript teeb töö kiiresti ja alati samas järjekorras, kuid see ei kontrolli ma
 
 Omadust, et korduv käivitus ei muuda midagi, kui soovitud olek on juba saavutatud, nimetatakse **idempotentsuseks**. Skriptis tuleb see ise kirjutada, Ansible'i moodulites on see olemas.
 
-## 4. Ansible
+## 3. Ansible
 
 **Ansible** on avatud lähtekoodiga tööriist serverite seadistamiseks. Failis kirjeldad, milline peab masin olema, ja Ansible teeb masinas ainult need muudatused, mis on selleks vajalikud. Ansible ilmus 2012. aastal ja seda arendab Red Hat.
 
@@ -121,7 +109,7 @@ Bashi skriptist eristavad Ansible'it kolm asja:
 
 Ansible on paigaldatud ainult **control node**'i. Masinat, mida Ansible seadistab, nimetatakse **hallatavaks masinaks**. Iga ülesande jaoks saadab Ansible SSH kaudu hallatavasse masinasse väikese Pythoni programmi, **mooduli**. Moodul kontrollib tegelikku olekut, teeb vajaduse korral muudatuse ja tagastab tulemuse.
 
-## 5. Inventory ja `ansible.cfg`
+## 4. Inventory ja `ansible.cfg`
 
 **Inventory** on fail, kus on kirjas hallatavad masinad ja grupid:
 
@@ -156,7 +144,7 @@ inventory = inventory.ini
 
 Hoia `ansible.cfg`, inventory ja playbook'id koos samas kaustas ja Gitis.
 
-## 6. Ad-hoc käsk ja playbook
+## 5. Ad-hoc käsk ja playbook
 
 | Käsk | Mida teeb | Näide |
 |---|---|---|
@@ -219,7 +207,7 @@ Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
 **Administraatori õigused.** Päeva ülesanne ei vaja administraatori õigusi. Paketi paigaldamiseks või `/etc` all oleva faili muutmiseks lisatakse play'le või ülesandele `become: true`: Ansible logib sisse tavakasutajana ja käivitab ülesande `sudo` kaudu. Laboris `sudo` parooli ei küsi, töökohas lisatakse käsule `-K`.
 
-## 7. Käivitamine ja tulemus
+## 6. Käivitamine ja tulemus
 
 ```bash
 ansible-playbook training.yml
@@ -263,7 +251,7 @@ Kui keegi muudab faili käsitsi, tekib **triiv (drift)**: tegelik olek erineb so
 
 Idempotentsus sõltub lahendusest, mitte tööriistast. Käsumoodulid (`command`, `shell`) ei tea soovitud olekut ja võivad anda igal käivitusel `changed`. Ka Bashi skripti saab kirjutada idempotentseks.
 
-## 8. Kontroll ja ohutu käivitamine
+## 7. Kontroll ja ohutu käivitamine
 
 Tööriista aruanne kirjeldab käivitamist, kontroll näitab tulemust. Need on kaks eri küsimust:
 
@@ -280,9 +268,8 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
 
 Enne muutva käsu käivitamist mõtle, millises masinas ja mida see muudab. Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne selle tegemist ja `--limit web01` piirab käivitamise ühe masinaga.
 
-## 9. Kokkuvõte
+## 8. Kokkuvõte
 
-- **Tulemus enne käske:** pane kirja, mis peab olema ja kuidas seda kontrollid.
 - **Skriptis tuleb iga kontroll ise kirjutada,** Ansible'i moodulites on need olemas.
 - **Playbook kirjeldab soovitud olekut:** inventory määrab masinad, playbook ülesanded ja moodul võrdleb soovitud olekut tegelikuga.
 - **`changed=0` korduval käivitusel** näitab, et playbook käitus idempotentselt.
