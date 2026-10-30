@@ -93,9 +93,10 @@ Sisselogimisel on ekraanil rida `Seda masinat haldab Ansible.` Logi välja käsu
 
 ## A3 · Ainult osa masinatest: `--limit`
 
-Muudatust on ohutum proovida kõigepealt ühes masinas või grupis. Võti `--limit` käivitab playbook'i ainult valitud masinates, ilma et playbook'is peaks rida `hosts: all` muutma:
+Muudatust on ohutum proovida kõigepealt ühes masinas või grupis. Võti `--limit` käivitab playbook'i ainult valitud masinates, ilma et playbook'is peaks rida `hosts: all` muutma. Võti `--list-hosts` näitab enne käivitamist, millised masinad valikusse jäävad, midagi käivitamata:
 
 ```bash
+ansible-playbook tools.yml --limit alma --list-hosts
 ansible-playbook tools.yml --limit alma
 ansible-playbook tools.yml --limit web01
 ```
@@ -110,7 +111,10 @@ ansible-playbook tools.yml --limit web01
 
 ```bash
 ansible-playbook tools.yml --list-tags
+ansible-playbook tools.yml --list-tasks
 ```
+
+Teine käsk näitab kõiki ülesandeid koos siltidega. Pika playbook'i puhul on sellest abi, kui tahad teada, mis järjekorras ülesanded käivituvad.
 
 Muuda playbook'is teate teksti (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne.
 
@@ -123,6 +127,14 @@ ansible-playbook tools.yml --tags motd
 ??? success "Oodatav tulemus"
 
     Käivituvad ainult faktide kogumine ja ülesanne `Teade sisselogimisel`. Kõigi viie masina kokkuvõttes on `changed=1`.
+
+Kui playbook katkes keskel, ei pea seda algusest käivitama. Võti `--start-at-task` alustab nimetatud ülesandest ja `--step` küsib iga ülesande eel, kas see käivitada: `y` jah, `n` ei (vaikimisi), `c` jätka edasi küsimata. Esimene küsimus on faktide kogumise kohta, vasta `y` või `c`, sest ilma faktideta ei tööta tingimused `when`:
+
+```bash
+ansible-playbook tools.yml --start-at-task "Teade sisselogimisel" --step
+```
+
+Kõik käsurea võtmed on lehel [Ansible CLI cheatsheet](https://docs.ansible.com/projects/ansible/latest/command_guide/cheatsheet.html).
 
 ## A5 · Korduv käivitus ja commit
 

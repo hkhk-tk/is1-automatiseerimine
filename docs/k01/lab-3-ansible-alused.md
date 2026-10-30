@@ -77,6 +77,54 @@ ansible-inventory --graph
       |  |--db01
     ```
 
+Ansible'i seaded võivad tulla mitmest kohast: projekti kausta `ansible.cfg`, kodukausta `~/.ansible.cfg`, `/etc/ansible/ansible.cfg` ja keskkonnamuutujad. Kehtib esimene leitud fail. Käsk näitab ainult neid seadeid, mis erinevad vaikeväärtustest, ja seda, kust need tulid:
+
+```bash
+ansible-config dump --only-changed
+```
+
+??? success "Oodatav tulemus"
+
+    ```
+    CONFIG_FILE() = /home/kasutaja/kursus/k01/ansible.cfg
+    DEFAULT_HOST_LIST(/home/kasutaja/kursus/k01/ansible.cfg) = ['/home/kasutaja/kursus/k01/inventory.ini']
+    ```
+
+Inventory võib olla ka YAML-is. Väikese masinahulga puhul on INI loetavam, aga suurema ja automaatselt genereeritud inventory puhul kasutatakse sageli YAML-i. Ansible teisendab sinu inventory ise YAML-iks:
+
+```bash
+ansible-inventory --list --yaml
+```
+
+Loo samasse kausta fail `inventory.yml` sama sisuga, ilma tühjade gruppideta:
+
+```yaml
+ubuntu:
+  hosts:
+    web01:
+    app01:
+    rmq01:
+alma:
+  hosts:
+    mc01:
+    db01:
+all:
+  vars:
+    ansible_user: kasutaja
+```
+
+Grupi all on võti `hosts` ja masina nime järel koolon, sest YAML-is on iga masin sõnastiku võti. Muutujad on võtme `vars` all. Võti `-i` valib inventory käsu jaoks, `ansible.cfg` seadet see ei muuda.
+
+**Ennusta:** kas YAML-inventory annab sama puu?
+
+```bash
+ansible-inventory -i inventory.yml --graph
+```
+
+??? success "Oodatav tulemus"
+
+    Sama puu nagu `inventory.ini` puhul. Edasi kasutad `inventory.ini`-d, sest see on failis `ansible.cfg`.
+
 ## A3 · Käsud kõigis masinates korraga
 
 Ad-hoc käsk käivitab ühe Ansible'i **mooduli** kohe, ilma playbook'ita: `ansible <masinad või grupp> -m <moodul> -a "<parameetrid>"`. Esimene kontroll on moodul [`ansible.builtin.ping`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/ping_module.html). See ei saada võrgupaketti nagu käsk `ping`, vaid kontrollib, kas Ansible saab masinasse SSH kaudu sisse ja seal töötab Python:

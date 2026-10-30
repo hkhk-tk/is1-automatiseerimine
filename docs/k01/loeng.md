@@ -136,6 +136,28 @@ Neist kõige tähtsam on viimane: playbook kirjeldab **soovitud olekut**, mitte 
 
 Ansible on paigaldatud ainult **control node**'i. Masinat, mida Ansible seadistab, nimetatakse **hallatavaks masinaks**. Iga ülesande jaoks saadab Ansible SSH kaudu hallatavasse masinasse väikese Pythoni programmi, **mooduli**. Moodul kontrollib tegelikku olekut, teeb vajaduse korral muudatuse ja tagastab tulemuse.
 
+
+### Põhimõisted
+
+Dokumentatsioon on inglise keeles. Tabelis on [Ansible concepts](https://docs.ansible.com/projects/ansible/latest/getting_started/basic_concepts.html) lehe mõisted koos eestikeelsete nimetustega, mida kasutame selles materjalis:
+
+| Dokumentatsioonis | Materjalis | Tähendus | Kursusel |
+|---|---|---|---|
+| control node | control node | masin, kus on Ansible ja kust käivitad käsud `ansible`, `ansible-playbook`, `ansible-vault` | K1 |
+| managed node, host | hallatav masin | masin, mida Ansible seadistab; Ansible'it sinna ei paigaldata | K1 |
+| inventory | inventory | hallatavate masinate loend koos gruppide ja muutujatega | K1 |
+| playbook | playbook | YAML-fail, milles on üks või mitu play'd | K1 |
+| play | play | seob masinad (`hosts`) ülesannetega; sisaldab muutujaid, rolle ja ülesandeid | K1 |
+| task | ülesanne | üks tegevus ühe mooduliga; ad-hoc käsk on üks ülesanne ilma playbook'ita | K1 |
+| module | moodul | kood, mille Ansible kopeerib hallatavasse masinasse ja käivitab | K1 |
+| handler | handler | ülesanne, mis käivitub ainult siis, kui teine ülesanne teatas muudatusest | K2 |
+| role | roll | korduvkasutatav komplekt ülesandeid, handlereid, muutujaid ja malle | K2 |
+| collection | kogu | moodulite, rollide ja pluginate pakett, paigaldatakse Galaxyst | K2 |
+| plugin | plugin | laiendab Ansible'it: ühendus (SSH), filtrid (`sort`), väljundi kuju | K2 |
+| Execution Environment | — | konteiner, milles on Ansible ja kogud; control node konteinerina | K3 |
+
+*Tabel 4. Ansible'i põhimõisted.*
+
 ## 4. Inventory ja `ansible.cfg`
 
 Et Ansible teaks, milliseid masinaid hallata, on need kirjas failis, mida nimetatakse **inventory**'ks. Masinad võib jagada gruppidesse:
@@ -160,7 +182,7 @@ ansible_user=kasutaja
 | `web01` | masina nimi; IP-aadress tuleb SSH konfiguratsioonifailist |
 | `[all:vars]`, `ansible_user` | kõigile masinatele kehtiv muutuja: kasutaja, kellena Ansible sisse logib |
 
-*Tabel 4. Inventory osad.*
+*Tabel 5. Inventory osad.*
 
 Fail `ansible.cfg` projekti kaustas ütleb, millist inventory't kasutada, nii et seda ei pea iga käsu juurde kirjutama:
 
@@ -179,7 +201,7 @@ Dokumentatsioon ([Building an inventory](https://docs.ansible.com/projects/ansib
 | **Kus** see asub | asukoht | `tallinn`, `haapsalu`, `serveriruum` |
 | **Millal** seda kasutatakse | keskkond | `test`, `staging`, `production` |
 
-*Tabel 5. Gruppide liigid.*
+*Tabel 6. Gruppide liigid.*
 
 Täna on meil veel neljas liik, distributsioon (`ubuntu`, `alma`), sest selle järgi erinevad paketinimed. Üks masin võib olla mitmes grupis korraga. Grupi nimes ära kasuta tühikuid, sidekriipse ega numbrit alguses (`korrus_19`, mitte `19-korrus`). Nimed on tõstutundlikud.
 
@@ -209,7 +231,7 @@ Ansible'il on kaks põhikäsku. Üks käivitab ühe mooduli kohe, teine terve pl
 | `ansible` | käivitab ühe mooduli kohe (ad-hoc) | `ansible all -m ansible.builtin.ping` |
 | `ansible-playbook` | käivitab playbook'i: mitu ülesannet järjest | `ansible-playbook training.yml` |
 
-*Tabel 6. Ansible'i kaks põhikäsku.*
+*Tabel 7. Ansible'i kaks põhikäsku.*
 
 Moodul `ping` vastab `pong`, kui Ansible jõuab SSH kaudu masinasse ja seal töötab Python. Ad-hoc käsk sobib kiireks kontrolliks. Seadistuse, mida soovid korrata, kirjuta playbook'i.
 
@@ -223,7 +245,7 @@ Iga moodul täidab üht kindlat haldusülesannet. Alustamiseks piisab mõnest:
 | `ansible.builtin.service` | teenused |
 | `ansible.builtin.command` | käivitab käsu; soovitud olekut Ansible ei tea |
 
-*Tabel 7. Sagedasemad moodulid.*
+*Tabel 8. Sagedasemad moodulid.*
 
 Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
@@ -281,7 +303,7 @@ Labori masinates on kaks distributsiooni ja samal programmil võib olla eri pake
 | `--limit` | käivitab playbook'i ainult osas masinatest, playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
 | `tags` | ülesande silt; `--tags` käivitab ainult valitud siltidega ülesanded | `ansible-playbook tools.yml --tags motd` |
 
-*Tabel 8. Tingimus, sihtmasinad ja sildid.*
+*Tabel 9. Tingimus, sihtmasinad ja sildid.*
 
 Tingimus põhineb **faktidel**: andmetel, mida Ansible kogub masinast enne ülesandeid (operatsioonisüsteem, versioon, võrk). Ubuntus on `ansible_facts['os_family']` väärtus `Debian`, AlmaLinuxis `RedHat`.
 
@@ -313,7 +335,7 @@ Muutuja väärtuse saab määrata mitmes kohas:
 | `group_vars/<grupp>.yml` | inventory grupi masinatele | `group_vars/alma.yml`: `admin_grupp: wheel` |
 | `host_vars/<masin>.yml` | ühele masinale | erand ühele masinale |
 
-*Tabel 9. Muutujate asukohad.*
+*Tabel 10. Muutujate asukohad.*
 
 Kaustad `group_vars` ja `host_vars` asuvad inventory faili kõrval ja Ansible loeb need ise. Kui sama muutuja on mitmes kohas, kehtib täpsem väärtus: masina muutuja on tähtsam kui grupi oma ja grupi muutuja tähtsam kui `all`. Nii kirjeldab playbook, *mida* teha, ja inventory, *milline* on iga masin. Sama playbook töötab uues distributsioonis, kui lisad sellele grupi ja grupimuutujate faili.
 
@@ -342,7 +364,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus |
 | `skipped` | ülesanne jäeti tingimuse (`when`) tõttu vahele |
 
-*Tabel 10. PLAY RECAP väljad.*
+*Tabel 11. PLAY RECAP väljad.*
 
 Kui kaust ja fail on juba olemas ja õiged, on tulemus `ok` ja `changed=0`: Ansible ei muuda midagi ainult seetõttu, et playbook käivitati.
 
