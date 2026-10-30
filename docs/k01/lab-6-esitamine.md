@@ -13,7 +13,7 @@ tags:
 
 ## A1 · Lõpuülesanne
 
-Lisa `training.yml`-i kolmas ülesanne: kaustas `automation-lab` peab olema fail `README.txt` õigustega `0644` ja sisuga:
+Lisa playbook'i `training.yml` kolmas ülesanne: kaustas `automation-lab` peab olema fail `README.txt` õigustega `0644` ja sisuga:
 
 ```text
 Seda kausta haldab Ansible. Ära muuda käsitsi.
@@ -65,7 +65,7 @@ Ava oma repositoorium GitHubis ja kontrolli, et kaustas `k01/` on järgmised fai
 |---|---|
 | `prepare-training.sh` | [2. Käsitsi ja skriptina](lab-2-kasitsi.md) |
 | `ansible.cfg`, `inventory.ini` | [3. Ansible'i alused](lab-3-ansible-alused.md) |
-| `training.yml` | [4. Esimene playbook](lab-4-playbook.md) ja A1 |
+| `training.yml` | [4. Esimene playbook](lab-4-playbook.md) ja selle lehe A1 |
 | `tools.yml` | [5. Playbook viiele masinale](lab-5-parem-playbook.md) |
 
 *Tabel 1. Esitatavad failid.*

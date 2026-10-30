@@ -55,7 +55,7 @@ ansible-playbook training.yml
 
     Mõlema ülesande olek on `ok` ja kokkuvõttes on `changed=0`. Ansible võrdles soovitud olekut masina tegeliku olekuga ega leidnud erinevust.
 
-Eemalda kaust ja käivita uuesti:
+Eemalda masinast web01 kaust `automation-lab` ja käivita playbook uuesti:
 
 ```bash
 ssh web01 rm -r automation-lab
@@ -130,7 +130,7 @@ git commit -m "k01: ansible.cfg, inventory ja training.yml"
 git push
 ```
 
-**Valmis, kui** teine käivitus annab `changed=0` ja pärast triivi taastas playbook faili soovitud oleku.
+**Valmis, kui** teine käivitus annab `changed=0` ja pärast käsitsi tehtud muudatust taastas playbook faili soovitud oleku.
 
 ??? info "Loe juurde"
 

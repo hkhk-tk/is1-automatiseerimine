@@ -16,7 +16,7 @@ Kõik käsud käivitad control node'is kaustas `~/kursus/k01`. Fail `tools.yml` 
 
 ## A1 · Probleem: sama programm, erinev paketinimi
 
-Tekstiredaktori `vim` pakett on Ubuntus `vim`, AlmaLinuxis `vim-enhanced`. Sama paketinime ei saa siin kasutada mõlema distributsiooni puhul. Fakt `ansible_facts['os_family']` näitab distributsioonide perekonda: Ubuntus on see `Debian`, AlmaLinuxis `RedHat`.
+Tekstiredaktori `vim` pakett on Ubuntus `vim`, AlmaLinuxis `vim-enhanced`. Sama paketinime ei saa siin kasutada mõlema distributsiooni puhul. Fakt `ansible_facts['os_family']` näitab, millisesse distributsioonide perekonda masin kuulub: Ubuntus on see `Debian`, AlmaLinuxis `RedHat`.
 
 ```bash
 ansible all -m ansible.builtin.setup -a 'filter=ansible_os_family'
@@ -71,7 +71,7 @@ ansible-playbook tools.yml
 
     Ubuntu masinates on AlmaLinuxi ülesande olek `skipping` ja AlmaLinuxi masinates on Ubuntu ülesannete olek `skipping`. PLAY RECAP real näitab väli `skipped` vahele jäetud ülesannete arvu.
 
-Logi mõnda masinasse sisse ja vaata teadet:
+Logi mõnda masinasse sisse ja vaata sisselogimisel kuvatavat teadet:
 
 ```bash
 ssh mc01
@@ -96,7 +96,7 @@ ansible-playbook tools.yml --limit web01
 
 ## A4 · Sildid
 
-Muuda teadet failis (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne:
+Muuda playbook'is teate teksti (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne:
 
 ```bash
 ansible-playbook tools.yml --tags motd

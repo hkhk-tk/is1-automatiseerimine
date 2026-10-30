@@ -9,7 +9,7 @@ tags:
 !!! abstract "Eesmärgid"
 
     - paigaldad Ansible'i control node'ile;
-    - kirjutad `ansible.cfg` ja inventory kõigi viie masinaga;
+    - koostad faili `ansible.cfg` ja inventory, kus on kõik viis masinat;
     - käivitad ad-hoc käske tavakasutaja ja administraatori õigustega.
 
 Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
@@ -141,7 +141,7 @@ Käivita sama käsk uuesti.
 
     Labori masinates on `sudo` seadistatud parooli küsimata. Töökohas küsib `sudo` tavaliselt parooli. Sel juhul lisa käsule `-K` (`--ask-become-pass`): Ansible küsib parooli üks kord ja kasutab seda kõigis masinates. Kui vastuseks tuleb `Missing sudo password`, on just see põhjus.
 
-**Valmis, kui** käsu `ansible all -m ansible.builtin.ping` peale vastavad kõik viis masinat `pong` ja paketi `tree` teine paigaldus annab kõikjal `changed: false`.
+**Valmis, kui** käsule `ansible all -m ansible.builtin.ping` vastavad kõik viis masinat `pong` ja paketi `tree` teine paigaldus annab kõikjal `changed: false`.
 
 ??? info "Loe juurde"
 
