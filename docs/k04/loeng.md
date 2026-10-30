@@ -7,9 +7,9 @@ tags:
 
 # 4. kohtumine · Taristu koodina: loeng
 
-**Eeldus:** eelmisel korral pakkisid teenused image'itesse ja käivitasid stacki Compose'iga; masinad, millel see kõik töötab, olid ikka käsitsi tehtud.
+**Eeldus:** eelmisel korral pakkisid teenused image'itesse ja käivitasid stacki Compose'iga; masinad, millel see töötas, olid aga endiselt käsitsi loodud.
 
-Kolmel kohtumisel seadistasime masinaid, mille loomine polnud kuskil kirjas. Täna läheb see koodi. Taristu kood kirjeldab soovitud seisu, aga tööriist teab maailmast ainult seda, mis on tema [state'is](https://opentofu.org/docs/language/state/). Töö taristuga koodina on kolme asja kokku hoidmine: kood, state ja tegelik seis.
+Kolmel eelmisel kohtumisel seadistasid masinaid, mille loomine polnud kuskil kirjas. Täna kirjeldad koodina ka masinate loomise. Taristu kood kirjeldab soovitud olekut, aga tööriist teab maailmast ainult seda, mis on tema [state'is](https://opentofu.org/docs/language/state/). Taristu koodina haldamisel tuleb kooskõlas hoida kolm asja: kood, state ja tegelik olek.
 
 ## 🎯 Õpiväljundid
 
@@ -25,9 +25,9 @@ Pärast seda loengut oskad:
 
 [Virtuaalse taristu haldus ja SDDC](../teemad/virtuaaltaristu.md) · [Provisioning](../teemad/provisioning.md) · [Taristu koodina ja poliitika koodina](../teemad/iac.md) · [IT-migratsioon ja pilve migratsioon](../teemad/migratsioon.md) · [Standard Operating Environment ja IT-süsteemi elutsükkel](../teemad/soe-ja-elutsukkel.md) · [Orkestreerimine ja automatiseerimine](../teemad/orkestreerimine.md)
 
-## 1. Provisioning ja soovitud seis taristu tasemel
+## 1. Provisioning ja soovitud olek taristu tasemel
 
-Tüüpiline on-prem VM sünnib tiketist: VMware'i või Proxmoxi template, käsitsi muudetud RAM ja ketas, IP tabelist ja runbook'i samm "lisa monitooringusse". Viie aasta pärast on masina tegelik kirjeldus ainult hüperviisoris ja sellist snowflake serverit ei saa samast allikast uuesti teha.
+Tüüpiline kohapealne (on-prem) VM luuakse tiketi alusel: VMware'i või Proxmoxi template, käsitsi muudetud RAM ja ketas, IP tabelist ja runbook'i samm "lisa monitooringusse". Viie aasta pärast on masina tegelik kirjeldus ainult hüperviisoris ja sellist snowflake serverit ei saa samast allikast uuesti luua.
 
 **Provisioning** on kõik, mis viib ressursi olematusest kasutatavaks: VM, ketas, võrk, IP, DNS-kirje, ligipääs ja esimene käivitus. 1. kohtumisel nägid cloud-init'i, mis teeb masina sees provisioning'u viimase sammu. Taristu koodina (IaC) viib selle kirjelduse Giti. [OpenTofu](https://opentofu.org/docs/) haldab hüperviisori või pilve API objekte: VM-e, kettaid, võrke, DNS-kirjeid. Mudel on **deklaratiivne**: kirjeldad lõppseisu ja tööriist arvutab ise, millised API kutsed mis järjekorras selleks vaja on.
 
@@ -41,7 +41,7 @@ resource "proxmox_virtual_environment_vm" "web" {
 }
 ```
 
-Tofu ehitab plokkidest ja nende viidetest sõltuvusgraafi ning käib selle läbi paralleelselt, vaikimisi kümme toimingut korraga (`-parallelism=10`). Kui VM on olemas ja ainult RAM erineb, muudab ta ainult RAM-i.
+Tofu koostab plokkidest ja nende viidetest sõltuvusgraafi ning töötleb seda paralleelselt, vaikimisi kümme toimingut korraga (`-parallelism=10`). Kui VM on olemas ja ainult RAM erineb, muudab ta ainult RAM-i.
 
 See kõik eeldab, et taristul on API. **Tarkvaraga määratletud andmekeskus** (SDDC, software-defined data center) tähendab, et arvutus, salvestus ja võrk on virtualiseeritud ja neid juhitakse ühe control plane'i API kaudu: vSphere koos vSAN-i ja NSX-iga, Proxmox VE koos Ceph'i ja [SDN-iga](https://pve.proxmox.com/wiki/Software-Defined_Network) või OpenStack. Siis on VLAN, VNet ja storage pool samasugused objektid nagu VM ning need läbivad sama koodi ja sama plaani. Hind on suurem blast radius. Token, millel on õigus `/` peal, on võti kogu andmekeskusele, ja Proxmoxi SDN-is jäävad muudatused ootele, kuni keegi teeb klastri tasemel Apply, ja see viib sisse ka teised ootel muudatused. Tokenid antakse seepärast pool'i ja tee kaupa.
 
@@ -49,7 +49,7 @@ Avalikus sektoris kohustuslik [E-ITS](https://eits.ria.ee/) nõuab, et süsteemi
 
 ### Provider ja lukufail
 
-`tofu init` kirjutab valitud provider'ite versioonid ja kontrollsummad faili [`.terraform.lock.hcl`](https://opentofu.org/docs/language/files/dependency-lock/). Fail läheb Giti, nii et iga tööjaam ja pipeline kasutab sama binaari ning kontrollsumma erinevus peatab `init`-i. Provider'i uuendus on `tofu init -upgrade` ja lukufaili muudatus PR-is, mitte vaikne kõrvalmõju kellegi sülearvutis. Kui provider'i uus versioon muudab mõne argumendi vaikeväärtust või skeemi, ilmub järgmisse plaani muudatus, mida keegi koodis ei teinud. Provider'i protsess elab ühe käsu aja. Tofu käivitab selle alamprotsessina, provider teatab käivitusel standardväljundis protokolli versiooni ja socket'i aadressi ning edasi käivad kõik kutsed gRPC kaudu. Provider'i viga või paanika katkestab seepärast kogu käsu, mitte ühte ressurssi.
+`tofu init` kirjutab valitud provider'ite versioonid ja kontrollsummad faili [`.terraform.lock.hcl`](https://opentofu.org/docs/language/files/dependency-lock/). Fail läheb Giti, nii et iga tööjaam ja pipeline kasutab sama binaari ning kontrollsumma erinevus peatab `init`-i. Provider'i uuendus on `tofu init -upgrade` ja lukufaili muudatus PR-is, mitte vaikne kõrvalmõju kellegi sülearvutis. Kui provider'i uus versioon muudab mõne argumendi vaikeväärtust või skeemi, ilmub järgmisse plaani muudatus, mida keegi koodis ei teinud. Provider'i protsess töötab ainult ühe käsu ajal. Tofu käivitab selle alamprotsessina, provider teatab käivitusel standardväljundis protokolli versiooni ja socket'i aadressi ning edasi käivad kõik kutsed gRPC kaudu. Provider'i viga või paanika katkestab seepärast kogu käsu, mitte ühte ressurssi.
 
 Paralleelsus on omaette rikkekoht. Kümme samaaegset kloonimist samast mallist tähendab kümmet ketta kopeerimist samale salvestusele ning Proxmox lukustab kloonimise ajal VM-ide konfiguratsioonifaile. Veateate `can't lock file ... got timeout` korral vähendatakse `-parallelism` väärtust või luuakse masinad mitmes osas. Pilve API-del on päringulimiidid ja provider kordab throttling'u vastuseid ise, nii et suur plaan venib ja pipeline'i timeout peab sellega arvestama.
 
@@ -57,15 +57,15 @@ Iseseisvaks lugemiseks: [Virtuaalse taristu haldus ja SDDC](../teemad/virtuaalta
 
 ## 2. State kui tõe allikas
 
-Koodis on kirjas `web01`, Proxmoxis on VM ID-ga 1101. Nimi ei sobi seoseks: kaks VM-i võivad kanda sama nime ja nime võib keegi UI-s muuta.
+Koodis on kirjas `web01`, Proxmoxis on VM ID-ga 1101. Nimi ei sobi seose aluseks: kaks VM-i võivad kanda sama nime ja nime võib keegi UI-s muuta.
 
 Seose hoiab **state**. See on JSON, kus iga koodi aadressi juures on API objekti ID ja kõik atribuudid, nagu provider neid viimati luges. Lisaks on seal `serial`, mis kasvab iga kirjutusega, ja `lineage`, mis antakse state'i loomisel ega muutu kunagi. State seob aadressi API objektiga, mäletab objekte, mille plokk on koodist kustutatud (need tuleb hävitada), ja hoiab sõltuvusi, et hävitamine käiks õiges järjekorras.
 
-Rikked tulevad sellest, et state on Tofu ainus teadmine. Kui state kaob, ei kao ükski VM, aga järgmine plaan tahab kõik uuesti luua ja ebaõnnestub ID konflikti peale või loob teise komplekti kõrvale. Kui protsess tapetakse keset `apply`-d, võib API-s olla objekt, mis state'i ei jõudnud. Kui kaks jooksu kirjutavad ilma lukuta, jääb alles viimase kirjutaja state. Kõik atribuudid on lihttekstina, ka paroolid ja tokenid.
+Rikked tulenevad sellest, et Tofu teab taristust ainult seda, mis on state'is. Kui state kaob, ei kao ükski VM, aga järgmine plaan tahab kõik uuesti luua ja ebaõnnestub ID konflikti peale või loob teise komplekti kõrvale. Kui protsess katkestatakse keset `apply`-d, võib API-s olla objekt, mis state'i ei jõudnud. Kui kaks käivitust kirjutavad ilma lukuta, jääb alles viimase kirjutaja state. Kõik atribuudid on lihttekstina, ka paroolid ja tokenid.
 
 Meeskonnas on state seepärast **remote backendis** (S3, Azure Blob, GCS, PostgreSQL) koos **lukuga**. OpenTofu 1.10+ S3 backend lukustab tingimusliku kirjutusega: objekt `<key>.tflock` luuakse päisega `If-None-Match: *`. Vanemad juhendid kasutavad selleks DynamoDB tabelit. Lukk ei tea, kas selle omanik veel töötab, nii et `force-unlock` on alati inimese otsus. Gitis state'i ei hoita, sest JSON-i merge-konflikti ei lahenda keegi.
 
-Skaalas tekib küsimus, kui suur üks state on. Iga plaan värskendab kõik oma objektid API-st. 50 hosti ja paarsada ressurssi tähendavad iga plaani juures sadu API kutseid ja üht [lukku](https://opentofu.org/docs/language/settings/backends/s3/) kõigile, kes seda koodi puudutavad. Seepärast jagatakse state keskkonna ja komponendi kaupa (võrk, andmebaasid, rakenduse VM-id): väiksem plaan, väiksem blast radius, eraldi õigused. Hind on see, et komponendid loevad teineteise väljundeid ja muudatus üle mitme state'i ei ole enam üks `apply`.
+Suures keskkonnas tuleb otsustada, kui suur võib olla üks state. Iga plaan värskendab kõik oma objektid API-st. 50 hosti ja paarsada ressurssi tähendavad iga plaani juures sadu API kutseid ja üht [lukku](https://opentofu.org/docs/language/settings/backends/s3/) kõigile, kes seda koodi puudutavad. Seepärast jagatakse state keskkonna ja komponendi kaupa (võrk, andmebaasid, rakenduse VM-id): väiksem plaan, väiksem blast radius, eraldi õigused. Hind on see, et komponendid loevad teineteise väljundeid ja muudatus üle mitme state'i ei ole enam üks `apply`.
 
 Keskkondade eraldamiseks on kaks tavalist teed. `tofu workspace` annab samale koodile mitu state'i samas backendis: kood on üks, keskkondade erinevus peab olema muutujates ja vale aktiivse workspace'iga `apply` läheb teise keskkonda. Eraldi kaustad keskkonna kaupa, mis kutsuvad sama moodulit kindla tag'iga, tähendavad rohkem faile, aga tootmise backend, token ja mooduli versioon on eraldi ning PR näitab, millist keskkonda muudatus puudutab. Kui tootmisele on eraldi õigused ja eraldi muudatuste kord, sobib teine tee paremini.
 
@@ -80,30 +80,30 @@ State'i aadress on objekti identiteet. Kui tõstad VM-ide koodi moodulisse, muut
 
 ### Pooleli jäänud apply
 
-`apply` uuendab state'i iga lõpetatud ressursi järel ja salvestab selle backendi jooksu ajal korduvalt, mitte ainult lõpus. Kui backend pole salvestamise hetkel kättesaadav, kirjutab tööriist state'i kohalikku faili `errored.tfstate`. Selle peab `tofu state push`-iga tagasi viima enne, kui keegi uue plaani teeb, muidu arvutatakse plaan vananenud state'i peal. Kui ressursi loomine algas, aga ei lõppenud (VM tekkis, provisioner või loomisjärgne kontroll ebaõnnestus), märgitakse objekt state'is **tainted**: see on olemas, aga järgmine plaan asendab selle. Pipeline'is tähendab see, et katkenud jooksu logi ja `errored.tfstate` peavad alles jääma ning lukk vabastatakse alles pärast seda, kui keegi on kontrollinud, et state ja API klapivad.
+`apply` uuendab state'i iga lõpetatud ressursi järel ja salvestab selle backendi käivituse ajal korduvalt, mitte ainult lõpus. Kui backend pole salvestamise hetkel kättesaadav, kirjutab tööriist state'i kohalikku faili `errored.tfstate`. Selle peab `tofu state push`-iga tagasi viima enne, kui keegi uue plaani teeb, muidu arvutatakse plaan vananenud state'i peal. Kui ressursi loomine algas, aga ei lõppenud (VM tekkis, provisioner või loomisjärgne kontroll ebaõnnestus), märgitakse objekt state'is **tainted**: see on olemas, aga järgmine plaan asendab selle. Pipeline'is tähendab see, et katkenud käivituse logi ja `errored.tfstate` peavad alles jääma ning lukk vabastatakse alles pärast seda, kui keegi on kontrollinud, et state ja API klapivad.
 
 ## 3. Plaan ja poliitika enne muudatust
 
 28. veebruaril 2017 tahtis AWS-i insener eemaldada S3 arveldussüsteemist väikese hulga servereid. Ühe sisendi viga käsus eemaldas palju suurema hulga, sealhulgas kaks alamsüsteemi, millest sõltus kogu S3 us-east-1 regioonis. AWS-i [kokkuvõtte](https://aws.amazon.com/message/41926/) järgi muudeti tööriista nii, et see eemaldab võimsust aeglasemalt ja keeldub minemast alla alamsüsteemi miinimumi.
 
-Deklaratiivse tööriista vastus sellele on **plaan**. `plan` loeb kõigepealt iga state'is oleva objekti API-st (refresh), võrdleb tulemust koodiga ja näitab muudatusi nelja märgiga: `+` luuakse, `~` muudetakse kohapeal, `-/+` kustutatakse ja tehakse uuesti, `-` kustutatakse. Kaks viimast viivad masina koos kettaga, nii et plaani lugemine algab nendest.
+Deklaratiivse tööriista vastus sellele on **plaan**. `plan` loeb kõigepealt iga state'is oleva objekti API-st (refresh), võrdleb tulemust koodiga ja näitab muudatusi nelja märgiga: `+` luuakse, `~` muudetakse kohapeal, `-/+` kustutatakse ja tehakse uuesti, `-` kustutatakse. Kaks viimast kustutavad masina koos kettaga, nii et plaani lugemine algab nendest.
 
 <figure markdown="span">
 
 ```mermaid
 flowchart LR
-    K["kood<br/>soovitud seis"] --> P{"plan"}
-    S["state<br/>teadaolev seis"] --> P
-    API["API<br/>tegelik seis"] -- refresh --> P
+    K["kood<br/>soovitud olek"] --> P{"plan"}
+    S["state<br/>teadaolev olek"] --> P
+    API["API<br/>tegelik olek"] -- refresh --> P
     P -- "+ ~ -/+ -" --> A["apply"]
     A --> API
     A --> S
 ```
 
-  <figcaption>Joonis 4.2. Plaan võrdleb kolme seisu. <code>apply</code> muudab tegelikku seisu ja kirjutab tulemuse state'i.</figcaption>
+  <figcaption>Joonis 4.2. Plaan võrdleb kolme olekut. <code>apply</code> muudab tegelikku olekut ja kirjutab tulemuse state'i.</figcaption>
 </figure>
 
-Kas muudatus on `~` või `-/+`, otsustab provider'i skeem: iga argumendi juures on märge, kas selle muutus nõuab asendust (SDKv2 provider'is `ForceNew`, plugin framework'is `RequiresReplace`). VM-i RAM-i saab muuta, malli mitte, sest teisest mallist kloonides tekib teine ketas. Plaani ajal saadab Tofu provider'ile iga ressursi eelmise seisu ja koodis kirjeldatud seisu (`PlanResourceChange`) ning provider vastab, milline tuleb uus seis ja millised atribuudid nõuavad asendust. Plaan on seega provider'i arvutus ja provider'i viga jõuab plaani samamoodi nagu sinu enda muudatus.
+Kas muudatus on `~` või `-/+`, otsustab provider'i skeem: iga argumendi juures on märge, kas selle muutus nõuab asendust (SDKv2 provider'is `ForceNew`, plugin framework'is `RequiresReplace`). VM-i RAM-i saab muuta, malli mitte, sest teisest mallist kloonides tekib teine ketas. Plaani ajal saadab Tofu provider'ile iga ressursi eelmise oleku ja koodis kirjeldatud oleku (`PlanResourceChange`) ning provider vastab, milline tuleb uus olek ja millised atribuudid nõuavad asendust. Plaan on seega provider'i arvutus ja provider'i viga jõuab plaani samamoodi nagu sinu enda muudatus.
 
 ```text
   # proxmox_virtual_environment_vm.web must be replaced
@@ -129,7 +129,7 @@ deny contains msg if {
 }
 ```
 
-Reegel näeb ainult seda, mida plaan teab. Väärtus, mis selgub alles `apply`-s, on JSON-is `after_unknown` all ja reegel, mis seda ei arvesta, laseb muudatuse vaikselt läbi. Seepärast annab teadmata väärtus keelu. Poliitika repo vajab ülevaatust ja erandite korda, muidu lülitatakse samm pipeline'ist välja. Sama mõte laieneb automaatikale endale (automation as code): moodulid, playbook'id, pipeline'i definitsioon ja AWX-i job template'id koos õigustega on Gitis. 1. kohtumisel nimetatud testitud tegevuste raamatukogu on IaC-s versioonitud moodulite kogu, mida meeskonnad kasutavad tag'i järgi (`?ref=v1.4.0`), mitte koodi kopeerides.
+Reegel näeb ainult seda, mida plaan teab. Väärtus, mis selgub alles `apply`-s, on JSON-is `after_unknown` all ja reegel, mis seda ei arvesta, laseb muudatuse vaikselt läbi. Seepärast annab teadmata väärtus keelu. Poliitikate repositoorium vajab ülevaatust ja erandite korda, muidu lülitatakse samm pipeline'ist välja. Sama mõte laieneb automaatikale endale (automation as code): moodulid, playbook'id, pipeline'i definitsioon ja AWX-i job template'id koos õigustega on Gitis. 1. kohtumisel nimetatud testitud tegevuste raamatukogu on IaC-s versioonitud moodulite kogu, mida meeskonnad kasutavad tag'i järgi (`?ref=v1.4.0`), mitte koodi kopeerides.
 
 ### Kui kontroll ise eksib
 
@@ -147,13 +147,13 @@ Iseseisvaks lugemiseks: [Taristu koodina ja poliitika koodina](../teemad/iac.md)
 
 State ja tegelikkus lahknevad kolmel viisil. Objekt on state'is, aga kustutati: refresh eemaldab selle ja plaan tahab selle uuesti luua. Objekt on state'is, aga atribuut muutus: plaan tahab selle tagasi panna. Objekt on olemas, aga state ei tea sellest: plaan on tühi, sest tööriist küsib API-lt ainult oma objekte. Kolmanda leiab ainult pool'i võrdlus state'iga.
 
-Leitud drift'iga on kaks otsust: muudatus läheb koodi või kood võtab selle tagasi. "Jätame nii" tähendab, et järgmine `apply` otsustab sinu eest. Öine RAM-i tõstmine on emergency change, mis registreeritakse tagantjärele, ja IaC-s on see registreerimine commit. Drift'i leidmiseks käivitatakse plaan ajastatult: `-detailed-exitcode` annab erinevuse korral koodi 2 ja selle peale tuleb teavitus.
+Leitud drift'iga on kaks otsust: muudatus läheb koodi või kood võtab selle tagasi. "Jätame nii" tähendab, et järgmine `apply` otsustab sinu eest. Öine RAM-i tõstmine on erakorraline muudatus (emergency change), mis registreeritakse tagantjärele, ja IaC-s on see registreerimine commit. Drift'i leidmiseks käivitatakse plaan ajastatult: `-detailed-exitcode` annab erinevuse korral koodi 2 ja selle peale tuleb teavitus.
 
 Enne koodi tehtud objektid tuuakse koodi alla **[import](https://opentofu.org/docs/language/import/)**-iga. `import` plokk läbib plaani nagu iga teine muudatus ja muudab ainult state'i. `-generate-config-out` kirjutab koodi mustandi, aga selles on kõik vaikeväärtused ja puudub see, mida API-st lugeda ei saa, näiteks millisest mallist VM kunagi kloonitud oli. Pakett VM-i sees ei ole OpenTofu jaoks drift, sest API seda ei näita; see on Ansible'i ala.
 
 ### Pidev jõustamine või ajastatud plaan
 
-Puppeti agent käivitub vaikimisi iga 30 minuti järel (seadistus `runinterval`) ja paneb masina sisu koodi järgi tagasi. Drift elab seal kuni pool tundi ja öine käsitsi parandus kaob ilma, et keegi otsustaks. OpenTofu ja Ansible jõustavad seisu ainult siis, kui keegi need käivitab. Valik on teavituse ja automaatse parandamise vahel. Automaatne `apply` ajakava järgi hoiab seisu puhtana, aga kustutab ka õigustatud hädaparanduse ja teeb `apply` koodiga, mille plaani keegi ei lugenud. Tavaline kompromiss on ajastatud plaan koos teavitusega taristu tasemel ning automaatne jõustamine ainult masina sisus, kus muudatus on kohapealne ja kergemini tagasi võetav.
+Puppeti agent käivitub vaikimisi iga 30 minuti järel (seadistus `runinterval`) ja paneb masina sisu koodi järgi tagasi. Seal püsib drift kuni pool tundi ja öine käsitsi parandus kaob ilma, et keegi otsustaks. OpenTofu ja Ansible jõustavad soovitud olekut ainult siis, kui keegi need käivitab. Valik on teavituse ja automaatse parandamise vahel. Automaatne `apply` ajakava järgi hoiab tegeliku oleku koodiga kooskõlas, aga kustutab ka õigustatud hädaparanduse ja teeb `apply` koodiga, mille plaani keegi ei lugenud. Tavaline kompromiss on ajastatud plaan koos teavitusega taristu tasemel ning automaatne jõustamine ainult masina sisus, kus muudatus on kohapealne ja kergemini tagasi võetav.
 
 Ühe hosti drift on nähtav siis, kui keegi seda otsib. 2012. aasta juuli lõpus paigaldas Knight Capitali tehnik uue kauplemistarkvara käsitsi kaheksast serverist seitsmele. Kaheksandas jäi alles vana kood ja 1. augustil käivitas uue koodi jaoks ümber kasutatud lipp seal ammu kasutusest maas oleva funktsiooni. [SEC-i otsuse](https://www.sec.gov/litigation/admin/2013/34-70694.pdf) järgi tegi süsteem umbes 45 minutiga üle 4 miljoni tehingu ja firma kaotas üle 460 miljoni dollari. Otsuses on puudusena nimetatud, et paigaldust ei vaadanud üle teine inimene ja puudus kord, mis kontrolliks, kas kõik serverid said sama versiooni. Kood ja võrdlus koodi vastu on see kontroll.
 
@@ -170,7 +170,7 @@ Muutmise faasis on paketi uuendamiseks kaks teed: paigaldada see töötavasse ma
 | | Golden image ja asendus | Seadistus käivitusel |
 |---|---|---|
 | Uue masina käivitus | kiire, tarkvara on kettal | aeglasem, paigaldus igal loomisel |
-| Kõik masinad samad | jah, sama mall | sõltub paketihoidla seisust sel hetkel |
+| Kõik masinad samad | jah, sama mall | sõltub paketihoidla sisust sel hetkel |
 | Paketihoidla rikke ajal | taastamine töötab | uus masin ei saa valmis |
 | Turvapaik | uus ehitus ja kõigi masinate asendus | `apt upgrade` kohapeal |
 | Rollback | eelmine mall, üks rida koodis | paketi vana versioon, kui see on alles |
@@ -187,14 +187,14 @@ Iseseisvaks lugemiseks: [Standard Operating Environment ja IT-süsteemi elutsük
 
 Uue veebihosti tellimus tähendab VM-i, DNS-kirjet, Ansible'i rolli, monitooringu kirjet, koormusjaoturi pool'i ja suletud tiketit. Iga samm võib olla automatiseeritud ja ikkagi käivitab admin neid käsitsi õiges järjekorras ning teab peast, et Ansible'i ei tasu käivitada enne, kui cloud-init on lõpetanud.
 
-**Automatiseerimine** teeb ühe ülesande ilma inimeseta. **Orkestreerimine** seob mitu automatiseeritud ülesannet eri süsteemides üheks töövooks, kus on järjekord, sõltuvused, veakäsitlus ja üks tulemus. Tofu sõltuvusgraaf on orkestreerimine ühe state'i API kutsete sees. Tööriistade vahel teeb seda tase kõrgemal: pipeline või AWX-i workflow job template, konteinerite puhul Kubernetes. Pilves on sama vahe: öine snapshot on cloud automation, keskkond koos võrgu, tulemüürireeglite, VM-ide, andmebaasi ja DNS-iga õiges järjekorras on cloud orchestration.
+**Automatiseerimine** teeb ühe ülesande ilma inimeseta. **Orkestreerimine** seob mitu automatiseeritud ülesannet eri süsteemides üheks töövooks, kus on järjekord, sõltuvused, veakäsitlus ja üks tulemus. Tofu sõltuvusgraaf on orkestreerimine ühe state'i API kutsete sees. Tööriistade vahel teeb seda kõrgema taseme tööriist: pipeline või AWX-i workflow job template, konteinerite puhul Kubernetes. Pilves on sama vahe: öine snapshot on cloud automation, keskkond koos võrgu, tulemüürireeglite, VM-ide, andmebaasi ja DNS-iga õiges järjekorras on cloud orchestration.
 
 | | OpenTofu / Terraform | Ansible |
 |---|---|---|
 | Haldab | API objektid: VM, ketas, võrk, DNS | masina sisu: paketid, failid, teenused, kasutajad |
-| Mälu | state, teab, mida ta lõi | puudub, küsib igal jooksul |
+| Mälu | state: teab, mida on loonud | puudub, küsib igal käivitusel |
 | Koodist eemaldatud objekt | kustutatakse | jääb alles |
-| Tugev | loomine, asendus, mahavõtmine | seadistus, paigad, järjestatud muudatus hostide kaupa |
+| Sobib kõige paremini | loomine, asendus, mahavõtmine | seadistus, paigad, järjestatud muudatus hostide kaupa |
 
 *Tabel 4.2. Kumb tööriist millist tööd teeb.*
 
@@ -202,7 +202,7 @@ Mõlemad oskavad teise tööd osaliselt. Ansible loob VM-e (`community.general.p
 
 ### Osaline õnnestumine
 
-Tööriistade vahel ei ole tehingut. Kui Tofu lõi kolm VM-i ja Ansible ebaõnnestus teise peal, on tulemus kolm olemasolevat masinat: üks seadistatud, üks pooleli ja üks puutumata. Töövoog peab seepärast olema korratav algusest. Tofu teine `apply` annab tühja plaani ja Ansible'i teine jooks teeb ainult puuduoleva, nii et parandus on veakoha kõrvaldamine ja sama töövoo uus käivitus. Kompenseerivat sammu, näiteks masina kustutamist, kasutatakse harva, sest pooleli masinat on veaotsingul vaja.
+Tööriistade vahel ei ole tehingut. Kui Tofu lõi kolm VM-i ja Ansible ebaõnnestus teise peal, on tulemus kolm olemasolevat masinat: üks seadistatud, üks pooleli ja üks puutumata. Töövoog peab seepärast olema korratav algusest. Tofu teine `apply` annab tühja plaani ja Ansible'i teine käivitus teeb ainult puuduva, nii et parandus on veakoha kõrvaldamine ja sama töövoo uus käivitus. Kompenseerivat sammu, näiteks masina kustutamist, kasutatakse harva, sest pooleli masinat on veaotsingul vaja.
 
 Teine rikkekoht on ajastus. VM on API jaoks valmis enne, kui cloud-init on võtmed, kasutajad ja võrgu paika pannud. Siis esimene SSH-ühendus ebaõnnestub või jõuab kohale enne cloud-init'i lõppu ja kaks tööriista muudavad samal ajal samu faile. Töövoog ootab seepärast selget valmisoleku märki (`cloud-init status --wait`, Ansible'i `wait_for_connection`), mitte fikseeritud `sleep`-i. AWX-i workflow'is on igal node'il eraldi järgmine samm õnnestumise ja ebaõnnestumise korral, nii et ebaõnnestunud seadistus saab avada tiketi ja jätta hosti koormusjaoturi pool'ist välja.
 
@@ -210,7 +210,7 @@ Iseseisvaks lugemiseks: [Orkestreerimine ja automatiseerimine](../teemad/orkestr
 
 ## 7. OpenTofu, Terraform ja teised tööriistad
 
-2023. aasta augustis vahetas HashiCorp Terraformi litsentsi MPL 2.0 pealt BSL 1.1 vastu ([HashiCorpi teade](https://www.hashicorp.com/blog/hashicorp-adopts-business-source-license)). Kogukond tegi viimasest MPL-versioonist fork'i, mis on nüüd OpenTofu ja elab Linux Foundationi all ([OpenTofu manifest](https://opentofu.org/manifesto/)). Keel, töövoog, alamkäsud ja failinimed (`terraform.tfstate`, `terraform.tfvars`) on samad, käsk on `tofu`.
+2023. aasta augustis vahetas HashiCorp Terraformi litsentsi MPL 2.0 pealt BSL 1.1 vastu ([HashiCorpi teade](https://www.hashicorp.com/blog/hashicorp-adopts-business-source-license)). Kogukond tegi viimasest MPL-versioonist fork'i, mida arendatakse nüüd OpenTofu nime all Linux Foundationi juures ([OpenTofu manifest](https://opentofu.org/manifesto/)). Keel, töövoog, alamkäsud ja failinimed (`terraform.tfstate`, `terraform.tfvars`) on samad, käsk on `tofu`.
 
 | | OpenTofu | Terraform |
 |---|---|---|
@@ -224,20 +224,20 @@ Iseseisvaks lugemiseks: [Orkestreerimine ja automatiseerimine](../teemad/orkestr
 
 Töökuulutustes on enamasti kirjas "Terraform". Oskus on sama: HCL, state, plaani lugemine, moodulid. BSL piirab Terraformi kasutamist HashiCorpiga konkureerivates toodetes, oma taristu haldamist see ei puuduta. Kursus kasutab OpenTofut, sest MPL ei vaja litsentsi ülevaatust ühelgi juhul. Kolimine ühelt tööriistalt teisele on üks commit, millele eelneb state'i varukoopia ([migreerimine](https://opentofu.org/docs/intro/migration/)).
 
-Vendor lock-in tuleb sellest, mis on tööriista ümber. HCP Terraformi poliitikad võivad olla [Sentinelis](https://developer.hashicorp.com/sentinel/docs), mida väljaspool HashiCorpi tooteid ei käivitata, OPA reeglid aga töötavad mõlema tööriista plaani JSON-i peal. Kui hindad tööriista, vaata seepärast ka seda, kus elavad state, poliitika, saladused ja käivitus, sest need on kolimisel suurem töö kui HCL.
+Vendor lock-in tuleb sellest, mis on tööriista ümber. HCP Terraformi poliitikad võivad olla [Sentinelis](https://developer.hashicorp.com/sentinel/docs), mida väljaspool HashiCorpi tooteid ei käivitata, OPA reeglid aga töötavad mõlema tööriista plaani JSON-i peal. Kui hindad tööriista, vaata seepärast ka seda, kus asuvad state, poliitika, saladused ja käivitus, sest need on kolimisel suurem töö kui HCL.
 
-Võõrast IaC koodi lugedes otsi kolme asja: kus on soovitud seis, kus on state ja mis näitab plaani enne muudatust.
+Võõrast IaC koodi lugedes otsi kolme asja: kus on soovitud olek, kus on state ja mis näitab plaani enne muudatust.
 
-| Tööriist | Soovitud seis | State | Plaan enne muudatust |
+| Tööriist | Soovitud olek | State | Plaan enne muudatust |
 |---|---|---|---|
-| Ansible | YAML, masina sisu | puudub, küsib igal jooksul masinalt | `--check --diff`, mitte kõigi moodulitega |
+| Ansible | YAML, masina sisu | puudub, küsib igal käivitusel masinalt | `--check --diff`, mitte kõigi moodulitega |
 | OpenTofu / Terraform | HCL, taristu objektid | fail backendis | `plan` |
 | [Pulumi](https://www.pulumi.com/docs/) | Python, TypeScript, Go | Pulumi Cloud või oma backend | `pulumi preview` |
 | [CloudFormation](https://docs.aws.amazon.com/cloudformation/) | YAML või JSON, ainult AWS | AWS hoiab ise | change set |
 
 *Tabel 4.4. Tööriistad kõrvuti.*
 
-Pulumi annab programmeerimiskeele tsüklid ja testid, aga lõppseisu on koodist raskem välja lugeda.
+Pulumi annab programmeerimiskeele tsüklid ja testid, aga lõppolekut on koodist raskem välja lugeda.
 
 ## Kokkuvõte
 
@@ -245,7 +245,7 @@ Pulumi annab programmeerimiskeele tsüklid ja testid, aga lõppseisu on koodist 
 
 -   **Deklaratiivne mudel**
 
-    Kirjelda koodis ressursi lõppseisu ja lase Toful API kutsed sõltuvusgraafist arvutada. Anna tokenile õigus pool'i ja tee kaupa, sest SDDC-s on ka võrk ja salvestus API objektid.
+    Kirjelda koodis ressursi soovitud olekut ja lase Toful API kutsed sõltuvusgraafist arvutada. Anna tokenile õigus pool'i ja tee kaupa, sest SDDC-s on ka võrk ja salvestus API objektid.
 
 -   **State**
 
@@ -284,10 +284,10 @@ Pulumi annab programmeerimiskeele tsüklid ja testid, aga lõppseisu on koodist 
 ## Kontrolli ennast
 
 ??? question "Miks vajab OpenTofu state'i, kui Ansible saab ilma selleta hakkama?"
-    Ansible küsib igal jooksul masinalt, mis seal on, ega mäleta varasemat, nii et koodist eemaldatud objekt jääb alles. OpenTofu peab teadma, millise aadressi taga on milline objekt ka siis, kui aadress on koodist kadunud, ja millises järjekorras objekte kustutada.
+    Ansible küsib igal käivitusel masinalt, mis seal on, ega mäleta varasemat, nii et koodist eemaldatud objekt jääb alles. OpenTofu peab teadma, millise aadressi taga on milline objekt ka siis, kui aadress on koodist kadunud, ja millises järjekorras objekte kustutada.
 
 ??? question "Kolleeg kustutas kogemata kohaliku `terraform.tfstate` faili. Mis juhtub VM-idega ja mida näitab järgmine plaan?"
-    VM-idega ei juhtu midagi. Plaan tahab kõik uuesti luua, sest state'is pole ühtki objekti, ja `apply` ebaõnnestuks `vm_id` konflikti peale. Kohalikul backendil on `terraform.tfstate.backup` eelmise seisuga; kui seda pole, tuleb objektid importida.
+    VM-idega ei juhtu midagi. Plaan tahab kõik uuesti luua, sest state'is pole ühtki objekti, ja `apply` ebaõnnestuks `vm_id` konflikti peale. Kohalikul backendil on `terraform.tfstate.backup` eelmise state'iga; kui seda pole, tuleb objektid importida.
 
 ??? question "Kolleeg tõstis öösel UI-s db01 RAM-i 2048-le. Mida näitab `plan -refresh-only`, mida tavaline `plan` ja mida sa teed?"
     `-refresh-only` näitab muutust 1024 → 2048 väljaspool Tofut, tavaline `plan` tahab selle 1024-le tagasi panna. Kui muudatus oli õige, läheb 2048 koodi; kui ei, teed koodiga `apply`. Otsus läheb koos põhjusega commit'i.

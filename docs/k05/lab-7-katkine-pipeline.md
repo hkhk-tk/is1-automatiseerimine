@@ -16,11 +16,11 @@ Veaotsingu tabel ei ütle, milline rida sinu PR-is kehtib: mõni rida ei kehti �
 
 | Sümptom | Vaata esimesena | Tõenäoline koht |
 |---|---|---|
-| jooksul pole ühtegi job'i, `Invalid workflow file` | `actionlint`, jooksu lehe ülaosa | `ci.yml` struktuur |
+| käivitusel pole ühtegi job'i, `Invalid workflow file` | `actionlint`, käivituse lehe ülaosa | `ci.yml` struktuur |
 | job on kollane, *Waiting for a runner to pick up this job* | *Settings → Actions → Runners*, `journalctl -u 'actions.runner.*'` | control node või `runs-on` |
 | samm ebaõnnestub `denied`, `403` või `unauthorized` peale | *Set up job* → *GITHUB_TOKEN Permissions* | job'i `permissions:` |
 | samm ütleb, et muutuja on tühi või puudub | sammu `env:` read, `gh secret list --env proxmox` | secret'i nimi või `environment:` |
-| deploy ebaõnnestub, rollback käivitus | app01 logi, `docker compose ps` | uus image või konfifail |
+| deploy ebaõnnestub, rollback käivitus | app01 logi, `docker compose ps` | uus image või konfiguratsioonifail |
 
 *Tabel L5.2. Veaotsingu tabel.*
 
@@ -28,11 +28,11 @@ Veaotsingu tabel ei ütle, milline rida sinu PR-is kehtib: mõni rida ei kehti �
 
 ## Rike paika
 
-Alustad teadaolevast rohelisest seisust ja lased skriptil rikked paika panna. Pärast rollback'i katset on main'i deploy roheline.
+Alustad teadaolevalt töötavast olekust ja lased skriptil rikked paika panna. Pärast rollback'i katset on main'i deploy roheline.
 
 Kui algseis pole roheline, ei tea sa hiljem, kas viga tuli kolleegi PR-ist või oli juba enne olemas.
 
-1. Kontrolli algseisu.
+1. Kontrolli algolekut.
 
     ```bash
     git switch main && git pull && git status --short
@@ -47,9 +47,9 @@ Kui algseis pole roheline, ei tea sa hiljem, kas viga tuli kolleegi PR-ist või 
     gh pr view k05-rike --web
     ```
 
-Kirjuta märkmikku algseisu `/version` commit ja main'i viimase jooksu link. Need on sinu võrdluspunkt kogu mooduli jooksul. Kui skript katkes enne PR-i avamist, vaata selle viimast väljundirida: see ütleb, mis eeldus jäi täitmata.
+Kirjuta märkmikku algoleku `/version` commit ja main'i viimase käivituse link. Need on sinu võrdluspunkt kogu mooduli jooksul. Kui skript katkes enne PR-i avamist, vaata selle viimast väljundirida: see ütleb, mis eeldus jäi täitmata.
 
-✅ **Edasi saad minna, kui** PR "Kolleegi muudatus: deploy kiiremaks" on avatud ja selle esimene jooks on *Actions* vahekaardil.
+✅ **Edasi saad minna, kui** PR "Kolleegi muudatus: deploy kiiremaks" on avatud ja selle esimene käivitus on *Actions* vahekaardil.
 
 ## PR roheliseks
 
@@ -57,7 +57,7 @@ Esimene eesmärk on saada PR-i kontrollid roheliseks. PR-il ja haru push'il käi
 
 Viga, mille PR-i kontroll leiab, ei jõua tootmisse.
 
-1. Vaata haru `k05-rike` viimast push-jooksu ja PR-i kontrolli. Leia veaotsingu tabelist rida, mis sümptomiga sobib.
+1. Vaata haru `k05-rike` viimast push'i käivitust ja PR-i kontrolli. Leia veaotsingu tabelist rida, mis sümptomiga sobib.
 
     ```bash
     gh run list -b k05-rike -L 3
@@ -65,20 +65,20 @@ Viga, mille PR-i kontroll leiab, ei jõua tootmisse.
     ```
 
 2. Paranda viga failis harul `k05-rike`, commit sõnumiga `fix(ci): <põhjus>` ja push.
-3. Korda, kuni haru push-jooks ja PR-i kontroll on mõlemad rohelised. Järgmine viga võib ilmuda alles siis, kui eelmine on parandatud.
+3. Korda, kuni haru push'i käivitus ja PR-i kontroll on mõlemad rohelised. Järgmine viga võib ilmuda alles siis, kui eelmine on parandatud.
 4. Kirjuta märkmikku iga leitud vea kohta: sümptom, põhjus ja käsk, millega selle leidsid.
 
-Võrdle iga paranduse järel PR-i kontrolli ja haru push-jooksu. Need ei pruugi olla samad, sest push-jooks lükkab image'i ja PR-jooks mitte, seega mõni samm käivitub ainult ühes neist. Kui parandus tegi ühe roheliseks ja teine jäi punaseks, on sul vähemalt veel üks viga, mis puudutab ainult seda sündmust.
+Võrdle iga paranduse järel PR-i kontrolli ja haru push'i käivitust. Need ei pruugi olla samad, sest push'i käivitus lükkab image'i registrisse ja PR-i käivitus mitte, seega mõni samm käivitub ainult ühes neist. Kui parandus tegi ühe roheliseks ja teine jäi punaseks, on sul vähemalt veel üks viga, mis puudutab ainult seda sündmust.
 
-✅ **Edasi saad minna, kui** haru `k05-rike` push-jooksus on image job roheline ja lükkas uue sha7 tag'i ning PR-i kontrollid on rohelised.
+✅ **Edasi saad minna, kui** haru `k05-rike` push'i käivituses on image job roheline ja lükkas uue sha7 tag'i ning PR-i kontrollid on rohelised.
 
 ## Deploy roheliseks
 
-Merge'id PR-i ja jälgid main'i jooksu, kus nüüd käivitub ka deploy. Kaks viga on veel alles.
+Merge'id PR-i ja jälgid main'i käivitust, kus nüüd käivitub ka deploy. Kaks viga on veel alles.
 
 Tavaline olukord: kõik PR-i kontrollid olid rohelised ja viga tuli välja alles tootmises.
 
-1. Merge'i PR ja jälgi main'i jooksu.
+1. Merge'i PR ja jälgi main'i käivitust.
 
     ```bash
     gh pr merge k05-rike --merge
@@ -95,9 +95,9 @@ Tavaline olukord: kõik PR-i kontrollid olid rohelised ja viga tuli välja alles
 
 4. Korda, kuni main'i deploy on roheline.
 
-Kui `/version` näitab algseisu commit'i, töötas rollback ja kasutajad ei näinud viga. See annab sulle aega rahulikult põhjust otsida. Kui `/version` ei vasta üldse, on stack maas ja esimene töö on see püsti saada, alles siis põhjus. Masinas tehtud parandus ei ole Gitis näha, seepärast on märkmiku käsk ainus jälg, mis sellest jääb.
+Kui `/version` näitab algoleku commit'i, töötas rollback ja kasutajad ei näinud viga. See annab sulle aega rahulikult põhjust otsida. Kui `/version` ei vasta üldse, on stack maas ja esimene töö on see püsti saada, alles siis põhjus. Masinas tehtud parandus ei ole Gitis näha, seepärast on märkmiku käsk ainus jälg, mis sellest jääb.
 
-✅ **Edasi saad minna, kui** main'i viimane jooks on roheline koos deploy'ga, `/version` võrdub `origin/main`-iga ja runner on `online`.
+✅ **Edasi saad minna, kui** main'i viimane käivitus on roheline koos deploy'ga, `/version` võrdub `origin/main`-iga ja runner on `online`.
 
 ## Põhjused kirja
 

@@ -7,7 +7,7 @@ tags:
 
 # 6. Õigused, varundus ja taaste
 
-Jenkinsi varukoopia, mida pole kunagi taastatud, on oletus, ja liiga lai roll annab igale kasutajale ligipääsu kõigi credential'itele. Mõlemad tulevad tavaliselt välja alles intsidendi ajal. Klassis tõendad, et naabri folder ja agent on sulle kinni. Oma sandbox-Jenkinsis annad kasutajale ainult lugemisõiguse, teed varukoopia, uuendad pluginat ja taastad varukoopia teise konteinerisse. Taaste on õnnestunud alles siis, kui jobid, õigused ja credential töötavad ka uues Jenkinsis.
+Jenkinsi varukoopia, mida pole kunagi taastatud, on oletus, ja liiga lai roll annab igale kasutajale ligipääsu kõigi credential'itele. Mõlemad probleemid ilmnevad tavaliselt alles intsidendi ajal. Klassis tõendad, et naabri folder ja agent on sulle kinni. Oma sandbox-Jenkinsis annad kasutajale ainult lugemisõiguse, teed varukoopia, uuendad pluginat ja taastad varukoopia teise konteinerisse. Taaste on õnnestunud alles siis, kui jobid, õigused ja credential töötavad ka uues Jenkinsis.
 
 **Kui teed seda tööl iga päev:** oled Jenkinsi `JENKINS_HOME`-i varukoopiast juba teise masinasse taastanud ja credential'id töötasid. Kui see on sul juba korras, mine otse etappi [„Taasta ilma võtmeta“](#taasta-ilma-votmeta).
 
@@ -29,7 +29,7 @@ Kui ainult esimene tase töötaks, saaks sinu Jenkinsfile panna buildi töötama
 
 Nüüd seadistad õigused ise sandboxis. Matrix-strateegia on tabel, kus read on kasutajad ja veerud õigused. Lisaks globaalsele tabelile saab igal jobil olla oma tabel, mis annab õigusi juurde.
 
-Kõige levinum viga on lukustada iseennast välja: salvestad tabeli, kus admin puudub, ja keegi ei saa enam Manage Jenkinsisse. Seepärast lisad oma admin-kasutaja enne kõike muud.
+Kõige levinum viga on enda väljalukustamine: salvestad tabeli, kus admin puudub, ja keegi ei saa enam Manage Jenkinsisse. Seepärast lisad oma admin-kasutaja enne kõike muud.
 
 1. `docker start jenkins-liivakast`, logi sisse adminina.
 2. **Manage Jenkins → Users → Create User**: `vaatleja`.
@@ -45,7 +45,7 @@ Kõige levinum viga on lukustada iseennast välja: salvestad tabeli, kus admin p
 </figure>
 -->
 
-> Lukustasid end välja (admin jäi tabelist välja): `docker exec jenkins-liivakast sed -i 's#<useSecurity>true#<useSecurity>false#' /var/jenkins_home/config.xml && docker restart jenkins-liivakast`, siis sea õigused uuesti.
+> Kui lukustasid end välja (admin jäi tabelist välja), lülita turve ajutiselt välja: `docker exec jenkins-liivakast sed -i 's#<useSecurity>true#<useSecurity>false#' /var/jenkins_home/config.xml && docker restart jenkins-liivakast`, siis sea õigused uuesti.
 
 `vaatleja` näeb ainult jobi, millele andsid *Job/Read*, ja tal pole ühtegi nuppu, mis midagi muudaks. *Overall/Read* üksi lubab ainult sisse logida ja avalehte näha. *Overall/Read* on eeldus kõigele muule: ilma selleta ei näe kasutaja ka job'i, millele tal on *Job/Read*.
 
@@ -53,7 +53,7 @@ Kõige levinum viga on lukustada iseennast välja: salvestad tabeli, kus admin p
 
 ## Tee varukoopia
 
-Varukoopia on peatatud teenuse `JENKINS_HOME`. Peatad Jenkinsi, sest töötav Jenkins kirjutab buildide logisid, `build.xml`-e ja pipeline'i olekut pidevalt. Et taastamise proovil oleks midagi kontrollida, lisad enne üht credential'i ja jobi, mis seda kasutab.
+Varukoopia tehakse peatatud teenuse kaustast `JENKINS_HOME`. Peatad Jenkinsi, sest töötav Jenkins kirjutab buildide logisid, `build.xml`-e ja pipeline'i olekut pidevalt. Et taastamise proovil oleks midagi kontrollida, lisad enne üht credential'i ja jobi, mis seda kasutab.
 
 Arhiivis on koos `secrets/master.key` ja `secrets/hudson.util.Secret` ning `credentials.xml`, nii et arhiivi lugeja saab kõik credential'id lahti krüpteerida ilma Jenkinsita.
 
@@ -76,7 +76,7 @@ Arhiivis on koos `secrets/master.key` ja `secrets/hudson.util.Secret` ning `cred
     ls -l ~/jenkins-liivakast.tgz && tar tzf ~/jenkins-liivakast.tgz | grep -c 'secrets/master.key'
     ```
 
-> Arhiiv ei lähe kunagi Giti: selles on `secrets/master.key` ja krüpteeritud credential'id.
+> Arhiivi ei tohi kunagi Giti lisada, sest selles on `secrets/master.key` ja krüpteeritud credential'id.
 
 `du` näitab tavaliselt, et suurimad osad on `plugins/`, `tools/` ja `jobs/`. Esimest kahte saaks uuesti paigaldada, aga `jobs/` ja `secrets/` on asendamatud.
 
@@ -84,7 +84,7 @@ Arhiivis on koos `secrets/master.key` ja `secrets/hudson.util.Secret` ning `cred
 
 ## Uuenda pluginat
 
-Uuendus käib pärast varukoopiat. Pluginauuendus on Jenkinsi tavaline rikkeallikas: uus versioon võib nõuda uuemat Jenkinsit, muuta seadistuse XML-i kuju või eemaldada sammu, mida mõni Jenkinsfile kasutab. Plugin Manager jätab eelmise versiooni faili `plugins/<nimi>.bak` ja pakub nuppu *Downgrade*, aga see ei pööra tagasi seadistust, mille uus versioon juba ümber kirjutas.
+Uuendus tehakse alles pärast varukoopiat. Pluginauuendus on Jenkinsi tavaline rikkeallikas: uus versioon võib nõuda uuemat Jenkinsit, muuta seadistuse XML-i kuju või eemaldada sammu, mida mõni Jenkinsfile kasutab. Plugin Manager jätab eelmise versiooni faili `plugins/<nimi>.bak` ja pakub nuppu *Downgrade*, aga see ei pööra tagasi seadistust, mille uus versioon juba ümber kirjutas.
 
 1. `docker start jenkins-liivakast`, oota avalehte.
 2. **Manage Jenkins → Plugins → Updates**: vali üks plugin, mis oli sandboxi paigaldamisel uuendatavate nimekirjas, ja vaata enne uuendamist selle lehelt *Release notes*.
@@ -131,7 +131,7 @@ Rida `credential loetav` tõendab, et `master.key` ja krüpteeritud credential'i
 
 Nüüd teed sama taaste, aga jätad välja ühe faili: `secrets/master.key`. Nii näed, mis juhtub, kui keegi varundab "ainult konfiguratsiooni" või kui võti on varundusest turvakaalutlustel välja jäetud ja teist koopiat pole.
 
-Ilma võtmeta varukoopiast tõuseb Jenkins üles ja näeb esmapilgul korras välja. Viga tuleb välja alles siis, kui mõni job vajab credential'i, ja tavaliselt öösel.
+Ilma võtmeta varukoopiast käivitub Jenkins ja näeb esmapilgul korras välja. Viga ilmneb alles siis, kui mõni job vajab credential'it.
 
 1. Peata eelmine taaste ja taasta kolmandasse volume'isse ilma võtmeta.
 
@@ -155,7 +155,7 @@ Ilma võtmeta varukoopiast tõuseb Jenkins üles ja näeb esmapilgul korras väl
 
 Sisselogimine töötas, sest kasutajate paroolid on räsina `users/` all ja ei vaja `master.key`-d. Credential'i väärtus aga ei dekrüpteeru ja `ehitus` ei jõua reani `credential loetav`. `master.key` on kaustas olemas, aga räsi erineb arhiivi omast: Jenkins lõi käivitusel uue võtme, mis vanu saladusi ei ava. Järeldus: varukoopia ilma `secrets/`-ita taastab jobid, aga mitte ühtegi credential'it.
 
-✅ **Edasi saad minna, kui** `ehitus` logis pole rida `credential loetav`, kaks `master.key` räsi erinevad ja PR-i kirjelduses on lause selle kohta, mida taaste ilma võtmeta päriselt tähendaks.
+✅ **Edasi saad minna, kui** `ehitus` logis pole rida `credential loetav`, kaks `master.key` räsi erinevad ja PR-i kirjelduses on lause selle kohta, mida taaste ilma võtmeta tootmises tähendaks.
 
 ## Koristus
 

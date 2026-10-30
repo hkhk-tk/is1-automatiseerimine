@@ -114,7 +114,7 @@ Release'i Secret'is on kõik väärtused ja renderdatud manifestid, mistõttu ro
     kill %1
     ```
 
-> `exceeded quota`: mõni `~/k07-katse` katsepod on alles. `kubectl get pods` ja `kubectl describe resourcequota`.
+> Kui näed viga `exceeded quota`, on mõni `~/k07-katse` katsepod alles. Kontrolli seda käskudega `kubectl get pods` ja `kubectl describe resourcequota`.
 
 `helm list` näitab release'i olekut ja revisjoni. Objektidel on label `app.kubernetes.io/instance=podinfo`, millega Helm nad hiljem üles leiab. Curl'i vastuses on `hostname` pod'i nimi ja `message` sinu tekst: rakendus luges väärtuse keskkonnamuutujast, mille chart sinu failist tegi.
 
@@ -162,7 +162,7 @@ See on vahe Helmi ja Argo CD vahel. Helmiga võib klaster nädalaid erineda sell
     helm get manifest podinfo | kubectl diff -f - | grep -E '^[-+] +replicas'
     ```
 
-2. Pane seis tagasi release'i järgi: `helm get manifest podinfo | kubectl apply -f -`, siis `kubectl get deploy podinfo`.
+2. Taasta olek release'i järgi: `helm get manifest podinfo | kubectl apply -f -`, siis `kubectl get deploy podinfo`.
 
 `helm status` ütles ikka `deployed`, kuigi klastris oli kaks koopiat. Helmi jaoks on release korras, sest ta vaatab oma Secret'it, mitte klastrit. `kubectl diff` release'i manifestiga näitas erinevust kohe. Sama mõte, release'i manifest kui tõe allikas, on Argo CD aluseks.
 
@@ -190,7 +190,7 @@ kubectl get rs -l app.kubernetes.io/name=podinfo             # uus ReplicaSet 0 
 
 > Kui uut pod'i ei teki üldse ja `describe rs` näitab `exceeded quota`, katkestab ajapiir upgrade'i kvoodi, mitte image'i pärast: kustuta katsepod'id ja korda. Helm 4-s ei ole `--atomic`-ut, Helm 3-s puudub `--rollback-on-failure`: `helm version` ütleb, kumb sul on.
 
-Vana pod teenindas kogu aja, sest uus ei saanud kunagi Ready'ks ja Deployment'i rolling update ei kustuta vana enne. Helm ei tea seda: tema ootab ainult ajapiirini ja märgib siis revisjoni `failed`-iks. Ilma `--rollback-on-failure`-ita jääks release olekusse `failed`, Deployment poolikusse rollout'i ja järgmine `helm upgrade` alustaks sellest seisust. Argo CD all sama lippu ei ole: seal hoiab vana versiooni alles Deployment ise ja rollback on `git revert`.
+Vana pod teenindas kogu aja, sest uus ei saanud kunagi Ready'ks ja Deployment'i rolling update ei kustuta vana enne. Helm seda ei arvesta: see ootab ainult ajapiirini ja märgib siis revisjoni `failed`-iks. Ilma `--rollback-on-failure`-ita jääks release olekusse `failed`, Deployment poolikusse rollout'i ja järgmine `helm upgrade` alustaks sellest olekust. Argo CD all sama lippu ei ole: seal hoiab vana versiooni alles Deployment ise ja rollback on `git revert`.
 
 ✅ **Edasi saad minna, kui** `helm history` näitab `failed` revisjoni ja selle järel automaatset `Rollback to …` olekuga `deployed`, logis pole ühtegi muud koodi kui `200` ja image on sama mis enne upgrade'i.
 

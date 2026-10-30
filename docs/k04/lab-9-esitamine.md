@@ -12,7 +12,7 @@ Kood, mis töötab sinu kaustas, võib värskes kloonis ebaõnnestuda, sest pool
 
 ## Enne esitamist
 
-Kontrollid koodi, plaani, Giti sisu ja Ansible'i ühendust samas järjekorras, nagu need üksteisest sõltuvad. Automaatne hindaja näeb ainult repot: vormindus, `validate`, ressursid, moodul ja saladused. Proxmoxi VM-e see ei näe.
+Kontrollid koodi, plaani, Giti sisu ja Ansible'i ühendust samas järjekorras, nagu need üksteisest sõltuvad. Automaatne hindaja näeb ainult repositooriumi: vormindus, `validate`, ressursid, moodul ja saladused. Proxmoxi VM-e see ei näe.
 
 Kaks esimest sammu kontrollivad seda, mida automaatne hindaja ei saa näha.
 
@@ -80,7 +80,7 @@ git add k04-tofu/NOTES.md && git commit -m "k04: NOTES, minu töökohal" && git 
 
 ## PR, merge ja tag
 
-Nüüd viid haru `main`-i ja märgid esitatud seisu tag'iga. Tag peab olema `main`-i peal pärast merge'i. Kui see on vales kohas, hindab automaatne hindaja koodi, mida sa ei tahtnud esitada.
+Nüüd viid haru `main`-i ja märgid esitatava versiooni tag'iga. Tag peab olema `main`-i peal pärast merge'i. Kui see on vales kohas, hindab automaatne hindaja koodi, mida sa ei tahtnud esitada.
 
 ```bash
 git push
@@ -105,7 +105,7 @@ PR on ülevaatuse koht ka siis, kui sa ise selle kohe merge'id. Selle diff näit
 
 ## Automaatse hindaja tulemus
 
-Tag `k04` käivitab GitHubis automaatse hindaja. Loed tulemust ja seod iga mitteläbinud kontrolli oma koodiga. Tulemus on paari minuti pärast: repo → **Releases** → viimane `submit/…`, iga mitteläbinud kontrolli juures on põhjus. Testide nimekiri on repos failis `autograde/TESTS.md`.
+Tag `k04` käivitab GitHubis automaatse hindaja. Loed tulemust ja seod iga mitteläbinud kontrolli oma koodiga. Tulemus on paari minuti pärast: repo → **Releases** → viimane `submit/…`, iga mitteläbinud kontrolli juures on põhjus. Testide nimekiri on repositooriumi failis `autograde/TESTS.md`.
 
 Automaatne hindaja kontrollib, kas failid on olemas, kas kood läbib `fmt`-i ja `validate`-i, kas VM-id on kirjeldatud data source'i, `for_each`-i ja mooduliga ning kas token, state ja `terraform.tfvars` on Gitist väljas. Kui mõni kontroll ebaõnnestus GitHubis, aga mitte sinu terminalis, on erinevus keskkonnas: tavaliselt fail, mis on sinu kaustas, aga mitte commit'is.
 
@@ -113,7 +113,7 @@ Automaatne hindaja kontrollib, kas failid on olemas, kas kood läbib `fmt`-i ja 
 
 ## Tõendid moodulite kaupa
 
-Käi nimekiri läbi, et `NOTES.md` ja issue'd räägiksid sama lugu nagu kood.
+Käi nimekiri läbi, et `NOTES.md` ja issue'd oleksid koodiga kooskõlas.
 
 - [ ] 1. Üks VM koodist: commit `01-alused`, ennustused ja plaanid, Task History kasutaja, `cloud-init status --long`
 - [ ] 2. Viis VM-i: commit koos lukufailiga, ümbernimetamise plaan, token-output'i proov, `tofu state list`, `tofu test` pass

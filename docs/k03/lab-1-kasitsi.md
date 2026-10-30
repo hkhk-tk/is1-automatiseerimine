@@ -7,11 +7,11 @@ tags:
 
 # 1. Konteinerid käsitsi
 
-Kui konteiner tootmises seiskub, saab OOM-kill'i või avab pordi tulemüürist mööda, on põhjus hostis, mitte Dockeri väljundis, ja seni, kuni ei tea, kus konteiner hostis paistab, on ta must kast. Docker ei too ühtegi uut tuuma mehhanismi: ta paneb kokku protsessid, cgroup'id, nftables'i ja failiõigused, mida sa juba tunned. Käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus elavad protsess, piirangud, port ja andmed. Lõpuks on iga rida, mille hiljem Compose'i faili kirjutad, sulle tuttav ühe `docker run` võtmena.
+Kui konteiner tootmises seiskub, saab OOM-kill'i või avab pordi tulemüürist mööda, on põhjus hostis, mitte Dockeri väljundis, ja seni, kuni ei tea, kus konteiner hostis paistab, on ta must kast. Docker ei too ühtegi uut tuuma mehhanismi: ta paneb kokku protsessid, cgroup'id, nftables'i ja failiõigused, mida sa juba tunned. Käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus asuvad protsess, piirangud, port ja andmed. Lõpuks on iga rida, mille hiljem Compose'i faili kirjutad, sulle tuttav ühe `docker run` võtmena.
 
 **Kui teed seda tööl iga päev:** `docker info --format '{{.CgroupVersion}} {{.RegistryConfig.Mirrors}}'` annab `2` ja kooli peegli, haru `k03-docker` on olemas ja `docker ps` töötab ilma `sudo`-ta. Kui see on sul juba korras, mine otse etappi „[Mälu, CPU ja protsessid](#malu-cpu-ja-protsessid)“.
 
-Tabel L3.1 näitab versioone, millega laborit on läbi proovitud. Uuem Docker sobib. Vanema Compose'iga puuduvad sildid nagu `!override` ja prod-failis saad süntaksivea, mis ei ütle, et viga on versioonis.
+Tabel L3.1 näitab versioone, millega praktikum on läbi proovitud. Uuem Docker sobib. Vanema Compose'iga puuduvad sildid nagu `!override` ja prod-failis saad süntaksivea, mis ei ütle, et viga on versioonis.
 
 | Komponent | Versioon |
 |---|---|
@@ -54,11 +54,11 @@ Kui `docker info` näitab cgroup'i versiooni 2, töötavad mooduli piirangukatse
 
 ✅ **Edasi saad minna, kui** haru on `k03-docker`, server on 28 või uuem, `docker compose` vastab, mirrors-nimekirjas on kooli peegel, cgroup'i versioon on 2 ja `docker ps` töötab ilma `sudo`-ta.
 
-## Engine hostis: teenus, kataloog ja konfifail
+## Engine hostis: teenus, kataloog ja konfiguratsioonifail
 
-Enne esimest konteinerit vaatad, mis Docker hostis on. See on tavaline systemd teenus oma kataloogi, konfifaili ja logiga, täpselt nagu nginx või MariaDB, mida oled varem hallanud. Kui tead, kus need kolm asja on, parandad Dockerit samamoodi nagu iga teist teenust.
+Enne esimest konteinerit vaatad, mis Docker hostis on. See on tavaline systemd teenus oma kataloogi, konfiguratsioonifaili ja logiga, täpselt nagu nginx või MariaDB, mida oled varem hallanud. Kui tead, kus need kolm asja on, parandad Dockerit samamoodi nagu iga teist teenust.
 
-Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daemon.json`. Kuna vaikimisi on `live-restore` välja lülitatud, viib iga `systemctl restart docker` maha kõik hosti konteinerid, ja vigase konfiga need enam ei tõuse.
+Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daemon.json`. Kuna vaikimisi on `live-restore` välja lülitatud, viib iga `systemctl restart docker` maha kõik hosti konteinerid, ja vigase konfiguratsiooniga need enam ei käivitu.
 
 1. Vaata, millised üksused Dockeri moodustavad ja kes socket'it kuulab.
 
@@ -76,7 +76,7 @@ Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daem
     sudo du -sh /var/lib/docker/* 2>/dev/null | sort -h | tail -6
     ```
 
-3. Kontrolli konfifaili daemonit puutumata, siis tee meelega vigane koopia ja kontrolli seda.
+3. Kontrolli konfiguratsioonifaili daemonit peatamata, siis tee meelega vigane koopia ja kontrolli seda.
 
     ```bash
     sudo dockerd --validate --config-file /etc/docker/daemon.json
@@ -94,13 +94,13 @@ Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daem
 
 `docker.socket` kuulab socket'it ka siis, kui `dockerd` seisab: esimene `docker` käsk käivitab daemoni. `containerd` on eraldi teenus, kes konteinereid tegelikult käitab, ja `dockerd` räägib temaga. `DockerRootDir` on kataloog, mida jälgid kettaruumi monitooringus, sest seal on konteinerite logid, volume'id ja build cache. `--validate` leidis vea ilma teenust peatamata, nagu `nginx -t` või `sshd -t`.
 
-✅ **Edasi saad minna, kui** kolm üksust on `active`, tead oma `Driver` ja `DockerRootDir` väärtust, päris konf annab `configuration OK`, vigane koopia annab veateate ja koodi ≠ 0 ning journal'is on daemoni viimane start. Kirjuta TOEND.md-sse `docker info` rida ja üks lause: kuidas muudaksid `daemon.json`-i tootmisserveris.
+✅ **Edasi saad minna, kui** kolm üksust on `active`, tead oma `Driver` ja `DockerRootDir` väärtust, kehtiv konfiguratsioon annab `configuration OK`, vigane koopia annab veateate ja koodi ≠ 0 ning journal'is on daemoni viimane start. Kirjuta TOEND.md-sse `docker info` rida ja üks lause: kuidas muudaksid `daemon.json`-i tootmisserveris.
 
 ## Elutsükkel ja PID 1
 
-Vaatad, kui kaua konteiner elab ja kes ta hostis on. Sama nginx paistab hostis tavalise protsessina, konteineris on ta PID 1. Elutsükli käsud `run`, `stop`, `start` ja `rm` muudavad eri asju: protsessi, kirjutatavat kihti või mõlemat.
+Uurid konteineri elutsüklit ja seda, milline protsess see hostis on. Sama nginx paistab hostis tavalise protsessina, konteineris on ta PID 1. Elutsükli käsud `run`, `stop`, `start` ja `rm` muudavad eri asju: protsessi, kirjutatavat kihti või mõlemat.
 
-Kui sa ei tea, et konteiner sureb koos PID 1-ga, otsid valest kohast. Teenus "ebaõnnestub", aga tegelikult lõpetas entrypoint'i skript oma töö ja konteiner tegi täpselt seda, mida pidi.
+Kui sa ei tea, et konteiner lõpeb koos PID 1-ga, otsid valest kohast. Teenus "ebaõnnestub", aga tegelikult lõpetas entrypoint'i skript oma töö ja konteiner tegi täpselt seda, mida pidi.
 
 1. Käivita konteiner, mis lõpetab kohe, ja nginx esiplaanil (Ctrl+C), taustal, peatatuna ja uuesti käivitatuna.
 
@@ -237,11 +237,11 @@ Kood 137 on 128 + 9: protsess sai SIGKILL-i. `OOMKilled: true` ütleb, et tappis
 
 ✅ **Edasi saad minna, kui** `oom` lõpetas koodiga 137 ja `OOMKilled` on `true`, `docker stats` näitab `cpu` konteineril umbes 50% CPU-d, `cpu.max` on `50000 100000` ja `memory.max` pärast `update`-i `134217728`. Kirjuta TOEND.md-sse kolm väärtust ja üks lause: mis juhtuks samas olukorras ilma `-m`-ita.
 
-## Restart-poliitika: kes konteineri üles tõstab
+## Restart-poliitika: kes konteineri uuesti käivitab
 
-Konteineris pole systemd'i, aga keegi peab ta pärast ebaõnnestumist või reboot'i üles tõstma. Seda teeb `dockerd` restart-poliitika järgi. Proovid kaht poliitikat ja vaatad, mis vahe neil on, kui admin on konteineri käsitsi peatanud.
+Konteineris pole systemd'i, aga keegi peab selle pärast ebaõnnestumist või taaskäivitust uuesti käivitama. Seda teeb `dockerd` restart-poliitika järgi. Proovid kaht poliitikat ja vaatad, mis vahe neil on, kui admin on konteineri käsitsi peatanud.
 
-Vale poliitika annab kaks klassikalist viga: teenus ei tõuse pärast hooldusreboot'i või tõuseb üles see, mille sa meelega maha võtsid.
+Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hoolduse järgset taaskäivitust või käivitub teenus, mille sa meelega peatasid.
 
 1. Käivita nginx poliitikaga `unless-stopped` ja tapa tema PID 1 hostist.
 
@@ -268,9 +268,9 @@ Vale poliitika annab kaks klassikalist viga: teenus ei tõuse pärast hooldusreb
     docker rm rf
     ```
 
-`RestartCount` 1 ja olek `running` näitavad, et daemon märkas PID 1 surma ja käivitas sama konteineri uuesti, sama ID ja kirjutatava kihiga. Pärast daemoni restarti on `ra` üleval ja `rs` `Exited`: `always` ei arvesta sinu käsitsi peatamist, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` `unless-stopped`-i. `on-failure:3` proovis kolm korda ja jättis siis konteineri seisma. Nii ei taaskäivitu katkine konteiner lõputult ning logi ja väljumiskood jäävad sulle uurimiseks alles.
+`RestartCount` 1 ja olek `running` näitavad, et daemon märkas PID 1 lõppemist ja käivitas sama konteineri uuesti, sama ID ja kirjutatava kihiga. Pärast daemoni restarti on `ra` üleval ja `rs` `Exited`: `always` ei arvesta sinu käsitsi peatamist, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` `unless-stopped`-i. `on-failure:3` proovis kolm korda ja jättis siis konteineri seisma. Nii ei taaskäivitu katkine konteiner lõputult ning logi ja väljumiskood jäävad sulle uurimiseks alles.
 
-✅ **Edasi saad minna, kui** `rs` tõusis pärast `kill -9`-i ise, pärast daemoni restarti on `ra` `Up` ja `rs` `Exited`, `rf` näitab `3 exited 1` ning kõik kolm on kustutatud. Kirjuta TOEND.md-sse üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
+✅ **Edasi saad minna, kui** `rs` käivitus pärast `kill -9`-i ise uuesti, pärast daemoni restarti on `ra` `Up` ja `rs` `Exited`, `rf` näitab `3 exited 1` ning kõik kolm on kustutatud. Kirjuta TOEND.md-sse üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
 
 ## Käivitusvõtmed, mida admin vajab
 
@@ -312,7 +312,7 @@ Samad võtmed on Compose'i failis teiste nimedega: `env_file`, `user`, `init`, `
     docker run --rm --mount type=bind,src=/tmp/k03-puudub,dst=/data alpine:3.22 ls /data
     ```
 
-5. `--entrypoint`: tee konfiveaga nginx, mis ebaõnnestub kohe, ja vaata talle sisse.
+5. `--entrypoint`: käivita nginx vigase konfiguratsiooniga, mis lõpeb kohe, ja uuri konteinerit seestpoolt.
 
     ```bash
     printf 'server { listen 80 }\n' > /tmp/k03-ngx.conf
@@ -324,7 +324,7 @@ Samad võtmed on Compose'i failis teiste nimedega: `env_file`, `user`, `init`, `
 
 > `--rm` kustutab koos konteineriga ka tema logi. Kui konteiner ebaõnnestub ja tahad teada miks, käivita ta ilma `--rm`-ita.
 
-`B` sai väärtuseks `"kaks"` koos jutumärkidega: `--env-file` ei tõlgenda jutumärke, Compose'i `.env` tõlgendab. `-e D` ilma väärtuseta võttis väärtuse sinu shellist. `root.txt` kuulub UID 0-le ja `mina.txt` sulle, seepärast käivitad tööriista-konteineri, mis kirjutab sinu kausta, alati `--user`-iga. `noinit` peatus umbes 10 sekundiga, sest `sleep` PID 1-na ei käsitle SIGTERM-i ja tuum ei rakenda PID 1-le vaikekäitumist. `--init` pani PID 1-ks väikese init'i, kes andis signaali edasi ja korjab ka zombie-protsessid. `-v` lõi puuduva kausta vaikselt root'i omanikuna, `--mount` keeldus: vale tee jääb nii kohe silma, mitte siis, kui teenus käivitub tühja konfiga. Ebaõnnestunud konteinerisse `exec` ei pääse, aga sama image sama mount'iga ja teise ENTRYPOINT-iga näitab viga otse.
+`B` sai väärtuseks `"kaks"` koos jutumärkidega: `--env-file` ei tõlgenda jutumärke, Compose'i `.env` tõlgendab. `-e D` ilma väärtuseta võttis väärtuse sinu shellist. `root.txt` kuulub UID 0-le ja `mina.txt` sulle, seepärast käivitad tööriista-konteineri, mis kirjutab sinu kausta, alati `--user`-iga. `noinit` peatus umbes 10 sekundiga, sest `sleep` PID 1-na ei käsitle SIGTERM-i ja tuum ei rakenda PID 1-le vaikekäitumist. `--init` pani PID 1-ks väikese init'i, kes andis signaali edasi ja korjab ka zombie-protsessid. `-v` lõi puuduva kausta vaikselt root'i omanikuna, `--mount` keeldus: vale tee jääb nii kohe silma, mitte siis, kui teenus käivitub tühja konfiguratsiooniga. Ebaõnnestunud konteinerisse `exec` ei pääse, aga sama image sama mount'iga ja teise ENTRYPOINT-iga näitab viga otse.
 
 ✅ **Edasi saad minna, kui** `env` näitab `A=yks`, `B="kaks"`, `D=neli`, `E=viis` ja alles jäänud konteinereid on 0, `root.txt` omanik on 0 ja `mina.txt` sinu UID, `docker top init` näitab kaht protsessi, `docker-init` ja tema all `sleep`, `noinit` peatus umbes 10 s ja `init` alla sekundi, `-v` lõi kausta omanikuga root, `--mount` andis `bind source path does not exist`, `docker exec ngx` ütles `is not running` ja `nginx -t` näitas vigast rida. Kirjuta TOEND.md-sse kaks `stop` aega ja üks lause: millal kasutad `--mount`-i `-v` asemel.
 
@@ -434,7 +434,7 @@ Joonis L3.2 näitab kolme kohta, kuhu `/var/lib/mysql` võib sattuda. Loe seda k
 
 UID 999 on konteineri `mysql` kasutaja. Hostis ei pruugi sellel numbril nime olla, aga tuum kontrollib õigusi numbri järgi. Seepärast ei saanud sinu tavakasutaja faile kustutada.
 
-✅ **Edasi saad minna, kui** `42` elas üle `docker rm -f`, `Mounts` näitab `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`, bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
+✅ **Edasi saad minna, kui** rida `42` jäi pärast `docker rm -f`-i alles, `Mounts` näitab `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`, bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
 
 📎 **Selle mooduli tõend:** TOEND.md-s `docker version` ja mirrors-rida, `docker info` rida ja `daemon.json`-i lause, `docker ps -a`, `lsns`, host-võrgu lause, OOM-i kood ja `memory.max`, restart-poliitika lause, kaks `stop` aega ja `--mount`-i lause, sisemise võrgu lause, `Mounts` ja bind mount'i UID; commit `K3.1 konteinerid käsitsi`.
 

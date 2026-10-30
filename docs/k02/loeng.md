@@ -11,18 +11,18 @@ tags:
     Pärast seda kohtumist oskad:
 
     - hoida väärtusi muutujates ja valida, kas need kuuluvad kõigile masinatele, grupile või ühele masinale;
-    - korrata ülesannet `loop`-iga, salvestada tulemust `register`-iga ja käivitada teenuse taaskäivitus handler'iga ainult siis, kui midagi muutus;
+    - korrata ülesannet `loop`-iga, salvestada tulemust `register`-iga ja taaskäivitada teenust handler'iga ainult siis, kui konfiguratsioon muutus;
     - kirjutada Jinja2 malli, mille väärtused tulevad muutujatest ja faktidest;
-    - jagada töötava playbook'i rollideks ja panna need kokku failis `site.yml`;
-    - paigaldada kogu (collection) `requirements.yml` failist ja kasutada selle mooduleid;
+    - jagada töötav playbook rollideks ja panna need kokku failis `site.yml`;
+    - paigaldada kogu (collection) faili `requirements.yml` abil ja kasutada selle mooduleid;
     - hoida parooli Vaulti abil krüpteeritult Gitis;
-    - teha muudatuse enne nähtavaks (`--check --diff`) ja levitada seda masinhaaval (`serial`, `--limit`).
+    - vaadata muudatust enne selle tegemist (`--check --diff`) ja rakendada seda masinhaaval (`serial`, `--limit`).
 
 ## 1. Ühest masinast mitme masinani
 
 **Küsimus:** mis muutub, kui masinaid on mitu ja need ei ole ühesugused?
 
-Eelmisel kohtumisel seadistasid Ansible'iga ühe masina ja kontrollisid korduva käivituse tulemust. Nüüd laiendame sama mõtet. Erinevad masinad vajavad erinevaid seadistusi: veebiserver vajab nginx-i, andmebaas MariaDB-d, kasutajaid on vaja kõigis. Kasvav playbook vajab selget struktuuri, muidu on sul paari nädala pärast üks 400-realine fail, mida keegi ei julge muuta.
+Eelmisel kohtumisel seadistasid Ansible'iga ühe masina ja kontrollisid korduva käivituse tulemust. Nüüd kasutad sama põhimõtet mitme masina seadistamiseks. Masinad vajavad erinevat konfiguratsiooni: veebiserver vajab nginx-i, andmebaasiserver MariaDB-d ja kasutajad tuleb luua kõigis masinates. Kasvaval playbook'il peab olema selge ülesehitus, muidu tekib mõne nädalaga sadade ridadega fail, mida keegi ei julge muuta.
 
 Tänase päeva lõpuks on sul projekt, kus:
 
@@ -31,7 +31,7 @@ Tänase päeva lõpuks on sul projekt, kus:
 - **handler'id** taaskäivitavad teenuse ainult siis, kui konfiguratsioon muutus;
 - **rollid** jagavad töö loogilisteks osadeks: ühine, veeb, andmebaas;
 - **Vault** hoiab andmebaasi parooli krüpteeritult;
-- **`site.yml`** paneb kõik kokku ja teine käivitus annab `changed=0`.
+- **`site.yml`** ühendab kõik osad ja teisel käivitusel on `changed=0`.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 200" role="img" aria-label="Täna ehitatav projekt: site.yml käivitab rollid common kõigile masinatele, veeb gruppi veeb ja andmebaas gruppi andmebaas" xmlns="http://www.w3.org/2000/svg">
@@ -43,10 +43,10 @@ Tänase päeva lõpuks on sul projekt, kus:
 <rect class="box" x="270" y="98" width="180" height="90" rx="8"/><text class="b" x="360" y="122" text-anchor="middle">roll veeb</text><text class="s" x="360" y="146" text-anchor="middle">nginx, mall, handler</text><text class="s" x="360" y="170" text-anchor="middle">web01, app01</text>
 <rect class="box" x="520" y="98" width="180" height="90" rx="8"/><text class="b" x="610" y="122" text-anchor="middle">roll andmebaas</text><text class="s" x="610" y="146" text-anchor="middle">MariaDB, parool Vaultist</text><text class="s" x="610" y="170" text-anchor="middle">db01</text>
 </svg>
-<figcaption>Joonis 1.1. Tänase päeva projekt.</figcaption>
+<figcaption>Joonis 1.1. Selle kohtumise projekt.</figcaption>
 </figure>
 
-Inventory jääb samaks nagu 1. kohtumisel, lisanduvad kaks gruppi masinate ülesande järgi:
+Inventory jääb samaks nagu 1. kohtumisel, lisanduvad kaks gruppi masinate otstarbe järgi:
 
 ```ini
 [ubuntu]
@@ -69,15 +69,15 @@ db01
 ansible_user=kasutaja
 ```
 
-Sama masin võib olla mitmes grupis: web01 on nii `ubuntu` kui ka `veeb`. Grupid OS-i järgi aitavad otsustada, kuidas midagi teha. Grupid ülesande järgi ütlevad, mida masinas teha.
+Sama masin võib olla mitmes grupis: web01 kuulub nii gruppi `ubuntu` kui ka `veeb`. Operatsioonisüsteemi järgi grupid aitavad otsustada, kuidas midagi teha. Otstarbe järgi grupid määravad, mida masinas teha.
 
-??? note "Süvenemiseks: teised konfihalduse tööriistad"
+??? note "Süvenemiseks: teised konfiguratsioonihalduse tööriistad"
 
     Puppet, Chef ja Salt lahendavad sama ülesannet agendi ja serveriga. Nende võrdlus on lehel [Konfiguratsioonihaldus](../teemad/konfiguratsioonihaldus.md).
 
 ??? question "Kontrolli ennast"
 
-    1. Miks on web01 kahes grupis ja mida kumbki grupp ütleb?
+    1. Miks on web01 kahes grupis ja mida kumbki grupp tähendab?
     2. Mis juhtub, kui kõik tänased ülesanded oleksid ühes playbook'is ühe play all?
 
 ## 2. Muutujad ja faktid
@@ -86,7 +86,7 @@ Sama masin võib olla mitmes grupis: web01 on nii `ubuntu` kui ka `veeb`. Grupid
 
 ### Muutuja
 
-**Muutuja** on väärtus nime all. Playbook'is kasutad seda kujul `{{ nimi }}`. Nii on ülesanne üks ja sama, aga väärtus võib eri masinates olla erinev:
+**Muutuja** on nimega väärtus. Playbook'is kasutad seda kujul `{{ nimi }}`. Nii jääb ülesanne samaks, kuid väärtus võib masinati erineda:
 
 ```yaml
 - name: Veebilehe kaust on olemas
@@ -95,9 +95,9 @@ Sama masin võib olla mitmes grupis: web01 on nii `ubuntu` kui ka `veeb`. Grupid
     state: directory
 ```
 
-Kui väärtus algab `{{`-ga, pane kogu väärtus jutumärkidesse. Muidu loeb YAML seda sõnastikuna ja tuleb viga.
+Kui väärtus algab `{{`-ga, pane kogu väärtus jutumärkidesse. Muidu tõlgendab YAML seda sõnastikuna ja tekib viga.
 
-### Kus muutujad elavad
+### Kus muutujaid hoitakse
 
 Väärtused hoitakse projekti kaustades inventory kõrval:
 
@@ -114,7 +114,7 @@ k02/
     └── web01.yml        # ainult web01-le
 ```
 
-Faili nimi on grupi või masina nimi. Ansible loeb need ise, playbook'is pole vaja midagi lisada.
+Faili nimi on grupi või masina nimi. Ansible loeb need failid automaatselt ja playbook'is ei ole vaja midagi lisada.
 
 ```yaml
 # group_vars/veeb.yml
@@ -122,9 +122,9 @@ veeb_pealkiri: "IS1 labor"
 veeb_port: 80
 ```
 
-### Kumb võidab
+### Milline väärtus jääb kehtima
 
-Kui sama muutuja on mitmes kohas, võidab täpsem. Kogu järjekord on Ansible'is pikk, alustamiseks piisab sellest:
+Kui sama muutuja on määratud mitmes kohas, jääb kehtima täpsem väärtus. Ansible'i täielik prioriteetide järjekord on pikk, alustamiseks piisab järgmisest:
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 120" role="img" aria-label="Muutujate järjekord nõrgemast tugevamani: rolli defaults, group_vars all, group_vars grupp, host_vars, play vars, -e" xmlns="http://www.w3.org/2000/svg">
@@ -138,13 +138,13 @@ Kui sama muutuja on mitmes kohas, võidab täpsem. Kogu järjekord on Ansible'is
 <rect class="hi" x="605" y="20" width="108" height="44" rx="6"/><text class="c" x="659" y="47" text-anchor="middle">-e</text>
 <line class="a" x1="20" y1="90" x2="700" y2="90" marker-end="url(#lxv2)"/><text class="s" x="20" y="112">nõrgem</text><text class="s" x="700" y="112" text-anchor="end">tugevam: võidab</text>
 </svg>
-<figcaption>Joonis 2.1. Kui muutuja on mitmes kohas, võidab paremal olev.</figcaption>
+<figcaption>Joonis 2.1. Kui muutuja on määratud mitmes kohas, jääb kehtima paremal olev väärtus.</figcaption>
 </figure>
 
 | Koht | Millal kasutada |
 |---|---|
 | rolli `defaults/main.yml` | mõistlik vaikeväärtus, mida kasutaja võib üle kirjutada |
-| `group_vars/all.yml` | kõigile masinatele ühine, näiteks kasutajate nimekiri |
+| `group_vars/all.yml` | kõigile masinatele ühine väärtus, näiteks kasutajate loend |
 | `group_vars/<grupp>.yml` | ühe grupi väärtused, näiteks veebiserveri port |
 | `host_vars/<masin>.yml` | üks masin on teistest erinev |
 | play `vars:` | väärtus kuulub selle playbook'i juurde |
@@ -152,15 +152,15 @@ Kui sama muutuja on mitmes kohas, võidab täpsem. Kogu järjekord on Ansible'is
 
 *Tabel 2.1. Kuhu muutuja panna.*
 
-Muutujat näed ad-hoc käsuga, see on parim viis kontrollida, millise väärtuse Ansible tegelikult valis:
+Muutuja väärtust näed ad-hoc käsuga. Nii saad kõige kindlamalt kontrollida, millist väärtust Ansible kasutab:
 
 ```bash
 ansible web01 -m ansible.builtin.debug -a "var=veeb_pealkiri"
 ```
 
-### Faktid otsustes
+### Faktid tingimustes
 
-1. kohtumisel nägid, et Ansible kogub masinast fakte. Need on samuti muutujad, ainult Ansible täidab need ise:
+1. kohtumisel nägid, et Ansible kogub masinast fakte. Ka faktid on muutujad, kuid nende väärtused kogub Ansible ise:
 
 | Fakt | Näide |
 |---|---|
@@ -179,7 +179,7 @@ ansible web01 -m ansible.builtin.debug -a "var=veeb_pealkiri"
 
 ??? question "Kontrolli ennast"
 
-    1. `veeb_port` on `group_vars/veeb.yml`-is `80` ja `host_vars/app01.yml`-is `8080`. Mis port on app01-l?
+    1. `veeb_port` on `group_vars/veeb.yml`-is `80` ja `host_vars/app01.yml`-is `8080`. Millist porti app01 kasutab?
     2. Miks on `path: "{{ veeb_juur }}"` jutumärkides?
     3. Mis vahe on `inventory_hostname`-il ja `ansible_facts['hostname']`-il?
 
@@ -192,11 +192,11 @@ ansible web01 -m ansible.builtin.debug -a "var=veeb_pealkiri"
 
 ## 3. Tsükkel, tulemus ja handler
 
-**Küsimus:** kuidas teha sama asja mitu korda, kasutada eelmise ülesande tulemust ja taaskäivitada teenust ainult siis, kui vaja?
+**Küsimus:** kuidas käivitada sama ülesannet mitu korda, kasutada eelmise ülesande tulemust ja taaskäivitada teenust ainult vajaduse korral?
 
 ### `loop`: üks ülesanne, mitu väärtust
 
-Kolm kasutajat kolme ülesandega oleks kopeerimine. **`loop`** käivitab sama ülesande iga nimekirja elemendiga, element on muutujas `item`:
+Kolme kasutaja jaoks kolme eraldi ülesande kirjutamine oleks kordamine. **`loop`** käivitab sama ülesande loendi iga elemendiga ja element on muutujas `item`:
 
 ```yaml
 # group_vars/all.yml
@@ -215,9 +215,9 @@ labori_kasutajad:
   loop: "{{ labori_kasutajad }}"
 ```
 
-Uue kasutaja lisamiseks muudad ainult nimekirja, ülesanne jääb samaks. Väljundis on iga element eraldi real: `changed: [web01] => (item=anna)`.
+Uue kasutaja lisamiseks muudad ainult loendit, ülesanne jääb samaks. Väljundis on iga element eraldi real: `changed: [web01] => (item=anna)`.
 
-Nimekirja element võib olla ka sõnastik. Siis loed väljad punktiga:
+Loendi element võib olla ka sõnastik. Siis loed välja väärtuse punktiga:
 
 ```yaml
 labori_kasutajad:
@@ -248,17 +248,17 @@ Iga moodul tagastab tulemuse. **`register`** salvestab selle muutujasse, mida sa
 | Väli | Sisu |
 |---|---|
 | `kodud.stdout` | käsu väljund ühe tekstina |
-| `kodud.stdout_lines` | väljund ridade nimekirjana |
+| `kodud.stdout_lines` | väljund ridade loendina |
 | `kodud.rc` | väljumiskood |
 | `kodud.changed` | kas ülesanne muutis midagi |
 
 *Tabel 3.1. `register`-iga salvestatud tulemus.*
 
-`changed_when: false` ütleb, et see käsk ainult loeb ega muuda midagi. Ilma selleta oleks `command` igal käivitusel `changed` (1. kohtumine, toores käsk).
+`changed_when: false` määrab, et see käsk ainult loeb ega muuda midagi. Ilma selleta oleks `command` ülesande tulemus igal käivitusel `changed` (vt 1. kohtumine).
 
 ### `when` uuesti
 
-1. kohtumisel valis `when` ülesande OS-i järgi. Sama tingimus töötab ka `register`-i tulemusega:
+1. kohtumisel valisid `when` abil ülesande operatsioonisüsteemi järgi. Sama tingimus töötab ka `register`-i tulemusega:
 
 ```yaml
 - name: Hoiatus, kui kodukaustu on liiga palju
@@ -267,11 +267,11 @@ Iga moodul tagastab tulemuse. **`register`** salvestab selle muutujasse, mida sa
   when: kodud.stdout_lines | length > 5
 ```
 
-`| length` on **filter**: see võtab väärtuse ja annab tagasi selle pikkuse. Filtrid tulevad mallide juures uuesti.
+`| length` on **filter**: see tagastab väärtuse pikkuse. Filtritest tuleb rohkem juttu mallide juures.
 
-### Handler: taaskäivitus ainult muudatuse peale
+### Handler: taaskäivitus ainult muudatuse korral
 
-Kui muudad teenuse konfiguratsioonifaili, peab teenus selle uuesti lugema. Kui fail ei muutunud, oleks taaskäivitus asjatu katkestus. **Handler** on ülesanne, mis käivitub ainult siis, kui mõni teine ülesanne teda **`notify`**-ga teavitas ja ise `changed` oli:
+Kui muudad teenuse konfiguratsioonifaili, peab teenus selle uuesti lugema. Kui fail ei muutunud, oleks taaskäivitus tarbetu katkestus. **Handler** on ülesanne, mis käivitub ainult siis, kui mõni teine ülesanne seda **`notify`**-ga teavitas ja selle ülesande tulemus oli `changed`:
 
 ```yaml
 - name: Veebiserver
@@ -307,15 +307,15 @@ Kui muudad teenuse konfiguratsioonifaili, peab teenus selle uuesti lugema. Kui f
 <figcaption>Joonis 3.1. Handler käivitub ainult siis, kui teavitanud ülesanne oli <code>changed</code>.</figcaption>
 </figure>
 
-Kolm reeglit:
+Handler'ite kohta kehtib kolm reeglit:
 
 - `notify` väärtus peab olema täpselt handler'i nimi;
 - handler käivitub **play lõpus**, mitte kohe;
-- handler käivitub **üks kord**, ükskõik mitu ülesannet teda teavitas.
+- handler käivitub **üks kord**, olenemata sellest, mitu ülesannet seda teavitas.
 
-??? note "Kui handler peab käima kohe"
+??? note "Kui handler peab käivituma kohe"
 
-    `- ansible.builtin.meta: flush_handlers` käivitab ootel handler'id selles kohas. Seda on vaja, kui järgmine ülesanne eeldab, et teenus juba töötab uue seadistusega.
+    `- ansible.builtin.meta: flush_handlers` käivitab ootel handler'id selles kohas. Seda on vaja, kui järgmine ülesanne eeldab, et teenus juba töötab uue konfiguratsiooniga.
 
 ??? question "Kontrolli ennast"
 
@@ -337,7 +337,7 @@ Kolm reeglit:
 
 ### `copy` ja `template`
 
-1. kohtumisel kirjutas `copy` faili täpselt sellise sisuga, nagu playbook'is oli. **`template`** loeb faili, asendab selles muutujad ja kirjutab tulemuse masinasse. Mall on tavaline tekstifail laiendiga `.j2` ja asub kaustas `templates/`. Mallikeel on **Jinja2**.
+1. kohtumisel kirjutas `copy` faili täpselt sellise sisuga, nagu playbook'is oli kirjas. **`template`** loeb faili, asendab selles muutujad ja kirjutab tulemuse masinasse. Mall on tavaline tekstifail laiendiga `.j2` ja asub kaustas `templates/`. Mallikeel on **Jinja2**.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 150" role="img" aria-label="Mall index.html.j2 ja muutujad koos faktidega annavad iga masina jaoks oma valmis faili" xmlns="http://www.w3.org/2000/svg">
@@ -350,18 +350,18 @@ Kolm reeglit:
 <line class="a" x1="420" y1="75" x2="478" y2="75" marker-end="url(#lxm2)"/>
 <rect class="box" x="480" y="40" width="230" height="70" rx="8"/><text class="b" x="595" y="64" text-anchor="middle">web01: index.html</text><text class="c" x="595" y="88" text-anchor="middle">&lt;h1&gt;IS1 labor&lt;/h1&gt;</text>
 </svg>
-<figcaption>Joonis 4.1. Mall pluss väärtused annab iga masina jaoks oma faili.</figcaption>
+<figcaption>Joonis 4.1. Mallist ja muutujate väärtustest tekib iga masina jaoks oma fail.</figcaption>
 </figure>
 
-### Jinja2 lühidalt
+### Jinja2 põhivõtted
 
 | Kirjutis | Mida teeb | Näide |
 |---|---|---|
-| `{{ ... }}` | trükib väärtuse | `{{ inventory_hostname }}` |
+| `{{ ... }}` | väljastab väärtuse | `{{ inventory_hostname }}` |
 | <code>{{ x &#124; filter }}</code> | muudab väärtust | <code>{{ veeb_pealkiri &#124; upper }}</code> |
 | <code>{{ x &#124; default('...') }}</code> | vaikeväärtus, kui muutujat pole | <code>{{ veeb_port &#124; default(80) }}</code> |
 | `{% if %} ... {% endif %}` | tingimus | `{% if ansible_facts['os_family'] == 'Debian' %}` |
-| `{% for x in list %} ... {% endfor %}` | tsükkel | kõik kasutajad nimekirjas |
+| `{% for x in list %} ... {% endfor %}` | tsükkel | kõik kasutajad loendis |
 | `{# ... #}` | kommentaar, väljundisse ei jõua | |
 
 *Tabel 4.1. Jinja2 põhivõtted.*
@@ -388,11 +388,11 @@ Veebilehe mall:
     mode: "0644"
 ```
 
-Sama mall annab web01-le ja app01-le eri faili, sest `inventory_hostname` on erinev. `template` on idempotentne nagu `copy`: kui valmis fail on sama, mis masinas, on tulemus `ok`.
+Samast mallist tekib web01-s ja app01-s erinev fail, sest `inventory_hostname` on erinev. `template` on idempotentne nagu `copy`: kui mallist tekkinud fail on sama mis masinas olev fail, on tulemus `ok`.
 
 ### Vigane konfiguratsioon ei jõua teenuseni
 
-Vigane konfiguratsioonifail võib teenuse maha võtta. **`validate`** kontrollib uut faili **enne**, kui see paika läheb. `%s` asendatakse ajutise faili teega:
+Vigane konfiguratsioonifail võib teenuse töö peatada. **`validate`** kontrollib uut faili **enne**, kui see sihtkohta kopeeritakse. `%s` asendatakse ajutise faili teega:
 
 ```yaml
 - name: sudo reegel laborile
@@ -403,11 +403,11 @@ Vigane konfiguratsioonifail võib teenuse maha võtta. **`validate`** kontrollib
     validate: visudo -cf %s
 ```
 
-Kui `visudo` leiab vea, ülesanne ebaõnnestub ja vana fail jääb alles. `validate` töötab ainult siis, kui kontrollitav fail on iseseisev. nginx-i puhul kontrollitakse kogu seadistust käsuga `nginx -t`; laboris teed seda pärast muudatust.
+Kui `visudo` leiab vea, ülesanne ebaõnnestub ja vana fail jääb alles. `validate` töötab ainult siis, kui kontrollitav fail on iseseisev. nginx-i puhul kontrollitakse kogu konfiguratsiooni käsuga `nginx -t`. Laboris teed seda pärast muudatust.
 
 ??? note "Päis `ansible_managed`"
 
-    Pane malli esimesele reale `# {{ ansible_managed }}`. Valmis failis on siis kommentaar „Ansible managed“: kes faili masinas avab, näeb, et käsitsi muutmine kirjutatakse järgmisel käivitusel üle.
+    Pane malli esimesele reale `# {{ ansible_managed }}`. Siis on valmis failis kommentaar „Ansible managed“ ja faili avaja näeb, et käsitsi tehtud muudatus kirjutatakse järgmisel käivitusel üle.
 
 ??? question "Kontrolli ennast"
 
@@ -427,7 +427,7 @@ Kui `visudo` leiab vea, ülesanne ebaõnnestub ja vana fail jääb alles. `valid
 
 ### Mis on roll
 
-Pärast muutujaid, malle ja handler'eid on veebiserveri playbook juba pikk. Andmebaas ja kasutajad lisavad veel. **Roll** on kaust kindla ülesehitusega, kuhu läheb kõik, mis ühe ülesande juurde kuulub: ülesanded, handler'id, mallid ja vaikeväärtused. Playbook ütleb siis ainult, milline roll millistesse masinatesse.
+Pärast muutujaid, malle ja handler'eid on veebiserveri playbook juba pikk. Andmebaas ja kasutajad pikendavad seda veelgi. **Roll** on kindla ülesehitusega kaust, kuhu läheb kõik, mis ühe osa juurde kuulub: ülesanded, handler'id, mallid ja vaikeväärtused. Playbook määrab siis ainult, millist rolli millistes masinates kasutatakse.
 
 ```text
 roles/veeb/
@@ -439,7 +439,7 @@ roles/veeb/
     └── labor.conf.j2
 ```
 
-Kaustu, mida ei kasuta, pole vaja. Tühja rolli ülesehituse teeb käsk `ansible-galaxy role init roles/veeb`, aga käsitsi on algajale selgem.
+Kaustu, mida roll ei kasuta, ei ole vaja luua. Tühja rolli ülesehituse loob käsk `ansible-galaxy role init roles/veeb`, kuid käsitsi loomine on algajale arusaadavam.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 170" role="img" aria-label="Playbook'i osad lähevad rolli kaustadesse: tasks tasks/main.yml-i, handlers handlers/main.yml-i, mallid templates kausta, vaikeväärtused defaults/main.yml-i" xmlns="http://www.w3.org/2000/svg">
@@ -451,10 +451,10 @@ Kaustu, mida ei kasuta, pole vaja. Tühja rolli ülesehituse teeb käsk `ansible
 <rect class="hi" x="410" y="10" width="300" height="150" rx="10"/>
 <text class="c" x="426" y="44">roles/veeb/tasks/main.yml</text><text class="c" x="426" y="80">roles/veeb/handlers/main.yml</text><text class="c" x="426" y="116">roles/veeb/defaults/main.yml</text><text class="c" x="426" y="152">roles/veeb/templates/</text>
 </svg>
-<figcaption>Joonis 5.1. Rolli tegemine on töötava playbook'i osade ümbertõstmine.</figcaption>
+<figcaption>Joonis 5.1. Rolli loomisel tõstetakse töötava playbook'i osad rolli kaustadesse.</figcaption>
 </figure>
 
-Rolli failides pole play päist (`hosts`, `tasks:`), ainult ülesannete nimekiri:
+Rolli failides ei ole play päist (`hosts`, `tasks:`), on ainult ülesannete loend:
 
 ```yaml
 # roles/veeb/tasks/main.yml
@@ -470,20 +470,20 @@ Rolli failides pole play päist (`hosts`, `tasks:`), ainult ülesannete nimekiri
     enabled: true
 ```
 
-Mall rollis: `src: index.html.j2` leitakse automaatselt kaustast `roles/veeb/templates/`.
+Rollis otsitakse malli `src: index.html.j2` automaatselt kaustast `roles/veeb/templates/`.
 
 ### `defaults` ja `vars`
 
-| Kaust | Tugevus | Kasutus |
+| Kaust | Prioriteet | Kasutus |
 |---|---|---|
-| `defaults/main.yml` | kõige nõrgem | väärtused, mida rolli kasutaja tohib üle kirjutada: port, pealkiri |
-| `vars/main.yml` | tugevam kui `group_vars` | rolli sisemised väärtused, mida väljast muuta ei tohiks |
+| `defaults/main.yml` | kõige madalam | väärtused, mida rolli kasutaja tohib üle kirjutada: port, pealkiri |
+| `vars/main.yml` | kõrgem kui `group_vars` | rolli sisemised väärtused, mida väljast muuta ei tohiks |
 
 *Tabel 5.1. Rolli muutujad.*
 
-Algaja reegel: pane rolli väärtused `defaults/main.yml`-i ja kirjuta need vajadusel üle `group_vars`-is või `host_vars`-is.
+Alustamiseks piisab reeglist: pane rolli väärtused `defaults/main.yml`-i ja kirjuta need vajadusel üle `group_vars`-is või `host_vars`-is.
 
-### `site.yml`: kõik kokku
+### `site.yml`: kõik rollid koos
 
 ```yaml
 - name: Kõik masinad
@@ -505,17 +505,17 @@ Algaja reegel: pane rolli väärtused `defaults/main.yml`-i ja kirjuta need vaja
     - andmebaas
 ```
 
-Üks käsk seadistab kogu labori. Iga play ütleb, milline roll millise grupi masinatesse. Ansible otsib rolle kaustast `roles/` playbook'i kõrval.
+Üks käsk seadistab kogu labori. Iga play määrab, millist rolli millise grupi masinates kasutatakse. Ansible otsib rolle kaustast `roles/` playbook'i kõrval.
 
 ??? note "Roll Galaxyst"
 
-    Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne võõra rolli kasutamist vaata, millal seda viimati uuendati, mida selle ülesanded täpselt teevad ja millised muutujad tal on. Võõras roll jookseb sinu masinates `become`-iga, sama usaldusega nagu sinu enda kood.
+    Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne võõra rolli kasutamist vaata, millal seda viimati uuendati, mida selle ülesanded täpselt teevad ja millised muutujad sellel on. Võõras roll töötab sinu masinates `become`-iga ehk samade õigustega nagu sinu enda kood.
 
 ??? question "Kontrolli ennast"
 
     1. Mis kaustadest roll koosneb ja mis igaühes on?
     2. Miks pole rolli `tasks/main.yml`-is rida `hosts:`?
-    3. Kumb on nõrgem, `defaults` või `group_vars`? Miks on see rolli puhul kasulik?
+    3. Kummal on madalam prioriteet, `defaults`-il või `group_vars`-il? Miks on see rolli puhul kasulik?
 
 ??? info "Loe juurde"
 
@@ -528,22 +528,22 @@ Algaja reegel: pane rolli väärtused `defaults/main.yml`-i ja kirjuta need vaja
 
 ### Kogu
 
-`ansible-core` sisaldab ainult põhimooduleid (`ansible.builtin.*`). Kõik muu tuleb **kogudest** (collection): pakkidest, kus on moodulid, rollid ja pluginad ühe teema kohta. Kogu nimi on kahest osast: nimeruum ja nimi.
+`ansible-core` sisaldab ainult põhimooduleid (`ansible.builtin.*`). Kõik muu tuleb **kogudest** (collection): pakkidest, kus on moodulid, rollid ja pluginad ühe teema kohta. Kogu nimi koosneb kahest osast: nimeruumist ja nimest.
 
 | Kogu | Mida sisaldab |
 |---|---|
 | `ansible.mysql` | MariaDB ja MySQL: andmebaasid, kasutajad, õigused (vanades juhendites nimega `community.mysql`) |
-| `community.general` | sadu sekalisi mooduleid, näiteks ajavöönd, UFW tulemüür |
+| `community.general` | sadu eri valdkondade mooduleid, näiteks ajavöönd, UFW tulemüür |
 | `ansible.posix` | Linuxi lisad: `firewalld`, `sysctl`, `authorized_key` |
 | `community.docker` | Docker: image'id, konteinerid, Compose (3. kohtumine) |
 
 *Tabel 6.1. Sagedasemad kogud.*
 
-Mooduli pikk nimi ütleb, millisest kogust see tuleb: `ansible.mysql.mysql_db` on moodul `mysql_db` kogust `ansible.mysql`.
+Mooduli täisnimi näitab, millisest kogust see pärineb: `ansible.mysql.mysql_db` on moodul `mysql_db` kogust `ansible.mysql`.
 
 ### `requirements.yml`
 
-Kogud paigaldatakse control node'ile käsuga `ansible-galaxy`. Et projekt töötaks ka kolleegi masinas, pane vajalikud kogud faili `requirements.yml` ja Giti:
+Kogud paigaldatakse control node'ile käsuga `ansible-galaxy`. Et projekt töötaks ka kolleegi masinas, kirjuta vajalikud kogud faili `requirements.yml` ja lisa see Giti:
 
 ```yaml
 collections:
@@ -557,7 +557,7 @@ ansible-galaxy collection list ansible.mysql
 
 Kogud lähevad vaikimisi kausta `~/.ansible/collections/`. Mooduli juhendi näed samamoodi nagu sisseehitatud moodulitel: `ansible-doc ansible.mysql.mysql_user`.
 
-??? note "Versioon kinni"
+??? note "Versiooni piiramine"
 
     `requirements.yml`-is saab versiooni piirata: `version: ">=3.0.0,<4.0.0"`. Siis ei muuda uus suurversioon sinu projekti käitumist ootamatult. Galaxy ja Red Hati automation hub'i vahet näed 1. kohtumise loengu tabelis „Ansible Automation Platformi komponendid“.
 
@@ -571,7 +571,7 @@ Kogud lähevad vaikimisi kausta `~/.ansible/collections/`. Mooduli juhendi näed
     login_unix_socket: /var/lib/mysql/mysql.sock
 ```
 
-AlmaLinuxi MariaDB-s logib `root` sisse sokli kaudu ilma paroolita, kui ühendus tuleb sama masina `root`-kasutajalt. `become: true` annab just selle.
+AlmaLinuxi MariaDB-s saab `root` sisse logida Unixi sokli kaudu ilma paroolita, kui ühendus tuleb sama masina kasutajalt `root`. `become: true` tagab just selle.
 
 ??? question "Kontrolli ennast"
 
@@ -587,11 +587,11 @@ AlmaLinuxi MariaDB-s logib `root` sisse sokli kaudu ilma paroolita, kui ühendus
 
 ## 7. Saladused Vaultiga
 
-**Küsimus:** kuidas hoida parooli Gitis nii, et seda ei saa lugeda?
+**Küsimus:** kuidas hoida parooli Gitis nii, et kõrvaline isik seda lugeda ei saa?
 
 ### Probleem
 
-Andmebaasi kasutaja vajab parooli. Kui see on `group_vars`-is avatekstina, on see Gitis kõigile nähtav ja jääb ajalukku ka pärast kustutamist. GitHub ei tunne seda ära, sest `db_parool: Salajane123` ei näe välja nagu teenuse token.
+Andmebaasi kasutaja vajab parooli. Kui see on `group_vars`-is avatekstina, on see Gitis kõigile nähtav ja jääb ajalukku ka pärast kustutamist. GitHubi saladuste skanner seda ei tuvasta, sest `db_parool: Salajane123` ei sarnane ühegi teenuse tokeniga.
 
 ### `ansible-vault`
 
@@ -601,7 +601,7 @@ Andmebaasi kasutaja vajab parooli. Kui see on `group_vars`-is avatekstina, on se
 ansible-vault create group_vars/andmebaas/vault.yml
 ```
 
-Avaneb redaktor. Kirjuta sisse:
+Avaneb tekstiredaktor. Kirjuta faili:
 
 ```yaml
 vault_db_parool: "MuudaMind-2026"
@@ -609,21 +609,21 @@ vault_db_parool: "MuudaMind-2026"
 
 | Käsk | Mida teeb |
 |---|---|
-| `ansible-vault create fail.yml` | uus krüpteeritud fail |
-| `ansible-vault view fail.yml` | näita sisu |
-| `ansible-vault edit fail.yml` | muuda sisu |
-| `ansible-vault encrypt fail.yml` | krüpteeri olemasolev avatekstiga fail |
-| `ansible-vault rekey fail.yml` | vaheta Vaulti parool |
+| `ansible-vault create fail.yml` | loob uue krüpteeritud faili |
+| `ansible-vault view fail.yml` | näitab faili sisu |
+| `ansible-vault edit fail.yml` | avab faili muutmiseks |
+| `ansible-vault encrypt fail.yml` | krüpteerib olemasoleva avatekstiga faili |
+| `ansible-vault rekey fail.yml` | vahetab Vaulti parooli |
 
 *Tabel 7.1. `ansible-vault` käsud.*
 
-Playbook'i käivitamisel küsi Vaulti parooli:
+Playbook'i käivitamisel lase Ansible'il Vaulti parooli küsida:
 
 ```bash
-ansible-playbook site.yml -K --ask-vault-pass
+ansible-playbook site.yml --ask-vault-pass
 ```
 
-`-K` küsib `sudo` parooli, `--ask-vault-pass` (lühidalt `-J`) Vaulti parooli. Need on kaks eri parooli.
+`--ask-vault-pass` (lühidalt `-J`) küsib Vaulti parooli. See ei ole sama mis `sudo` parool: töökohas, kus `sudo` nõuab parooli, lisatakse käsule ka `-K` ja siis küsitakse kahte eri parooli.
 
 ### Kaks faili: `vars.yml` ja `vault.yml`
 
@@ -638,7 +638,7 @@ ansible-playbook site.yml -K --ask-vault-pass
 <rect class="box" x="560" y="20" width="150" height="70" rx="8"/><text class="b" x="635" y="44" text-anchor="middle">Vaulti parool</text><text class="s" x="635" y="68" text-anchor="middle">ei ole Gitis</text>
 <text class="s" x="360" y="125" text-anchor="middle">grep db_parool leiab muutuja, aga mitte väärtuse</text>
 </svg>
-<figcaption>Joonis 7.1. Loetav viide ja krüpteeritud väärtus eraldi failides.</figcaption>
+<figcaption>Joonis 7.1. Loetav viide ja krüpteeritud väärtus on eraldi failides.</figcaption>
 </figure>
 
 ```yaml
@@ -648,11 +648,11 @@ db_kasutaja: labor
 db_parool: "{{ vault_db_parool }}"
 ```
 
-Nii näeb `grep`-iga ja koodiülevaatusel, millised muutujad on olemas ja kus neid kasutatakse, aga väärtus jääb krüpteerituks. Eesliide `vault_` ütleb, et väärtus tuleb Vaultist.
+Nii on `grep`-iga ja koodiülevaatusel näha, millised muutujad on olemas ja kus neid kasutatakse, kuid väärtus jääb krüpteerituks. Eesliide `vault_` näitab, et väärtus tuleb Vaultist.
 
 ### Parool väljundis
 
-Ansible trükib vaikimisi ülesande parameetrid välja, kui midagi läheb valesti või kui käivitad `-v`-ga. Ülesandel, mis kasutab parooli, peab olema **`no_log: true`**:
+Ansible väljastab ülesande parameetrid, kui midagi läheb valesti või kui käivitad `-v`-ga. Ülesandel, mis kasutab parooli, peab olema **`no_log: true`**:
 
 ```yaml
 - name: Andmebaasi kasutaja on olemas
@@ -667,7 +667,7 @@ Ansible trükib vaikimisi ülesande parameetrid välja, kui midagi läheb valest
 
 !!! warning "Mis ei lähe Giti"
 
-    Vaulti parool, avatekstiga paroolifailid ja privaatvõtmed. Kui avatekstiga parool jõudis kord GitHubi, vaheta see kohe ära: ajaloo ümberkirjutamine ei jõua kloonideni.
+    Vaulti parool, avatekstiga paroolifailid ja privaatvõtmed. Kui avatekstiga parool jõudis kordki GitHubi, vaheta see kohe: ajaloo ümberkirjutamine ei eemalda parooli juba tehtud kloonidest.
 
 ??? question "Kontrolli ennast"
 
@@ -684,20 +684,20 @@ Ansible trükib vaikimisi ülesande parameetrid välja, kui midagi läheb valest
 
 **Küsimus:** kuidas muuta viit masinat nii, et viga ei jõuaks korraga kõigini?
 
-1. kohtumisel nägid `--check --diff`-i ja `--limit`-i ühe faili peal. Mitme masina ja teenusega projektis on need veel olulisemad, sest üks vigane mall võib võtta maha kõik veebiserverid korraga.
+1. kohtumisel kasutasid `--check --diff`-i ja `--limit`-i ühe faili puhul. Mitme masina ja teenusega projektis on need veel olulisemad, sest üks vigane mall võib peatada kõigi veebiserverite töö korraga.
 
 | Võte | Mida annab | Näide |
 |---|---|---|
-| `--check --diff` | näitab muudatust failides enne tegemist | `ansible-playbook site.yml --check --diff -K -J` |
-| `--limit` | muudatus ainult valitud masinatele | `--limit web01` |
-| `serial` | play käib korraga ainult osa masinate peal | `serial: 1` |
+| `--check --diff` | näitab failide muudatust enne selle tegemist | `ansible-playbook site.yml --check --diff -J` |
+| `--limit` | rakendab muudatuse ainult valitud masinates | `--limit web01` |
+| `serial` | play töötleb korraga ainult osa masinatest | `serial: 1` |
 | `--syntax-check`, `ansible-lint` | leiab vead enne käivitamist | `ansible-lint site.yml` |
 
 *Tabel 8.1. Kontrollitud muudatuse võtted.*
 
 ### `serial`: masinhaaval
 
-Vaikimisi teeb Ansible iga ülesande kõigis masinates ja liigub siis järgmise juurde. Kui mall on vigane, katkeb nginx kõigis veebiserverites peaaegu samal ajal. **`serial: 1`** teeb kogu play läbi ühe masinaga, siis järgmisega:
+Vaikimisi täidab Ansible iga ülesande kõigis masinates ja liigub seejärel järgmise ülesande juurde. Kui mall on vigane, lakkab nginx kõigis veebiserverites töötamast peaaegu samal ajal. **`serial: 1`** täidab kogu play ühes masinas ja alles seejärel järgmises:
 
 ```yaml
 - name: Veebiserverid
@@ -708,21 +708,21 @@ Vaikimisi teeb Ansible iga ülesande kõigis masinates ja liigub siis järgmise 
     - veeb
 ```
 
-Kui esimeses masinas mõni ülesanne ebaõnnestub, peatub play enne, kui viga teise masinani jõuab. `serial` võib olla ka protsent (`"50%"`) või nimekiri (`[1, "50%"]`): esimene masin proovina, siis pooled korraga.
+Kui esimeses masinas mõni ülesanne ebaõnnestub, peatub play enne, kui viga teise masinani jõuab. `serial` võib olla ka protsent (`"50%"`) või loend (`[1, "50%"]`): kõigepealt üks masin proovina, seejärel pooled masinad korraga.
 
-### Tööjärjekord muudatusel
+### Muudatuse tegemise järjekord
 
 1. muuda muutujat või malli;
-2. `--check --diff --limit web01`: vaata, mis failis muutuks;
-3. käivita päriselt `--limit web01` ja kontrolli teenust (`curl`);
-4. käivita kõigile, `serial`-iga;
-5. teine käivitus: `changed=0`;
-6. `git commit`, `git push`.
+2. vaata `--check --diff --limit web01` abil, mis failis muutuks;
+3. rakenda muudatus `--limit web01` abil ja kontrolli teenust (`curl`);
+4. rakenda muudatus kõigis masinates `serial`-iga;
+5. käivita playbook uuesti ja veendu, et kokkuvõttes on `changed=0`;
+6. tee commit ja saada muudatused GitHubi.
 
 ??? question "Kontrolli ennast"
 
     1. Mis vahe on `--limit`-il ja `serial`-il?
-    2. Miks käivitad muudatuse kõigepealt ühel masinal?
+    2. Miks rakendad muudatuse kõigepealt ühes masinas?
 
 ??? info "Loe juurde"
 
@@ -731,12 +731,12 @@ Kui esimeses masinas mõni ülesanne ebaõnnestub, peatub play enne, kui viga te
 
 ## 9. Kokkuvõte
 
-- **Muutujad** hoiavad väärtusi eraldi ülesannetest; täpsem koht võidab: `host_vars` enne `group_vars`-i.
-- **`loop`** kordab ülesannet, **`register`** salvestab tulemuse, **handler** taaskäivitab teenuse ainult muudatuse peale.
-- **Mall** teeb muutujatest ja faktidest iga masina jaoks oma faili.
-- **Roll** on ühe ülesande kaust; **`site.yml`** ütleb, milline roll millisesse gruppi.
-- **Kogud** tuuakse `requirements.yml`-ist, mooduli pikk nimi ütleb, kust see tuleb.
+- **Muutujad** hoiavad väärtusi eraldi ülesannetest; kehtima jääb täpsem väärtus: `host_vars` on `group_vars`-ist tähtsam.
+- **`loop`** kordab ülesannet, **`register`** salvestab tulemuse, **handler** taaskäivitab teenuse ainult muudatuse korral.
+- **Mallist** tekib muutujate ja faktide põhjal iga masina jaoks oma fail.
+- **Roll** hoiab ühe osa kõiki faile ühes kaustas; **`site.yml`** määrab, millist rolli millises grupis kasutatakse.
+- **Kogud** paigaldatakse faili `requirements.yml` järgi ja mooduli täisnimi näitab, millisest kogust see pärineb.
 - **Vault** hoiab parooli Gitis krüpteeritult; Vaulti parool Giti ei lähe.
-- **Muudatus:** `--check --diff`, üks masin, siis kõik `serial`-iga.
+- **Muudatus:** kõigepealt `--check --diff`, siis üks masin ja seejärel kõik masinad `serial`-iga.
 
 Järgmisel kohtumisel paned rakenduse konteinerisse: rakendus ja kõik, mida see vajab, ühes pakis. Ansible jääb tööriistaks, mis paigaldab masinatesse Dockeri ja käivitab konteinerid.

@@ -56,7 +56,7 @@ JVM luges cgroup'i piiri ja arvutas heap'i selle järgi. Vaikimisi veerand 768 M
 
 ## Piir peab vastu: protsesside arv
 
-Mälupiiri nägid juba `docker run -m`-iga. Protsesside piir kaitseb teise vea eest: fork-pomm või lekkiv skript, mis käivitab protsesse lõputult. Proovid seda web01-s, kelle piir on 100.
+Mälupiiri nägid juba `docker run -m`-iga. Protsesside piir kaitseb teise vea eest: fork-pomm või lekkiv skript, mis käivitab protsesse lõputult. Proovid seda web01-s, mille piir on 100.
 
 Ilma `pids`-piiranguta täidab üks konteiner hosti protsessitabeli. Siis ei saa ka `sshd` uut sessiooni avada ja masinat saad parandada ainult konsoolist.
 
@@ -149,9 +149,9 @@ app01 kood ≠ 0 ja web01 kood 0 tähendavad, et segmenteerimine töötab mõlem
 
 ## Kirjutuskaitstud konteinerid
 
-Kirjutuskaitstud juurfailisüsteem tähendab, et konteineris ei saa ükski protsess faile muuta väljaspool kaustu, mille sa eraldi lubad. Teed seda kahele teenusele, kes seda kergesti taluvad.
+Kirjutuskaitstud juurfailisüsteem tähendab, et konteineris ei saa ükski protsess faile muuta väljaspool kaustu, mille sa eraldi lubad. Teed seda kahele teenusele, mis seda kergesti taluvad.
 
-Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisamine või konfi muutmine. `read_only` lõpetab selle failisüsteemi tasandil, sõltumata sellest, mis kasutajana ründaja protsess töötab.
+Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisamine või konfiguratsiooni muutmine. `read_only` lõpetab selle failisüsteemi tasandil, sõltumata sellest, mis kasutajana ründaja protsess töötab.
 
 1. Lisa mc01-le `read_only: true`. Lisa web01-le `read_only: true` ja `tmpfs` kaustadele, kuhu nginx kirjutab: `/var/cache/nginx`, `/run`, `/tmp` ja `/etc/nginx/conf.d` (sinna kirjutab entrypoint template'ist `default.conf`-i).
 2. Uuenda stacki ja proovi kirjutada.
@@ -165,7 +165,7 @@ Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisa
 
 3. Eemalda ajutiselt `/etc/nginx/conf.d` tmpfs'i nimekirjast, uuenda stacki ja vaata `docker compose logs web01 | head -15` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/health`. Pane rida tagasi.
 
-`Read-only file system` tuli tuumalt, mitte nginx'ilt. Ilma `conf.d` tmpfs'ita ei saanud entrypoint template'ist konfi kirjutada; see on tüüpiline viga, kui `read_only` lisatakse ilma teenuse kirjutuskohti uurimata.
+`Read-only file system` tuli tuumalt, mitte nginx'ilt. Ilma `conf.d` tmpfs'ita ei saanud entrypoint template'ist konfiguratsiooni kirjutada; see on tüüpiline viga, kui `read_only` lisatakse ilma teenuse kirjutuskohti uurimata.
 
 ✅ **Edasi saad minna, kui** `touch` veebijuurde annab `Read-only file system`, `/tmp` on kirjutatav, `ReadonlyRootfs` on `true` ja `/health` on `UP`. Kirjuta TOEND.md-sse, mis juhtus ilma `conf.d` tmpfs'ita ja miks.
 
@@ -294,7 +294,7 @@ Prod-fail on Gitis ja valideerub, aga töötab ainult siis, kui keegi selle tead
 
 ## Miks see nii töötab
 
-**RabbitMQ parool.** Selles laboris kasutatav image `rabbitmq:4.1-management-alpine` ei toeta muutujat `RABBITMQ_DEFAULT_PASS_FILE`. Seetõttu jääb rmq01 parool failis `compose.prod.yaml` keskkonnamuutujasse. See on selle image'i piirang. Parooli kasutatakse ainult esimesel käivitusel tühja andmekataloogiga. Parooli saab anda failist, kui mount'id saladuse failina `/etc/rabbitmq/conf.d/20-labseis.conf` ridadega `default_user = labseis` ja `default_pass = …`. See näitab, miks "kasuta alati `_FILE`-muutujat" ei ole universaalne reegel: image'i ametlik entrypoint määrab, milliseid saladuse edastamise viise teenus tegelikult toetab.
+**RabbitMQ parool.** Selles praktikumis kasutatav image `rabbitmq:4.1-management-alpine` ei toeta muutujat `RABBITMQ_DEFAULT_PASS_FILE`. Seetõttu jääb rmq01 parool failis `compose.prod.yaml` keskkonnamuutujasse. See on selle image'i piirang. Parooli kasutatakse ainult esimesel käivitusel tühja andmekataloogiga. Parooli saab anda failist, kui mount'id saladuse failina `/etc/rabbitmq/conf.d/20-labseis.conf` ridadega `default_user = labseis` ja `default_pass = …`. See näitab, miks "kasuta alati `_FILE`-muutujat" ei ole universaalne reegel: image'i ametlik entrypoint määrab, milliseid saladuse edastamise viise teenus tegelikult toetab.
 
 **Spring Boot'i configtree.** Spring Boot'i configtree loeb kaustast `/run/secrets/` iga faili konfiguratsiooniomaduseks, mille nimi on failinimi. Rakenduse `application.properties` viitab `${DB_PASSWORD}`-ile ja rakendus saab väärtuse failist kätte samamoodi nagu keskkonnamuutujast.
 

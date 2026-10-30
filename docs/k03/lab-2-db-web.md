@@ -7,7 +7,7 @@ tags:
 
 # 2. db ja web image
 
-Oma Dockerfile, mis kordab ametliku image'i entrypoint'i tööd, jääb baasimage'i turvaparandustest maha ja läheb katki esimesel suuremal uuendusel. db01 ja web01 ehituvad sinu Dockerfile'idest ametlike image'ite peale. Kõigepealt vaatad, mida ametlik image juba teeb, ja kirjutad ainult puuduva osa: nii jääb Dockerfile lühikeseks ja baasimage'i uuendus toob parandused kaasa ilma, et peaksid oma faili muutma. db ja app vajavad repo faile, seega on nende ehituskontekst **repo juur**; web'i kontekst on tema oma kaust. Lõpus on ehituskontekst `.dockerignore`-iga väike ja saladustest puhas.
+Oma Dockerfile, mis kordab ametliku image'i entrypoint'i tööd, jääb baasimage'i turvaparandustest maha ja läheb katki esimesel suuremal uuendusel. db01 ja web01 image'id ehitatakse sinu Dockerfile'idest ametlike image'ite põhjal. Kõigepealt vaatad, mida ametlik image juba teeb, ja kirjutad ainult puuduva osa: nii jääb Dockerfile lühikeseks ja baasimage'i uuendus toob parandused kaasa ilma, et peaksid oma faili muutma. db ja app vajavad repo faile, seega on nende ehituskontekst **repo juur**; web'i kontekst on tema oma kaust. Lõpus on ehituskontekst `.dockerignore`-iga väike ja saladustest puhas.
 
 **Kui teed seda tööl iga päev:** `docker build --check` sinu db- ja web-Dockerfile'ile ei anna hoiatusi ja tead, millal MariaDB image'i init-skriptid käivituvad. Kui see on sul juba korras, kirjuta mõlemad Dockerfile'id ise ja mine otse etappi „[Init-skripti lõks](#init-skripti-loks)“.
 
@@ -39,7 +39,7 @@ docker run --rm --entrypoint ls nginx:1.30-alpine /docker-entrypoint.d
 
 Tühi `User` tähendab, et image käivitub root'ina ja entrypoint vahetab kasutaja ise, kui ettevalmistus on tehtud. `Volumes` väljal olev kataloog saab iga konteineriga anonüümse volume'i, kui sa ise nime ei anna. nginx'i kaust `/docker-entrypoint.d` on hook: iga sinna pandud skript käivitub enne nginx'it.
 
-✅ **Edasi saad minna, kui** tead, et MariaDB ENTRYPOINT on skript, mis initsialiseerib tühja `/var/lib/mysql` ja loeb kausta `/docker-entrypoint-initdb.d/`, ning et nginx'i entrypoint käivitab enne nginx'it skriptid kaustast `/docker-entrypoint.d/`, sh `20-envsubst-on-templates.sh`, mis teeb template'ist lõpliku konfi.
+✅ **Edasi saad minna, kui** tead, et MariaDB ENTRYPOINT on skript, mis initsialiseerib tühja `/var/lib/mysql` ja loeb kausta `/docker-entrypoint-initdb.d/`, ning et nginx'i entrypoint käivitab enne nginx'it skriptid kaustast `/docker-entrypoint.d/`, sh `20-envsubst-on-templates.sh`, mis teeb template'ist lõpliku konfiguratsiooni.
 
 ## db/Dockerfile
 
@@ -95,7 +95,7 @@ Teine käivitus leidis volume'ist valmis andmekataloogi ja jättis kogu `/docker
 
 ## web/Dockerfile ja nginx'i template
 
-web01 on app01 ees pöördproksi. nginx lahendab `upstream` nime ainult käivitusel; kui app01 konteiner luuakse uuesti uue IP-ga, vastab web01 502-ga. [Ametlik nginx-image](https://hub.docker.com/_/nginx) oskab konfifaili template'ist teha ja konteineri DNS-serveri sinna kirjutada.
+web01 on app01 ees pöördproksi. nginx lahendab `upstream` nime ainult käivitusel; kui app01 konteiner luuakse uuesti uue IP-ga, vastab web01 502-ga. [Ametlik nginx-image](https://hub.docker.com/_/nginx) oskab konfiguratsioonifaili template'ist genereerida ja konteineri DNS-serveri sinna kirjutada.
 
 GitHub Actionsi pipeline uuendab app01 iga commit'iga, nii et see juhtuks iga päev.
 
@@ -103,7 +103,7 @@ Kirjuta `k03-docker/web/nginx.conf` ja `k03-docker/web/Dockerfile` nende nõuete
 
 - üks `server`-plokk pordil 80, `location /` suunab `http://app01:8080` poole ja edastab päised `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`
 - faili algus `resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;`, `server`-plokis `set $app_upstream http://app01:8080;` ja `proxy_pass $app_upstream;`
-- Dockerfile: `nginx:1.30-alpine`, konfifail kopeeritakse `/etc/nginx/templates/default.conf.template`, `ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1`
+- Dockerfile: `nginx:1.30-alpine`, konfiguratsioonifail kopeeritakse `/etc/nginx/templates/default.conf.template`, `ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1`
 - `HEALTHCHECK`, mis küsib `wget`-iga `http://127.0.0.1/health` (alpine'is curl'i pole)
 
 ```bash
@@ -113,7 +113,7 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
 > Kui näed `${NGINX_LOCAL_RESOLVERS}` muutmata kujul, jäi ENV puudu või fail pole `templates/` all.
 
-`nginx -T` näitab lõplikku konfi, mille entrypoint template'ist tegi. IP-aadress `resolver` real tähendab, et envsubst sai muutuja kätte. `proxy_pass $app_upstream` alles tähendab, et nginx lahendab nime iga päringu ajal resolver'i kaudu, mitte ainult käivitusel.
+`nginx -T` näitab lõplikku konfiguratsiooni, mille entrypoint template'ist tegi. IP-aadress `resolver` real tähendab, et envsubst sai muutuja kätte. `proxy_pass $app_upstream` alles tähendab, et nginx lahendab nime iga päringu ajal resolver'i kaudu, mitte ainult käivitusel.
 
 ✅ **Edasi saad minna, kui** `resolver` real on päris IP-aadress ja `proxy_pass $app_upstream;` on alles. Kirjuta TOEND.md-sse, miks `$host` ja `$app_upstream` jäid envsubst'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
 
@@ -123,7 +123,7 @@ Sinu web-image peab käivituma ka siis, kui app01 veel pole. Proovid seda testv�
 
 Staatilise upstream'iga nginx keeldub käivitumast, kui nimi ei lahendu. Compose'is tähendaks see, et web01 ebaõnnestub iga kord, kui app01 on alles käivitumas, ja restart-poliitika taaskäivitab teda tsüklis.
 
-1. Käivita oma web-image võrgus, kus app01 pole, ja küsi temalt avalehte.
+1. Käivita oma web-image võrgus, kus app01 pole, ja küsi sellelt avalehte.
 
     ```bash
     docker network create k03web
@@ -140,9 +140,9 @@ Staatilise upstream'iga nginx keeldub käivitumast, kui nimi ei lahendu. Compose
     docker rm -f webt && docker network rm k03web
     ```
 
-Sinu image käivitus ja vastas 502-ga: konf on korras, puudu on ainult backend, ja seda ütleb ka logi. Staatiline variant ei jõudnud kuulamiseni, `nginx -t` peatus juba nime peal. 502 tähendab "nginx töötab, upstream ei vasta", `Exited (1)` tähendab "konf ei lähe läbi".
+Sinu image käivitus ja vastas 502-ga: konfiguratsioon on korras, puudu on ainult backend, ja seda ütleb ka logi. Staatiline variant ei jõudnud kuulamiseni, `nginx -t` peatus juba nime peal. 502 tähendab "nginx töötab, upstream ei vasta", `Exited (1)` tähendab "konfiguratsioon ei läbi kontrolli".
 
-✅ **Edasi saad minna, kui** `webt` oli `Up` ja `wget` sai 502 (kood ≠ 0), logis oli `could not be resolved`, staatiline konf andis `host not found in upstream` ning testkonteiner ja võrk on kustutatud.
+✅ **Edasi saad minna, kui** `webt` oli `Up` ja `wget` sai 502 (kood ≠ 0), logis oli `could not be resolved`, staatiline konfiguratsioon andis `host not found in upstream` ning testkonteiner ja võrk on kustutatud.
 
 ## .dockerignore
 

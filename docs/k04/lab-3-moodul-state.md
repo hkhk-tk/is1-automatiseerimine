@@ -6,7 +6,7 @@ tags:
 
 # 3. Moodul, moved ja state
 
-State, mis on ainult control node'i kettal, kaob koos kettaga, ja kaks inimest, kes käivitavad samal ajal `apply`, kirjutavad teineteise töö üle. Viie VM-i kirjeldust ei saa praegu ka teises kohas uuesti kasutada. Tõstad VM-i kirjelduse moodulisse `modules/vm`, viid state'i koolitaja S3 bucketisse ja lülitad sisse luku, mis ei lase kahel jooksul korraga kirjutada. Mõlemad muudatused tehakse töötava taristu peal ja on õnnestunud ainult siis, kui ükski masin seda ei märganud: iga etapi lõpus on plaan "No changes".
+State, mis on ainult control node'i kettal, kaob koos kettaga, ja kaks inimest, kes käivitavad samal ajal `apply`, kirjutavad teineteise töö üle. Viie VM-i kirjeldust ei saa praegu ka teises kohas uuesti kasutada. Tõstad VM-i kirjelduse moodulisse `modules/vm`, viid state'i koolitaja S3 bucketisse ja lülitad sisse luku, mis ei lase kahel käivitusel korraga kirjutada. Mõlemad muudatused tehakse töötava taristu peal ja on õnnestunud ainult siis, kui ükski masin seda ei märganud: iga etapi lõpus on plaan "No changes".
 
 Enne alustamist peab `tofu plan` kaustas `k04-tofu` ütlema "No changes".
 
@@ -14,7 +14,7 @@ Enne alustamist peab `tofu plan` kaustas `k04-tofu` ütlema "No changes".
 
 ## Tõsta VM moodulisse
 
-Tõstad VM-i kirjelduse eraldi kausta, millel on sisendid ja väljundid. Sama kirjeldust on vaja ka järgmistel kordadel ja dev-keskkonnas, ning moodul on koht, kus see elab ühes eksemplaris. Lõpus vaatad plaani, mis näitab, mida see tõstmine ilma lisatööta teeks.
+Tõstad VM-i kirjelduse eraldi kausta, millel on sisendid ja väljundid. Sama kirjeldust on vaja ka järgmistel kordadel ja dev-keskkonnas, ning moodul on koht, kus see on kirjas ainult ühes eksemplaris. Lõpus vaatad plaani, mis näitab, mida see tõstmine ilma lisatööta teeks.
 
 Refaktoreerimine, mis kustutab ja loob viis masinat, on tootmises katkestus kõigile teenustele korraga. Sama plaan tuleb ka siis, kui keegi tõstab koodi ümber ja plaani ei loe.
 
@@ -117,9 +117,9 @@ Sama `serial` enne ja pärast tähendab, et kolimine kopeeris state'i muutmata. 
 
 ## Lülita lukk sisse ja proovi
 
-Jagatud state vajab lukku. Lukk on `<key>.tflock` objekt bucketis ([state locking](https://opentofu.org/docs/language/state/locking/)). Siin lülitad selle sisse ja tekitad meelega olukorra, kus kaks jooksu tahavad sama state'i.
+Jagatud state vajab lukku. Lukk on `<key>.tflock` objekt bucketis ([state locking](https://opentofu.org/docs/language/state/locking/)). Siin lülitad selle sisse ja tekitad meelega olukorra, kus kaks käivitust tahavad sama state'i.
 
-Ilma lukuta jääb state'i see, kes kirjutas viimasena. Teise jooksu loodud VM jääb Proxmoxi, aga state ei tea sellest, ja järgmine plaan teeb sama VM-i uuesti või ebaõnnestub ID konflikti peale.
+Ilma lukuta jääb state'i see, kes kirjutas viimasena. Teise käivituse loodud VM jääb Proxmoxi, aga state ei tea sellest, ja järgmine plaan teeb sama VM-i uuesti või ebaõnnestub ID konflikti peale.
 
 1. Võta `backend.hcl`-is `use_lockfile = true` kommentaarist välja ja seadista backend uuesti.
 
@@ -146,7 +146,7 @@ Veateates on kirjas, kes lukku hoiab (kasutaja ja host) ja millest alates. See o
 
 Eelmises etapis vabastas lukk end ise. Siin tapad lukku hoidva protsessi nii, et see ei jõua koristada, ja vabastad luku käsitsi. Nii jääb lukk maha ka siis, kui SSH-ühendus katkeb keset `apply`-d.
 
-`force-unlock` on käsk, mida tehakse ainult siis, kui oled kindel, et keegi ei kirjuta. Kui murrad lahti töötava jooksu luku, on tulemuseks täpselt see üleskirjutamine, mille vastu lukk oli. Siin on see ohutu, sest lukku hoidis `tofu console`, mis state'i ei kirjuta. Tootmises, kus lukk jäi maha keset `apply`-d, tee enne `tofu state pull > varu.json` ja kontrolli, et fail on loetav.
+`force-unlock` on käsk, mida tehakse ainult siis, kui oled kindel, et keegi ei kirjuta. Kui murrad lahti töötava käivituse luku, on tulemuseks täpselt see üleskirjutamine, mille vastu lukk oli. Siin on see ohutu, sest lukku hoidis `tofu console`, mis state'i ei kirjuta. Tootmises, kus lukk jäi maha keset `apply`-d, tee enne `tofu state pull > varu.json` ja kontrolli, et fail on loetav.
 
 1. Käivita esimeses terminalis `tofu console`. Teises terminalis tapa see.
 
@@ -170,7 +170,7 @@ Eelmises etapis vabastas lukk end ise. Siin tapad lukku hoidva protsessi nii, et
 
 Commit'i läheb moodul, `moved.tf` ja `backend.tf`. `backend.hcl` ja state'i jäljed ei lähe, ja seda kontrollid enne `git add`-i.
 
-`backend.hcl` Gitis annab igaühele, kes repot näeb, teada sinu bucketi ja võtme tee. Võtmepaari seal pole, aga see on esimene samm õige objekti leidmiseks.
+`backend.hcl` Gitis annab igaühele, kes repositooriumi näeb, teada sinu bucketi ja võtme tee. Võtmepaari seal pole, aga see on esimene samm õige objekti leidmiseks.
 
 ```bash
 cd ~/labori-seis

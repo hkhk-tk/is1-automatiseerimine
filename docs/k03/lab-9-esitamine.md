@@ -63,7 +63,7 @@ Kloonis pole `.env`-i ega `secrets/`-i, ja see on õige: automaatne hindaja tö�
 
 ## Lõpukontroll
 
-Kontrolli stacki seisu, mida automaatne hindaja ei näe: täielik restart, versioon, rikkele reageerimine ja kontroll seestpoolt. Need on samad asjad, mida koolitaja PR-i juures vaatab.
+Kontrolli stacki olekut, mida automaatne hindaja ei näe: täielik restart, versioon, rikkele reageerimine ja kontroll seestpoolt. Need on samad asjad, mida koolitaja PR-i juures vaatab.
 
 ```bash
 cd k03-docker && docker compose down && docker compose up -d --wait && docker compose ps
@@ -111,7 +111,7 @@ git tag k03 && git push origin k03
 
 > Parandus pärast esitust: uus commit `main`-i, siis `git tag -f k03 && git push -f origin k03`.
 
-Tag `main`-i peal tähendab, et automaatne hindaja hindab sama koodi, mis on kursuse põhiharus. Tag haru peal hindaks koodi, mida `main` ei sisalda, ja 5. kohtumine algaks vale seisu pealt.
+Tag `main`-i peal tähendab, et automaatne hindaja hindab sama koodi, mis on kursuse põhiharus. Tag haru peal hindaks koodi, mida `main` ei sisalda, ja 5. kohtumine algaks valest olekust.
 
 ✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k03`.
 

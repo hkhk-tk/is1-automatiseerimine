@@ -6,18 +6,18 @@ tags:
   - CI/CD
 ---
 
-# 6. kohtumine, labor: Jenkins, SonarQube ja Nexus
+# 6. kohtumine · Praktikum: Jenkins, SonarQube ja Nexus
 
 !!! info "Selle korra töö"
     - **Masin:** control node, repo `~/labori-seis`, töökaust `k06-jenkins/`, tõendid PR-i kirjeldusse
     - **Sihtmasinad:** `jenkins.lab.hkhk.ee:8080`, `sonar.lab.hkhk.ee:9000`, `nexus.lab.hkhk.ee:8081` (VPN); administraatori osas oma sandbox-Jenkins control node'il (`:8090`)
     - **Esitamine:** haru `k06-jenkins` → PR → merge → tag `k06`
     - **Vaja koolitajalt:** neli parooli (Jenkins, agendi saladus, Sonar, Nexus); kasutajanimi = GitHubi nimi väiketähtedega, allpool `<gh>`
-    - **Eelmisest korrast:** `main` GitHub Actionsi korra seisuga (`pom.xml`, `src/`, `autograde/`), 3. kohtumisest `k03-docker/compose.yaml` ja `k03-docker/app/Dockerfile`, control node'il töötav VPN ja Docker
+    - **Eelmisest korrast:** `main` sellisena, nagu see oli GitHub Actionsi kohtumise lõpus (`pom.xml`, `src/`, `autograde/`), 3. kohtumisest `k03-docker/compose.yaml` ja `k03-docker/app/Dockerfile`, control node'il töötav VPN ja Docker
     - **Testitud:** Jenkins LTS 2.580.x, Java 21, Maven 3.9.16, SonarQube Community Build 26.9 (andmebaas PostgreSQL 17), SonarScanner for Maven 5.8.0.7211, Nexus CE 3.96.4, Tomcat 10.1 (`tomcat:10.1-jre21-temurin`), sandboxi image `jenkins/jenkins:lts-jdk21`, Docker 29, Ubuntu 24.04
     - **Dokumentatsioon:** [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/syntax/) · [Jenkins Configuration as Code](https://www.jenkins.io/projects/jcasc/) · [SonarQube](https://docs.sonarsource.com/sonarqube-community-build/) · [Nexus Repository](https://help.sonatype.com/en/repository-types.html)
 
-Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonari quality gate peatab halva koodi ja sama WAR läheb Nexusesse ja Docker image'isse. Avaldamine käib ainult põhiharult, testkeskkonda paigaldus ainult inimese kinnitusega. Oma sandbox-Jenkinsi seadistad koodist, uuendad selle pluginat ja taastad selle varukoopiast.
+Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonari quality gate peatab halva koodi ja sama WAR läheb Nexusesse ja Docker image'isse. Avaldamine toimub ainult põhiharult ja testkeskkonda paigaldatakse ainult inimese kinnitusel. Oma sandbox-Jenkinsi seadistad koodist, uuendad selle pluginat ja taastad selle varukoopiast.
 
 Kui moodulil on GitHubis issue (milestone `K6`), lisa commit'i sõnumisse `closes #N`.
 

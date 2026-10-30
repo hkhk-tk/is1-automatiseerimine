@@ -6,11 +6,11 @@ tags:
 
 # Pilve kodutööd (AWS) · üldjuhend
 
-Valikuline, neile, kes tahavad sama asja pilves proovida. Klassis töötad Proxmoxis, kodutöös viid **sama koodi** AWS-i oma kontole: samad
-Ansible'i playbook'id ja rollid, sama Dockerfile, sama OpenTofu struktuur, sama pipeline, samad manifestid. Küsimus on igas kodutöös
-sama: *mis osa minu koodist eeldas Proxmoxi ja kuidas ma selle eelduse parameetriks teen?*
+Kodutööd on valikulised ja mõeldud neile, kes tahavad sama lahendust pilves proovida. Klassis töötad Proxmoxis, kodutöös viid **sama koodi** oma AWS-i kontole: samad
+Ansible'i playbook'id ja rollid, sama Dockerfile, sama OpenTofu struktuur, sama pipeline, samad manifestid. Igas kodutöös
+on sama küsimus: *milline osa minu koodist eeldab Proxmoxi ja kuidas selle eelduse muutujaks muuta?*
 
-Eeldus on sama kohtumise Proxmoxi labor. Kui labor jäi pooleli, lõpeta see enne (VPN-iga kodust).
+Kodutöö eeldab sama kohtumise praktikumi. Kui praktikum jäi pooleli, lõpeta see enne kodutööd (kodust pääsed laborisse VPN-iga).
 Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 
 | Kohtumine | Kodutöö | Tulemus | Juhend |
@@ -28,7 +28,7 @@ Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 
 ## Kuhu kood läheb
 
-Sinu kursuse repos on kaust `cloud/`:
+Kursuse repositooriumis on kaust `cloud/`:
 
 ```text
 cloud/
@@ -37,5 +37,5 @@ cloud/
   k02-aws/ … k07-aws/
 ```
 
-Sulge kodutöö issue commit'iga (`closes #N`) ja lisa issue'sse kommentaar: `aws-leftovers.sh` väljundi viimane
-rida ja tõend, mida juhend küsib (screenshot või käsu väljund). Tag'i ei pane, automaatne hindaja pilve ei kontrolli.
+Sulge kodutöö issue commit'iga (`closes #N`) ja lisa issue'sse kommentaar, milles on `aws-leftovers.sh` väljundi viimane
+rida ja juhendis nõutud tõend (kuvatõmmis või käsu väljund). Kodutööle tag'i ei panda, sest automaatne hindaja pilveressursse ei kontrolli.

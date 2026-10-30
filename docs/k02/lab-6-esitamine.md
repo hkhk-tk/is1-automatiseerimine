@@ -8,12 +8,12 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - näed muudatust enne tegemist (`--check --diff`);
-    - proovid muudatust ühel masinal (`--limit`);
-    - levitad muudatust masinhaaval (`serial`);
+    - vaatad muudatust enne selle tegemist (`--check --diff`);
+    - proovid muudatust kõigepealt ühes masinas (`--limit`);
+    - rakendad muudatust masinhaaval (`serial`);
     - esitad projekti.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k02`.
+Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
 
 ## A1 · Muudatus mallis
 
@@ -23,10 +23,10 @@ Lisa `roles/veeb/templates/index.html.j2`-sse enne `</body>` rida:
   <p>Kursus: {{ kursus }}</p>
 ```
 
-Vaata enne, mis muutuks, ainult web01-l:
+Kontrolli enne käivitamist, mis web01-s muutuks:
 
 ```bash
-ansible-playbook site.yml -K --ask-vault-pass --check --diff --limit web01
+ansible-playbook site.yml --ask-vault-pass --check --diff --limit web01
 ```
 
 ??? success "Oodatav tulemus"
@@ -36,12 +36,12 @@ ansible-playbook site.yml -K --ask-vault-pass --check --diff --limit web01
     changed: [web01]
     ```
 
-    `--check` ei muutnud midagi: `ssh web01 curl -s http://localhost | grep Kursus` ei leia veel midagi.
+    `--check` ei muutnud masinas midagi: käsk `ssh web01 curl -s http://localhost | grep Kursus` ei leia veel midagi.
 
-Nüüd päriselt ühel masinal, siis kontroll:
+Rakenda muudatus web01-s ja kontrolli tulemust:
 
 ```bash
-ansible-playbook site.yml -K --ask-vault-pass --limit web01
+ansible-playbook site.yml --ask-vault-pass --limit web01
 ssh web01 curl -s http://localhost | grep Kursus
 ```
 
@@ -59,16 +59,16 @@ Lisa `site.yml`-is play'le `Veebiserverid` rida `serial: 1` (rea `become: true` 
 ```
 
 ```bash
-ansible-playbook site.yml -K --ask-vault-pass
+ansible-playbook site.yml --ask-vault-pass
 ```
 
 ??? success "Oodatav tulemus"
 
-    Veebiserverite play käib kaks korda: kõigepealt kõik ülesanded web01-l, siis app01-l (inventory järjekorras). web01 oli juba muudetud, seega seal `ok`; app01-l `changed`. Kui web01-l oleks midagi ebaõnnestunud, ei oleks play app01-ni jõudnud.
+    Veebiserverite play käivitatakse kaks korda: kõigepealt kõik ülesanded web01-s, seejärel app01-s (inventory järjekorras). web01 oli juba muudetud, seega on seal tulemus `ok`, app01-s `changed`. Kui web01-s oleks midagi ebaõnnestunud, ei oleks play app01-ni jõudnud.
 
-Teine käivitus: `changed=0`.
+Teisel käivitusel on `changed=0`.
 
-## A3 · Esita
+## A3 · Töö esitamine
 
 ```bash
 cd ~/kursus
@@ -77,9 +77,9 @@ git commit -m "k02: serial ja muudatus mallis"
 git push
 ```
 
-Ava oma repo GitHubis ja kontrolli:
+Ava oma repositoorium GitHubis ja kontrolli, et seal on järgmised failid:
 
-| Fail või kaust | Kust |
+| Fail või kaust | Kus see tehti |
 |---|---|
 | `ansible.cfg`, `inventory.ini` | [1. Algseis](lab-1-algseis.md) |
 | `group_vars/`, `host_vars/` | [1. Algseis](lab-1-algseis.md), [4. Andmebaas](lab-4-andmebaas.md) |
@@ -89,8 +89,8 @@ Ava oma repo GitHubis ja kontrolli:
 
 *Tabel 1. Esitatavad failid.*
 
-Ava GitHubis `group_vars/andmebaas/vault.yml`: sisu peab algama `$ANSIBLE_VAULT`.
+Ava GitHubis fail `group_vars/andmebaas/vault.yml`. Selle sisu peab algama reaga `$ANSIBLE_VAULT`.
 
-**Valmis, kui** kõik failid on GitHubis, `vault.yml` on krüpteeritud ja `site.yml` teine käivitus annab `changed=0`.
+**Valmis, kui** kõik failid on GitHubis, `vault.yml` on krüpteeritud ja `site.yml` teisel käivitusel on `changed=0`.
 
 Edasi: [Kodutöö](kodutoo.md).

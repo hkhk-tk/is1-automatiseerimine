@@ -63,7 +63,7 @@ Otsi sümptomi järgi. Viimane veerg ütleb mehhanismi, selle järgi leiad ka ve
 | app01 kaua `Init:0/1` | `kubectl logs <pod> -c wait-deps` | sõltuvus pole üleval või ConfigMap'is vale host | init-konteiner ootab TCP-porti ja ei lõpe enne, kui sõltuvus vastab |
 | Ingress `404 page not found` | `kubectl get ingress` HOSTS, curl `-H 'Host: …'` | hostis kirjaviga, `ingressClassName` puudub või Host-päis jäi ära | Traefik valib reegli Host-päise ja klassi järgi; sobivat reeglit ei leitud |
 | Ingress `503` / `no available server` | `kubectl get endpoints app01` | reegel on olemas, aga Service'il pole Ready pod'e | Traefik leiab reegli, aga Endpoints on tühi, sest ükski pod pole Ready |
-| leht avaneb ilma stiilita | `kubectl get ingress -o yaml \| grep -A3 path` | reegel katab ainult lehe tee, `/style.css` jääb välja | Ingress suunab ainult teed, mis reegel katab, ülejäänu saab 404 |
+| leht avaneb ilma stiilita | `kubectl get ingress -o yaml \| grep -A3 path` | reegel hõlmab ainult lehe teed, `/style.css` jääb välja | Ingress suunab ainult reeglis kirjeldatud teed, ülejäänud päringud saavad 404 |
 | ajutine pod saab pärast NetworkPolicy't ikka `open` | `kubectl get networkpolicy db01 -o yaml` | klaster ei jõusta NetworkPolicy'd või `podSelector` ei vali db01 pod'i | NetworkPolicy on ainult objekt; jõustab seda CNI, ja selector peab pod'i valima |
 | pärast NetworkPolicy't app01 `Init:0/1`, `ootan db01:3306` | `kubectl get pods -l app=app01 --show-labels`, policy `from` | `from.podSelector` ei vasta app01 label'ile | poliitika lubab ainult nimetatud label'eid, init-konteiner kasutab app01 pod'i label'it |
 | `nc2` label'iga `app=app01` saab `open` | ootuspärane | poliitika valib pod'id label'i järgi | NetworkPolicy ei tea, kes pod'i lõi, ainult mis label tal on |
@@ -85,7 +85,7 @@ Otsi sümptomi järgi. Viimane veerg ütleb mehhanismi, selle järgi leiad ka ve
 | install: `exceeded quota` | `kubectl describe resourcequota` | `~/k07-katse` katsepod'id on alles | chart'i pod'id lähevad samasse kvooti kui kõik muu |
 | `PODINFO_UI_MESSAGE` puudub renderdatud failis | `helm template … -f $V \| grep -i ui_` | values-failis on võti vales kohas (`ui.message`, mitte `message`) | Helm jätab tundmatu või vales kohas võtme vaikselt kasutamata |
 | `rollback`: `release has no 1 version` | `helm history podinfo` | revisjoni number on vale või release paigaldati uuesti | `helm rollback` viitab revisjoni numbrile release'i ajaloos, mitte chart'i versioonile |
-| `helm status` näitab `deployed`, kuigi klastris on teine seis | `helm get manifest podinfo \| kubectl diff -f -` | ootuspärane | Helm loeb release'i Secret'it, klastrit ta ei jälgi |
+| `helm status` näitab `deployed`, kuigi klastri olek on teine | `helm get manifest podinfo \| kubectl diff -f -` | ootuspärane | Helm loeb release'i Secret'it ega jälgi klastrit |
 | **7. GitOps Argo CD-ga** | | | |
 | olek `Unknown`, `repository not accessible` | `grep repoURL k07-k8s/argocd/application.yaml` | repoURL-is kirjaviga või repo pole org'is `hkhk-tk` | repo-server ei saa repot kloonida, seega pole midagi võrrelda |
 | `application destination … is not permitted in project` | `destination.namespace` | destination namespace ei ole sinu namespace | AppProject lubab ainult kindlaid destination'eid |
@@ -103,7 +103,7 @@ Otsi sümptomi järgi. Viimane veerg ütleb mehhanismi, selle järgi leiad ka ve
 | `gitops` logis `image'i rida ei muutunud` | `grep image: k07-k8s/40-app.yaml` | `sed` muster ei leia rida (tühikud, jutumärgid, teine registry) | `sed` asendab ainult rida, mis mustrile täpselt vastab |
 | `cibump`: `TODO-d täitmata` | `grep -n 'TODO\|if: false' .github/workflows/gitops.yml` | TODO kommentaarid või `if: false` on alles | automaatne hindaja kontrollib, et starteri kohatäited on asendatud |
 | `kubectl scale` jääb alles | `kubectl get application -o jsonpath='{.spec.syncPolicy}'` | selfHeal on väljas: tee `k07-k8s/argocd/application.yaml`-ile uuesti `kubectl apply` | ilma selfHeal'ita märgib Argo drift'i, aga ei paranda |
-| `rollout undo` keeratakse kohe tagasi | ootuspärane | selfHeal taastab Giti seisu: tagasi pöördud `git revert`-iga | Git ütleb endiselt sama image'it ja selfHeal taastab selle |
+| `rollout undo` keeratakse kohe tagasi | ootuspärane | selfHeal taastab Gitis kirjeldatud oleku: tagasi pöördumiseks kasuta `git revert`-i | Gitis on endiselt sama image ja selfHeal taastab selle |
 | `proov` ConfigMap ei kao pärast `git rm`-i | `grep prune k07-k8s/argocd/application.yaml`, Refresh | `prune: true` puudub või Argo pole Giti veel uuesti lugenud | prune kustutab ainult siis, kui see on lubatud ja Argo on uut commit'i näinud |
 | katkise YAML-iga olek `Unknown`, `ComparisonError` | `kubectl get application labori-seis -o jsonpath='{.status.conditions}'` | ootuspärane: repo-server ei suuda faili lugeda | Argo ei muuda klastrit, kui mõnda faili ei saa renderdada |
 | pärast katkise faili eemaldamist ikka `Unknown` | Refresh-annotatsioon | Argo pole uut commit'i veel lugenud | Giti loetakse perioodiliselt või refresh-signaali peale |

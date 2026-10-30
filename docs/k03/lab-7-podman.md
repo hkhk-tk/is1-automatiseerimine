@@ -41,7 +41,7 @@ Enne muudatust teed mõlemast VM-ist snapshot'i ja vaatad, millise Podmaniga sul
     done
     ```
 
-Rootless tähendab, et kõik konteinerid elavad kasutaja `kasutaja` user namespace'is: konteineri UID 0 on hostis `kasutaja`, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. 11211 ja 3306 on üle `ip_unprivileged_port_start` piiri, nii et kumbki port ei vaja sysctl'i muutmist.
+Rootless tähendab, et kõik konteinerid töötavad kasutaja `kasutaja` user namespace'is: konteineri UID 0 on hostis `kasutaja`, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. 11211 ja 3306 on üle `ip_unprivileged_port_start` piiri, nii et kumbki port ei vaja sysctl'i muutmist.
 
 ✅ **Edasi saad minna, kui** mõlemal VM-il on snapshot `enne-podman`, Podman on 5.x, väljund ütleb `rootless=true cgroup=v2 net=netavark store=overlay`, `subuid` rida on olemas ja `getenforce` annab `Enforcing`. Kirjuta TOEND.md-sse jaotis `## Podman` ja sinna `podman info` rida.
 
@@ -53,7 +53,7 @@ AlmaLinuxi host tõmbab samad image'id samast registry'st kui control node, aga 
 2. Seadista mõlemas hostis peegel ja Gitea CA nõuete järgi:
     - peegel on drop-in failis `/etc/containers/registries.conf.d/50-labseis-mirror.conf`: `[[registry]]` `location = "docker.io"` ja selle all `[[registry.mirror]]` kooli peegli aadressiga (sama mis `daemon.json`-is);
     - kui `podman pull` annab `x509`, läheb kooli CA faili `/etc/containers/certs.d/gitea.lab.hkhk.ee/ca.crt`, mitte `--tls-verify=false`;
-    - login salvestub faili, mis elab reboot'i üle (`--authfile ~/.config/containers/auth.json`).
+    - login salvestub faili, mis säilib ka pärast taaskäivitust (`--authfile ~/.config/containers/auth.json`).
 3. Tõmba mc01-s `docker.io/library/memcached:1.6-alpine`, db01-s oma `labori-seis-db` image sama tag'iga, mis registry lehel, ja võrdle digesti control node'i omaga.
 
     ```bash
@@ -70,7 +70,7 @@ Sama digest kahes eri tööriistas tõestab, et OCI image ei sõltu runtime'ist:
 
 ## mc01: teenus konteineriks
 
-Alustad lihtsamast teenusest, mille seis ei pea alles jääma. Peatad native memcached'i, käivitad sama pordiga konteineri ja vaatad hostist, kes kellele vanem on. Kontroll tuleb sealt, kust teenust kasutatakse: app01 `/health` web01 kaudu.
+Alustad lihtsamast teenusest, mille olek ei pea alles jääma. Peatad native memcached'i, käivitad sama pordiga konteineri ja vaatad hostist, kes kellele vanem on. Kontroll tuleb sealt, kust teenust kasutatakse: app01 `/health` web01 kaudu.
 
 ```bash
 ssh mc01 'sudo systemctl disable --now memcached
@@ -80,7 +80,7 @@ sleep 15; curl -s http://web01/health; echo
 ssh mc01 'podman rm -f mc-proov'
 ```
 
-`ps` näitas kolme protsessi. `memcached` töötab UID-ga `subuid` vahemikust, mitte root'ina ega `kasutaja`-na. Tema vanem on `conmon`, mis hoiab konteineri stdio't ja väljumiskoodi. Porti hoiab `pasta`, mis kuulab hostis kasutaja õigustega ja suunab ühendused konteineri võrgu namespace'i. `podman` protsessi ennast enam pole: käsk lõpetas töö pärast käivitamist ja ühtegi daemonit, mille restart konteineri peataks, ei ole. Seepärast ei tõsta seda konteinerit pärast reboot'i ka keegi üles.
+`ps` näitas kolme protsessi. `memcached` töötab UID-ga `subuid` vahemikust, mitte root'ina ega `kasutaja`-na. Tema vanem on `conmon`, mis hoiab konteineri stdio't ja väljumiskoodi. Porti hoiab `pasta`, mis kuulab hostis kasutaja õigustega ja suunab ühendused konteineri võrgu namespace'i. `podman` protsessi ennast enam pole: käsk lõpetas töö pärast käivitamist ja ühtegi daemonit, mille restart konteineri peataks, ei ole. Seepärast ei käivita seda konteinerit pärast taaskäivitust ka keegi uuesti.
 
 ✅ **Edasi saad minna, kui** `/health` näitas `"cache":"UP"` ilma app01 restardita, `ps` näitab `memcached`-i numbrilise UID-ga ja `conmon`-i tema vanemana ning `mc-proov` on kustutatud. Kirjuta `/health` ja `ps` väljund TOEND.md-sse.
 
@@ -142,7 +142,7 @@ Muudatus käib tootmise reeglitega: andmebaas kolib native teenusest konteineris
         sudo ausearch -m avc -ts recent | grep -m2 03-dump'
     ```
 
-5. Paranda bind mount'i rida. Enne uut starti mõtle, mis seisus on volume pärast poolikut initsialiseerimist ja pärast teist katset, ning tee nii, et import käivitub uuesti. Kontrolli ridade arvu, silti ja paroolide asukohta, siis sulge hooldusaken.
+5. Paranda bind mount'i rida. Enne uut starti mõtle, mis olekus on volume pärast poolikut initsialiseerimist ja pärast teist katset, ning tee nii, et import käivitub uuesti. Kontrolli ridade arvu, silti ja paroolide asukohta, siis sulge hooldusaken.
 
     ```bash
     ssh db01 'ls -Z ~/labseis/03-dump.sql
@@ -239,13 +239,13 @@ Quadleti failid lähevad Giti ja hostid lähevad tagasi native teenustele: 4. ko
 
 **Quadlet on generaator.** `daemon-reload` käivitab generaatori `/usr/lib/systemd/user-generators/podman-user-generator`, mis kirjutab `.service` failid kausta `$XDG_RUNTIME_DIR/systemd/generator/`. Need failid on ajutised ja tehakse iga `daemon-reload`-iga uuesti, seepärast muudad ainult `.container` faili. Varasem `podman generate systemd` on aegunud: see tegi staatilise unit'i, mis ei uuenenud koos konteineri seadistusega.
 
-**Linger.** Kasutaja systemd (`user@<UID>.service`) käivitub tavaliselt esimese sisselogimisega ja lõpetab viimase väljalogimisega. `loginctl enable-linger` loob faili `/var/lib/systemd/linger/<kasutaja>`, ja siis käivitub kasutaja systemd boot'il ning `default.target` tõstab Quadleti teenused üles.
+**Linger.** Kasutaja systemd (`user@<UID>.service`) käivitub tavaliselt esimese sisselogimisega ja lõpetab viimase väljalogimisega. `loginctl enable-linger` loob faili `/var/lib/systemd/linger/<kasutaja>`, ja siis käivitub kasutaja systemd boot'il ning `default.target` käivitab Quadleti teenused.
 
 **SELinuxi sildid.** AlmaLinuxi poliitikas tohib `container_t` lugeda ja kirjutada ainult `container_file_t` silti. Podman paneb `:Z` sildi iga konteineri stardil uuesti, `:z` annab ühise sildi ilma MCS kategooriateta. Kodukausta või `/etc` alla ei panda `:Z`-ga laia kausta: silt muutub kogu puul ja hosti teised teenused võivad ligipääsu kaotada. Kui dump'i hiljem kustutad, eemalda ka `Volume=` rida, muidu ei käivitu konteiner, sest bind mount'i allikas puudub.
 
 **Rootless võrk.** `pasta` tõlgib konteineri namespace'i võrgupaketid hosti tavalisteks socket'iteks kasutaja õigustega. Sissetulev ühendus läbib hosti `firewalld`-i nagu native teenuse puhul, nii et 2. kohtumisel avatud pordid kehtivad ka konteinerile. Rootful Dockeri NAT-reegleid, mis lähevad tulemüürist mööda, siin pole.
 
-**Healthcheck Podmanis.** Podman käivitab healthcheck'i systemd taimeriga, mitte daemoni sees. `HealthOnFailure=kill` lõpetab `unhealthy` konteineri ja unit'i `Restart=` tõstab selle uuesti: see on käitumine, mida Docker Compose'il pole. `Notify=healthy` hoiab unit'i olekus `activating`, kuni healthcheck läbib, nii et teised unit'id saavad sellest `After=`-iga sõltuda.
+**Healthcheck Podmanis.** Podman käivitab healthcheck'i systemd taimeriga, mitte daemoni sees. `HealthOnFailure=kill` lõpetab `unhealthy` konteineri ja unit'i `Restart=` käivitab selle uuesti: see on käitumine, mida Docker Compose'il pole. `Notify=healthy` hoiab unit'i olekus `activating`, kuni healthcheck läbib, nii et teised unit'id saavad sellest `After=`-iga sõltuda.
 
 **Kahe tööriista hind.** Podman sobib serverisse, kus töötab üks või paar teenust ja AlmaLinux/RHEL on standard: systemd, journald, SELinux ja auditilogi on samad mis teistel teenustel. Docker jääb arendusmasinasse, CI-sse ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it. Kubernetes võtab mõlemast sama OCI image'i.
 

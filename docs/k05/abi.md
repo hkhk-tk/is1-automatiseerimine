@@ -8,7 +8,7 @@ tags:
 | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
 |---|---|---|---|
 | **1. Maven** | | | |
-| `docker compose ps` ei näita nelja teenust või `curl /health` ei vasta | `cd k03-docker && docker compose logs --tail 30` | stack on maas: `docker compose up -d` | VM-i taaskäivituse järel tõusevad ainult teenused, millel on `restart:` poliitika; käsitsi peatatud stack jääb maha |
+| `docker compose ps` ei näita nelja teenust või `curl /health` ei vasta | `cd k03-docker && docker compose logs --tail 30` | stack on maas: `docker compose up -d` | VM-i taaskäivituse järel käivituvad uuesti ainult teenused, millel on `restart:` poliitika; käsitsi peatatud stack jääb maha |
 | `gh repo view` näitab `viewerPermission` `WRITE` või `READ` | repo *Settings* puudub | sul pole admin-õigust: koolitaja annab | runner'i ja environment'i loomine on repo seadete muutmine, mida GitHub lubab ainult adminile |
 | `mvn: command not found` või Java 17 | `mvn -v`, `java -version` | `sudo apt-get install -y openjdk-21-jdk-headless maven` | Ubuntu vaikimisi JDK võib olla vanem kui pom'i nõue ja Maven ei tule JDK-ga kaasa |
 | `Unknown lifecycle phase` | käsu kirjapilt | faasi nimes on trükiviga, kood 1 | Maven tunneb ainult elutsükli faase ja `plugin:goal` kuju; muu sõna on tema jaoks tundmatu |
@@ -19,23 +19,23 @@ tags:
 | värske kloon ebaõnnestub, oma kaust mitte | `git status --ignored`, `git ls-files` | vajalik fail pole Gitis (ignoreeritud või commit'imata) | kloon saab ainult commit'itud faile, täpselt nagu CI runner |
 | `-o` build: `Cannot access central in offline mode` | `ls ~/.m2/repository` | mõni plugin või teek pole veel kohalikus hoidlas | offline-režiim keelab allalaadimise ja nõuab, et `verify` oleks enne vähemalt korra võrguga käivitunud |
 | **2. Esimene workflow** | | | |
-| jooksu pole üldse | faili tee ja laiend, `branches:` | fail pole `.github/workflows/*.yml` või haru nimi ei klapi | GitHub otsib workflow'sid ainult sellest kaustast ja käivitab need ainult `on:` tingimustele vastavatel sündmustel |
-| punane jooks ilma job'ideta, `Invalid workflow file` | `actionlint` | YAML-i viga: taane või koolon | GitHub ei saa vigasest failist job'e luua, seega pole ühtegi sammu, mille logi näidata |
-| `Unable to resolve action …@vX` | action'i *Releases* leht | olematu versioon või lühike SHA | *Set up job* laeb action'id alla enne ühtki sammu ja peatab job'i, kui viidet pole |
+| käivitust pole üldse | faili tee ja laiend, `branches:` | fail pole `.github/workflows/*.yml` või haru nimi ei klapi | GitHub otsib workflow'sid ainult sellest kaustast ja käivitab need ainult `on:` tingimustele vastavatel sündmustel |
+| punane käivitus ilma job'ideta, `Invalid workflow file` | `actionlint` | YAML-i viga: taane või koolon | GitHub ei saa vigasest failist job'e luua, seega pole ühtegi sammu, mille logi näidata |
+| `Unable to resolve action …@vX` | action'i *Releases* leht | olematu versioon või lühike SHA | *Set up job* laadib action'id alla enne ühtki sammu ja peatab job'i, kui viidet pole |
 | `command not found`, `exit code 127` | sammu `run:` rida | käsk on valesti kirjutatud või runner'il puudub | runner'i image'il on oma PATH ja tööriistad; sinu masina alias'ed ja paketid sinna ei kandu |
 | `release version 21 not supported` CI-s | setup-java samm | setup-java puudub või `java-version` pole `"21"` | runner'i image'il on vaikimisi oma Java ja ilma setup-java'ta kasutab Maven seda |
 | `actionlint: command not found` | `ls ~/.local/bin`, `echo $PATH` | `~/.local/bin` pole PATH-is | Ubuntu lisab `~/.local/bin` PATH-i ainult siis, kui kaust oli sisselogimisel olemas |
 | PR-il pole kontrolli | `on:` plokk | `pull_request:` puudub või `branches:` pole `main` | `branches:` all on PR-i sihtharu, mitte sinu haru nimi |
 | `No files were found with the provided path` | build'i logi, `ls target` | WAR-i tee vale või build ebaõnnestus enne; `if-no-files-found: error` teeb selle punaseks | upload-artifact otsib faili runner'i töökaustast ja Maveni ebaõnnestumisel `target/` WAR-i pole |
-| `fromdate` viga `gh run view --json jobs` jq-s | jooksu olek | valitud jooks on pooleli või mõni samm jäi alustamata | pooleliolevatel ja vahele jäänud sammudel pole korrektset lõpuaega |
+| `fromdate` viga `gh run view --json jobs` jq-s | käivituse olek | valitud käivitus on pooleli või mõni samm jäi alustamata | pooleliolevatel ja vahele jäänud sammudel pole korrektset lõpuaega |
 | **3. Trivy, matrix ja õigused** | | | |
 | Trivy samm: `Unable to resolve action` | SHA pikkus | SHA pole 40 märki või võeti tag-objekti SHA, mitte `^{}` rida | annotated tag'il on oma SHA, mis pole commit; `uses:` vajab commit'i |
 | kokkuvõttes pole Trivy tabelit | sammu tingimus | kokkuvõtte samm pole `if: always()` või `output:` fail on teise nimega | vaikimisi tingimus `success()` jätab sammu vahele, kui Trivy samm ebaõnnestus |
 | `dependency:tree -Dincludes` ei näita midagi | leiu teegi nimi, `trivy.txt` veerg *Library* | vale `groupId:artifactId` või leid pole Maveni sõltuvus | Trivy skännib ka teisi faile peale pom'i ja `-Dincludes` vajab täpset nime |
 | `compat (25)` ebaõnnestub | sammu logi | ootuspärane info: mõni plugin või sõltuvus pole Java 25 jaoks valmis; märgi üles | pluginad, mis loevad klassifaile, peavad uut Java versiooni eraldi toetama |
-| ainult üks matrix'i jooks, teine *Cancelled* | `strategy` plokk | `fail-fast: false` puudub | vaikimisi tühistab GitHub ülejäänud kombinatsioonid esimese ebaõnnestumise järel |
+| ainult üks matrix'i käivitus, teine *Cancelled* | `strategy` plokk | `fail-fast: false` puudub | vaikimisi tühistab GitHub ülejäänud kombinatsioonid esimese ebaõnnestumise järel |
 | `k05 build`: Java 21 pole valitud | build job'i setup-java | build job'is on `${{ matrix.java }}`: matrix käib `compat` job'i, build jääb `"21"` | automaatne hindaja otsib failist sõnasõnalist `java-version: "21"` rida |
-| `Cache not found for input keys` igal jooksul | `gh cache list` | `cache: maven` puudub või pom muutub igas commit'is | vahemälu võti sisaldab pom'i räsi, nii et iga pom'i muutus annab uue võtme |
+| `Cache not found for input keys` igal käivitusel | `gh cache list` | `cache: maven` puudub või pom muutub igas commit'is | vahemälu võti sisaldab pom'i räsi, nii et iga pom'i muutus annab uue võtme |
 | checkout: `Repository not found` või `403` | *Set up job* → *GITHUB_TOKEN Permissions* | job'il pole `contents: read`: job'i plokk asendab workflow oma | privaatset repot saab kloonida ainult lugemisõigusega token ja `{}` ei anna midagi |
 | `k05 hygiene`: Node 20 action'id | `grep -n 'uses:' .github/workflows/*.yml` | `@v4` või vanem major | vanad major'id töötavad Node 20 peal, mida GitHubi runner enam ei toeta |
 | `k05 hygiene`: trivy-action täis-SHA | Trivy `uses:` rida | tag'iga või lühikese SHA-ga | tag'i saab ümber suunata ja just seda tehti trivy-action'i intsidendis |
@@ -58,14 +58,14 @@ tags:
 | `~/.docker/config.json`-is on ghcr.io kirje | `docker logout ghcr.io` | käsitsi tehtud `docker login` | login-action logib ainult oma sisselogimise välja; sinu käsitsi login jääb kettale |
 | **5. Triggerid, saladused ja environment** | | | |
 | nuppu *Run workflow* pole | `on:` main'i harus | `workflow_dispatch` on ainult harul, mitte main'is | GitHub näitab nuppu vaikeharu workflow faili järgi |
-| ajastatud jooksu pole | cron, vaikeharu | cron on UTC-s ja käivitub ainult vaikeharul | ajakava loetakse ainult vaikeharu failist ja GitHub võib täistunni jooksud edasi lükata |
+| ajastatud käivitust pole | cron, vaikeharu | cron on UTC-s ja käivitub ainult vaikeharul | ajakava loetakse ainult vaikeharu failist ja GitHub võib täistunni käivitused edasi lükata |
 | `secret … puudub` või väärtus tühi | job'i `environment:`, `gh secret list --env proxmox` | secret on environment'is, aga job ei ütle `environment: proxmox`, või vastupidi | environment'i secret antakse ainult job'ile, mis selle environment'i nimetab; puuduv secret on tühi string, mitte viga |
 | `required variable REGISTRY is missing a value` | `.env` samm | samm ei saa `vars.REGISTRY` / `vars.OWNER` | Compose interpoleerib kogu faili enne teenuse valimist ja `:?` nõuab väärtust |
 | `Branch … is not allowed to deploy to proxmox` | environment'i haru piirang | käivitasid deploy muult harult kui `main` | GitHub kontrollib piirangut enne, kui job runner'ile antakse; haru piirangu katses on see oodatud tulemus |
 | haru piirangu katses deploy käivitus | environment'i *Deployment branches*, job'i `environment:` | piirang pole seatud või job ei nimeta environment'i | ilma `environment:` reata ei kehti job'ile ükski environment'i reegel |
 | deploy käivitub, kuigi `DEPLOY_ENABLED=false` | deploy `if:` | `vars.DEPLOY_ENABLED == 'true'` puudub push-tingimusest | muutuja on ainult väärtus; seda loeb ainult tingimus, mis seda nimetab |
-| kaks deploy'd töötasid korraga | deploy job'i `concurrency` | grupp puudub või grupi nimi sõltub `run_id`-st | grupp piirab ainult sama nimega töid ja `run_id` on igal jooksul erinev |
-| main'i jooksud tühistavad üksteist | workflow taseme `concurrency` | grupp on `github.ref` ja `cancel-in-progress: true` ka main'il | kõik main'i jooksud on siis samas grupis ja uus katkestab vana, ka poolelioleva deploy |
+| kaks deploy'd töötasid korraga | deploy job'i `concurrency` | grupp puudub või grupi nimi sõltub `run_id`-st | grupp piirab ainult sama nimega töid ja `run_id` on igal käivitusel erinev |
+| main'i käivitused tühistavad üksteist | workflow taseme `concurrency` | grupp on `github.ref` ja `cancel-in-progress: true` ka main'il | kõik main'i käivitused on siis samas grupis ja uus katkestab vana, ka poolelioleva deploy |
 | **6. Health check ja rollback** | | | |
 | `actionlint`: `missing input "version-url"` | `with:` plokk | kohustuslik sisend puudub või on teise nimega | actionlint loeb kohaliku action'i `inputs:` ploki ja võrdleb seda `with:`-iga |
 | `Can't find 'action.yml'` | tee ja checkout | action'i kaust on vale või checkout puudub enne `uses: ./…` | `./` tee on runner'i töökaustas ja seal on fail alles pärast checkout'i |

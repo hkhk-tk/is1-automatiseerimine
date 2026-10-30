@@ -20,7 +20,7 @@ Joonisel on vasakul control node, kus töötab üks kubectl. Paremal on kaks kla
 
 ## Haru ja klassi kubeconfig
 
-Lood haru, kopeerid starteri ja paned paika koolitajalt saadud kubeconfig'i. kubectl peab jõudma koolitaja klastrisse enne, kui sa oma klastri kõrvale paned, muidu ei tea sa hiljem, kumb fail on vigane.
+Lood haru, kopeerid starteri ja paned paika koolitajalt saadud kubeconfig'i. kubectl peab jõudma koolitaja klastrisse enne, kui oma klastri lisad, muidu ei tea sa hiljem, kumb fail on vigane.
 
 kubeconfig'is on kliendisertifikaat või token, millega API server sind tuvastab. Kubernetes ei toeta kliendisertifikaatide tühistamist (CRL-i ega OCSP-d pole): lekkinud sertifikaat kehtib aegumiseni, kui koolitaja ei vaheta CA-d. ServiceAccount'i tokeni saab tühistada, kustutades ServiceAccount'i või token-Secret'i.
 
@@ -54,7 +54,7 @@ kubeconfig'is on kliendisertifikaat või token, millega API server sind tuvastab
     ls -l ~/.kube/config
     ```
 
-> `connection refused` või `x509`: VPN peab olema üleval. Kui serveri real on `127.0.0.1`, said vale faili.
+> Kui näed `connection refused` või `x509`, kontrolli, kas VPN-ühendus on aktiivne. Kui serveri real on `127.0.0.1`, said vale faili.
 
 Vastus `No resources found` tõestab kolme asja korraga: võrk jõudis API serverini, sertifikaat klappis ja sinu kasutaja tohib selles namespace'is pod'e lugeda. `Forbidden` oleks tähendanud, et ühendus on korras, aga õigused mitte. Helm hoiatab hiljem, kui fail on grupile või teistele loetav, seepärast `chmod 600`.
 
@@ -66,7 +66,7 @@ Koolitaja on teinud sinu pool'i VM-i `k3s01`: Ubuntu 24.04, 2 tuuma, 2 GB mälu,
 
 k3s server vajab vähemalt 2 GB mälu. Liiga väikese mäluga VM käivitub, aga k3s jääb kinni või kernel hakkab protsesse tapma. Siis otsid viga Kubernetesest, kuigi põhjus on VM-i suuruses.
 
-1. Proxmoxi veebiliideses: sinu pool → `k3s01` → **Start**.
+1. Vali Proxmoxi veebiliideses oma pool, seejärel `k3s01` ja vajuta **Start**.
 2. Oota cloud-init'i lõppu ja vaata VM-i suurust:
 
     ```bash
@@ -125,7 +125,7 @@ kubectl ei küsi kinnitust ega näita väljundis, millisesse klastrisse käsk l�
     kubectl auth can-i '*' '*'
     ```
 
-> `x509: certificate is valid for … not …`: k3s paneb sertifikaati node'i IP, seega kasuta IP-d, mitte nime. `i/o timeout`: VM-i tulemüür, `sudo ufw allow 6443/tcp`.
+> Kui näed `x509: certificate is valid for … not …`, kasuta nime asemel IP-aadressi, sest k3s lisab sertifikaati node'i IP. Kui näed `i/o timeout`, blokeerib ühendust VM-i tulemüür: `sudo ufw allow 6443/tcp`.
 
 Tärn `get-contexts` väljundis näitab context'i, mida kubectl kasutab, kui sa `--context`-i ei anna. See jääb klassi omaks, sest `KUBECONFIG`-i esimese faili `current-context` võidab. `can-i '*' '*'` annab oma klastris `yes` ja klassis `no`: sama kubectl, kaks väga erinevat volitust. Just seepärast paned oma klastri käskudele context'i alati kirja.
 
@@ -173,9 +173,9 @@ Kui tead, et Service on kerneli reegel, ei otsi sa rikke korral "Service'i prots
     kubectl --context k3s01 get pods -A -o custom-columns=POD:.metadata.name,MEM:.spec.containers[*].resources.requests.memory
     ```
 
-> `iptables` on tühi: uuemas k3s-is võib kube-proxy kasutada nftables'it, siis `sudo nft list ruleset | grep -A3 default/web`.
+> Kui `iptables` väljund on tühi, võib kube-proxy uuemas k3s-is kasutada nftables'it. Sel juhul kasuta käsku `sudo nft list ruleset | grep -A3 default/web`.
 
-Kaks `web`-pod'i on node'il kaks `pause`-protsessi ja kaks network namespace'i. ClusterIP ei ole ühegi võrguliidese aadress: ta elab ainult NAT-tabelis, mis suunab paketi ühe pod'i IP-le. `tere.txt` kuupäev tõestab, et PVC on node'i kaust, kuhu konteiner kirjutas. `Allocated resources` näitab, mida pod'id küsisid, mitte seda, mida nad kasutavad: node võib olla "täis" ja samal ajal peaaegu jõude.
+Kaks `web`-pod'i on node'il kaks `pause`-protsessi ja kaks network namespace'i. ClusterIP ei ole ühegi võrguliidese aadress: see on olemas ainult NAT-tabelis, mis suunab paketi ühe pod'i IP-le. `tere.txt` kuupäev tõestab, et PVC on node'i kaust, kuhu konteiner kirjutas. `Allocated resources` näitab, mida pod'id küsisid, mitte seda, mida nad kasutavad: node võib olla "täis" ja samal ajal peaaegu jõude.
 
 ✅ **Edasi saad minna, kui** iptables'is on rida `default/web` ClusterIP-ga, local-path kaustas `pvc-…_default_katse` on fail kuupäevaga ja `Allocated resources` näitab requests'ide summat protsendina node'i mahust.
 
@@ -228,7 +228,7 @@ Unustatud `KUBECONFIG` jätab alles context'i, mis osutab välja lülitatud masi
 
 > Admini vaade (teine namespace, NodePort, LoadBalancer, `cordon`, `kubectl debug node/…`) ja PodDisruptionBudget'i katse on lehel [Lisaülesanded → 11. Oma klastri admini vaade](lisa.md#11-oma-klastri-admini-vaade). Sama VM-i vajavad ka [21. Saladus Gitis: Sealed Secrets ja võtme taaste](lisa.md#21-saladus-gitis-sealed-secrets-ja-votme-taaste) ja võrguinseneri ülesanne [22. vorgukogu CronJob'ina](lisa.md#22-vorgukogu-cronjobina). Nende jaoks käivitad VM-i uuesti ja kopeerid admin-faili nagu etapis „k3s ja kaks klastrit ühes kubectl'is“. Kui oled valmis, lülita VM jälle välja.
 
-`current-context` näitab nüüd klassi context'i, sest alles jäi ainult `~/.kube/config`. Kui ta näitaks `k3s01`, on `KUBECONFIG` mõnes teises terminalis või `.bashrc`-is alles.
+`current-context` näitab nüüd klassi context'i, sest alles jäi ainult `~/.kube/config`. Kui see näitab `k3s01`, on `KUBECONFIG` mõnes teises terminalis või `.bashrc`-is alles.
 
 ✅ **Edasi saad minna, kui** `kubectl config current-context` näitab klassi context'i ja `k3s01` on Proxmoxis olekus *stopped*.
 
@@ -244,7 +244,7 @@ Unustatud `KUBECONFIG` jätab alles context'i, mis osutab välja lülitatud masi
 
 **k3s systemd teenusena.** k3s on üks systemd teenus ja selle logi näitab käsk `journalctl -u k3s -f`. Teenus käivitab containerd ja kõik control plane'i komponendid ühes protsessis.
 
-**Miks pod'id jäid tööle.** Konteinerid töötavad oma shim-protsessides, mitte k3s-i protsessi sees. Selles laboris kasutatava k3s-i (v1.35.9+k3s1) paigaldusskripti loodud systemd unit'is on `KillMode=process`, nii et `systemctl stop k3s` lõpetas ainult põhiprotsessi. Teistsuguse unit'i seadistusega peatuksid ka konteinerid.
+**Miks pod'id jäid tööle.** Konteinerid töötavad oma shim-protsessides, mitte k3s-i protsessi sees. Selles praktikumis kasutatava k3s-i (v1.35.9+k3s1) paigaldusskripti loodud systemd unit'is on `KillMode=process`, nii et `systemctl stop k3s` lõpetas ainult põhiprotsessi. Teistsuguse unit'i seadistusega peatuksid ka konteinerid.
 
 **DaemonSet.** DaemonSet hoiab igal node'il ühte pod'i (näiteks logikogujad, võrgu- ja salvestusagendid). Kui klastrisse lisatakse node, luuakse sellele automaatselt DaemonSet'i pod.
 

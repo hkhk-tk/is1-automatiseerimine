@@ -27,7 +27,7 @@ tags:
 | [Lisaprojekt: tulemüür koodis](#lisaprojekt-tulemuur-koodis) | keskmine | web01 SSH ainult control node'ilt |
 | [Lisaprojekt: Docker ja Kubernetes OpenTofuga](#lisaprojekt-docker-ja-kubernetes-opentofuga) | keskmine | memcached ja Helm release OpenTofu state'is |
 | [Lisaprojekt: krüpteeritud state](#lisaprojekt-krupteeritud-state) | raske | state krüpteeritud, parool vahetatud |
-| [17. render.py: soovitud seis template'ist, diff ja apply](#17-renderpy-soovitud-seis-templateist-diff-ja-apply) | keskmine | `render.py` näitab ruuteri diff'i ja viib muudatuse ruuterisse |
+| [17. render.py: soovitud olek template'ist, diff ja apply](#17-renderpy-soovitud-seis-templateist-diff-ja-apply) | keskmine | `render.py` näitab ruuteri diff'i ja viib muudatuse ruuterisse |
 
 Kui ülesande juures pole teisiti, läheb tulemus kausta `k04-tofu/` ja otsused ning mõõtmised `NOTES.md`-sse; GitHubis on igal ülesandel issue label'iga `edasijõudnu`.
 
@@ -41,7 +41,7 @@ Tofu kontrollib koodi kolmes etapis: `validate`, `plan` ja `apply`. Igaüks näe
 
 - Tee kaustas `01-alused` kaks viga ükshaaval ja käivita iga kord ainult `tofu validate`: `tags = "test"` (string listi asemel) ja `clone` plokis viide `data.proxmox_virtual_environment_vms.debian` (sellist data source'i pole). Paranda mõlemad.
 - Muuda `node_name` olematuks (`pve99`), käivita `tofu plan` ja `tofu apply`.
-- Enne kui õige node'i tagasi paned, vaata UI-st ja `tofu state list`-iga, mis seisus `test01` on.
+- Enne kui õige node'i tagasi paned, vaata UI-st ja `tofu state list`-iga, mis olekus `test01` on.
 - Pane õige node tagasi ja korda `apply`-d, kuni plaan on tühi.
 
 **Kontroll:**
@@ -56,7 +56,7 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"
 **Valmis, kui:**
 
 - `NOTES.md`-s on iga vea juures etapp, kus see välja tuli, ja veateade;
-- `NOTES.md`-s on `test01` seis UI-s ja state'is pärast ebaõnnestunud `apply`-d;
+- `NOTES.md`-s on `test01` olek UI-s ja state'is pärast ebaõnnestunud `apply`-d;
 - lõpus annab `tofu plan -detailed-exitcode` koodi `0`.
 
 ??? success "Lahendus"
@@ -100,7 +100,7 @@ jq '{serial, lineage, ressursid: [.resources[] | "\(.mode) \(.type).\(.name)"]}'
 
 - oskad näidata üht `data` ja üht `managed` objekti ning öelda, mis neil vahet on;
 - `serial` kasvas `apply` järel ühe võrra;
-- `terraform.tfstate.backup` sisaldab eelmise seisu `serial`-i;
+- `terraform.tfstate.backup` sisaldab eelmise versiooni `serial`-i;
 - `grep -c ssh-ed25519 terraform.tfstate` annab vähemalt `1` ja `NOTES.md`-s on kirjas, miks võti seal on.
 
 ??? success "Lahendus"
@@ -231,10 +231,10 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"              # 0
 - app01 ja db01 `/` on umbes 14 GB ja uptime ei alanud nullist;
 - teine skripti käivitus ei muutnud midagi;
 - plaani kood on `0`;
-- `NOTES.md`-s on kirjas, miks "tagasi koodi seisu" ketta puhul ei tööta.
+- `NOTES.md`-s on kirjas, miks "tagasi koodis kirjeldatud olekusse" ketta puhul ei tööta.
 
 ??? success "Lahendus"
-    Drift: `-refresh-only` näitab `size` 10 → 12, tavaline plaan tahab 10 peale tagasi ja provider keeldub kahandamast; koodi seisu saaks tagasi ainult VM-i asendusega. Õige otsus on web01 reale `disk = 12`. Koodist kasvatamisel teeb Proxmox ketta suuremaks töötava VM-i all, aga partitsioon ja failisüsteem jäävad samaks, kuni keegi need kasvatab: `growpart` → `resize2fs` (ext4) või `xfs_growfs <ühenduspunkt>` (xfs kasvab ainult ühendatuna), LVM-iga vahepeal `pvresize` ja `lvextend -r`. Skript loeb seadme ja partitsiooni numbri `findmnt`-ist ja `/sys`-ist, sest AlmaLinux ja Ubuntu pilvemallis on juurpartitsioon eri numbriga.
+    Drift: `-refresh-only` näitab `size` 10 → 12, tavaline plaan tahab 10 peale tagasi ja provider keeldub kahandamast; koodis kirjeldatud oleku saaks taastada ainult VM-i asendusega. Õige otsus on web01 reale `disk = 12`. Koodist kasvatamisel teeb Proxmox ketta suuremaks töötava VM-i all, aga partitsioon ja failisüsteem jäävad samaks, kuni keegi need kasvatab: `growpart` → `resize2fs` (ext4) või `xfs_growfs <ühenduspunkt>` (xfs kasvab ainult ühendatuna), LVM-iga vahepeal `pvresize` ja `lvextend -r`. Skript loeb seadme ja partitsiooni numbri `findmnt`-ist ja `/sys`-ist, sest AlmaLinux ja Ubuntu pilvemallis on juurpartitsioon eri numbriga.
 
     ```bash
     # terraform.tfvars: web01 = { ..., disk = 12 }, app01 ja db01 = { ..., disk = 14 }
@@ -618,7 +618,7 @@ db01 andmed on süsteemikettal, nii et iga malli uuendus ja `-replace` viib ka a
 - Lisa moodulisse teine `disk` (`scsi1`, 5 GB) `dynamic` plokiga, vaikimisi väljas, ja lülita see sisse ainult db01-le.
 - Ansible'iga: `community.general.filesystem` uuele kettale ja `ansible.posix.mount` → `/var/lib/mysql`.
 - Mount peidab kõik, mis kaustas enne oli, ja MariaDB alustab tühja kataloogiga. Laboris on baas tühi või Ansible'iga taastatav; tootmises tee enne dump, kopeeri andmed uuele kettale ja kontrolli taastamist.
-- Teine Ansible'i jooks ei muuda midagi.
+- Teine Ansible'i käivitus ei muuda midagi.
 
 **Kontroll:**
 
@@ -633,7 +633,7 @@ curl -s http://<web01 IP>/health; echo
 
 - db01-l näitab `df -h /var/lib/mysql` umbes 5 GB ketast;
 - plaanis muutus ainult db01 ja ükski VM ei asendunud;
-- teine Ansible'i jooks annab db01-l `changed=0`;
+- teine Ansible'i käivitus annab db01-l `changed=0`;
 - MariaDB töötab ja `/health` on UP.
 
 ??? success "Lahendus"
@@ -699,7 +699,7 @@ curl -s http://<web01 IP>/health; echo
           changed_when: db_restorecon.stdout | length > 0
     ```
 
-    Kontroll: `tofu plan` näitab ainult db01 `~ update in-place` uue `disk` plokiga; pärast `ansible-playbook site.yml --limit db01` näitab `ssh kasutaja@<db01 IP> 'df -h /var/lib/mysql; ls -Zd /var/lib/mysql'` umbes 5 GB ketast ja `mysqld_db_t` silti, teine Ansible'i jooks annab db01-l `changed=0` ja `/health` on UP. Kontrollimata: kas ketta lisamine töötavale VM-ile vajab provider'i versioonis restarti, ja seadme tee `/dev/disk/by-id/…-scsi1` (vaata `ls /dev/disk/by-id/`).
+    Kontroll: `tofu plan` näitab ainult db01 `~ update in-place` uue `disk` plokiga; pärast `ansible-playbook site.yml --limit db01` näitab `ssh kasutaja@<db01 IP> 'df -h /var/lib/mysql; ls -Zd /var/lib/mysql'` umbes 5 GB ketast ja `mysqld_db_t` silti, teine Ansible'i käivitus annab db01-l `changed=0` ja `/health` on UP. Kontrollimata: kas ketta lisamine töötavale VM-ile vajab provider'i versioonis restarti, ja seadme tee `/dev/disk/by-id/…-scsi1` (vaata `ls /dev/disk/by-id/`).
 
 ### 12. Poliitika plaanile Conftestiga
 
@@ -822,7 +822,7 @@ conftest verify --policy policy
 
 Laboris viisid Ubuntu malli esmalt rmq01-le `-target`-iga. See jättis koodi ja tegelikkuse vahele akna, mille ajal tavaline plaan tahtis rmq01 tagasi viia. Nüüd peab uus AlmaLinuxi mall jõudma esmalt ühele masinale ilma `-target`-ita ja rollback olema üks rida.
 
-- Packeri kausta teine `source` (`clone_vm = "tpl-alma-9"`, `ssh_username = "almalinux"`, `tags = "labseis-base;alma"`) ja teine `build`: `shell` samm `dnf -y upgrade`, `ansible` samm `groups = ["alma"]` ja `labseis_firewalld=true`. Ehita ainult AlmaLinuxi mall: `packer build -only='proxmox-clone.labseis_rocky' .`; Ubuntu mall jääb samaks.
+- Packeri kausta teine `source` (`clone_vm = "tpl-alma-9"`, `ssh_username = "almalinux"`, `tags = "labseis-base;alma"`) ja teine `build`: `shell` samm `dnf -y upgrade`, `ansible` samm `groups = ["alma"]` ja `labseis_firewalld=true`. Ehita ainult AlmaLinuxi mall: `packer build -only='proxmox-clone.labseis_alma' .`; Ubuntu mall jääb samaks.
 - `vms` objektile väli `template = optional(string)`; mooduli `template_id` eelistab hosti välja ja kasutab muidu distro malli.
 - Data source loeb ka hostide malle, mitte ainult distrode omi.
 - Plaanis on täpselt üks asendus (mc01), db01 jääb pilvemallile.
@@ -847,7 +847,7 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"        # 0
 - `NOTES.md`-s on järjekord, milles viiksid tootmises uue malli db01-le, ja mida enne seda varundad.
 
 ??? tip "Lahenduse suund"
-    - **Packer.** Teine `source "proxmox-clone"` ja teine `build` eraldi failis samas kaustas. Paralleelne ehitus vajab AlmaLinuxile oma `vm_id`-d ja ehitus-IP-d (nt `IS1_VMID_BASE` + 8 ja `.18`); Packer nõuab kõiki muutujaid ka `-only`-ga. Malli nimesse pane distro (`labseis-base-rocky-<kuupäev>`): sama kuupäevaga Ubuntu mall annaks nime järgi otsingus kaks vastet. Koristussammus on `/home/alma/.ssh/authorized_keys`, mitte `ubuntu` oma; manifest eraldi faili ja `.gitignore`-i.
+    - **Packer.** Teine `source "proxmox-clone"` ja teine `build` eraldi failis samas kaustas. Paralleelne ehitus vajab AlmaLinuxile oma `vm_id`-d ja ehitus-IP-d (nt `IS1_VMID_BASE` + 8 ja `.18`); Packer nõuab kõiki muutujaid ka `-only`-ga. Malli nimesse pane distro (`labseis-base-alma-<kuupäev>`): sama kuupäevaga Ubuntu mall annaks nime järgi otsingus kaks vastet. Koristussammus on `/home/alma/.ssh/authorized_keys`, mitte `ubuntu` oma; manifest eraldi faili ja `.gitignore`-i.
     - **Data source.** Teine `data "proxmox_virtual_environment_vms"`, mille `for_each` on hostid, kellel on `template` (võti host, mitte malli nimi). Siis saab `tags = ["labseis-base", each.value.distro]` koos nime `filter`-iga ja `postcondition` `length(self.vms) == 1` peatada vale distro malli.
     - **Valik.** `locals`-is map host → mall: `v.template != null ? data…host_template[name].vms[0] : local.templates[v.distro]`. `coalesce`-iga map'i otsing ebaõnnestub, kui hosti malli data source'i pole.
     - **Test.** `override_data` hosti malli data source'ile (sihtmärk on ressurss, mitte instants: ilma `["mc01"]`-ta) ja `assert`, et mc01 `template_id` on uue malli ID ja db01 oma pilvemalli ID.
@@ -973,7 +973,7 @@ Vihje: `DROP` blokeerib ka sinu SSH-i, kui port 22 reegel puudub; hoia teine ses
 
 ### Lisaprojekt: Docker ja Kubernetes OpenTofuga
 
-**Tase:** keskmine · **Eeldus:** 3. ja 7. kohtumise laborid: `docker ps` vastab ilma `sudo`-ta, `kubectl --kubeconfig ~/<github>.kubeconfig get pods -n is-<github>` vastab · **Esita:** `k04-tofu/lisa-docker/`, `k04-tofu/lisa-k8s/`
+**Tase:** keskmine · **Eeldus:** 3. ja 7. kohtumise praktikumid: `docker ps` vastab ilma `sudo`-ta, `kubectl --kubeconfig ~/<github>.kubeconfig get pods -n is-<github>` vastab · **Esita:** `k04-tofu/lisa-docker/`, `k04-tofu/lisa-k8s/`
 
 Sama OpenTofu tsükkel töötab ka konteinerite ja klastriga, ainult provider on teine. Haldad control node'i Dockerit ja oma Kubernetese namespace'i OpenTofuga ning võrdled tulemust Compose'i ja Argo CD-ga.
 
@@ -1025,7 +1025,7 @@ Koolitaja näeb bucketit ja seega kogu state'i: IP-d, võtmed, cloud-init'i vä�
 
 - Enne: `tofu state pull > ~/k04-state-varu.json` ja ≥ 16-märgiline parool faili `~/.config/is1/state.pass`, mõlemad õigustega 600.
 - Muutuja `state_passphrase`: `sensitive`, vaikeväärtuseta, `validation` ≥ 16 märki, väärtus `TF_VAR_state_passphrase`-ist.
-- `key_provider "pbkdf2"` → `method "aes_gcm"` → `state` ja `plan` plokk, lõppseisus `enforced = true`.
+- `key_provider "pbkdf2"` → `method "aes_gcm"` → `state` ja `plan` plokk, lõppolekus `enforced = true`.
 - Üleminek: esimesel `apply`-l `method "unencrypted"` `fallback`-ina, pärast eemaldad selle.
 - Vahetus: uus võti ja meetod kirjutavad, vana loeb `fallback`-ina; pärast `apply`-d jääb ainult uus.
 - Ebaõnnestunud vahetuse järel loeb vana parool state'i edasi; enne vahetust on plaan tühi.
@@ -1073,19 +1073,19 @@ Vihje: [state'i krüpteerimise dokumentatsioon](https://opentofu.org/docs/langua
 
 ## Võrguinsenerile
 
-Tööriist `vorgukogu` (1. kohtumise lisaülesanne 21) seni ainult luges ruuterite seisu. Siin muudad ruuterit samas tsüklis, mida OpenTofu tegi VM-idega: kood → plaan (diff jooksva konfiga) → apply → kontroll, et diff on tühi.
+Tööriist `vorgukogu` (1. kohtumise lisaülesanne 21) seni ainult luges ruuterite olekut. Siin muudad ruuterit samas tsüklis, mida OpenTofu tegi VM-idega: kood → plaan (diff jooksva konfiguratsiooniga) → apply → kontroll, et diff on tühi.
 
-### 17. render.py: soovitud seis template'ist, diff ja apply
+### 17. render.py: soovitud olek template'ist, diff ja apply { #17-renderpy-soovitud-seis-templateist-diff-ja-apply }
 
 **Tase:** keskmine · **Eeldus:** [Import, drift ja keskkonnad](lab-6-import-drift.md), 1. kohtumise lisaülesanne 21 tehtud, koolitaja `rtr01`, `rtr02` ja `key chain lab` saladus · **Esita:** `vorgukogu/render.py`, `intent/`, `templates/frr.conf.j2`
 
 Ruuteri konfi muudetakse `vtysh`-is käsitsi ja keegi ei tea, kas kahe ruuteri konf on sama loogikaga. Proovimuudatus on rtr01 marsruut `10.255.98.0/24 blackhole`.
 
 - `requirements.txt`: `jinja2==3.1.*`.
-- `intent/<ruuter>.yaml`: `hostname`, `interfaces` (nimi, `description`, `addresses`), `static_routes` (`prefix`, `nexthop`); alguses täpselt ruuteri praegune seis. `eth0`-l on ainult kirjeldus.
+- `intent/<ruuter>.yaml`: `hostname`, `interfaces` (nimi, `description`, `addresses`), `static_routes` (`prefix`, `nexthop`); alguses täpselt ruuteri praegune olek. `eth0`-l on ainult kirjeldus.
 - `templates/frr.conf.j2` on kogu fail, ka koolitaja `key chain lab` saladusega `VORK_KEYCHAIN_SECRET`-ist.
 - Ilma lippudeta: `build/<ruuter>/frr.conf` (saladus maskeeritud), ruuterisse ühendumata; vigane aadress või puuduv väli annab koodi 1.
-- `--diff`: Netmikoga jooksva konfi unified diff, saladused maskeeritud; erinevusega kood 3, ilma 0. Ebaõnnestunud ruuter: kood 2, teine tehakse ikka.
+- `--diff`: Netmikoga jooksva konfiguratsiooni unified diff, saladused maskeeritud; erinevusega kood 3, ilma 0. Ebaõnnestunud ruuter: kood 2, teine tehakse ikka.
 - `--apply` ainult `--diff`-i ja saladusega: `vtysh -C -f`, `frr-reload.py --reload`, `write memory`, siis tühi diff.
 
 **Kontroll:**
@@ -1116,7 +1116,7 @@ python render.py --diff; echo "kood $?"
 Vihje: koolitaja baasi taastamine: `sudo cp -p /etc/frr/frr.conf.baas /etc/frr/frr.conf && sudo /usr/lib/frr/frr-reload.py --reload /etc/frr/frr.conf`.
 
 ??? success "Lahendus"
-    See on IaC võrgu jaoks: YAML on soovitud seis, template on seadme süntaks ja `--diff` on plaan. `frr-reload.py --reload` võrdleb faili jooksva konfiga ja saadab `vtysh`-ile ainult lisatavad ja kustutatavad read: daemonid ei käivitu uuesti ja muutmata marsruudid jäävad paigale. Kuna fail on terviklik, võtab reload maha kõik, mida template'is pole, seepärast on template'is ka koolitaja `key chain lab`; ilma saladuseta `--apply` keeldub. `normalize` järjestab plokid (rida ilma taandeta koos oma taandega ridadega), et FRR-i oma väljundi järjekord ei annaks erinevust. Fail läheb ruuterisse base64-na lühikeste tükkidena, sest pikk käsurida murdub terminalis ja Netmiko ei tunne kaja ära; `unset HISTFILE` hoiab saladuse bash'i ajaloost väljas.
+    See on IaC võrgu jaoks: YAML on soovitud olek, template on seadme süntaks ja `--diff` on plaan. `frr-reload.py --reload` võrdleb faili jooksva konfiguratsiooniga ja saadab `vtysh`-ile ainult lisatavad ja kustutatavad read: daemonid ei käivitu uuesti ja muutmata marsruudid jäävad paigale. Kuna fail on terviklik, võtab reload maha kõik, mida template'is pole, seepärast on template'is ka koolitaja `key chain lab`; ilma saladuseta `--apply` keeldub. `normalize` järjestab plokid (rida ilma taandeta koos oma taandega ridadega), et FRR-i oma väljundi järjekord ei annaks erinevust. Fail läheb ruuterisse base64-na lühikeste tükkidena, sest pikk käsurida murdub terminalis ja Netmiko ei tunne kaja ära; `unset HISTFILE` hoiab saladuse bash'i ajaloost väljas.
 
     ```yaml
     # rtr01 soovitud seis. Haldus-IP-d: rtr01 <IS1_NET>.21, rtr02 <IS1_NET>.22 (näites 10.10.7).

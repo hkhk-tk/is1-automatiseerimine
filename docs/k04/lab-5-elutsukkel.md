@@ -6,7 +6,7 @@ tags:
 
 # 5. Elutsükkel ja kaitsed
 
-Praegu kustutab üks vale `apply` db01 koos andmetega sama kergelt kui iga teise VM-i. Paned db01-le kaitse Proxmoxis ja Tofus, proovid `lifecycle`-i kolme argumenti ja lisad koodile kaks tingimust: üks hoiatab, teine peatab. Proxmoxi kaitse kehtib kõigile, kes API-t kasutavad, Tofu oma ainult sinu koodi jooksu ajal. Lõpuks on db01 kaitstud, `NOTES.md`-s on kirjas, milline kaitse millise vea vastu aitab, ja plaan on jälle "No changes".
+Praegu kustutab üks vale `apply` db01 koos andmetega sama kergelt kui iga teise VM-i. Paned db01-le kaitse Proxmoxis ja Tofus, proovid `lifecycle`-i kolme argumenti ja lisad koodile kaks tingimust: üks hoiatab, teine peatab. Proxmoxi kaitse kehtib kõigile, kes API-t kasutavad, Tofu oma ainult sinu koodi käivitamise ajal. Lõpuks on db01 kaitstud, `NOTES.md`-s on kirjas, milline kaitse millise vea vastu aitab, ja plaan on jälle "No changes".
 
 **Kui teed seda tööl iga päev:** db01-l on `protection = true`, plaan on "No changes" ja sa oskad öelda, milline kaitse (Proxmoxi `protection`, `prevent_destroy`, `up.sh` keeld) peatab `tofu destroy`, `-replace` ja koodist kustutatud ressursiploki. Kui see on sul juba korras, mine otse etappi „[Lisa hoiatus ja keeld](#lisa-hoiatus-ja-keeld)“.
 
@@ -14,7 +14,7 @@ Praegu kustutab üks vale `apply` db01 koos andmetega sama kergelt kui iga teise
 
 Esimene kaitse on hüperviisori enda lipp. Proxmoxi `protection` keelab VM-i ja ketaste kustutamise UI-st, API-st ja Tofust. See on VM-i atribuut, nii et selle saab anda ühele hostile ja hoida koodis nagu iga teist väärtust.
 
-Kõik muud masinad saab `up.sh` minutitega tagasi tõsta, db01 sisu mitte.
+Kõik muud masinad saab `up.sh` minutitega uuesti luua, db01 sisu mitte.
 
 Nõuded:
 
@@ -32,7 +32,7 @@ Nõuded:
 
 2. Vaata UI-s db01 → **Options → Protection**.
 
-Plaan muutis ainult db01, sest `optional(bool, false)` andis teistele vaikeväärtuse, mis oli niigi Proxmoxi seis. Uus väli objektis ei sunni sind igale reale midagi kirjutama.
+Plaan muutis ainult db01, sest `optional(bool, false)` andis teistele vaikeväärtuse, mis vastas niigi Proxmoxi tegelikule olekule. Uus väli objektis ei sunni sind igale reale midagi kirjutama.
 
 ✅ **Edasi saad minna, kui** plaan oli `1 to change` (in-place), UI näitab db01-l `Protection: Yes` ja teistel `No`.
 
@@ -76,9 +76,9 @@ Erinevalt Proxmoxi lipust peatab `prevent_destroy` juba plaani, enne kui ükski 
 
 ✅ **Edasi saad minna, kui** mõlemad plaanid ebaõnnestusid `Instance cannot be destroyed`-iga, `validate` keeldus muutujast, `prevent_destroy` on koodist läinud ja plaan on "No changes".
 
-## Jäta opsi märkmed rahule
+## Ära kirjuta opsi märkmeid üle
 
-Kood ei pea omama kõike, mis VM-il on. Siin annad VM-ile koodist märkuse, lased kellelgi UI-s sinna kirjutada ja ütled Toful, et see väli pole tema mure.
+Kood ei pea omama kõike, mis VM-il on. Siin annad VM-ile koodist märkuse, lased kellelgi UI-s sinna kirjutada ja määrad, et Tofu seda välja pärast loomist ei halda.
 
 Kui iga `apply` kustutab opsi märkme, lõpetab ops märkmete kirjutamise. Siis kaob info, mis ei sobinud koodi, ja järgmine valvesolija ei tea, miks masinat eile taaskäivitati.
 
@@ -115,7 +115,7 @@ Sümbol `+/-` tähendab, et Tofu teeks uue VM-i enne vana kustutamist. Plaan ei 
 
 Lisad koodile reeglid, mis kontrollivad tervikut, mitte üht muutujat. [`check`](https://opentofu.org/docs/language/checks/) hoiatab igas plaanis, [`precondition`](https://opentofu.org/docs/language/expressions/custom-conditions/) peatab. Mõlemal on koht: hoiatus sobib asjale, mida võib teadlikult ületada, keeld asjale, mis on alati viga.
 
-`check` hinnatakse iga plaani ja `apply` lõpus ka siis, kui ükski ressurss ei muutu, nii et see sobib ka püsivaks hoiatuseks. `precondition` hinnatakse enne ressursi muutmist ja selle ebaõnnestumine peatab jooksu.
+`check` hinnatakse iga plaani ja `apply` lõpus ka siis, kui ükski ressurss ei muutu, nii et see sobib ka püsivaks hoiatuseks. `precondition` hinnatakse enne ressursi muutmist ja selle ebaõnnestumine peatab käivituse.
 
 Nõuded:
 

@@ -7,7 +7,7 @@ tags:
 
 # 7. Neli punast buildi
 
-Kolleeg tegi enne puhkust harule `k06-jenkins` "väikese koristuse" ja samal õhtul vahetati agentide saladused. Pipeline on punane ja rikkeid on neli, eri kohtades: järgmist näed alles siis, kui eelmine on parandatud. Agendi, triggerid, quality gate'i ja Nexuse ehitasid sa täna ise, raske on ainult see, et sa ei tea, kus viga on. Liigu väljast sisse (kas build üldse käivitub, kas kood saab läbi, kas tulemus jõuab kohale), paranda iga rike eraldi commit'iga ja kirjuta sõnumisse põhjus.
+Kolleeg tegi enne puhkust harule `k06-jenkins` "väikese koristuse" ja samal õhtul vahetati agentide saladused. Pipeline on punane ja rikkeid on neli, eri kohtades: järgmist näed alles siis, kui eelmine on parandatud. Agendi, triggerid, quality gate'i ja Nexuse seadistasid täna ise. Raskus on selles, et sa ei tea, kus viga on. Liigu väljast sisse (kas build üldse käivitub, kas kood saab läbi, kas tulemus jõuab kohale), paranda iga rike eraldi commit'iga ja kirjuta sõnumisse põhjus.
 
 **Kui teed seda tööl iga päev:** CI intsidendi koha leiad buildi logist ilma veaotsingu tabelita. Kui see on sul juba korras, jäta tabel vahele ja mine otse etappi [„Käivita intsident“](#kaivita-intsident); raskeim osa on [„Leia, mida intsident maha jättis“](#leia-mida-intsident-maha-jattis).
 
@@ -25,14 +25,14 @@ Veaotsingu tabel kitsendab otsingu ühe kohani, vastust see ei anna.
 
 *Tabel L6.1. Veaotsingu tabel.*
 
-> Kui pipeline on täiesti segamini: `git log --oneline -5` näitab, kust "koristus" algas. Revert'i siin ei tehta, iga rike parandatakse eraldi.
+> Kui pipeline'ist ei saa enam aru, näitab `git log --oneline -5`, kust "koristus" algas. Revert'i siin ei tehta, iga rike parandatakse eraldi.
 
 ## Käivita intsident
 
-Skript muudab sinu repot ja agendi masinat nii, nagu kolleeg ja administraator oleksid teinud. Enne käivitamist peab seis olema roheline ja puhas, sest muidu ei tea sa hiljem, milline viga oli sinu oma ja milline tuli intsidendiga.
+Skript muudab sinu repot ja agendi masinat nii, nagu kolleeg ja administraator oleksid teinud. Enne käivitamist peab viimane build olema roheline ja töökaust puhas, sest muidu ei tea sa hiljem, milline viga oli sinu oma ja milline tuli intsidendiga.
 
 1. Veendu, et viimane build on roheline ja töökaust puhas: `git status --short` on tühi.
-2. Käivita skript repo juurest. See küsib sudo parooli ja kinnitust.
+2. Käivita skript repo juurest. See küsib kinnitust.
 
     ```bash
     k06-jenkins/intsident.sh
@@ -71,7 +71,7 @@ Kontrollid, et agent ühendub ka pärast teenuse ja masina taaskäivitust, ilma 
 
 2. Vaata Nodes lehte ja veendu, et agent on roheline.
 
-`Connected` pärast restart'i ja `enabled` tähendavad, et parandus on teenuse püsivas seadistuses ja elab üle ka masina taaskäivituse. Kui restart viis agendi uuesti punaseks, oli sinu parandus ajutine: vaata, mida teenus käivitamisel loeb.
+`Connected` pärast restart'i ja `enabled` tähendavad, et parandus on teenuse püsivas seadistuses ja kehtib ka pärast masina taaskäivitust. Kui restart viis agendi uuesti punaseks, oli sinu parandus ajutine: vaata, mida teenus käivitamisel loeb.
 
 ✅ **Edasi saad minna, kui** pärast restart'i on `grep -c` vähemalt `1`, `is-enabled` annab `enabled` ja agent on Nodes all roheline.
 
@@ -101,13 +101,13 @@ Paralleelse buildi viimane rida ütleb tavaliselt ainult, et "üks haru ebaõnne
 3. Paranda ja tee commit `fix(<koht>): <põhjus>`. Parandada saab kahes kohas: Jenkinsfile'is või folderi credential'ites. Kirjuta PR-i, kumma valisid ja miks.
 4. Push ja oota buildi.
 
-Kaks parandusviisi annavad sama rohelise tulemuse, aga erinevad selle poolest, kus on source of truth. Üks muudab koodi ja jääb Giti ajalukku, teine muudab Jenkinsi olekut, mida Git ei näe. Sinu põhjendus PR-is näitab, kumba sa järgmisel korral eelistad ja miks.
+Kaks parandusviisi annavad sama rohelise tulemuse, aga erinevad selle poolest, kus on tõe allikas (source of truth). Üks muudab koodi ja jääb Giti ajalukku, teine muudab Jenkinsi olekut, mida Git ei näe. Sinu põhjendus PR-is näitab, kumba sa järgmisel korral eelistad ja miks.
 
 ✅ **Edasi saad minna, kui** mõlemad `Avaldamine` harud on rohelised ja Nexuse haru logis on `Uploaded:`.
 
 ## Tee kaks rohelist buildi järjest
 
-Üks roheline build ei tõesta, et versioonimine töötab. Rike on parandatud alles siis, kui ka järgmine build läheb läbi. Mõned vead tulevad välja ainult teisel korral, sest esimene kord pole veel midagi, millega kokku põrgata.
+Üks roheline build ei tõesta, et versioonimine töötab. Rike on parandatud alles siis, kui ka järgmine build läheb läbi. Mõned vead ilmnevad alles teisel käivitusel, sest esimesel korral pole veel varasemat versiooni, millega konflikti minna.
 
 1. Tee kaks väikest commit'i, igaühe järel oota pollSCM-i buildi lõppu.
 2. Kui teine build ebaõnnestub, leia tabelist rida, paranda ja tee commit `fix(<koht>): <põhjus>`.

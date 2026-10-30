@@ -12,7 +12,7 @@ Kui buildid töötavad controlleris või ühisel agendil, jagavad kõik jobid sa
 
 ## Valmista control node ette
 
-Töö käib eraldi harul, et `main` jääks GitHub Actionsi korra seisu. Abiskriptid on värskes `main`-is olemas.
+Töö käib eraldi harul, et `main` jääks samaks, nagu see oli GitHub Actionsi kohtumise lõpus. Abiskriptid on värskes `main`-is olemas.
 
 Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docker build` ja hiljem sinu oma sandbox-Jenkins. Kui 3. kohtumise stack jääb tööle, saab Maven buildi keskel `OutOfMemoryError`-i, mis näeb välja nagu koodiviga.
 
@@ -41,7 +41,7 @@ Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docke
     curl -sI http://jenkins.lab.hkhk.ee:8080/login | head -1
     ```
 
-> `curl` ei anna `200`: VPN on maas. Kui GitHub Actionsi deploy käivitas stacki mujalt, näitab `docker ps` projekti nime.
+> Kui `curl` ei anna vastust `200`, ei ole VPN-ühendus aktiivne. Kui GitHub Actionsi deploy käivitas stacki mujalt, näitab `docker ps` projekti nime.
 
 `HTTP/1.1 200` tähendab, et sinu masin jõuab controllerini ja kõik edasised ühendused saavad alata sinu poolt. Kui `free -m` näitab vaba mälu alla 2 GB ka pärast stacki peatamist, otsi `docker ps` ja `ps aux --sort=-rss | head` abil, mis veel mälu hoiab.
 
@@ -94,15 +94,15 @@ Saladus on node'i identiteet. Kes saladust teab, saab sinu nime all agendi ühen
     journalctl -u jenkins-agent -n 5 --no-pager
     ```
 
-> `Failed to connect` või 403: saladus on vale või node'i nimi ei kattu (`<gh>` väiketähtedega, täpselt nagu Nodes all). `Connection refused`: VPN.
+> Kui logis on `Failed to connect` või 403, on saladus vale või node'i nimi ei kattu (`<gh>` väiketähtedega, täpselt nagu Nodes all). `Connection refused` tähendab, et VPN-ühendus puudub.
 
-Logirida `Connected` ütleb, et WebSocketi ühendus on püsti ja controller tunneb sinu node'i ära. Roheline node ja kaks vaba executorit tähendavad, et Jenkins võib nüüd sinu masinasse korraga kaks buildi saata. Kui teenus on `active`, aga node punane, töötab protsess, aga ühendus ei õnnestu: vastus on siis journal'is, mitte Jenkinsi lehel.
+Logirida `Connected` ütleb, et WebSocketi ühendus on loodud ja controller tunneb sinu node'i ära. Roheline node ja kaks vaba executorit tähendavad, et Jenkins võib nüüd sinu masinasse korraga kaks buildi saata. Kui teenus on `active`, aga node punane, töötab protsess, aga ühendus ei õnnestu: vastus on siis journal'is, mitte Jenkinsi lehel.
 
 ✅ **Edasi saad minna, kui** skript ütles `OK: agent <gh> ühendus controlleriga olemas`, Nodes all on agent roheline ja all on kaks vaba executorit.
 
 ## Vaata, kes ja kus ehitab
 
-Enne pipeline'i teed Freestyle jobi, mis ainult kirjeldab oma keskkonda: mis kasutajana ja kus build töötab ning mitu buildi korraga mahub. Jenkinsfile'i muutja käivitab koodi selle kasutaja õigustes, nii et agendi kasutaja õigused on sama hästi kui iga arendaja õigused sellel masinal.
+Enne pipeline'i teed Freestyle jobi, mis ainult kirjeldab oma keskkonda: mis kasutajana ja kus build töötab ning mitu buildi korraga mahub. Jenkinsfile'i muutja käivitab koodi selle kasutaja õigustes, nii et agendi kasutaja õigused on sisuliselt iga arendaja õigused sellel masinal.
 
 1. Folderis `<gh>`: **New Item → `kes-olen` → Freestyle project**.
 2. *Restrict where this project can be run*: label `<gh>`.
@@ -152,7 +152,7 @@ Nüüd katkestad agendi keset buildi, nagu teeks uuenduse järel taaskäivitus v
     journalctl -u jenkins-agent --since "-1min" --no-pager | grep -E 'Connected|Main process'
     ```
 
-`ps` väljundis on `-secret @/opt/jenkins/secret`: Remoting loeb väärtuse failist. Freestyle'i samm on agendi protsessi alamprotsess ja katkeb koos sellega. Pipeline'i `sh` käivitub durable-task wrapperiga, mis kirjutab väljundi ja väljumiskoodi faili, ning pipeline ootab agendi tagasitulekut. Kas skript ise ellu jääb, sõltub sellest, kas systemd tapab peatamisel kogu cgroup'i (`KillMode`). `kill -9` järel tõi agendi tagasi `Restart=on-failure`.
+`ps` väljundis on `-secret @/opt/jenkins/secret`: Remoting loeb väärtuse failist. Freestyle'i samm on agendi protsessi alamprotsess ja katkeb koos sellega. Pipeline'i `sh` käivitub durable-task wrapperiga, mis kirjutab väljundi ja väljumiskoodi faili, ning pipeline ootab agendi tagasitulekut. Kas skript jätkab töötamist, sõltub sellest, kas systemd tapab peatamisel kogu cgroup'i (`KillMode`). `kill -9` järel tõi agendi tagasi `Restart=on-failure`.
 
 ✅ **Edasi saad minna, kui** katkestatud build lõppes punasena (FAILURE või ABORTED) ja konsoolis on teade ühenduse kadumise kohta, pärast `pkill -9` oli agent 15 sekundi pärast uuesti `active` ja Nodes all roheline ning PR-i kirjelduses on kaks lauset: mis juhtus buildiga ja miks systemd agendi tagasi tõi.
 
@@ -235,7 +235,7 @@ bash autograde/check.sh k06 agent
 git add k06-jenkins/Jenkinsfile && git commit -m "k06: Jenkinsfile build + test" && git push
 ```
 
-> `Tool type "maven" does not have an install of "MAVEN3.9"`: nimi on kopeeritud mujalt. Build ootab "Waiting for next available executor on '<gh>'": agent on offline.
+> Teade `Tool type "maven" does not have an install of "MAVEN3.9"` tähendab, et tööriista nimi on kopeeritud mujalt. Kui build ootab teatega "Waiting for next available executor on '<gh>'", on agent offline.
 
 Testitulemuste graafik ilmub alles teise buildi järel, sest trend vajab vähemalt kahte punkti. Kaks `OK`-i tähendavad, et automaatne hindaja näeb failis etappe, testiraportit, labeliga agenti ja tööriistu. Automaatne hindaja ei näe, kas build roheline oli: seda tõestab sinu ekraanipilt.
 

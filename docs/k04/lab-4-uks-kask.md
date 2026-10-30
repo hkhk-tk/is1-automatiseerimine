@@ -7,7 +7,7 @@ tags:
 
 # 4. Üks käsk
 
-Tofu teab, millised masinad on olemas, Ansible teab, mis on nende sees, ja nende vahel oled praegu sina: kopeerid IP-d, ootad boodi ära, sisestad Vault'i parooli. Nüüd ühendab need fail: Tofu kirjutab Ansible'i inventory oma väljundist. Lõpuks tõstab skript `up.sh` Labori seisu tühjast pool'ist üles nii, et vahepeal ei pea midagi käsitsi tegema, ja kogu Labori seis on koodis.
+Tofu teab, millised masinad on olemas, Ansible teab, mis on nende sees, ja nende vahel oled praegu sina: kopeerid IP-d, ootad, kuni masin käivitub, sisestad Vault'i parooli. Nüüd ühendab need fail: Tofu kirjutab Ansible'i inventory oma väljundist. Lõpuks tõstab skript `up.sh` Labori seisu tühjast pool'ist üles nii, et vahepeal ei pea midagi käsitsi tegema, ja kogu Labori seis on koodis.
 
 Enne alustamist peab `jq -r .backend.type .terraform/terraform.tfstate` andma `s3`.
 
@@ -58,7 +58,7 @@ Kuna `local.groups` tuleb mooduli väljunditest, sõltub `local_file` kõigist v
 
 Faili esimene rida ütleb, et seda ei muudeta käsitsi. Siin teed seda ikkagi ja vaatad, kas Tofu märkab. Nii tead, mis juhtub, kui kolleeg "kiiresti parandab" ühe IP.
 
-Käsitsi parandus genereeritud failis elab ainult järgmise `apply`-ni. Kui keegi seda ei tea, tuleb viga tagasi täpselt siis, kui keegi midagi muud muudab.
+Käsitsi parandus genereeritud failis püsib ainult järgmise `apply`-ni. Kui keegi seda ei tea, tuleb viga tagasi täpselt siis, kui keegi midagi muud muudab.
 
 1. Lisa `../k02-ansible/inventory.ini` lõppu rida `[proov]` ja `proov01 ansible_host=10.10.<nr>.99`, siis vaata plaani.
 
@@ -74,7 +74,7 @@ Provider võrdleb faili sisu state'is oleva kontrollsummaga. Kui need ei klapi, 
 
 ## Lisa testi inventory kontroll
 
-`tofu test` teab nüüd ka inventory't. Siin lisad testi, mis kontrollib template'i väljundit ilma ühtki faili kirjutamata.
+`tofu test` kontrollib nüüd ka inventory't. Siin lisad testi, mis kontrollib template'i väljundit ilma ühtki faili kirjutamata.
 
 Template'is on kõige lihtsam teha viga, mida keegi ei näe: puuduv reavahetus, vale grupi nimi või tühi grupp. Ansible jätab sellised hostid vaikselt vahele.
 
@@ -92,7 +92,7 @@ Test kontrollib täpset teksti koos reavahetusega, mitte ainult seda, et kuskil 
 
 ✅ **Edasi saad minna, kui** `tofu test` näitab ka `inventory_grupid… pass`.
 
-## Valmista Ansible ette jooksuks ilma inimeseta
+## Valmista Ansible ette käivitamiseks ilma inimeseta
 
 Skript ei saa vastata küsimustele ega oodata, kuni sa näed, et masin on üleval. Kontrollid, et Ansible ootab cloud-init'i ise ja et Vault avaneb ilma parooli küsimata.
 
@@ -105,10 +105,10 @@ Värske VM, kus cloud-init veel paigaldab pakette, hoiab apt-i lukku. Ansible'i 
     grep -n 'wait_for_connection' ../k02-ansible/site.yml
     ```
 
-2. Pane Vault'i parool faili `~/.vault_pass` (õigused 600, väljaspool repot) ja lisa `ansible.cfg`-i `[defaults]` alla `vault_password_file = ~/.vault_pass`.
+2. Pane Vault'i parool faili `~/.vault_pass` (õigused 600, väljaspool repositooriumi) ja lisa `ansible.cfg`-i `[defaults]` alla `vault_password_file = ~/.vault_pass`.
 3. Proovi, et Vault avaneb küsimata: `ansible-vault view ../k02-ansible/group_vars/all/vault.yml | head -2`
 
-`wait_for_connection` ootab, kuni SSH vastab. `cloud-init status --wait` ootab, kuni masin on ise valmis. Need on kaks eri asja: SSH võib vastata minuteid enne, kui cloud-init on lõpetanud. Paroolifail väljaspool repot tähendab, et Gitis on ainult krüpteeritud Vault ja võtit seal pole.
+`wait_for_connection` ootab, kuni SSH vastab. `cloud-init status --wait` ootab, kuni masin on ise valmis. Need on kaks eri asja: SSH võib vastata minuteid enne, kui cloud-init on lõpetanud. Paroolifail väljaspool repositooriumi tähendab, et Gitis on ainult krüpteeritud Vault ja võtit seal pole.
 
 > Kui `site.yml`-is pole `wait_for_connection`-i, lisa esimesele play'le `gather_facts: false`, `pre_tasks`-i `ansible.builtin.wait_for_connection` ja siis `ansible.builtin.setup`.
 
@@ -158,9 +158,9 @@ Skript väljastas, et plaanis on üks kustutamine, ja lõpetas koodiga 1, enne k
 
 ✅ **Edasi saad minna, kui** `up.sh` lõpetas koodiga 1 ja teatega kustutamisest, Proxmoxis jäi mc01 samaks ja pärast tagasivõtmist lõpeb `./up.sh` koodiga 0.
 
-## Tõsta stack nullist
+## Loo stack nullist uuesti
 
-Kustutad kõik ja lased skriptil stacki tagasi tõsta.
+Kustutad kõik ja lased skriptil stacki uuesti luua.
 
 Siin mõõdad ka aega: see on selle stacki taastamisaja alampiir, andmete taastamine tuleb sellele lisaks.
 
@@ -177,7 +177,7 @@ Siin mõõdad ka aega: see on selle stacki taastamisaja alampiir, andmete taasta
     curl -s http://<web01 IP>/health; echo
     ```
 
-`/health` UP tähendab, et kõik kolm sammu töötasid järjest: Tofu lõi masinad, cloud-init andis võrgu ja võtme, Ansible seadistas teenused. `time` tulemusest näed, kui suur osa ajast läks kloonimisele ja boodile ning kui suur Ansible'ile. See jaotus ütleb, kust taastamist kiirendada.
+`/health` UP tähendab, et kõik kolm sammu töötasid järjest: Tofu lõi masinad, cloud-init andis võrgu ja võtme, Ansible seadistas teenused. `time` tulemusest näed, kui suur osa ajast läks kloonimisele ja käivitumisele ning kui suur Ansible'ile. See jaotus ütleb, kust taastamist kiirendada.
 
 ✅ **Edasi saad minna, kui** `/health` vastab `"status":"UP"` ja `NOTES.md`-s on `time` tulemus.
 

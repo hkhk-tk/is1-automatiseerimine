@@ -11,7 +11,7 @@ Paisunud või root'ina töötavat app-image'it ei paranda ühes kohas: app-image
 
 **Kui teed seda tööl iga päev:** sinu Java image on mitmeastmeline, töötab mitte-root UID-ga ja `docker history` näitab, et koodimuudatus ei tühista sõltuvuste kihti. Kui see on sul juba korras, kirjuta mitmeastmeline Dockerfile ise ja mine otse etappi „[Kihid kettal: history, GraphDriver ja kirjutatav kiht](#kihid-kettal-history-graphdriver-ja-kirjutatav-kiht)“.
 
-## Naiivne variant ja tema suurus
+## Naiivne variant ja selle suurus
 
 Võrdluseks teed kõigepealt image'i nii, nagu enamik veebinäiteid: üks aste, kogu repo sisse, Maven ehitab. See töötab, aga image kannab kaasas JDK, Maveni ja kogu sõltuvuste vahemälu.
 
@@ -167,7 +167,7 @@ Shell-vormis on PID 1 `sh`, kes signaali edasi ei anna; 10 sekundi pärast tuli 
 
 Ametlik Tomcati image töötab root'ina, ja konteineri root on hosti root, kui user namespace'i pole, ja vaikimisi seda pole. Annad Tomcatile oma kasutaja ja ainult need kaustad, kuhu ta kirjutab.
 
-Kui rakenduses on kaugkäivituse haavatavus, saab root'ina töötav protsess üle kirjutada Tomcati binaarid ja konfi. UID 10001-na saab ründaja kirjutada ainult logidesse ja ajutistesse kaustadesse.
+Kui rakenduses on kaugkäivituse haavatavus, saab root'ina töötav protsess üle kirjutada Tomcati binaarid ja konfiguratsiooni. UID 10001-na saab ründaja kirjutada ainult logidesse ja ajutistesse kaustadesse.
 
 Muuda `k03-docker/app/Dockerfile` nii:
 
@@ -187,7 +187,7 @@ docker image inspect -f '{{.Config.User}}' labseis-app:multi
 
 > Kui Tomcat ei käivitu ja logis on `Permission denied` mõne kausta kohta, kuulub see kaust veel root'ile.
 
-`touch` `conf/` alla ebaõnnestus: konf on kirjutuskaitstud ka töötavale rakendusele. `/health/live` vastas, seega said kõik kirjutatavad kaustad õige omaniku. Numbriline `User` on see, mida kontrollivad Trivy `config` registry lehel ja hiljem Kubernetes.
+`touch` `conf/` alla ebaõnnestus: konfiguratsioon on kirjutuskaitstud ka töötavale rakendusele. `/health/live` vastas, seega said kõik kirjutatavad kaustad õige omaniku. Numbriline `User` on see, mida kontrollivad Trivy `config` registry lehel ja hiljem Kubernetes.
 
 ✅ **Edasi saad minna, kui** `id` näitab `uid=10001`, `/health/live` vastab `{"status":"UP"}`, `touch` annab `Permission denied` ja image'i `User` on `10001`.
 

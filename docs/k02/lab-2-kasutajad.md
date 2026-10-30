@@ -11,7 +11,7 @@ tags:
     - lood kolm kasutajat kõigis viies masinas ühe ülesandega (`loop`);
     - salvestad käsu tulemuse (`register`) ja kasutad seda järgmises ülesandes.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k02`.
+Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
 
 ## A1 · `loop`
 
@@ -34,7 +34,7 @@ Nimekiri `labori_kasutajad` tuleb failist `group_vars/all.yml`.
 
 ```bash
 ansible-playbook users.yml --syntax-check
-ansible-playbook users.yml -K
+ansible-playbook users.yml
 ```
 
 ??? success "Oodatav tulemus"
@@ -48,7 +48,7 @@ ansible-playbook users.yml -K
     ...
     ```
 
-    PLAY RECAP: igal viiel masinal `changed=1`. Üks ülesanne loeb `changed`-iks, kui vähemalt üks element muutis midagi.
+    PLAY RECAP-is on igas viies masinas `changed=1`. Tsükliga ülesande tulemus on `changed`, kui vähemalt üks element muutis midagi.
 
 ## A2 · `register`
 
@@ -66,18 +66,18 @@ Lisa `users.yml`-i lõppu kaks ülesannet (sama taandega nagu esimene):
 ```
 
 ```bash
-ansible-playbook users.yml -K
+ansible-playbook users.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kasutajate ülesanne on nüüd igal pool `ok`. Debug näitab iga masina kohta näiteks:
+    Kasutajate ülesande tulemus on nüüd kõigis masinates `ok`. Debug näitab iga masina kohta näiteks:
 
     ```
     "msg": "web01: anna, kasutaja, mari, peeter"
     ```
 
-    PLAY RECAP: `changed=0`. `changed_when: false` hoidis `ls` käsu `ok` olekus.
+    PLAY RECAP-is on `changed=0`. Rida `changed_when: false` määrab, et `ls` käsu tulemus on alati `ok`.
 
 ??? question "Mõtle"
 
@@ -85,17 +85,17 @@ ansible-playbook users.yml -K
 
 ## A3 · Uus kasutaja
 
-Lisa `group_vars/all.yml`-is nimekirja neljas nimi, näiteks `jaan`. Käivita ainult ühe masina vastu:
+Lisa `group_vars/all.yml`-is nimekirja neljas nimi, näiteks `jaan`. Käivita playbook ainult ühes masinas:
 
 ```bash
-ansible-playbook users.yml -K --limit web01
+ansible-playbook users.yml --limit web01
 ```
 
 ??? success "Oodatav tulemus"
 
-    `ok` kolmele vanale, `changed` ainult `jaan`-ile. Playbook'i ennast sa ei muutnud: muutus ainult andmete nimekiri.
+    Kolme olemasoleva kasutaja tulemus on `ok`, ainult kasutaja `jaan` tulemus on `changed`. Playbook'i sa ei muutnud, muutus ainult kasutajate nimekiri.
 
-Käivita kõigile ilma `--limit`-ita, et kõik masinad oleksid jälle ühesugused.
+Seejärel käivita playbook ilma `--limit`-ita, et kõigis masinates oleks jälle sama olek.
 
 ## A4 · Commit
 

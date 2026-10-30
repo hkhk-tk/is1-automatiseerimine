@@ -8,7 +8,7 @@ tags:
 
 Deploy töötab, aga seda ei saa veel hallata: sa ei otsusta, millal see toimub, paroolid on failis `~/k03.env` ja keegi ei tea, mis juhtub, kui kaks inimest vajutavad korraga. Need on küsimused, mida küsib iga audit ja iga intsidendi järelanalüüs.
 
-Lõpus käivitub pipeline ka nupust ja ajakavaga, paroolid on environment'i secret'ites ja `~/k03.env` on control node'ilt kadunud. Korraga käivitub ainult üks deploy ja PR-i vana jooks katkeb, kui tuleb uus.
+Lõpus käivitub pipeline ka nupust ja ajakavaga, paroolid on environment'i secret'ites ja `~/k03.env` on control node'ilt kadunud. Korraga käivitub ainult üks deploy ja PR-i vana käivitus katkeb, kui tuleb uus.
 
 **Kui teed seda tööl iga päev:** workflow'l on `workflow_dispatch` sisendiga `deploy` ja `schedule`, `gh secret list --env proxmox` näitab nelja nime, environment lubab ainult main'i ja `~/k03.env` on kustutatud. Kui see on sul juba korras, mine otse etappi „[Üks deploy korraga](#uks-deploy-korraga)“.
 
@@ -36,23 +36,23 @@ Ilma nuputa tähendab "deploy uuesti" tühja commit'i, mis risustab ajalugu ja k
 </figure>
 -->
 
-Tühja sisendiga jooks tegi kõik peale deploy, mis tähendab, et nupp sobib ka lihtsalt "ehita uuesti" jaoks. Sõnaga jooks paigaldas sama commit'i uuesti, ja see on kasulik siis, kui keegi muutis serveris midagi käsitsi ja tahad tagasi teadaolevasse seisu. Nupp on näha ainult siis, kui `workflow_dispatch` on vaikeharul: seepärast pidi muudatus enne main'i jõudma.
+Tühja sisendiga käivitus tegi kõik peale deploy, mis tähendab, et nupp sobib ka lihtsalt "ehita uuesti" jaoks. Sõnaga käivitus paigaldas sama commit'i uuesti, ja see on kasulik siis, kui keegi muutis serveris midagi käsitsi ja tahad minna tagasi teadaolevasse olekusse. Nupp on näha ainult siis, kui `workflow_dispatch` on vaikeharul: seepärast pidi muudatus enne main'i jõudma.
 
-✅ **Edasi saad minna, kui** tühja sisendiga jooksus on `deploy` hall (*skipped*) ja sõnaga `deploy` töötas see roheliselt; mõlema jooksu link on märkmikus.
+✅ **Edasi saad minna, kui** tühja sisendiga käivituses on `deploy` hall (*skipped*) ja sõnaga `deploy` töötas see roheliselt; mõlema käivituse link on märkmikus.
 
 ## Ajakava
 
-Lisad ajastatud jooksu, mis kontrollib koodi ka siis, kui keegi ei push'i. Uus CVE tuleb sõltuvusse ka ilma commit'ita. Cron on UTC-s ja käivitub ainult vaikeharul.
+Lisad ajastatud käivituse, mis kontrollib koodi ka siis, kui keegi ei push'i. Uus CVE tuleb sõltuvusse ka ilma commit'ita. Cron on UTC-s ja käivitub ainult vaikeharul.
 
-Repo, mida keegi kuu aega ei puuduta, on kuu aega skännimata. Ajastatud jooks muudab Trivy andmebaasi uuendused nähtavaks, ilma et peaksid ise meeles pidama.
+Repo, mida keegi kuu aega ei puuduta, on kuu aega skännimata. Ajastatud käivitus muudab Trivy andmebaasi uuendused nähtavaks, ilma et peaksid ise meeles pidama.
 
 1. Lisa `schedule:` cron'iga tööpäevadeks varahommikul, minut mitte `0` (nt `"17 4 * * 1-5"`).
 2. Lisa `image` job'ile `if: github.event_name != 'schedule'`. Deploy jääb siis ise vahele, sest ta vajab image'it.
 3. Kontrolli lokaalselt: `actionlint; echo $?`
 
-Minut, mis pole `0`, on viisakus: täistunnil käivitavad oma jooksu tuhanded repod ja GitHub võib neid edasi lükata. Image'i ja deploy'd ajastatud jooks ei vaja, sest kood pole muutunud; uus image samast koodist oleks ainult uus tag ilma uue sisuta. Kui ajastatud jooksu järgmisel päeval pole, vaata kõigepealt, kas `schedule:` on main'is, sest teistel harudel GitHub seda ei loe.
+Minut, mis pole `0`, on viisakus: täistunnil käivituvad tuhandete repositooriumide workflow'd ja GitHub võib neid edasi lükata. Image'i ja deploy'd ajastatud käivitus ei vaja, sest kood pole muutunud; uus image samast koodist oleks ainult uus tag ilma uue sisuta. Kui ajastatud käivitust järgmisel päeval pole, vaata kõigepealt, kas `schedule:` on main'is, sest teistel harudel GitHub seda ei loe.
 
-✅ **Edasi saad minna, kui** `actionlint` annab `0`. Esimest ajastatud jooksu, kus töötavad ainult build, compat ja security, näed järgmisel tööpäeval.
+✅ **Edasi saad minna, kui** `actionlint` annab `0`. Esimest ajastatud käivitust, kus töötavad ainult build, compat ja security, näed järgmisel tööpäeval.
 
 ## Environment, secret'id ja muutujad
 
@@ -111,18 +111,18 @@ Kui piirang ei kehti, saab iga haru autor oma koodi koos tootmise paroolidega si
     gh run watch
     ```
 
-2. Ava jooksu deploy job ja leia teade, miks see ei käivitunud.
+2. Ava käivituse deploy job ja leia teade, miks see ei käivitunud.
 3. Kontrolli, et runner'i töökaustas pole `.env`-i: `find ~/actions-runner/_work -name .env -path '*k03-docker*'`
 
 Deploy ebaõnnestus teatega `Branch "k05-actions" is not allowed to deploy to proxmox` ja runner ei saanud tööd üldse. See tähendab, et secret'id ei lahkunud GitHubist: kontroll toimub enne, kui job runner'ile antakse. Tühi `find` kinnitab, et ka eelmise deploy fail on koristatud. Kui deploy oleks käivitunud, puudub environment'il haru piirang või on job'il `environment:` rida puudu.
 
-✅ **Edasi saad minna, kui** deploy job on punane haru piirangu teatega, runner'i logis pole selle jooksu job'i ja `find` on tühi.
+✅ **Edasi saad minna, kui** deploy job on punane haru piirangu teatega, runner'i logis pole selle käivituse job'i ja `find` on tühi.
 
 ## Käsitsi kinnitus: sinu repo järgi
 
 Valid, kuidas deploy enne käivitumist inimese otsust ootab. *Required reviewers* töötab GitHubi Free ja Team plaanil ainult avalikus repos. Self-hosted runner sobib aga ainult privaatsesse reposse.
 
-Need kaks nõuet on vastuolus ja tööl lahendatakse see tavaliselt Enterprise plaaniga. Laboris kasutame nuppu: tulemus on sama, inimene otsustab enne deploy'd, aga kontroll elab workflow's, mitte environment'i seadetes.
+Need kaks nõuet on vastuolus ja tööl lahendatakse see tavaliselt Enterprise plaaniga. Laboris kasutame nuppu: tulemus on sama, inimene otsustab enne deploy'd, aga kontroll on kirjas workflow's, mitte environment'i seadetes.
 
 | Repo | Kinnitus |
 |---|---|
@@ -137,18 +137,18 @@ Need kaks nõuet on vastuolus ja tööl lahendatakse see tavaliselt Enterprise p
 
 Muutujaga `DEPLOY_ENABLED=false` jäi push'i deploy vahele, aga nupp töötas: automaatne tee on kinni, käsitsi tee lahti. Nii käitub ka külmutusperiood tööl, kui enne puhkust või suurt üritust ei taheta automaatseid muudatusi. Muutuja on repo seadetes, seega muudad käitumist ilma commit'ita ja muutus on GitHubi auditilogis näha.
 
-✅ **Edasi saad minna, kui** märkmikus on jooksu link, kus deploy jäi vahele või ootas, ja teise jooksu link, kus see käivitus pärast sinu otsust.
+✅ **Edasi saad minna, kui** märkmikus on käivituse link, kus deploy jäi vahele või ootas, ja teise käivituse link, kus see käivitus pärast sinu otsust.
 
 ## Üks deploy korraga
 
-Paned deploy järjekorda, et kaks jooksu ei teeks sama stack'iga korraga midagi. Kaks paralleelset `docker compose up`-i samas kaustas jätavad stack'i ettearvamatusse seisu. [`concurrency`](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) grupis on korraga üks töötav ja üks ootav töö.
+Paned deploy järjekorda, et kaks käivitust ei teeks sama stack'iga korraga midagi. Kaks paralleelset `docker compose up`-i samas kaustas jätavad stack'i ettearvamatusse olekusse. [`concurrency`](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) grupis on korraga üks töötav ja üks ootav töö.
 
-Kaks kiiret merge'i järjest on tavaline olukord. Ilma järjekorrata võib vanem deploy lõppeda hiljem ja tootmisse jääb eelmine versioon, kuigi mõlemad jooksud on rohelised.
+Kaks kiiret merge'i järjest on tavaline olukord. Ilma järjekorrata võib vanem deploy lõppeda hiljem ja tootmisse jääb eelmine versioon, kuigi mõlemad käivitused on rohelised.
 
 1. Nõuded workflow'le:
     - deploy job'il on concurrency-grupp `deploy-proxmox`, mis ei katkesta poolikut deploy'd
     - igal job'il on `timeout-minutes`
-    - workflow tasemel grupp katkestab sama PR-i vana jooksu, aga main'i push'i ja nupu käivitused ei oota ega katkesta üksteist (grupi nimi peab sõltuma sündmusest; avaldiste süntaks: [`${{ }}` operaatorid](https://docs.github.com/actions/reference/workflows-and-actions/expressions))
+    - workflow tasemel grupp katkestab sama PR-i vana käivituse, aga main'i push'i ja nupu käivitused ei oota ega katkesta üksteist (grupi nimi peab sõltuma sündmusest; avaldiste süntaks: [`${{ }}` operaatorid](https://docs.github.com/actions/reference/workflows-and-actions/expressions))
 2. Kontrolli `actionlint`-iga ja vii see main'i, siis käivita kolm deploy'd kiiresti järjest ja vaata, mis igaühega juhtub.
 
     ```bash
@@ -156,14 +156,14 @@ Kaks kiiret merge'i järjest on tavaline olukord. Ilma järjekorrata võib vanem
     gh run list -w ci -L 3 --json databaseId,status,conclusion
     ```
 
-3. Kirjuta märkmikku kolme jooksu deploy job'i olek ja algus- ning lõpuaeg (*Actions* → jooks → deploy).
-4. PR-il: tee kaks push'i kiiresti järjest harule `k05-actions` ja vaata, mis juhtub esimese PR-jooksuga.
+3. Kirjuta märkmikku kolme käivituse deploy job'i olek ja algus- ning lõpuaeg (*Actions* → käivitus → deploy).
+4. PR-il: tee kaks push'i kiiresti järjest harule `k05-actions` ja vaata, mis juhtub esimese PR-i käivitusega.
 
-Kui ootav on juba olemas, asendab uus selle ja vana ootaja tühistatakse. See on deploy puhul õige, sest viimane soov on ainus, millel on tähtsust. `cancel-in-progress: false` tähendab, et poolik deploy lõpetatakse alati, sest katkestatud `compose up` on halvim seis. PR-il tühistati vana jooks, sest selle tulemus polnud enam kellelegi vajalik.
+Kui ootav on juba olemas, asendab uus selle ja vana ootaja tühistatakse. See on deploy puhul õige, sest viimane soov on ainus, millel on tähtsust. `cancel-in-progress: false` tähendab, et poolik deploy lõpetatakse alati, sest katkestatud `compose up` jätab stack'i kõige halvemasse olekusse. PR-il tühistati vana käivitus, sest selle tulemus polnud enam kellelegi vajalik.
 
-✅ **Edasi saad minna, kui** teine deploy oli *Pending*, kuni esimene lõppes, või tühistati kolmanda tõttu, ükski kahest deploy'st ei käivitunud samal ajal, PR-i esimene jooks on *Cancelled* ja `bash autograde/check.sh k05 deploy` annab `OK`.
+✅ **Edasi saad minna, kui** teine deploy oli *Pending*, kuni esimene lõppes, või tühistati kolmanda tõttu, ükski kahest deploy'st ei käivitunud samal ajal, PR-i esimene käivitus on *Cancelled* ja `bash autograde/check.sh k05 deploy` annab `OK`.
 
-📎 **Selle mooduli tõend:** jooksude lingid (nupp tühja ja `deploy` sisendiga, haru piirangu keeldumine, kinnitus), `gh secret list --env proxmox` neli nime, `~/k03.env` kustutatud, kolme deploy olekud ja ajad märkmikus; `check.sh k05 deploy` → `OK`.
+📎 **Selle mooduli tõend:** käivituste lingid (nupp tühja ja `deploy` sisendiga, haru piirangu keeldumine, kinnitus), `gh secret list --env proxmox` neli nime, `~/k03.env` kustutatud, kolme deploy olekud ja ajad märkmikus; `check.sh k05 deploy` → `OK`.
 
 ## Miks see nii töötab
 
@@ -177,7 +177,7 @@ Kui ootav on juba olemas, asendab uus selle ja vana ootaja tühistatakse. See on
 
 **Repo tasemel secret.** Repo tasemel secret on seevastu kättesaadav igale workflow'le igas harus. Erand on forgist tulnud PR-id ja Dependaboti käivitused, mis tavalisi secret'eid ei saa. Seetõttu on tootmiskeskkonna paroolid environment'is ja repo tasemel on ainult need secret'id, mida vajab iga job.
 
-**Ajakava avalikus repos.** Avalikus repos lülitab GitHub `schedule:` sündmuse välja, kui repos pole 60 päeva jooksul tegevust olnud. Kui öine jooks on vaikselt kadunud, vaata Actions lehelt, kas workflow on *disabled*.
+**Ajakava avalikus repos.** Avalikus repos lülitab GitHub `schedule:` sündmuse välja, kui repos pole 60 päeva jooksul tegevust olnud. Kui öine käivitus on vaikselt kadunud, vaata Actions lehelt, kas workflow on *disabled*.
 
 **Muutujad `vars`.** Muutujad (`vars`) sobivad seadetele, mida tahad muuta ilma commit'ita, näiteks `DEPLOY_ENABLED`. Organisatsiooni repos salvestub nende muutmine organisatsiooni auditilogisse.
 

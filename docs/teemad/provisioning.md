@@ -4,11 +4,11 @@ tags: [provisioning, cloud-init, PXE, zero-touch provisioning]
 
 # Provisioning
 
-Uus server jõuab andmekeskusesse kastis, uus VM tekib tiketi peale, uus kommutaator tuleb harukontorisse, kus IT-inimest pole. Igal juhul peab masin jõudma seisu, kus ta on võrgus, tal on õige nimi ja võti ning konfihaldus saab üle võtta. Kui see osa on käsitöö, algab drift juba esimesest minutist, sest iga käsitsi samm siin on erinevus, mida keegi hiljem ei leia.
+Uus server jõuab andmekeskusesse kastis, uus VM tekib tiketi peale, uus kommutaator tuleb harukontorisse, kus IT-inimest pole. Igal juhul peab masin jõudma olekusse, kus ta on võrgus, tal on õige nimi ja võti ning konfiguratsioonihaldus saab üle võtta. Kui see osa on käsitöö, algab drift juba esimesest minutist, sest iga käsitsi samm siin on erinevus, mida keegi hiljem ei leia.
 
 ## Bare metal, VM, pilv ja võrguseade
 
-Provisioning lõpeb seisus, kus konfihaldus (Ansible, Puppet) võib rolli seadistada: riistvara või VM on eraldatud, OS paigaldatud või kloonitud, võrk, IP, hostinimi, DNS-kirje ja ligipääs olemas ning esimene käivitus tehtud. Igal tasemel on oma mehhanism:
+Provisioning lõpeb olekus, kus konfiguratsioonihaldus (Ansible, Puppet) võib rolli seadistada: riistvara või VM on eraldatud, OS paigaldatud või kloonitud, võrk, IP, hostinimi, DNS-kirje ja ligipääs olemas ning esimene käivitus tehtud. Igal tasemel on oma mehhanism:
 
 - **Bare metal**: füüsiline server bootib võrgust (PXE või UEFI HTTP boot), paigaldaja töötab vastusefailiga (Kickstart, Ubuntu autoinstall, preseed) ja BMC (IPMI, Redfish) lülitab toite ning boot-järjekorda.
 - **VM**: hüperviisor kloonib malli ja annab VM-ile identiteedi, tavaliselt cloud-init'i andmetena. OS-i paigaldust ei toimu.
@@ -16,7 +16,7 @@ Provisioning lõpeb seisus, kus konfihaldus (Ansible, Puppet) võib rolli seadis
 
 **Zero-touch provisioning** (ZTP) tähendab, et seade seadistab end esimesel käivitusel ise ilma, et keegi kohapeal klaviatuuri puudutaks. Mõiste on levinud eelkõige võrguseadmete juures, aga sama mõte kehtib PXE-ga serverile ja cloud-init'iga VM-ile.
 
-Provisioning teeb esimese seisu üks kord, rolli seadistus ja selle hoidmine on konfihalduse töö. Cloud-init'i user-data, kuhu on kirjutatud terve rakenduse paigaldus, on üks kord käivituv skript, mida keegi hiljem ei kontrolli. Golden image ehitatakse enne (Packer), provisioning kasutab seda.
+Provisioning loob algoleku üks kord, rolli seadistus ja selle hoidmine on konfiguratsioonihalduse töö. Cloud-init'i user-data, kuhu on kirjutatud terve rakenduse paigaldus, on üks kord käivituv skript, mida keegi hiljem ei kontrolli. Golden image ehitatakse enne (Packer), provisioning kasutab seda.
 
 ## Bare metal: PXE ahel ja build-režiim
 
@@ -34,7 +34,7 @@ sequenceDiagram
     S->>T: kernel + initrd + vastusefail
     S->>P: paigaldus (Kickstart / autoinstall)
     P-->>T: "valmis" (build-režiim maha)
-    S->>S: reboot kettalt, cloud-init / konfihaldus
+    S->>S: reboot kettalt, cloud-init / konfiguratsioonihaldus
 ```
 
   <figcaption>Joonis 1. Bare metal provisioning'u ahel. Viimane teade ütleb provisioning'u serverile, et järgmine võrgust boot ei tohi paigaldust korrata.</figcaption>
@@ -83,13 +83,13 @@ Cisco dokumenteerib ZTP-d Catalyst 9300 kommutaatoril: tehase seadetega seade bo
 
 **Juhuslik uuesti paigaldus.** Kui boot-järjekorras on võrk esimene ja PXE server annab paigaldaja igale küsijale, paigaldab reboot tootmisserveri uuesti ja kustutab ketta. Build-režiim, MAC-põhine piirang ja eraldi provisioning'u VLAN on kaitse.
 
-**Saladused user-data's.** User-data on loetav metaandmeteenusest igale protsessile instantsis ja Proxmoxis igaühele, kes näeb VM-i seadistust. Pane sinna ainult avalik võti ja bootstrap-token, mis aegub; paroolid tulevad hiljem konfihaldusest või Vaultist.
+**Saladused user-data's.** User-data on loetav metaandmeteenusest igale protsessile instantsis ja Proxmoxis igaühele, kes näeb VM-i seadistust. Pane sinna ainult avalik võti ja bootstrap-token, mis aegub; paroolid tulevad hiljem konfiguratsioonihaldusest või Vaultist.
 
 **„Valmis“ enne valmisolekut.** SSH vastab enne, kui cloud-init on lõpetanud, ja automaatika, mis alustab kohe, ebaõnnestub dpkg luku peal. Ootamine on koodis (`cloud-init status --wait`), mitte `sleep 60`.
 
 **Mall ilma koristuseta.** Kloonidel on sama machine-id, sama SSH host key ja sama `instance-id`, kui malli ei koristatud. Tagajärjed on DHCP konflikt, SSH hoiatused ja cloud-init, mis ei käivita esimese boodi samme. Vaata lehte [SOE ja elutsükkel](soe-ja-elutsukkel.md).
 
-**Liiga palju user-data's.** Iga user-data's olev paigaldussamm sõltub paketihoidla seisust provisioning'u hetkel ja ebaõnnestumisel on masin pooleli ilma, et keegi märkaks. Hoia user-data lühike ja pane roll konfihaldusse, mis näitab `changed` ja `failed`.
+**Liiga palju user-data's.** Iga user-data's olev paigaldussamm sõltub paketihoidla sisust provisioning'u hetkel ja ebaõnnestumisel on masin pooleli ilma, et keegi märkaks. Hoia user-data lühike ja pane roll konfiguratsioonihaldusse, mis näitab `changed` ja `failed`.
 
 **Palju eraldi tööriistu.** Bare metal provisioning vajab DHCP-d, TFTP-d/HTTP-d, DNS-i, BMC ligipääsu ja paigaldaja malle. Foreman või MAAS koondab need, aga on ise keerukas süsteem, mida tuleb uuendada ja varundada.
 
@@ -102,7 +102,7 @@ Cisco dokumenteerib ZTP-d Catalyst 9300 kommutaatoril: tehase seadetega seade bo
     Muidu saab host järgmisel võrgust boodil jälle paigaldaja ja kustutab ketta. Teade lülitab hosti build-režiimi välja ja server annab edaspidi kohalikult kettalt boodi juhise. Sama kaitse on eraldi provisioning'u VLAN ja MAC-põhine piirang.
 
 ??? question "Kolleeg tahab panna user-data'sse andmebaasi parooli, et rakendus saaks esimesel boodil ühenduse. Mida vastad?"
-    User-data on loetav metaandmeteenusest igale protsessile instantsis ja hüperviisori seadistusest igaühele, kellel on VM-ile ligipääs, ning see ei aegu. User-data'sse sobib avalik võti ja lühiajaline bootstrap-token. Parool tuleb konfihaldusest, Vaultist või muust secrets manager'ist ja seda saab vahetada ilma VM-i uuesti loomata.
+    User-data on loetav metaandmeteenusest igale protsessile instantsis ja hüperviisori seadistusest igaühele, kellel on VM-ile ligipääs, ning see ei aegu. User-data'sse sobib avalik võti ja lühiajaline bootstrap-token. Parool tuleb konfiguratsioonihaldusest, Vaultist või muust secrets manager'ist ja seda saab vahetada ilma VM-i uuesti loomata.
 
 ??? question "Kuidas jõuab tehase seadetega Cisco kommutaator harukontoris oma seadistuseni ilma, et keegi kohapeal käske sisestaks?"
     Kui startup-config puudub, alustab seade ZTP-d: küsib DHCP-lt aadressi, saab option 67-ga Pythoni skripti URL-i, laeb skripti alla ja käivitab selle guest shell'is. Skript kirjutab baasseadistuse ja edasise seadistuse teeb keskne automaatika. Eeldus on, et DHCP ja HTTP server on harukontorist kättesaadavad.

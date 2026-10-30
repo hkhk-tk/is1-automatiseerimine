@@ -8,11 +8,11 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - teed 2. kohtumise projekti 1. kohtumise failide põhjal;
-    - lisad grupid masinate ülesande järgi;
-    - paned väärtused `group_vars`-i ja `host_vars`-i ning näed, kumb võidab.
+    - lood 2. kohtumise projekti 1. kohtumise failide põhjal;
+    - lisad grupid masinate otstarbe järgi;
+    - paned väärtused `group_vars`-i ja `host_vars`-i ning uurid, kumb väärtus jääb kehtima.
 
-Kõik käsud käivad control node'il.
+Kõik käsud käivita control node'is.
 
 ## A1 · Projekt
 
@@ -27,9 +27,9 @@ ansible all -m ansible.builtin.ping
 
 ??? success "Oodatav tulemus"
 
-    Viis plokki `SUCCESS` ja `"ping": "pong"`. Keskkond töötab samamoodi nagu 1. kohtumise lõpus.
+    Väljundis on viis plokki `SUCCESS` ja `"ping": "pong"`. Keskkond töötab samamoodi nagu 1. kohtumise lõpus.
 
-## A2 · Grupid ülesande järgi
+## A2 · Grupid masinate otstarbe järgi
 
 Lisa `inventory.ini` lõppu (enne `[all:vars]`) kaks gruppi:
 
@@ -48,7 +48,7 @@ ansible-inventory --graph
 
 ??? success "Oodatav tulemus"
 
-    web01 on nii grupis `ubuntu` kui ka `veeb`, db01 grupis `alma` ja `andmebaas`.
+    web01 on nii grupis `ubuntu` kui ka `veeb` ning db01 on grupis `alma` ja `andmebaas`.
 
 ## A3 · Muutujad gruppidele
 
@@ -82,7 +82,7 @@ ansible all -m ansible.builtin.debug -a "var=veeb_pealkiri"
 
 ??? success "Oodatav tulemus"
 
-    `kursus` on kõigil viiel `IS1-26`. `veeb_pealkiri` on web01-l ja app01-l `IS1 labor`, teistel `VARIABLE IS NOT DEFINED!`: need pole grupis `veeb`.
+    Muutuja `kursus` väärtus on kõigis viies masinas `IS1-26`. Muutuja `veeb_pealkiri` väärtus on web01-s ja app01-s `IS1 labor`, teistes masinates `VARIABLE IS NOT DEFINED!`, sest need ei kuulu gruppi `veeb`.
 
 ## A4 · Üks masin teistest erinev
 
@@ -92,7 +92,7 @@ Fail `host_vars/web01.yml`:
 veeb_pealkiri: "IS1 labor · peamine veebiserver"
 ```
 
-Ennusta enne: mis on web01 ja app01 `veeb_pealkiri`?
+Enne käivitamist ennusta, milline on muutuja `veeb_pealkiri` väärtus web01-s ja app01-s.
 
 ```bash
 ansible veeb -m ansible.builtin.debug -a "var=veeb_pealkiri"
@@ -100,9 +100,9 @@ ansible veeb -m ansible.builtin.debug -a "var=veeb_pealkiri"
 
 ??? success "Oodatav tulemus"
 
-    web01: `IS1 labor · peamine veebiserver`, app01: `IS1 labor`. `host_vars` on täpsem kui `group_vars` ja võidab.
+    web01-s on väärtus `IS1 labor · peamine veebiserver`, app01-s `IS1 labor`. `host_vars` on täpsem kui `group_vars`, seetõttu jääb kehtima masina enda väärtus.
 
-Proovi ühekordset üle kirjutamist käsurealt:
+Proovi väärtus käsurealt ühekordselt üle kirjutada:
 
 ```bash
 ansible veeb -m ansible.builtin.debug -a "var=veeb_pealkiri" -e veeb_pealkiri=Proov
@@ -110,7 +110,7 @@ ansible veeb -m ansible.builtin.debug -a "var=veeb_pealkiri" -e veeb_pealkiri=Pr
 
 ??? success "Oodatav tulemus"
 
-    Mõlemal `Proov`: `-e` on kõige tugevam.
+    Mõlemas masinas on väärtus `Proov`, sest käsurealt võtmega `-e` antud väärtusel on kõige kõrgem prioriteet.
 
 ## A5 · Commit
 
@@ -121,4 +121,4 @@ git commit -m "k02: algseis, grupid ja muutujad"
 git push
 ```
 
-**Valmis, kui** web01 ja app01 näitavad eri `veeb_pealkiri` väärtust ja muudatus on GitHubis.
+**Valmis, kui** web01-s ja app01-s on muutujal `veeb_pealkiri` eri väärtus ja muudatus on GitHubis.

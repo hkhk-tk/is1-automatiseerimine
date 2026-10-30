@@ -71,7 +71,7 @@ Aadress `lab["web01"]` ütleb, et VM-i identiteet Tofu jaoks on võti `web01`, m
 
 ## Püüa vead kinni plaanis
 
-Paned muutujale reeglid, mis lükkavad vigase sisendi tagasi enne, kui Proxmoxi poole midagi läheb. Ilma `validation`-ita tuleb vale IP välja alles siis, kui masin on ilma võrguta boodinud.
+Paned muutujale reeglid, mis lükkavad vigase sisendi tagasi enne, kui Proxmoxi poole midagi läheb. Ilma `validation`-ita tuleb vale IP välja alles siis, kui masin on ilma võrguta käivitunud.
 
 `validation` hinnatakse siis, kui muutuja väärtus on teada, enne ühtki provider'i kutset. Sama reegel kehtib igale väärtuse allikale: `tfvars`, `-var` ja `TF_VAR_`.
 
@@ -125,7 +125,7 @@ Data source loeb nüüd kaks malli, sest `vms`-is on mõlemad distrod. Teine `pl
 
 ## Vaata, mis on VM-i identiteet
 
-See etapp on katse, mida tootmises teha ei tahaks. Muudad ainult võtme nime ja vaatad, mida plaan sellest arvab. `apply`-d ei tee.
+See etapp on katse, mida tootmises teha ei tahaks. Muudad ainult võtme nime ja vaatad, mida plaan selle peale näitab. `apply`-d ei tee.
 
 Hostinime muutmine tundub kosmeetiline. Tofu jaoks on võti aga objekti aadress ja uus aadress tähendab uut objekti. Kes seda ei tea, kustutab ümbernimetamisel töötava masina.
 
@@ -234,7 +234,7 @@ Käivita `tofu console` ja proovi ridu ükshaaval. Kirjuta iga rea juurde `NOTES
     upper(var.vms["db01"].group)
     ```
 
-5. Genereeritud saladus. Ajutises kaustas `/tmp/k04-saladus` (mitte repos) tee `hashicorp/random` provider'iga `random_password`, mis annab rakenduse andmebaasi kasutajale parooli. Nõuded: 24 märki, vähemalt 2 suurtähte ja 2 numbrit, erimärgid ainult `_-.` (shellis ja URL-is ohutud), uus parool tuleb ainult muutuja `rotation` muutusest (`keepers`), output on `sensitive`. Kontroll:
+5. Genereeritud saladus. Ajutises kaustas `/tmp/k04-saladus` (mitte repositooriumis) tee `hashicorp/random` provider'iga `random_password`, mis annab rakenduse andmebaasi kasutajale parooli. Nõuded: 24 märki, vähemalt 2 suurtähte ja 2 numbrit, erimärgid ainult `_-.` (shellis ja URL-is ohutud), uus parool tuleb ainult muutuja `rotation` muutusest (`keepers`), output on `sensitive`. Kontroll:
 
     ```bash
     cd /tmp/k04-saladus && tofu init -input=false > /dev/null && tofu apply
@@ -249,7 +249,7 @@ Käivita `tofu console` ja proovi ridu ükshaaval. Kirjuta iga rea juurde `NOTES
 
 `min` ja `max` võtavad arvud eraldi argumentidena, mitte listina: `...` laiendab listi argumentideks, ilma selleta tuleb `number required, but have tuple`. `lower` teeb segatähtedega GitHubi kasutajanimest pool'i nimes väiketähtedega kuju, mida nõuavad näiteks S3 bucketi nimed ja DNS-kirjed.
 
-`random_password` ei vaja ühtki parooli käsitsi, aga tulemus on state'is lihttekstina. Seepärast läheb saladus Ansible'ile Vault'i krüpteerituna ja state'i tuleb kaitsta nagu paroolifaili ([krüpteeritud state](lisa.md#lisaprojekt-krupteeritud-state)). `keepers` teeb rotatsiooni koodis nähtavaks: plaan näitab `forces replacement`, mitte vaikset muutust. OpenTofu 1.11+ `ephemeral` ressurss hoiab sellise väärtuse state'ist üldse väljas, aga siis peab väärtust kasutav ressurss või provider selle samas jooksus kätte saama.
+`random_password` ei vaja ühtki parooli käsitsi, aga tulemus on state'is lihttekstina. Seepärast läheb saladus Ansible'ile Vault'i krüpteerituna ja state'i tuleb kaitsta nagu paroolifaili ([krüpteeritud state](lisa.md#lisaprojekt-krupteeritud-state)). `keepers` teeb rotatsiooni koodis nähtavaks: plaan näitab `forces replacement`, mitte vaikset muutust. OpenTofu 1.11+ `ephemeral` ressurss hoiab sellise väärtuse state'ist üldse väljas, aga siis peab väärtust kasutav ressurss või provider selle samas käivituses kätte saama.
 
 ✅ **Edasi saad minna, kui** `NOTES.md`-s on kõigi viie sammu avaldised ja käsud koos tulemusega ja selgitus, miks `try` ja `lookup` ei ebaõnnestunud.
 

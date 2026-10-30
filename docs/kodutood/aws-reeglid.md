@@ -19,12 +19,12 @@ tags:
 
 *Tabel 1. Konto ja kulu reeglid.*
 
-Koolitaja ei vastuta sinu AWS-i arvete eest. Kui kahtled, tee kodutööst dry run: kirjuta kood, käivita `tofu plan`
-või `--check`, aga ära loo ressursse.
+Koolitaja ei vastuta sinu AWS-i arvete eest. Kui sa ei ole kindel, tee kodutöö kuivkäivitusena: kirjuta kood ja käivita `tofu plan`
+või `--check`, kuid ära loo ressursse.
 
 | Ressurss | ~ $/h | Märkus |
 |---|---:|---|
-| t3.micro / t3.small | 0.011 / 0.022 | töötab ka siis, kui sa ei kasuta; peatatud masina ketas maksab edasi |
+| t3.micro / t3.small | 0.011 / 0.022 | tasu arvestatakse ka siis, kui masinat ei kasutata; peatatud masina ketta eest tuleb edasi maksta |
 | avalik IPv4 | 0.005 | iga avaliku IP eest, ka vaba Elastic IP |
 | NAT gateway | 0.046 + andmed | kodutöödes **mitte luua** |
 | Load balancer (ALB) | 0.024 + LCU | kodutöödes **mitte luua** |
@@ -39,10 +39,10 @@ nädalaga ~$13.
 
 | Reegel | Miks |
 |---|---|
-| Igapäevane töö IAM-kasutajana, root-il MFA ja access key'd puuduvad | Rooti ei saa õigustega piirata ega auditeerida. Root on ainult arvete ja konto sulgemise jaoks. |
+| Igapäevane töö IAM-kasutajana; root-kasutajal on MFA ja juurdepääsuvõtmeid (access key) pole | Rooti ei saa õigustega piirata ega auditeerida. Root on ainult arvete ja konto sulgemise jaoks. |
 | Control node'il `aws login` (CLI ≥ 2.32), mitte `~/.aws/credentials` | Sessioon aegub ise ja kettal pole midagi, mis lekiks. Seadistad 1. kohtumise kodutöö osas 1.5. |
-| Pikaajalisi võtmeid ainult 5. ja 6. kohtumise kodutöös, ainult ECR push | Kui võti lekib, peab see olema väärtusetu. Kodutöö lõpus võti kustutatakse. |
-| EC2 saab õigused IAM rollist, mitte võtmest | Ajutised võtmed tulevad metaandmete teenusest, kettal pole midagi. |
+| Pikaajalisi võtmeid ainult 5. ja 6. kohtumise kodutöös, ainult ECR push | Kui võti lekib, peab sellest tekkiv kahju olema võimalikult väike. Kodutöö lõpus võti kustutatakse. |
+| EC2 saab õigused IAM rollist, mitte võtmest | Ajutised võtmed tulevad metaandmete teenusest ja kettale neid ei salvestata. |
 | Saladused ei lähe Giti | Automaatse hindaja kontroll `cloud/secrets` annab hoiatuse. |
 
 *Tabel 3. Kasutajate ja võtmete reeglid.*
@@ -78,18 +78,18 @@ aws configure get region             # eu-north-1
 
    **Oodatav tulemus:** viimane rida `TULEMUS: tasulisi jääke pole`. `INFO` read (ECR repo, S3 bucket, VPC ilma
    masinateta) võivad jääda.
-   **Kui exit on 2:** mõni päring ebaõnnestus (õigused, võrk). Siis pole tulemus usaldusväärne, vaata `VIGA` rida.
-3. Billing → **Free plan** kaart: krediidi jääk. Märgi see üles, siis näed järgmisel korral, palju kodutöö maksis.
+   **Kui väljumiskood on 2:** mõni päring ebaõnnestus (õigused, võrk). Siis ei ole tulemus usaldusväärne, vaata rida `VIGA`.
+3. Vaata Billingu kaardilt **Free plan** krediidi jääki ja pane see kirja. Järgmisel korral näed, kui palju kodutöö maksis.
 
 ## Veaotsing
 
 | Probleem | Põhjus | Lahendus |
 |---|---|---|
-| `Unable to locate credentials` või `ExpiredToken` | `aws login` sessioon aegus (ka poole käsu pealt) | [`aws login --remote --profile labseis-login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) |
+| `Unable to locate credentials` või `ExpiredToken` | `aws login` sessioon aegus (ka käsu täitmise ajal) | [`aws login --remote --profile labseis-login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) |
 | `UnauthorizedOperation` | vale profiil või aegunud sessioon | `echo $AWS_PROFILE`, `aws sts get-caller-identity` samas shellis |
 | SSH timeout või Ansible `UNREACHABLE` kõigil | SG 22 on vanale IP-le (kodu IP muutub) | `curl -s https://checkip.amazonaws.com`, uuenda SG reeglit |
 | brauser või `curl` timeout, SSH töötab | SG-s pole teenuse porti sinu IP-le | lisa reegel |
-| masin või muu ressurss on `us-east-1`-s | konsooli region oli vale | kustuta seal, `aws-leftovers.sh` vaatab ka seda regiooni |
-| `aws-leftovers.sh` exit 2 | päring ebaõnnestus (õigused, võrk) | vaata `VIGA` rida, käivita uuesti |
+| masin või muu ressurss on `us-east-1`-s | konsoolis oli valitud vale regioon | kustuta seal, `aws-leftovers.sh` vaatab ka seda regiooni |
+| `aws-leftovers.sh` väljumiskood 2 | päring ebaõnnestus (õigused, võrk) | vaata `VIGA` rida, käivita uuesti |
 
 *Tabel 4. Kõigi kodutööde ühine veaotsing.*

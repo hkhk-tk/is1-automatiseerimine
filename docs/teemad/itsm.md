@@ -41,7 +41,7 @@ CMDB saab andmeid kahest suunast. *Discovery* skannib võrku ja agentidelt ning 
 
 ## Alertist intsidendini
 
-Alertmanager või ITSM-i sündmuste moodul rühmitab ja dedublikeerib alerdid ning intsident avatakse ainult kasutajat mõjutava seisu korral. Hea integratsioon seob intsidendi CI-ga ja näitab samal lehel viimaseid muudatusi selles CI-s. Sageli on see kiireim tee põhjuseni.
+Alertmanager või ITSM-i sündmuste moodul rühmitab ja dedublikeerib alerdid ning intsident avatakse ainult kasutajat mõjutava olukorra korral. Hea integratsioon seob intsidendi CI-ga ja näitab samal lehel viimaseid muudatusi selles CI-s. Sageli on see kiireim tee põhjuseni.
 
 ## AI ITSM-is: klassifitseerimine, otsing ja riskihinnang
 
@@ -88,7 +88,7 @@ Samal ajal näitas [2019. aasta State of DevOps uuring](https://dora.dev/publica
     Standardmuudatus on kinnitatud protseduuri käivitus. Workflow'faili muutmine muudab protseduuri ennast, näiteks eemaldab kontrolli või muudab sihtkeskkonda. Seepärast vajab see eraldi hinnangut ja kinnitust, mida teeb CODEOWNERS koos nõutud ülevaatajaga.
 
 ??? question "Discovery ja Ansible'i automaatika kirjutavad mõlemad samasse CMDB-sse. Mis läheb valesti ja kuidas seda vältida?"
-    Discovery kirjutab olemasoleva seisu ja võib üle kirjutada välja, mida automaatika kasutab soovitud seisuna, näiteks rolli või keskkonna. Siis muudab järgmine jooks hosti vale rolli järgi. Iga välja kohta peab olema määratud omanik (discovery või automaatika) ning lahknevused peavad jõudma aruandesse, mitte vaikse ülekirjutamiseni.
+    Discovery kirjutab tegeliku oleku ja võib üle kirjutada välja, mida automaatika kasutab soovitud olekuna, näiteks rolli või keskkonna. Siis muudab järgmine käivitus hosti vale rolli järgi. Iga välja kohta peab olema määratud omanik (discovery või automaatika) ning lahknevused peavad jõudma aruandesse, mitte vaikse ülekirjutamiseni.
 
 ??? question "DORA määrus nõuab, et muudatuse kinnitaja oleks sõltumatu muudatuse tegijast. Kuidas seda pipeline'is tehniliselt tagada?"
     PR-i peab kinnitama keegi teine kui autor ja haru kaitse ei luba autoril seda reeglit ise maha võtta, ka administraatoril mitte. Tootmise deploy ootab environment'i või `input`-i kinnitust, kus kinnitaja ja käivitaja võrdlus on pipeline'is kirjas. Kõik see jätab kirje väljaspool CI serverit.

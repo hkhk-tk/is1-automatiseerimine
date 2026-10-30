@@ -24,7 +24,7 @@ Joonis näitab lõpptulemust. Loe seda väljast sisse: kasutaja päring tuleb In
 
 Teed valmis kaks asja, mida teenused käivitumiseks vajavad: paroolid ja andmebaasi algseisu. Paroolid lähevad Secret'i, mille lood käsurealt. Andmebaasi skeem ja algandmed lähevad ConfigMap'i, mille genereerid skriptiga ja mis läheb Giti.
 
-Argo CD, kellele selle seisu hiljem üle annad, loob ainult seda, mis on Gitis. Seepärast on init ConfigMap Gitis, Secret mitte.
+Argo CD, kellele selle oleku haldamise hiljem üle annad, loob ainult seda, mis on Gitis. Seepärast on init ConfigMap Gitis, Secret mitte.
 
 1. Loo Secret. Paroolid on samad mis `k03-docker/.env`-is ja jäävad sinu terminali:
 
@@ -162,7 +162,7 @@ Kolm probe'i vastavad kolmele eri küsimusele. Kui need segi ajada, taaskäivita
     kill %1
     ```
 
-> `ImagePullBackOff` ja Events ütleb `unauthorized`: pakett on privaatne. Koolitaja on lisanud sinu default ServiceAccount'ile secret'i `ghcr-pull` (`kubectl get sa default -o yaml`). Kui seda pole, vt `k07-k8s/examples/secret.example.yaml`.
+> Kui pod on olekus `ImagePullBackOff` ja Events näitab `unauthorized`, on pakett privaatne. Koolitaja on lisanud sinu default ServiceAccount'ile secret'i `ghcr-pull` (`kubectl get sa default -o yaml`). Kui seda pole, vt `k07-k8s/examples/secret.example.yaml`.
 
 `wait-deps` logi näitab, mida pod ootas ja millal oote lõppes. `/health` vastus, kus kõik neli on `UP`, tõestab, et app01 jõudis kõigi kolme teenuseni nende nimede kaudu ja paroolid klapivad. `/version` SHA seob töötava pod'i kindla commit'iga. Seda seost kasutad, kui CI hakkab tag'i Argo CD jaoks ise kirjutama.
 
@@ -200,7 +200,7 @@ Ingress on koht, kus mitu rakendust jagavad üht IP-d ja porti. Kui kaks õppija
 </figure>
 -->
 
-> `404 page not found`: Traefik ei leia sellele hostile reeglit (kirjaviga, `ingressClassName` puudub või Host-päis jäi ära). `503` või `no available server`: reegel on olemas, aga Service'il pole Ready pod'e.
+> Kui vastus on `404 page not found`, ei leia Traefik sellele hostile reeglit (kirjaviga, `ingressClassName` puudub või Host-päis jäi ära). Kui vastus on `503` või `no available server`, on reegel olemas, aga Service'il pole Ready pod'e.
 
 Õige hostiga tuli `UP`, vale hostiga ja ilma hostita `404`. See tähendab, et Traefik töötab ja sinu reegel on ainus, mis sinu hostile vastab. Rikkeotsingul aitab see vahe: `404` on Ingress'i probleem, `503` Service'i või pod'i oma.
 

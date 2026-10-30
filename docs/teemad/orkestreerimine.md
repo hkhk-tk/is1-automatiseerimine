@@ -4,7 +4,7 @@ tags: [orkestreerimine, automatiseerimine, CloudOps, AWX]
 
 # Orkestreerimine ja automatiseerimine
 
-Uue veebihosti jaoks on kõik sammud automatiseeritud: VM tuleb OpenTofust, seadistus Ansible'ist, monitooringu kirje API-st ja koormusjaoturi pool'i lisab skript. Ikkagi kulub tellimusele pool päeva, sest admin käivitab need õiges järjekorras, ootab vahepeal cloud-init'i ja kontrollib käsitsi, kas eelmine samm õnnestus. Kui kolmas samm ebaõnnestub, ei tea keegi, mis seisu esimesed kaks jätsid. **Automatiseerimine teeb ühe ülesande ilma inimeseta, orkestreerimine seob mitu ülesannet eri süsteemides üheks töövooks, millel on järjekord, sõltuvused, veakäsitlus ja üks tulemus.**
+Uue veebihosti jaoks on kõik sammud automatiseeritud: VM tuleb OpenTofust, seadistus Ansible'ist, monitooringu kirje API-st ja koormusjaoturi pool'i lisab skript. Ikkagi kulub tellimusele pool päeva, sest admin käivitab need õiges järjekorras, ootab vahepeal cloud-init'i ja kontrollib käsitsi, kas eelmine samm õnnestus. Kui kolmas samm ebaõnnestub, ei tea keegi, millisesse olekusse esimesed kaks sammu süsteemi jätsid. **Automatiseerimine teeb ühe ülesande ilma inimeseta, orkestreerimine seob mitu ülesannet eri süsteemides üheks töövooks, millel on järjekord, sõltuvused, veakäsitlus ja üks tulemus.**
 
 ## Töövoo ja käituse orkestreerimine, CloudOps
 
@@ -36,7 +36,7 @@ flowchart LR
 
 Hajutatud töövool pole tehingut. Kui VM ja DNS-kirje on loodud ja Ansible ebaõnnestub, jäävad need alles. Orkestreerija valikud on: jätta pooleli ja teavitada, proovida sammu uuesti või käivitada kompenseeriv tegevus, mis eelmised sammud tagasi võtab. Uuesti proovimine on ohutu ainult idempotentse sammu puhul. Playbook ja `tofu apply` on idempotentsed, aga skript, mis lisab koormusjaoturisse rea, ei pruugi olla, ja teine katse lisab teise rea.
 
-Teine mehhanism on lukk. Kaks samaaegset töövoogu sama keskkonna peal kirjutavad sama state'i ja sama inventory't. OpenTofu S3 backend lukustab state'i, aga Ansible'i jooks ei ole millegagi lukus. Seepärast lubatakse orkestreerijas ühe keskkonna kohta üks töövoog korraga (AWX-is job template'i valik samaaegsete käivituste kohta, GitHub Actionsis `concurrency` grupp).
+Teine mehhanism on lukk. Kaks samaaegset töövoogu sama keskkonna peal kirjutavad sama state'i ja sama inventory't. OpenTofu S3 backend lukustab state'i, aga Ansible'i käivitus ei ole millegagi lukus. Seepärast lubatakse orkestreerijas ühe keskkonna kohta üks töövoog korraga (AWX-is job template'i valik samaaegsete käivituste kohta, GitHub Actionsis `concurrency` grupp).
 
 Töövoo käivitab inimene, ajakava, Giti sündmus või monitooringu signaal. Viimane on sündmuspõhine automaatika: [ansible-rulebook](https://docs.ansible.com/projects/rulebook/en/latest/) kuulab allikat, hindab reeglit ja käivitab playbook'i või AWX-i job template'i. Automaatse käivituse korral peavad piirid olema koodis: korduste arv, `throttle`, inimese kinnitus riskantse sammu ees.
 
@@ -65,7 +65,7 @@ Orkestreerimisele tuleb siit kolm järeldust. Kaitsemehhanism on samuti tarkvara
 
 Orkestreerija on kõige suurema õigusega süsteem majas. AWX-is on masinate SSH-võtmed, hüperviisori tokenid ja pilve volitused korraga. Selle kompromiteerimine annab ligipääsu kogu taristule ja selle rike peatab kõik töövood. Seepärast on orkestreerija ise koodis (AWX-i objektid `awx.awx` kollektsiooniga), varundatud ning sellel on eraldi õigused ja audit.
 
-Töövoog jääb pooleli regulaarselt. Iga töövoo juures peab olema kirjas, mis seisu jätab iga sammu ebaõnnestumine ja kas töövoogu saab algusest uuesti käivitada.
+Töövoog jääb pooleli regulaarselt. Iga töövoo juures peab olema kirjas, millisesse olekusse jätab süsteemi iga sammu ebaõnnestumine ja kas töövoogu saab algusest uuesti käivitada.
 
 Liigne orkestreerimine on samuti risk. Kolmekümne sammuga workflow, millest igaüks kutsub järgmist tingimuste järgi, on raskem lugeda kui runbook ja sageli käivitab seda ainult selle autor. Kui samme on vähe ja neid tehakse harva, piisab sageli ühest skriptist või playbook'ist, mis kutsub teisi.
 

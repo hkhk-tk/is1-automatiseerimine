@@ -8,9 +8,9 @@ tags:
 
 # 3. kohtumine · Docker: loeng
 
-**Eeldus:** eelmisel korral viis Ansible viiest serverist koosneva stacki rollide ja muutujatega soovitud seisu.
+**Eeldus:** eelmisel korral viis Ansible rollide ja muutujate abil viiest serverist koosneva stacki soovitud olekusse.
 
-Seni oli iga teenus server, mida sa seadistasid: paketid, konfifail, systemd unit. Täna muutub töö ühik. Teenus on valmis pakitud artefakt, mis käivitatakse protsessina, ja kõik, mis peab alles jääma, elab sellest väljaspool. **Konteiner on ühekordne, image on muutumatu, olek on mujal.** Võrgud, Compose, deploy ja baas-image'ite haldus tulenevad sellest jaotusest.
+Seni oli iga teenus server, mida seadistasid: paketid, konfiguratsioonifail, systemd unit. Täna muutub töö ühik. Teenus on valmis pakitud artefakt, mis käivitatakse protsessina, ja kõik, mis peab alles jääma, asub sellest väljaspool. **Konteiner on ühekordne, image on muutumatu, olek on mujal.** Võrgud, Compose, deploy ja baas-image'ite haldus tulenevad sellest jaotusest.
 
 ## 🎯 Õpiväljundid
 
@@ -18,8 +18,8 @@ Pärast seda loengut oskad:
 
 - selgitada, kuidas namespace'id ja cgroup'id teevad hosti protsessist konteineri, ning eristada konteinerit VM-ist isolatsiooni ja ressursside poolest;
 - kirjeldada image'it kui kihtidest koosnevat muutumatut artefakti ning eristada tag'i ja digest'i;
-- põhjendada, miks andmed, saladused ja logid peavad elama konteinerist väljaspool, ning valida [volume'i](https://docs.docker.com/engine/storage/volumes/) ja bind mount'i vahel;
-- selgitada, kuidas Compose kirjeldab stacki soovitud seisu ja miks "käivitatud" ei tähenda "valmis";
+- põhjendada, miks andmed, saladused ja logid peavad asuma konteinerist väljaspool, ning valida [volume'i](https://docs.docker.com/engine/storage/volumes/) ja bind mount'i vahel;
+- selgitada, kuidas Compose kirjeldab stacki soovitud olekut ja miks "käivitatud" ei tähenda "valmis";
 - võrrelda push- ja pull-mudelit konteinerite deploy automatiseerimisel ning põhjendada, kumb sobib tootmisteenusele;
 - kirjeldada heakskiidetud baas-image'ite (SOE) elutsüklit ning hinnata SBOM-i ja haavatavuste skännimise abil, mida uuesti ehitada;
 - võrrelda Dockeri ja Podmani käitusmudelit ning põhjendada, millal käivitada konteiner rootless'is systemd teenusena.
@@ -27,7 +27,7 @@ Pärast seda loengut oskad:
 
 ## 1. Konteiner on isoleeritud protsess
 
-Kaks Java versiooni samas serveris tähendas seni kaht käsitsi hoitud JDK-d või teist VM-i.
+Kaks Java versiooni samas serveris tähendasid seni kahte käsitsi hallatud JDK-d või teist VM-i.
 
 [Konteiner](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) on hosti tuumas töötav tavaline protsess, mida tuum isoleerib kahe mehhanismiga. [Namespace'id](https://man7.org/linux/man-pages/man7/namespaces.7.html) muudavad seda, mida protsess näeb: oma PID-puu, kus ta on PID 1, oma võrguliidesed, mount'id ja hostname. [cgroup'id](https://man7.org/linux/man-pages/man7/cgroups.7.html) piiravad mälu, CPU-aega ja protsesside arvu. systemd kasutab samu mehhanisme (`PrivateTmp=`, `MemoryMax=`).
 
@@ -47,7 +47,7 @@ docker exec w ps                     # konteineris: sama protsess on PID 1
 sudo lsns -p "$(pgrep -o nginx)"     # tema namespace'id
 ```
 
-Siit tuleb kolm tagajärge. Esiteks, kui konteineri PID 1 lõpeb, peatub ka konteiner. systemd't konteineris pole, seega peab teenus töötama esiplaanil ja `SIGTERM`-i peale lõpetama. `docker stop` ootab vaikimisi 10 sekundit (`--stop-timeout`, Compose'is `stop_grace_period`) ja saadab siis `SIGKILL`-i. Kui PID 1 on shell, mis signaali edasi ei anna, saab andmebaas iga deploy'ga `SIGKILL`-i.
+Sellest tuleneb kolm tagajärge. Esiteks, kui konteineri PID 1 lõpeb, peatub ka konteiner. systemd't konteineris pole, seega peab teenus töötama esiplaanil ja `SIGTERM`-i peale lõpetama. `docker stop` ootab vaikimisi 10 sekundit (`--stop-timeout`, Compose'is `stop_grace_period`) ja saadab siis `SIGKILL`-i. Kui PID 1 on shell, mis signaali edasi ei anna, saab andmebaas iga deploy'ga `SIGKILL`-i.
 
 Teiseks ei kaitse isolatsioon vaikimisi õigusi. Docker ei kasuta vaikimisi user namespace'i, nii et `uid=0` konteineris on hosti root. Grupi `docker` liige saab käivitada konteineri, mis mount'ib hosti `/`, ja `sudo` logisse sellest midagi ei jää ([Docker Engine security](https://docs.docker.com/engine/security/)). Grupi liikmete nimekirja tuleb auditeerida nagu `sudoers`-it.
 
@@ -63,7 +63,7 @@ Ressursipiirangud vajavad sama tähelepanu ka protsesside arvu puhul. Vaikimisi 
 
 ## 2. Image kui muutumatu artefakt
 
-Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon. Image pöörab selle ümber: tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse.
+Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon. Image'i puhul on vastupidi: tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse.
 
 **Image** on [OCI](https://opencontainers.org/) formaadis manifest, mis viitab konfiguratsiooni-JSON-ile (`Entrypoint`, `Cmd`, `Env`, `User`) ja järjestatud kihtide nimekirjale. Iga kiht on tar-arhiiv. Dockerfile'is lisab iga `RUN`, `COPY` ja `ADD` ühe kihi, `CMD`, `ENV` ja `USER` muudavad ainult konfiguratsiooni. Käivitamisel ühendab overlayfs kirjutuskaitstud kihid (`lowerdir`) ja konteineri oma kirjutatava kihi (`upperdir`). Kui protsess muudab alumises kihis olevat faili, kopeerib tuum enne kirjutamist terve faili ülemisse kihti (copy-up). 2 GB andmefail kirjutatavas kihis tähendab seega 2 GB koopiat esimesel kirjutusel.
 
@@ -72,7 +72,7 @@ Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositoorium
   <figcaption>Joonis 3.2. Kirjutuskaitstud kihid on ühised, igal konteineril on oma õhuke kirjutatav kiht.</figcaption>
 </figure>
 
-Muutumatusel on kolm tagajärge. Esiteks kaob `docker exec`-iga muudetud konfifail järgmise deploy'ga, sest uus konteiner tuleb image'ist. Parandus läheb Dockerfile'i ja uude image'isse. Teiseks on rollback eelmise image'i käivitamine, eeldusel et see on veel registry's. Kolmandaks jääb kõik, mis kihti jõudis, sinna alatiseks. Hilisemas kihis tehtud `rm` lisab ainult whiteout-kirje. Image'isse kopeeritud `.env` või SSH võti on kõigil, kes image'i alla laadivad.
+Muutumatusel on kolm tagajärge. Esiteks kaob `docker exec`-iga muudetud konfiguratsioonifail järgmise deploy'ga, sest uus konteiner tuleb image'ist. Parandus läheb Dockerfile'i ja uude image'isse. Teiseks on rollback eelmise image'i käivitamine, eeldusel et see on veel registry's. Kolmandaks jääb kõik, mis kihti jõudis, sinna alatiseks. Hilisemas kihis tehtud `rm` lisab ainult whiteout-kirje. Image'isse kopeeritud `.env` või SSH võti on kõigil, kes image'i alla laadivad.
 
 Seepärast eraldab [mitmeastmeline build](https://docs.docker.com/build/building/multi-stage/) ehitamise käitamisest. Kompilaator, sõltuvuste vahemälu ja lähtekood jäävad build-astmesse:
 
@@ -97,11 +97,11 @@ Muutumatus kehtib artefakti, mitte build'i kohta. Sama Dockerfile kahe nädala p
 
 MariaDB uuendus on `docker rm` ja `docker run`: mis oli kirjutatavas kihis, on kadunud.
 
-Olekut on kolme liiki. **Andmed** lähevad volume'isse või bind mount'i. **Volume** on Dockeri hallatav kataloog (`local` draiveriga `/var/lib/docker/volumes/<nimi>/_data`), mille elutsükkel on konteinerist lahus. Vahe bind mount'iga on omanikes. Tühja nimega volume'i täidab Docker esimesel ühendamisel image'i sihtkataloogi sisuga koos omaniku ja õigustega, nii et andmekataloog saab kohe õige UID. Bind mount on hosti kataloog hosti õigustega; puuduva kataloogi loob `-v` root'i omanikuna ja mitte-root teenus ei saa sinna kirjutada. Bind mount sobib konfifailile, volume andmebaasile.
+Olekut on kolme liiki. **Andmed** lähevad volume'isse või bind mount'i. **Volume** on Dockeri hallatav kataloog (`local` draiveriga `/var/lib/docker/volumes/<nimi>/_data`), mille elutsükkel on konteinerist lahus. Bind mount'ist erineb volume failide omaniku poolest. Tühja nimega volume'i täidab Docker esimesel ühendamisel image'i sihtkataloogi sisuga koos omaniku ja õigustega, nii et andmekataloog saab kohe õige UID. Bind mount on hosti kataloog hosti õigustega; puuduva kataloogi loob `-v` root'i omanikuna ja mitte-root teenus ei saa sinna kirjutada. Bind mount sobib konfiguratsioonifailile, volume andmebaasile.
 
 <figure markdown="span">
   ![Konteiner db01: kirjutatav kiht kaob docker rm-iga, volume /var/lib/docker/volumes all ja bind mount hosti kataloogis jäävad alles](assets/k03_l_andmed.svg)
-  <figcaption>Joonis 3.3. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise üle elavad ainult kaks neist.</figcaption>
+  <figcaption>Joonis 3.3. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist.</figcaption>
 </figure>
 
 **Seadistus ja saladused** tulevad käivitamisel väljast: sama image töötab testis ja tootmises, vahe on keskkonnas ja mount'itud failides. Keskkonnamuutuja on saladuse jaoks halb koht. `docker inspect` näitab seda kõigile, kellel on socket'ile ligipääs, ja see on loetav failist `/proc/<pid>/environ` ning pärandub igale lapsprotsessile. Fail ([Compose'is `secrets:`](https://docs.docker.com/compose/how-tos/use-secrets/), Kubernetesis Secret) jätab keskkonda ainult tee. **Logid** lähevad PID 1 stdout'i ja stderr'i. Vaikimisi [`json-file`](https://docs.docker.com/engine/logging/drivers/json-file/) draiver kirjutab need faili `/var/lib/docker/containers/<id>/<id>-json.log` ilma rotatsioonita, kuni `max-size` on seatud. Üks jutukas konteiner täidab partitsiooni ja peatab kõik teised.
@@ -116,7 +116,7 @@ Ka salvestusdraiveril on eeldused. `overlay2` XFS-i peal nõuab failisüsteemi, 
 
 ## 4. Mitu teenust Compose'iga
 
-Viie `docker run` käsuga käivitatud stacki soovitud seis on kirjas ainult shelli ajaloos. [Compose](https://docs.docker.com/compose/) paneb selle faili.
+Viie `docker run` käsuga käivitatud stacki soovitud olek on kirjas ainult shelli ajaloos. [Compose](https://docs.docker.com/compose/) kirjutab selle faili.
 
 `compose.yaml` kirjeldab teenused, võrgud ja volume'id. `docker compose up -d` arvutab iga teenuse seadistusest räsi ja võrdleb seda konteineri sildiga `com.docker.compose.config-hash`: puuduva loob, muutunud teenuse loob uuesti, ülejäänu jätab puutumata. Tulemus on idempotentne nagu playbook. Erinevus on mehhanismis: Ansible muudab olemasolevat serverit, Compose peatab vana konteineri ja loob uue. Selle vahe jooksul teenus ei vasta, sest Compose ei tee rolling update'i.
 
@@ -152,15 +152,15 @@ Iseseisvaks lugemiseks: [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika
 
 Tüüpiline intsident: sisevõrgu hostil jälgib automaatne uuendaja tag'i `mariadb:latest`. Öösel ilmub uus põhiversioon, uuendaja loob konteineri uue image'iga ja hommikul rakendus ei käivitu, sest olemasolev andmekataloog vajab `mariadb-upgrade`-i. Muudatusel pole ticket'it ja Gitist ei selgu, mis enne töötas.
 
-Konteineri deploy on alati sama jada: tag lahendatakse digest'iks ja image tõmmatakse, vana konteiner peatatakse ja sama seadistusega luuakse uus, health check otsustab, kas jääda või minna tagasi, ja lõpuks koristatakse vanad image'id. **Deployment automation** tähendab, et see jada käib igal hostil ühtemoodi ja jätab jälje. Otsustada tuleb, kes selle käivitab.
+Konteineri deploy on alati sama jada: tag lahendatakse digest'iks ja image tõmmatakse, vana konteiner peatatakse ja sama seadistusega luuakse uus, health check otsustab, kas jääda või minna tagasi, ja lõpuks koristatakse vanad image'id. **Deployment automation** tähendab, et see jada toimub igas hostis ühtemoodi ja jätab jälje. Otsustada tuleb, kes selle käivitab.
 
-**Push-mudelis** käivitab selle väline osapool, pipeline või playbook. See kirjutab hosti `.env`-i uue tag'i ning käivitab `docker compose pull` ja `up -d`. Versioon on Gitis, muudatus on commit ja korraga uuendatavate hostide arvu otsustab see, kes deploy'd käivitab. Hind: pipeline peab hostini jõudma ja tal on seal Dockeri socket'i ehk root'i õigus.
+**Push-mudelis** käivitab selle väline osapool, pipeline või playbook. See kirjutab hosti `.env`-i uue tag'i ning käivitab `docker compose pull` ja `up -d`. Versioon on Gitis, muudatus on commit ja korraga uuendatavate hostide arvu otsustab see, kes deploy'd käivitab. Selle hind on, et pipeline peab hostini jõudma ja tal on seal Dockeri socket'i ehk root'i õigus.
 
 **Pull-mudelis** jälgib host ise registry't. Podmanis teeb seda [`podman auto-update`](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html). Quadleti failis on `AutoUpdate=registry` ja `podman-auto-update.timer` käivitub vaikimisi iga päev keskööl. See võrdleb kohaliku image'i digest'i registry omaga ning muutuse korral tõmbab uue image'i ja taaskäivitab unit'i. Kui unit ei käivitu, läheb Podman tagasi eelmisele image'ile (`--rollback` on vaikimisi sees). Ebaõnnestumist näeb Podman aga ainult siis, kui konteiner annab sd_notify kaudu teada, et on valmis. Quadleti `Notify=healthy` (uuemates Podmani versioonides) seob selle teate healthcheck'iga. Ilma selleta loetakse õnnestunuks iga protsess, mis käivitus. Dockeri jaoks teevad sama kolmanda osapoole tööriistad.
 
-Pull-mudel ei vaja sissetulevat ligipääsu ega pipeline'i õigusi hostis ja sobib paljudele väikestele hostidele kontorites või tehastes. Deploy hetke ja sisu määrab aga see, kes registry's tag'i liigutab, ja kõik hostid uuendavad samal ööl. Tootmisteenuses on see muudatus ilma change'ita. Kui pull-mudel on tootmises, jälgib host kas tag'i, mida liigutab ainult heakskiidetud pipeline (näiteks `prod`), või paiga taseme tag'i (`11.4`, mitte `latest`).
+Pull-mudel ei vaja sissetulevat ligipääsu ega pipeline'i õigusi hostis ja sobib paljudele väikestele hostidele kontorites või tehastes. Deploy hetke ja sisu määrab aga see, kes registry's tag'i liigutab, ja kõik hostid uuendavad samal ööl. Tootmisteenuses tähendab see muudatust ilma muudatustaotluseta. Kui pull-mudel on tootmises, jälgib host kas tag'i, mida liigutab ainult heakskiidetud pipeline (näiteks `prod`), või paiga taseme tag'i (`11.4`, mitte `latest`).
 
-Viimane samm on koristus. Rollback on kiire ainult siis, kui eelmine image on veel hostis või registry's. Cron'is käiv `docker image prune -a` kustutab kõik image'id, mida ükski konteiner ei kasuta, ka rollback'i sihtmärgi. Ilma koristuseta kasvab `/var/lib/docker` iga deploy'ga. Hostis hoitakse praegust ja eelmist versiooni, registry's väljalaskeid nii kaua, kui rollback on lubatud.
+Viimane samm on koristus. Rollback on kiire ainult siis, kui eelmine image on veel hostis või registry's. Cron'iga käivitatav `docker image prune -a` kustutab kõik image'id, mida ükski konteiner ei kasuta, ka rollback'i sihtmärgi. Ilma koristuseta kasvab `/var/lib/docker` iga deploy'ga. Hostis hoitakse praegust ja eelmist versiooni, registry's väljalaskeid nii kaua, kui rollback on lubatud.
 
 ### Deploy suures skaalas
 
@@ -178,7 +178,7 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 
 **SOE** (standard operating environment) oli 1. kohtumisel piiratud hulk toetatud OS-i ja seadistuse kombinatsioone. Konteinerite puhul on SOE väike hulk heakskiidetud baas-image'eid, näiteks üks JRE, üks Pythoni ja üks minimaalne OS-image, mida ehitab platvormitiim. Baas tuleb upstream'i fikseeritud digest'ist, sisaldab asutuse CA-sertifikaate, ajavööndit ja mitte-root kasutajat ning on skännitud ja avaldatud sisemises registry's. Upstream'i valikul loeb, kui kaua ja kui kiiresti turvaparandused tulevad: Debian slim, Alpine, distroless ja Red Hat UBI (vabalt levitatav, RHEL-i elutsükliga) erinevad just selle poolest.
 
-`FROM` kopeerib baasi kihid rakenduse image'isse ja hosti `apt upgrade` neid ei puuduta. Parandatud baas ei paranda ühtegi rakendust enne, kui need on uuesti ehitatud ja deploy'tud. Sellest tuleb image'i elutsükkel.
+`FROM` kopeerib baasi kihid rakenduse image'isse ja hosti `apt upgrade` neid ei puuduta. Parandatud baas ei paranda ühtegi rakendust enne, kui need on uuesti ehitatud ja deploy'tud. Sellest tuleneb image'i elutsükkel.
 
 | Etapp | Mis toimub | Kes |
 |---|---|---|
@@ -209,14 +209,14 @@ Iseseisvaks lugemiseks: [Turvaautomaatika, compliance ja riskihaldus](../teemad/
 
 ## 7. Konteiner ilma daemonita: Podman ja systemd
 
-AlmaLinux ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab `podman-docker`-i. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
+AlmaLinuxi ja RHEL-i serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab `podman-docker`-i. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
 
 <figure markdown="span">
   ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
   <figcaption>Joonis 3.6. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd.</figcaption>
 </figure>
 
-**Daemonita mudel.** `podman run` loob konteineri `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja lõpetab. Root-daemonit, mille restart peataks kõik konteinerid, pole. Hind: pärast reboot'i ei tõsta konteinerit keegi, kui systemd seda ei tee.
+**Daemonita mudel.** `podman run` loob konteineri `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja lõpetab. Root-daemonit, mille restart peataks kõik konteinerid, pole. Selle hind: pärast taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
 
 **Rootless.** Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on hostis see kasutaja, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. Konteinerist välja pääsenud ründaja saab tavakasutaja õigused. Piirid tulevad tuumast: port alla 1024 vajab sysctl'i `ip_unprivileged_port_start`, võrk käib kasutajaruumi `pasta` kaudu ja cgroup v2 piirangud kehtivad ainult kontrolleritega, mille systemd on kasutajale delegeerinud.
 
@@ -270,8 +270,8 @@ AlmaLinux ja RHEL serveris on vaikimisi [Podman](https://docs.podman.io/), mitte
 
 ## Kontrolli ennast
 
-??? question "Kolleeg parandas tootmises `docker exec`-iga nginx'i konfifaili ja kõik töötas. Järgmisel päeval oli viga tagasi. Mis juhtus ja kuidas oleks pidanud tegema?"
-    Deploy käivitas uue konteineri image'ist, kus oli vana konfifail, ja kirjutatav kiht koos parandusega kustutati. Parandus läheb Dockerfile'i või Gitis olevasse mount'itud faili ja uue deploy'ga tootmisse.
+??? question "Kolleeg parandas tootmises `docker exec`-iga nginx'i konfiguratsioonifaili ja kõik töötas. Järgmisel päeval oli viga tagasi. Mis juhtus ja kuidas oleks pidanud tegema?"
+    Deploy käivitas uue konteineri image'ist, kus oli vana konfiguratsioonifail, ja kirjutatav kiht koos parandusega kustutati. Parandus läheb Dockerfile'i või Gitis olevasse mount'itud faili ja uue deploy'ga tootmisse.
 
 ??? question "Kumb on turvalisem: kasutaja grupis `docker` või kasutaja, kellel on `sudo` õigus ainult käsule `systemctl restart nginx`? Põhjenda."
     Teine. Grupi `docker` liige saab käivitada konteineri, mis mount'ib hosti `/`, ja konteineri root on vaikimisi hosti root. Piiratud `sudo` lubab ainult üht käsku.

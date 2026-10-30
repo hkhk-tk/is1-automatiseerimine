@@ -9,13 +9,13 @@ tags:
 
 **Eeldus:** 1. kohtumise labor (`training.yml`, `tools.yml`, `inventory.ini`) · **Esita:** `k01/aws.md` ja muudetud `training.yml`
 
-Laboris seadistas sinu playbook Proxmoxi masinaid. Siin käivitad sama playbook'i AWS-i virtuaalmasina (EC2) vastu ja näed, mis osa sellest eeldas meie laborit. Enne seda on vaja kontot, mis ei tee rahalisi üllatusi.
+Praktikumis seadistas playbook Proxmoxi masinaid. Kodutöös käivitad sama playbook'i AWS-i virtuaalmasinas (EC2) ja leiad, milline osa sellest eeldas meie laborit. Enne seda seadistad konto nii, et kulud oleksid kontrolli all.
 
 **Enne alustamist:**
 
-- Osa 1 loob konto, IAM-kasutaja, kaks eelarvehäiret ja regiooni **eu-north-1**.
-- Tunnipõhine kulu: 1 × t3.micro + avalik IPv4, kokku alla $0.05.
-- Lõpus koristus ja `bash cloud/aws-leftovers.sh` → `TULEMUS: tasulisi jääke pole`.
+- Osas 1 lood konto, IAM-kasutaja ja kaks eelarvehäiret ning valid regiooniks **eu-north-1**.
+- Üks t3.micro masin ja avalik IPv4-aadress maksavad kokku alla $0.05 tunnis.
+- Lõpus kustutad ressursid ja käivitad `bash cloud/aws-leftovers.sh`, mis peab väljastama `TULEMUS: tasulisi jääke pole`.
 - Reeglid ja ühine veaotsing: [AWS-i reeglid](aws-reeglid.md).
 
 ## Õpiväljundid
@@ -27,7 +27,7 @@ Laboris seadistas sinu playbook Proxmoxi masinaid. Siin käivitad sama playbook'
 
 ---
 
-## Osa 1 · Konto, mis ei tee üllatusi
+## Osa 1 · Konto ja kulude kontroll
 
 Selle osa teed **üks kord**, kõik järgmised kodutööd eeldavad seda.
 
@@ -35,8 +35,8 @@ Selle osa teed **üks kord**, kõik järgmised kodutööd eeldavad seda.
 
 Registreeru [aws.amazon.com](https://aws.amazon.com/) kaudu. Plaani valikul vali **Free plan** (miks: [AWS-i reeglid](aws-reeglid.md#konto-ja-kulu)).
 
-**Oodatav tulemus:** konsoolis Billing → avalehel on kaart "Free plan" krediidi ja päevade jäägiga.
-**Tõend:** screenshot krediidi kaardist (ilma kaardi andmeteta).
+**Oodatav tulemus:** konsooli Billingu avalehel on kaart "Free plan" krediidi ja päevade jäägiga.
+**Tõend:** kuvatõmmis krediidi kaardist (ilma maksekaardi andmeteta).
 
 <!-- EKRAANIPILT: AWS konsool, Billing and Cost Management avaleht (https://console.aws.amazon.com/costmanagement/home), kohe pärast registreerimist. Pildil kaart "Free plan": krediidi jääk ($) ja päevade jääk. Konto ID ja e-post hägustada.
 <figure markdown="span">
@@ -45,32 +45,32 @@ Registreeru [aws.amazon.com](https://aws.amazon.com/) kaudu. Plaani valikul vali
 </figure>
 -->
 
-### 1.2 Root lukku
+### 1.2 Root-kasutaja kaitsmine
 
-1. Root-kasutajale MFA (Security credentials → Assign MFA, autentimisrakendus või võti).
-2. Root-kasutajale access key'd **ei** loo.
-3. IAM → Users → uus kasutaja (nt `admin`), konsooli ligipääs, policy `AdministratorAccess`, sellele kasutajale samuti MFA.
-4. Logi välja ja logi sisse IAM-kasutajana (konto ID või alias + kasutajanimi).
+1. Lisa root-kasutajale MFA (Security credentials → Assign MFA, autentimisrakendus või turvavõti).
+2. Ära loo root-kasutajale juurdepääsuvõtmeid (access key).
+3. Loo IAM-is (IAM → Users) uus kasutaja, näiteks `admin`, anna talle konsooli ligipääs ja poliitika `AdministratorAccess` ning lisa ka sellele kasutajale MFA.
+4. Logi välja ja logi sisse IAM-kasutajana (konto ID või alias ja kasutajanimi).
 
-**Oodatav tulemus:** paremal üleval on `admin @ <konto>`, mitte konto nimi.
+**Oodatav tulemus:** konsooli paremas ülanurgas on `admin @ <konto>`, mitte konto nimi.
 **Tõend:** CloudShellis `aws sts get-caller-identity` väljund (Arn lõpeb `:user/admin`).
 
 **Mõtle:** IAM-kasutajal on `AdministratorAccess`. Mille poolest on see siis root-kasutajast parem?
 Mida saad IAM-kasutajaga teha, mida rootiga ei saa?
 
-### 1.3 Kulude valve
+### 1.3 Eelarvehäired
 
 Billing → [Budgets](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create.html) → Create budget:
 
-1. Mall **Zero spend budget**, e-post sinu aadressile.
-2. Teine budget: Monthly cost budget **$10**.
+1. Vali mall **Zero spend budget** ja lisa teavituseks oma e-posti aadress.
+2. Loo teine eelarve: Monthly cost budget **$10**.
 
-**Oodatav tulemus:** kaks budgetit, mõlemal e-posti teavitus. Esimene zero-spend kiri tuleb tõenäoliselt juba mõne
-tunni jooksul. See on oodatud ja näitab, et valve töötab.
-**Tõend:** Budgets nimekirja screenshot.
+**Oodatav tulemus:** loodud on kaks eelarvet, mõlemal e-posti teavitus. Esimene zero-spend kiri tuleb tõenäoliselt juba mõne
+tunni jooksul. See on oodatud ja näitab, et teavitus töötab.
+**Tõend:** kuvatõmmis Budgetsi loendist.
 
 ??? info "Miks nii"
-    Zero-spend budget ei arvesta krediiti: ta teavitab esimesest tasulisest kasutusest, ka siis, kui krediit selle
+    Zero-spend budget ei arvesta krediiti: see teavitab esimesest tasulisest kasutusest, ka siis, kui krediit selle
     katab. $10 kuueelarve annab märku, kui midagi jäi tööle ja kulu kasvab.
 
 <!-- EKRAANIPILT: AWS konsool, Billing and Cost Management → Budgets, pärast mõlema budgeti loomist. Nimekirjas kaks rida: zero-spend budget ja "Monthly cost budget" $10, mõlemal alert/teavitus seadistatud.
@@ -82,7 +82,7 @@ tunni jooksul. See on oodatud ja näitab, et valve töötab.
 
 ### 1.4 Region ja CloudShell
 
-Vali paremalt ülevalt **Europe (Stockholm) eu-north-1**. Ava CloudShell (ikoon ülaribal).
+Vali paremast ülanurgast regiooniks **Europe (Stockholm) eu-north-1**. Ava CloudShell (ikoon ülaribal).
 
 <!-- EKRAANIPILT: AWS konsooli ülariba ükskõik millisel teenuse lehel (nt EC2), regioonimenüü avatud ja valitud "Europe (Stockholm) eu-north-1"; CloudShelli ikoon ülaribal noolega märgitud.
 <figure markdown="span">
@@ -98,7 +98,7 @@ aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true \
 ```
 
 **Oodatav tulemus:** `eu-north-1`; nimekirjas on `t3.micro` ja `t3.small`.
-**Miks:** CloudShell on terminal brauseris, kus `aws` on juba sisse logitud. Võtmeid pole vaja.
+**Miks:** CloudShell on brauseris töötav terminal, kus `aws` on juba autenditud. Võtmeid pole vaja.
 
 ### 1.5 AWS CLI control node'il
 
@@ -112,7 +112,7 @@ aws login --remote --profile labseis-login
 
 `--remote` väljastab URL-i, mille avad oma arvuti brauseris, ja küsib koodi. Control node'il brauserit pole.
 
-Lisa `~/.aws/config`-i profiil, millest saavad aru ka OpenTofu ja Ansible (need ei oska `aws login` sessiooni ise lugeda):
+Lisa `~/.aws/config`-i profiil, millest saavad aru ka OpenTofu ja Ansible (need ei loe `aws login` sessiooni ise):
 
 ```ini
 [profile labseis]
@@ -132,7 +132,7 @@ aws sts get-caller-identity
 
 ## Osa 2 · EC2 masin
 
-### 2.1 SG ainult sinu IP-le
+### 2.1 Turvagrupp ainult sinu IP-aadressile
 
 ```bash
 MYIP=$(curl -s https://checkip.amazonaws.com)/32
@@ -140,7 +140,7 @@ aws ec2 create-security-group --group-name ansible-k01 --description "K1 kodutoo
 aws ec2 authorize-security-group-ingress --group-name ansible-k01 --protocol tcp --port 22 --cidr "$MYIP"
 ```
 
-**Miks:** `0.0.0.0/0` pordil 22 saab mõne minutiga esimesed võõrad sisselogimiskatsed.
+**Miks:** kui port 22 on avatud kõigile (`0.0.0.0/0`), algavad võõrad sisselogimiskatsed juba mõne minuti jooksul.
 
 ### 2.2 Võtmepaar
 
@@ -174,17 +174,17 @@ Lisa `inventory.ini`-sse uus grupp:
 ec2 ansible_host=<avalik-ip> ansible_user=ubuntu
 ```
 
-Pilvemasinas on kasutaja `ubuntu`, mitte `kasutaja`, ja aadress on avalik IP, mitte nimi `~/.ssh/config`-ist. EC2-l on kasutajal `ubuntu` paroolita `sudo`: kui `-K` küsib parooli, vajuta lihtsalt Enter.
+Pilvemasinas on kasutaja `ubuntu`, mitte `kasutaja`, ja aadress on avalik IP, mitte nimi `~/.ssh/config`-ist. EC2-l on kasutajal `ubuntu` paroolita `sudo`, nagu ka labori masinates.
 
 ```bash
 ansible aws -m ansible.builtin.ping
-ansible-playbook tools.yml -K --limit aws
+ansible-playbook tools.yml --limit aws
 ansible-playbook training.yml --limit aws
 ```
 
-**Ennusta enne:** `tools.yml` töötab (Ubuntu ülesanded käivad, AlmaLinuxi omad jäävad vahele). `training.yml` aga kukub: kaust `/home/kasutaja/automation-lab` ei ole EC2-l lubatud, sest seal pole kasutajat `kasutaja`.
+**Ennusta enne käivitamist:** `tools.yml` töötab (Ubuntu ülesanded käivituvad, AlmaLinuxi omad jäetakse vahele). `training.yml` aga ebaõnnestub, sest EC2-l pole kasutajat `kasutaja` ja kausta `/home/kasutaja/automation-lab` ei saa luua.
 
-See on eeldus, mis oli playbook'is peidus: **tee sõltus meie labori kasutajanimest**. Paranda `training.yml`-is mõlemad teed nii, et need võtavad kodukausta masina faktist:
+See on eeldus, mis oli playbook'is peidus: **tee sõltus meie labori kasutajanimest**. Paranda `training.yml`-is mõlemad teed nii, et kodukaust võetakse masina faktist:
 
 ```yaml
 path: "{{ ansible_facts['env']['HOME'] }}/automation-lab"
@@ -197,7 +197,7 @@ ansible-playbook training.yml --limit 'web01,aws'
 ansible-playbook training.yml --limit 'web01,aws'
 ```
 
-**Oodatav tulemus:** esimesel korral EC2 `changed`, web01 `ok`; teisel korral mõlemal `changed=0`.
+**Oodatav tulemus:** esimesel käivitusel on EC2 ülesannete olek `changed` ja web01 oma `ok`. Teisel käivitusel on mõlemal `changed=0`.
 
 Kirjuta faili `k01/aws.md` kolm lauset: mis eeldus playbook'is oli, kuidas selle leidsid ja kuidas parandasid.
 
@@ -218,7 +218,7 @@ Eemalda `inventory.ini`-st grupp `[aws]`. Võtmepaar (`control`) võib AWS-i jä
 
 ## Valmis, kui
 
-- `aws sts get-caller-identity` näitab IAM-kasutajat, root-il on MFA ja Budgets'is kaks eelarvet kinnitatud e-postiga
+- `aws sts get-caller-identity` näitab IAM-kasutajat, root-kasutajal on MFA ja Budgetsis on kaks eelarvet kinnitatud e-posti teavitusega
 - control node'il töötab `aws login`, `~/.aws/credentials` faili pole
 - `training.yml` teine käivitus annab nii web01-l kui EC2-l `changed=0`
 - `k01/aws.md` on repos

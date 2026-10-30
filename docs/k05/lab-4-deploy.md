@@ -64,9 +64,9 @@ Registry on piir CI ja CD vahel: kõik, mis on registry's, on testitud ja deploy
 </figure>
 -->
 
-`needs: [build, security]` tähendab, et image tehakse alles siis, kui testid ja skänn on läbi. `CACHED` teises jooksus tõestab, et sõltuvuste allalaadimise kiht tuli vahemälust: tühi commit ei muutnud pom'i, seega polnud põhjust seda uuesti teha. Tag sha7 on see, mida deploy kasutab, `latest` on ainult inimesele mugavuseks. Kui deploy kasutaks `latest`-i, ei saaks sa kunagi kindel olla, mis versioon parasjagu töötab.
+`needs: [build, security]` tähendab, et image tehakse alles siis, kui testid ja skänn on läbi. `CACHED` teises käivituses tõestab, et sõltuvuste allalaadimise kiht tuli vahemälust: tühi commit ei muutnud pom'i, seega polnud põhjust seda uuesti teha. Tag sha7 on see, mida deploy kasutab, `latest` on ainult inimesele mugavuseks. Kui deploy kasutaks `latest`-i, ei saaks sa kunagi kindel olla, mis versioon parasjagu töötab.
 
-✅ **Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga), teises jooksus on `dependency:go-offline` kiht `CACHED` ja `bash autograde/check.sh k05 structure` annab `OK`.
+✅ **Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga), teises käivituses on `dependency:go-offline` kiht `CACHED` ja `bash autograde/check.sh k05 structure` annab `OK`.
 
 ## Runner control node'ile, ohutult
 
@@ -214,7 +214,7 @@ Kui pärast seda pead ikka serverisse logima, et midagi käsitsi teha, ei ole de
 - haru `fix-pealkiri` tehakse värskest main'ist ja muudab ainult pealkirja failis `src/main/resources/templates/index.html`
 - merge alles siis, kui PR-i kontrollid on rohelised
 - pärast merge'i on haru kustutatud nii GitHubis kui lokaalselt
-- lõpus jätkad harus `k05-actions`, mis sisaldab main'i viimast seisu (`git merge main`)
+- lõpus jätkad harus `k05-actions`, mis sisaldab main'i viimaseid muudatusi (`git merge main`)
 
 ```bash
 curl -s http://localhost:8080/ | grep -o '<title>[^<]*'

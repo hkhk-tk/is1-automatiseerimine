@@ -6,13 +6,13 @@ tags:
 
 # 1. Maven
 
-Punase CI jooksu järel on esimene küsimus, kas viga on koodis, sõltuvuses, JDK-s või runner'is, ja GitHubis maksab iga katse minuteid. Mis control node'il ebaõnnestub, ebaõnnestub ka seal. Seepärast ehitad, testid ja pakid rakenduse kõigepealt control node'il, ilma ühegi workflow'ta, ja tekitad teadlikult vead, mis tulevad hiljem CI logis sama teksti ja sama exit code'iga tagasi. Lõpus on `mvn -B verify` roheline ja sa tunned need vead logist ära, ilma et peaksid arvama.
+Punase CI käivituse järel on esimene küsimus, kas viga on koodis, sõltuvuses, JDK-s või runner'is, ja GitHubis maksab iga katse minuteid. Mis control node'il ebaõnnestub, ebaõnnestub ka seal. Seepärast ehitad, testid ja pakid rakenduse kõigepealt control node'il, ilma ühegi workflow'ta, ja tekitad teadlikult vead, mis tulevad hiljem CI logis sama teksti ja sama exit code'iga tagasi. Lõpus on `mvn -B verify` roheline ja sa tunned need vead logist ära, ilma et peaksid arvama.
 
 **Kui teed seda tööl iga päev:** etapp [Haru ja stack valmis](#haru-ja-stack-valmis) on tehtud ja `mvn -B verify; echo $?` annab `0`. Kui see on sul juba korras, mine otse etappi „[Värske kloon ja build ilma võrguta](#varske-kloon-ja-build-ilma-vorguta)“.
 
 ## Haru ja stack valmis
 
-Alustad sellest, et kontrollid, kas eelmise korra tulemus on alles. Pipeline ehitab hiljem 3. kohtumisel tehtud stack'i peale: ta vajab töötavat `compose.yaml`-i, `.env`-i väärtusi ja GitHubi ligipääsu. Kui siin on midagi katki, avastad selle muidu alles siis, kui esimene deploy ebaõnnestub ja sa ei tea, kas viga on pipeline'is või stack'is.
+Alustad sellest, et kontrollid, kas eelmise korra tulemus on alles. Pipeline kasutab hiljem 3. kohtumisel tehtud stack'i: see vajab töötavat `compose.yaml`-i, `.env`-i väärtusi ja GitHubi ligipääsu. Kui siin on midagi katki, avastad selle muidu alles siis, kui esimene deploy ebaõnnestub ja sa ei tea, kas viga on pipeline'is või stack'is.
 
 1. Loo haru ja kontrolli, et stack töötab.
 
@@ -45,7 +45,7 @@ Roheline `/health` tähendab, et app01 jõuab andmebaasi, järjekorra ja vahemä
 
 Nüüd vaatad, milline JDK ja milline Maven on masinas. `pom.xml` nõuab Java 21.
 
-Versioonide erinevus control node'i ja CI runner'i vahel on klassikaline "minu masinas töötab" allikas ja hiljem võrdled CI viga just nende numbritega.
+Versioonide erinevus control node'i ja CI runner'i vahel on tüüpiline põhjus, miks „minu masinas töötab“, ja hiljem võrdled CI viga just nende numbritega.
 
 1. Vaata, mis on masinas, ja paigalda puuduv.
 
@@ -71,7 +71,7 @@ Versioonide erinevus control node'i ja CI runner'i vahel on klassikaline "minu m
 
 Maven ei käivita üksikuid käske, vaid elutsükli faase. Iga [faas](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html) käivitab ka kõik eelnevad. `verify` on see, mida CI hakkab käivitama. Siin käivitad faasid ükshaaval ja vaatad, mida igaüks kettale jätab.
 
-CI-s näed ainult lõpptulemust. Kui tead, mis kaust millise faasi järel tekib, saad punase jooksu järel kohe öelda, kui kaugele build jõudis.
+CI-s näed ainult lõpptulemust. Kui tead, mis kaust millise faasi järel tekib, saad punase käivituse järel kohe öelda, kui kaugele build jõudis.
 
 1. Käivita repo juurkaustas faasid järjest ja vaata iga järel `ls target/` ning `echo $?`.
 
@@ -139,7 +139,7 @@ WAR on ZIP-fail kindla kaustastruktuuriga. Kümned teegid `WEB-INF/lib` all selg
 
 Nüüd tekitad kaks viga, mis tulevad CI-s ette: plugina versioon, mis ei sobi JDK-ga, ja stiiliviga, mis ei ole testiviga. Kirjuta enne iga käivitust üles, mis sinu arvates juhtub.
 
-Plugina viga tuleb tavaliselt siis, kui keegi tõstab runner'i JDK-d ja pom jääb maha. Ennustus enne käivitust on harjutus: kui see läheb mööda, on sinu pilt sellest, mida Maven teeb, vale.
+Plugina viga tuleb tavaliselt siis, kui keegi uuendab runner'i JDK-d ja pom'i ei kohandata. Ennustus enne käivitust on harjutus: kui see läheb mööda, on sinu pilt sellest, mida Maven teeb, vale.
 
 1. Anna `jacoco.version` käsurealt, faili muutmata.
 
@@ -258,6 +258,6 @@ Kui kloon on roheline, on build korratav: kõik vajalik on Gitis. Kui kloon eba�
 
 **Mitu Maveni versiooni.** Maven on Java programm kaustas ja kaks versiooni ei sega teineteist. Mõlemad kasutavad sama hoidlat `~/.m2`, seega teisel korral midagi uuesti alla ei laadita. Kui build õnnestuks ühe versiooniga ja ebaõnnestuks teisega, oleks pom'is plugin, mis sõltub Maveni versioonist. Just sellisel juhul on vaja Maven Wrapper'it, mis paneb versiooni repo sisse.
 
-**Vahemälu CI-s.** GitHubi hallatud runner on iga job'i alguses tühi masin ja ilma `cache: maven`-ita laaditakse iga käivitus kogu hoidla uuesti Maven Centralist. Tühja ja täis hoidlaga build'i ajavahe korda push'ide arv päevas näitab, miks vahemälu on aeglase pipeline'i puhul esimene asi, mida kontrollida. Sama kehtib Maven Centrali koormuse kohta: tuhanded tühja hoidlaga build'id päevas on üks põhjus, miks suuremad organisatsioonid kasutavad vahendajana oma hoidlat (Nexus, 6. kohtumine).
+**Vahemälu CI-s.** GitHubi hallatud runner on iga job'i alguses tühi masin ja ilma `cache: maven`-ita laaditakse igal käivitusel kogu hoidla uuesti Maven Centralist. Tühja ja täis hoidlaga build'i ajavahe korda push'ide arv päevas näitab, miks vahemälu on aeglase pipeline'i puhul esimene asi, mida kontrollida. Sama kehtib Maven Centrali koormuse kohta: tuhanded tühja hoidlaga build'id päevas on üks põhjus, miks suuremad organisatsioonid kasutavad vahendajana oma hoidlat (Nexus, 6. kohtumine).
 
 Kui jõudsid kiiremini: [Lisaülesanded → 3. Maven Wrapper](lisa.md#3-maven-wrapper), paned Maveni versiooni repo sisse, et iga masin ja runner ehitaks sama versiooniga.

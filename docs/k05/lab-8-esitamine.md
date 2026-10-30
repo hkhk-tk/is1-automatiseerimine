@@ -41,7 +41,7 @@ Tühi `git ls-files | grep` tähendab, et ükski tuntud saladusfail pole Gitis. 
 
 ## Esimene Dependaboti PR
 
-Vaatad läbi ühe Dependaboti PR-i nii, nagu teeksid seda tööl iga nädal: mida see muudab, mida CI selle kohta ütles ja kas julged selle merge'ida. Dependaboti PR-i jooks saab ainult lugemisõigusega tokeni ega näe Actionsi secret'eid: Dependabotil on oma secret'id.
+Vaatad läbi ühe Dependaboti PR-i nii, nagu teeksid seda tööl iga nädal: mida see muudab, mida CI selle kohta ütles ja kas julged selle merge'ida. Dependaboti PR-i käivitus saab ainult lugemisõigusega tokeni ega näe Actionsi secret'eid: Dependabotil on oma secret'id.
 
 Automaatne uuendus, mida keegi ei vaata, on sama risk kui uuendus, mida ei tehta: üks muudab tootmist ilma otsuseta, teine jätab augud lahti. Sinu töö on otsustada, CI töö on anda otsuseks andmed.
 
@@ -69,7 +69,7 @@ Action'i PR-is muutub SHA ja kommentaar koos, Maveni PR-is versiooninumber pom'i
 
 Täna ehitasid ahela, kus commit jõuab testide, skänni ja kontrolliga tootmisse ning ebaõnnestunud deploy teeb ise rollback'i.
 
-Kirjuta repo juurkausta `NOTES.md`-sse pealkirja `## K5: sinu töökohal` alla 3–5 lauset: kus sinu töökohal see täna käsitsi käib ja mis oleks esimene samm automatiseerida? Nimeta protsess (näiteks rakenduse uuendus, konfi muudatus, sertifikaadi vahetus), kes seda praegu teeb ja millise kontrolliga, ning esimene job või workflow, mille sa teeks. Hostinimesid, IP-sid ja saladusi sinna ei kirjuta.
+Kirjuta repo juurkausta `NOTES.md`-sse pealkirja `## K5: sinu töökohal` alla 3–5 lauset: kus sinu töökohal see täna käsitsi käib ja mis oleks esimene samm automatiseerida? Nimeta protsess (näiteks rakenduse uuendus, konfiguratsiooni muudatus, sertifikaadi vahetus), kes seda praegu teeb ja millise kontrolliga, ning esimene job või workflow, mille sa teeks. Hostinimesid, IP-sid ja saladusi sinna ei kirjuta.
 
 ```bash
 awk '/^## K5: sinu töökohal/{f=1;next} /^## /{f=0} f' NOTES.md | grep -o '[.?!]\( \|$\)' | wc -l
@@ -94,7 +94,7 @@ git tag k05 && git push origin k05
 
 > Parandus pärast esitust: uus commit `main`-i, siis `git tag -f k05 && git push -f origin k05`.
 
-`git ls-remote --tags origin` näitab GitHubi seisu. Viimane merge käivitas veel ühe deploy, seega tootmises töötab täpselt see commit, millele tag osutab. Kui deploy pärast viimast merge'i ebaõnnestus, paranda see enne automaatse hindaja tulemuse vaatamist, sest koolitaja vaatab ka Actions vaadet.
+`git ls-remote --tags origin` näitab, millised tag'id on GitHubis. Viimane merge käivitas veel ühe deploy, seega tootmises töötab täpselt see commit, millele tag osutab. Kui deploy pärast viimast merge'i ebaõnnestus, paranda see enne automaatse hindaja tulemuse vaatamist, sest koolitaja vaatab ka Actions vaadet.
 
 ✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k05` ja main'i viimane deploy on roheline.
 
@@ -108,13 +108,13 @@ Kui tulemus erineb sellest, mida said lokaalselt, on peaaegu alati põhjus selle
 
 ## Tõendid moodulite kaupa
 
-Viimane kontroll on sinu enda märkmik. Iga rida allpool on üks moodul ja selle tõendid samas järjekorras, nagu need moodulite lõpus olid. Kui mõni puudub, leiad enamiku *Actions* vahekaardilt, sest tõendid on jooksude lingid ja need jäävad alles.
+Viimane kontroll on sinu enda märkmik. Iga rida allpool on üks moodul ja selle tõendid samas järjekorras, nagu need moodulite lõpus olid. Kui mõni puudub, leiad enamiku *Actions* vahekaardilt, sest tõendid on käivituste lingid ja need jäävad alles.
 
 - [ ] Maven: versioonid, testide arv ja katvus, `spring-core` versioon, WAR-i suurus, major version'i viga, mäluviga ja AI hinnang, JDK 17 viga, värske kloon ja offline-build
-- [ ] Esimene workflow: runner'i image ja Java, kahe punase jooksu ja katkise YAML-i lingid, roheline PR, `unzip -l`, `failure()` jooksu link, sammude kestused, `timeout-minutes` arvutus ja proovijooks
+- [ ] Esimene workflow: runner'i image ja Java, kahe punase käivituse ja katkise YAML-i lingid, roheline PR, `unzip -l`, `failure()` käivituse link, sammude kestused, `timeout-minutes` arvutus ja prooviks käivitatud workflow
 - [ ] Trivy, matrix ja õigused: Trivy leiud, ühe leiu jälg pom'ini, matrix'i ennustus ja tulemus, vahemälu kirjed, *GITHUB_TOKEN Permissions*, SHA-d, `dependabot.yml` nelja ökosüsteemiga, db01 `FROM` digest'iga
 - [ ] Image ja deploy: sama SHA, ghcr.io tag = sha7, `CACHED`, runner `online`, `docker inspect`, `/version` = commit, runner'i töökaust, muudatus haru kaudu
-- [ ] Triggerid, saladused ja environment: nupu ja kinnituse jooksud, haru piirangu keeldumine, neli secret'it, `~/k03.env` kustutatud, kolme deploy olekud ja ajad
+- [ ] Triggerid, saladused ja environment: nupu ja kinnituse käivitused, haru piirangu keeldumine, neli secret'it, `~/k03.env` kustutatud, kolme deploy olekud ja ajad
 - [ ] Health check ja rollback: `verify-deploy` action, punane deploy rollback'iga, revert ja roheline deploy, katkestuse ajajoon
 - [ ] Katkine pipeline: `fix(ci)` commit'id, nelja vea tabel, roheline deploy, `runner-valve.sh`
 - [ ] Esitamine: Dependaboti PR-i otsus, `NOTES.md` jaotis `## K5: sinu töökohal`, tag `k05`, Releases tulemus
@@ -127,7 +127,7 @@ Viimane kontroll on sinu enda märkmik. Iga rida allpool on üks moodul ja selle
 
 6. kohtumisel on control node Jenkinsi agent: seal käivad Maven, `docker build`, testkonteiner ja sinu sandbox-Jenkins. Control node'i mälu on 4 GB ja 3. kohtumise stack võtab sellest üle gigabaidi. 6. ja 7. kohtumine stacki ei vaja.
 
-Kui Releases on roheline ja `main`-i viimane deploy on roheline, võta stack maha. `down` ilma `-v`-ta eemaldab konteinerid, aga jätab volume'id ja image'id alles, nii et `up -d` toob sama seisu tagasi. `stop`-ist ei piisa: `restart`-poliitikaga konteinerid tõusevad control node'i taaskäivitusel uuesti üles.
+Kui Releases on roheline ja `main`-i viimane deploy on roheline, võta stack maha. `down` ilma `-v`-ta eemaldab konteinerid, aga jätab volume'id ja image'id alles, nii et `up -d` toob sama oleku tagasi. `stop`-ist ei piisa: `restart`-poliitikaga konteinerid käivituvad control node'i taaskäivitusel uuesti.
 
 ```bash
 docker compose ls

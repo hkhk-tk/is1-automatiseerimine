@@ -10,7 +10,7 @@ Meeskonnal on wiki's nelikümmend runbook'i, cron'is kakskümmend skripti, mille
 
 Ülesande automatiseerimises on ühik üks playbook, üks skript, üks moodul. **IT-protsesside automatiseerimises** on automaatne terve töövoog üle mitme süsteemi ja meeskonna. „Uus rakendusserver“ tähendab tiketti, kinnitust, VM-i, DNS-kirjet, seadistust, monitooringu kirjet, CMDB rida ja tiketi sulgemist. Iga samm võib olla eraldi automatiseeritud ja protsess ikkagi käsitsi, kui inimene kannab tulemust ühest süsteemist teise. Siin algab orkestreerimine, mille kohta on lähemalt [4. kohtumise loengus](../k04/loeng.md).
 
-RPA-robot (robotic process automation) klõpsab kasutajaliideses nagu inimene ja murdub, kui nupp liigub. Infra automaatika räägib API, SSH või agendiga ja kirjeldab seisu, mitte klõpse. Skriptide hulgast strateegiat ei teki: kui keegi ei tea, mis on automatiseeritud ja mis mitte, ei saa ka otsustada, mis järgmiseks. Eesmärk on, et inimene otsustaks ja masin täidaks; kinnitus ja audit jäävad.
+RPA-robot (robotic process automation) klõpsab kasutajaliideses nagu inimene ja murdub, kui nupp liigub. Infra automaatika räägib API, SSH või agendiga ja kirjeldab soovitud olekut, mitte klõpse. Skriptide hulgast strateegiat ei teki: kui keegi ei tea, mis on automatiseeritud ja mis mitte, ei saa ka otsustada, mis järgmiseks. Eesmärk on, et inimene otsustaks ja masin täidaks; kinnitus ja audit jäävad.
 
 **Toil** on Google'i SRE raamatu järgi [käsitsi tehtav, korduv, automatiseeritav, taktikaline töö, millel pole püsivat väärtust ja mis kasvab lineaarselt teenuse kasvuga](https://sre.google/sre-book/eliminating-toil/).
 
@@ -49,9 +49,9 @@ Kui automaatikat kirjutab kolm meeskonda, tekib kolm inventory't, kolm saladuste
 
 Toimiv mudel on hub-and-spoke: meeskonnad kirjutavad oma automaatika ise, CoE vaatab üle, hoiab standardit ja ühiseid komponente. Kui CoE kirjutab kõik ise, saab sellest järjekord, mille taga muudatused nädalaid ootavad, ja meeskonnad hakkavad sellest mööda minema.
 
-## Automation as Code: platvormi seis Gitis
+## Automation as Code: platvormi seadistus Gitis
 
-Playbook Gitis on pool tööst. Teine pool on see, kuidas ja kes seda käivitab: AWX-i või Semaphore'i job template, selle inventory, credential'i viide, ajakava, RBAC ja heakskiidu samm. Kui need on klikitud veebiliideses, on platvormi seis jälle snowflake: keegi ei tea, millal tootmise template'ile Execute-õigus lisati.
+Playbook Gitis on pool tööst. Teine pool on see, kuidas ja kes seda käivitab: AWX-i või Semaphore'i job template, selle inventory, credential'i viide, ajakava, RBAC ja heakskiidu samm. Kui need on klikitud veebiliideses, on platvormi seadistus jälle snowflake: keegi ei tea, millal tootmise template'ile Execute-õigus lisati.
 
 Automation as Code viib ka selle osa koodi. AWX-i objekte haldab kollektsioon [`awx.awx`](https://docs.ansible.com/ansible/10/collections/awx/awx/job_template_module.html) samade playbook'idega nagu servereid, Jenkinsi seadistust JCasC ja execution environment'i definitsioon on `execution-environment.yml`, millest `ansible-builder` ehitab image'i. Muudatus õigustes läheb PR-i kaudu nagu muudatus sshd seadistuses ja audit küsib Giti ajalugu.
 
@@ -59,7 +59,7 @@ Automation as Code viib ka selle osa koodi. AWX-i objekte haldab kollektsioon [`
 
 | Tööriist | Mida teeb | Litsents/hind | Millal valida |
 |---|---|---|---|
-| [Ansible](https://docs.ansible.com/) (ansible-core) | ülesanded ja soovitud seis üle SSH/WinRM-i | GPLv3, tasuta | vaikimisi valik Linuxi, võrgu ja Windowsi operatsioonitööks |
+| [Ansible](https://docs.ansible.com/) (ansible-core) | ülesanded ja soovitud olek üle SSH/WinRM-i | GPLv3, tasuta | vaikimisi valik Linuxi, võrgu ja Windowsi operatsioonitööks |
 | [AWX](https://github.com/ansible/awx) | job template'id, RBAC, ajakava, workflow, kinnitused | Apache 2.0, tasuta | mitu meeskonda, audit ja kinnitused on nõue; vajab Kubernetest |
 | [Semaphore](https://semaphoreui.com/) | Ansible'i, OpenTofu ja skriptide käivitus veebist | MIT (Community), tasuta; Pro ja Enterprise tasulised | väiksem meeskond, AWX on liiga raske |
 | [ansible-rulebook](https://github.com/ansible/ansible-rulebook) | sündmus → tingimus → heakskiidetud tegevus | Apache 2.0, tasuta | monitooringu häirele on üks kindel ette heaks kiidetud vastus |
@@ -98,7 +98,7 @@ Eesti avalikus sektoris on sama küsimus seotud [E-ITS](https://eits.ria.ee/)-ig
     Ülesande automatiseerimine teeb ühe sammu ilma inimeseta, näiteks VM-i loomise. Protsessi automatiseerimine seob kõik sammud ühte töövoogu koos järjekorra, veakäsitluse ja tulemusega, nii et keegi ei kanna tulemust käsitsi ühest süsteemist teise. Kui iga samm on kood, aga inimene käivitab neid õiges järjekorras, on protsess ikkagi käsitsi.
 
 ??? question "Playbook'id on Gitis, aga AWX-i job template'id ja õigused on klikitud veebiliideses. Mis risk sellest tuleb ja kuidas seda vähendad?"
-    Platvormi seis on dokumenteerimata: keegi ei tea, millal ja miks tootmise template'ile Execute-õigus lisati, ja AWX-i taastamine pärast riket on käsitöö. Lahendus on hallata AWX-i objekte koodina, näiteks `awx.awx` kollektsiooniga, nii et muudatused lähevad PR-i kaudu ja ajalugu on Gitis.
+    Platvormi seadistus on dokumenteerimata: keegi ei tea, millal ja miks tootmise template'ile Execute-õigus lisati, ja AWX-i taastamine pärast riket on käsitöö. Lahendus on hallata AWX-i objekte koodina, näiteks `awx.awx` kollektsiooniga, nii et muudatused lähevad PR-i kaudu ja ajalugu on Gitis.
 
 ??? question "CoE vaatab üle kõik automaatika PR-id ja keskmine ootus on kaheksa päeva. Mis juhtub ja mida muudad?"
     Meeskonnad hakkavad käivitama skripte oma masinatest ja platvormist mööda, nii et audit ja ühine standard kaovad. Muuda mudelit nii, et meeskonnad vaatavad oma koodi ise üle CoE reeglite järgi (lint, testid, CODEOWNERS) ja CoE vaatab üle ainult ühised komponendid ning kõrge riskiga muudatused.

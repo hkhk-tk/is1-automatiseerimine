@@ -4,11 +4,11 @@ tags: [turvaautomaatika, SOAR, compliance, E-ITS]
 
 # Turvaautomaatika, compliance ja riskihaldus
 
-Audiitor küsib, kas kõigil 300 serveril on E-ITS-i nõutud seadistus ja millega seda tõendad. Samal nädalal annab SIEM päevas 4000 hoiatust ja kahe inimesega meeskond jõuab neist läbi vaadata mõnisada. Mõlemat ei lahenda tööjõu lisamine, sest töö kasvab koos serverite arvuga. Turvaautomaatika koosneb kahest eri tööst: compliance hoiab süsteemi kokkulepitud seisus ja tõendab seda, SOAR reageerib sündmusele. Mõlemad vajavad testitud tegevuste kataloogi ja reeglit, millal automaatika peatub ja otsustab inimene.
+Audiitor küsib, kas kõigil 300 serveril on E-ITS-i nõutud seadistus ja millega seda tõendad. Samal nädalal annab SIEM päevas 4000 hoiatust ja kahe inimesega meeskond jõuab neist läbi vaadata mõnisada. Mõlemat ei lahenda tööjõu lisamine, sest töö kasvab koos serverite arvuga. Turvaautomaatika koosneb kahest eri tööst: compliance hoiab süsteemi kokkulepitud olekus ja tõendab seda, SOAR reageerib sündmusele. Mõlemad vajavad testitud tegevuste kataloogi ja reeglit, millal automaatika peatub ja otsustab inimene.
 
 ## Compliance, SOAR ja erand kui aktsepteeritud risk
 
-**Compliance management** tähendab, et süsteemi vastavust välisele nõudele kontrollitakse pidevalt, mitte kord aastas enne auditit. Nõue (CIS-i reegel, DISA STIG, E-ITS-i meede) seotakse tehnilise kontrolliga, kontroll käib ajakava järgi ja tulemus koos eranditega on tõend. Eeltingimus on tavaline konfihaldus, sest drift'i kontroll võrdleb hosti sinu koodiga. Compliance võrdleb seda välise standardiga.
+**Compliance management** tähendab, et süsteemi vastavust välisele nõudele kontrollitakse pidevalt, mitte kord aastas enne auditit. Nõue (CIS-i reegel, DISA STIG, E-ITS-i meede) seotakse tehnilise kontrolliga, kontroll käib ajakava järgi ja tulemus koos eranditega on tõend. Eeltingimus on tavaline konfiguratsioonihaldus, sest drift'i kontroll võrdleb hosti sinu koodiga. Compliance võrdleb seda välise standardiga.
 
 **SOAR** (security orchestration, automation and response) on platvorm, mis võtab vastu SIEM-i või EDR-i hoiatuse ja käivitab selle peale töövoo. Töövoog rikastab hoiatust (IP maine, kasutaja grupid, hosti omanik CMDB-st), teeb lihtsad otsused ise ja avab juhtumi (*case*), kuhu analüütik kirjutab otsused. SIEM kogub ja korreleerib, SOAR tegutseb.
 
@@ -68,7 +68,7 @@ Tuvastus töötas, katki oli samm tuvastusest tegevuseni. Selles vahes on SOAR-i
 
 - **Ründaja käivitab sinu automaatika.** Kui blokeering käib allika IP järgi, võib võltsitud allikaga UDP-liiklus panna blokeeringusse sinu DNS-resolveri või partneri NAT-aadressi. Automaatselt blokeeritavatest jäetakse välja oma võrgud ja kriitilised partnerid ning blokeeringul on alati `timeout`.
 - **Hardening katkestab teenuse.** Terve profiil korraga (`/tmp` `noexec`, auditd reeglid, STIG-i FIPS-režiim) peatab installerid ja agendid. Reeglid lülitatakse sisse lainetena, kõigepealt testringis ja `--check`-iga.
-- **Roheline raport, vale seis.** Raport on roheline, sest reegel kontrollib faili, mitte töötavat seadistust. `sshd_config` põhifail võib olla korras, aga `sshd_config.d/` drop-in muudab efektiivset väärtust ja `sshd -T` näitab muud. Kontroll peab vaatama efektiivset seadistust.
+- **Roheline raport, vale olek.** Raport on roheline, sest reegel kontrollib faili, mitte töötavat seadistust. `sshd_config` põhifail võib olla korras, aga `sshd_config.d/` drop-in muudab efektiivset väärtust ja `sshd -T` näitab muud. Kontroll peab vaatama efektiivset seadistust.
 - **Aegumiseta erandid.** Ilma aegumiseta erand jääb igaveseks. Erandiregister vaadatakse üle ajakava järgi ja aegunud erand muudab raporti punaseks.
 - **Skänneri õigused.** Autenditud skänn ja SOAR-i integratsioonid vajavad laia ligipääsu kõikjale. Nende kontod on ründaja jaoks väärtuslikud: eraldi identiteet, kitsas sudo-reegel ja logi väljaspool hosti.
 - **Automaatika kiirus ja tõendid.** Automaatne isoleerimine või kustutamine võib hävitada tõendid, mida forensics vajab. Enne muutvat sammu kogub töövoog andmed (mälu, protsessid, ühendused).

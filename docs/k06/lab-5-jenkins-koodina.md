@@ -7,7 +7,7 @@ tags:
 
 # 5. Jenkins koodina
 
-Käsitsi klõpsitud Jenkinsit ei saa pärast riket samaks taastada: keegi ei tea, millised pluginad ja versioonid seal olid ning kes mida System lehel muutis. Klassi Jenkinsis on administraatori pool (Plugins, Tools, Security, System) sulle kinni, kuigi just seal otsustatakse, kust tulevad tööriistad, millised pluginad on paigaldatud ja kus seadistus kirjas on. Seepärast paned control node'ile oma Jenkinsi [konteinerina](https://www.jenkins.io/doc/book/installing/docker/): see on sinu sandbox, kus võid vigu teha ja neid vaadata. Lõpuks on pluginad `jenkins-plugin-cli`-ga paigaldatud, nende nimekiri failis `k06-jenkins/casc/plugins.txt` ja üks süsteemi seade tuleb JCasC failist.
+Veebiliideses käsitsi seadistatud Jenkinsit ei saa pärast riket samaks taastada: keegi ei tea, millised pluginad ja versioonid seal olid ning kes mida System lehel muutis. Klassi Jenkinsis on administraatori pool (Plugins, Tools, Security, System) sulle kinni, kuigi just seal otsustatakse, kust tulevad tööriistad, millised pluginad on paigaldatud ja kus seadistus kirjas on. Seepärast paned control node'ile oma Jenkinsi [konteinerina](https://www.jenkins.io/doc/book/installing/docker/): see on sinu sandbox, kus võid vigu teha ja neid vaadata. Lõpuks on pluginad `jenkins-plugin-cli`-ga paigaldatud, nende nimekiri failis `k06-jenkins/casc/plugins.txt` ja üks süsteemi seade tuleb JCasC failist.
 
 **Kui teed seda tööl iga päev:** sinu tootmis-Jenkinsi pluginad tulevad `plugins.txt`-ist ja seadistus JCasC failist. Kui see on sul juba korras, mine otse etappi [„Muuda sandboxi seadet koodiga“](#muuda-sandboxi-seadet-koodiga).
 
@@ -35,7 +35,7 @@ Jenkinsi kogu olek on kaustas `JENKINS_HOME`, mis läheb volume'isse. JVM loeb `
 
 ## Leia, kust tööriist tuleb
 
-Klassi Jenkinsi buildi logis nägid rida, kus Jenkins paigaldas Maveni. Nüüd seadistad sama administraatori poolelt. Teed jobi kõigepealt valesti, et näha, mis juhtub, kui tööriista nimi pole määratud.
+Klassi Jenkinsi buildi logis nägid rida, kus Jenkins paigaldas Maveni. Nüüd seadistad sama administraatori poolelt. Seadistad jobi kõigepealt meelega valesti, et näha, mis juhtub, kui tööriista nimi pole määratud.
 
 Ilma nimelise tööriistata sõltub build sellest, mis juhtub olema node'i `PATH`-is. Ühel agendil on Maven 3.6, teisel 3.9, ja sama commit annab eri tulemuse.
 
@@ -47,7 +47,7 @@ Ilma nimelise tööriistata sõltub build sellest, mis juhtub olema node'i `PATH
 3. **Build Now** ja vaata konsooli. (Default) tähendab `mvn`-i masina PATH-ist, aga Jenkinsi image'is Mavenit pole.
 4. Muuda Maven Version → `maven3` ja vajuta uuesti **Build Now**. Automaatne paigaldus laeb tööriista node'ile esimesel kasutusel, täpselt nagu klassis sinu agendile.
 
-> `UnknownHostException: nexus.lab.hkhk.ee`: konteiner ei kasuta VPN-i DNS-i. Eemalda Goals'ist `-s deploy/ci/settings.xml`, sõltuvused tulevad siis internetist.
+> Kui logis on `UnknownHostException: nexus.lab.hkhk.ee`, ei kasuta konteiner VPN-i DNS-i. Siis eemalda Goals'ist `-s deploy/ci/settings.xml`, sõltuvused tulevad siis internetist.
 
 Esimene build ebaõnnestus enne, kui ükski rida koodi kompileeriti: viga oli keskkonnas, mitte koodis. Teise buildi logi näitab tööriista teed `tools/hudson.tasks.Maven_MavenInstallation/maven3`, mis on node'i kohalik cache. Klassi agendil on sama kaust `/opt/jenkins/tools` all.
 
@@ -68,7 +68,7 @@ Lüliti on hall, sest `Git` ja mitu Pipeline'i pluginat vajavad `Git client`-i. 
 
 ## Kirjuta pluginad faili
 
-Klõpsitud pluginaid ei saa korrata. `plugins.txt` (`nimi:versioon` rea kohta) on nimekiri koodina ja [`jenkins-plugin-cli`](https://github.com/jenkinsci/plugin-installation-manager-tool) on ametlikus image'is olemas. Võtad nimekirja töötavast Jenkinsist API kaudu, nii et failis on täpselt see, mis paigaldatud on.
+Veebiliideses paigaldatud pluginate valikut ei saa täpselt korrata. `plugins.txt` (`nimi:versioon` rea kohta) on nimekiri koodina ja [`jenkins-plugin-cli`](https://github.com/jenkinsci/plugin-installation-manager-tool) on ametlikus image'is olemas. Võtad nimekirja töötavast Jenkinsist API kaudu, nii et failis on täpselt see, mis paigaldatud on.
 
 Ilma versioonideta nimekirjast paigaldab `jenkins-plugin-cli` iga plugina uusima versiooni, mis selle Jenkinsiga ühildub, ja kaks päeva vahega ehitatud image'it erinevad.
 
@@ -108,7 +108,7 @@ Ilma versioonideta nimekirjast paigaldab `jenkins-plugin-cli` iga plugina uusima
 
 Enne oma JCasC faili kirjutamist loed klassi Jenkinsi oma. Klassi Jenkins ei näita viisardit: seadistus tuleb failist, mille tee annab keskkonnamuutuja `CASC_JENKINS_CONFIG`. Loetav koopia on sinu repos `k06-jenkins/klass-jenkins.yaml`.
 
-Seadistusfail on ka turvadokument: sellest näed, kes mida tohib, ja õiguste muudatus on diff, mida saab auditis näidata.
+Konfiguratsioonifail on ka turvadokument: sellest näed, kes mida tohib, ja õiguste muudatus on diff, mida saab auditis näidata.
 
 1. Loe fail läbi ja leia read, mis vastavad nendele küsimustele.
 
@@ -131,7 +131,7 @@ Sinu Jenkinsfile kasutab nimesid, mille administraator on failis kokku leppinud.
 
 Nüüd kirjutad oma JCasC faili. JCasC plugin loeb ilma `CASC_JENKINS_CONFIG`-ita faili `$JENKINS_HOME/jenkins.yaml`. **Manage Jenkins → Configuration as Code → View Configuration** näitab praegust seadistust YAML-ina: vaata sealt õiged võtmed.
 
-JCasC seab need võtmed, mis failis on. Enamikku seadeid, mida failis pole, see ei lähtesta, nii et käsitsi muudetud ja failist puuduv seade jääb drift'iks ka pärast reload'i.
+JCasC seab need võtmed, mis failis on. Enamikku seadeid, mida failis pole, see ei lähtesta, nii et käsitsi muudetud ja failist puuduv seade jääb triiviks ka pärast reload'i.
 
 Kirjuta `k06-jenkins/casc/jenkins.yaml`. Nõuded:
 
@@ -151,9 +151,9 @@ Kirjuta `k06-jenkins/casc/jenkins.yaml`. Nõuded:
 3. Vaata, mis jõudis `config.xml`-i: `docker exec jenkins-liivakast grep -E 'systemMessage|numExecutors' /var/jenkins_home/config.xml`
 4. Muuda **Manage Jenkins → System** all *System Message* käsitsi ja salvesta. Tee uuesti **Reload existing configuration** ja vaata avalehte.
 
-> Reload annab vea `unknown attribute` või `No configurator for`: võti on valel tasemel või vastavat pluginat pole. Võrdle View Configuration väljundiga.
+> Kui reload annab vea `unknown attribute` või `No configurator for`, on võti valel tasemel või vastav plugin puudub. Võrdle View Configuration väljundiga.
 
-YAML-ist sai `config.xml`: JCasC kirjutab Jenkinsi oma failidesse. Käsitsi muudetud teade kadus reload'iga, sest fail on source of truth ja veebiliides ainult vaade. Tootmises tähendab see, et parandus "kiiresti veebis" kaob järgmisel taaskäivitusel, kui keegi seda faili ei kanna.
+YAML-ist sai `config.xml`: JCasC kirjutab Jenkinsi oma failidesse. Käsitsi muudetud teade kadus reload'iga, sest fail on tõe allikas (source of truth) ja veebiliides ainult vaade. Tootmises tähendab see, et parandus "kiiresti veebis" kaob järgmisel taaskäivitusel, kui keegi seda faili ei kanna.
 
 ✅ **Edasi saad minna, kui** avalehel on sinu süsteemiteade, `config.xml` näitab `numExecutors` väärtust 1, käsitsi muudetud teade kadus pärast reload'i ja PR-i kirjelduses on lause selle kohta, mis juhtub käsitsi muudatusega koodist seadistatud Jenkinsis.
 
@@ -196,15 +196,15 @@ Reload keeldus vigast faili laadimast ja töötav seadistus jäi alles: see on t
 
 ✅ **Edasi saad minna, kui** PR-i kirjelduses on reload'i veateade ja logirida, mis nimetab `numExecutor`, pärast õige faili tagasipanekut on avaleht ja süsteemiteade jälle olemas ning sandbox on peatatud.
 
-📎 **Selle mooduli tõend:** commit `k06: liivakast koodina …` failidega `k06-jenkins/casc/plugins.txt` ja `k06-jenkins/casc/jenkins.yaml`; PR-i kirjelduses `ls /var/jenkins_home`, `Cannot run program "mvn"` ja kaks Maveni logirida, `Git client` sõltuvuste ekraanipilt, uuendatavate pluginate nimekiri, viis vastust `klass-jenkins.yaml` kohta, `grep config.xml` väljund, lause drift'i kohta, vigase faili reload'i viga ja logirida.
+📎 **Selle mooduli tõend:** commit `k06: liivakast koodina …` failidega `k06-jenkins/casc/plugins.txt` ja `k06-jenkins/casc/jenkins.yaml`; PR-i kirjelduses `ls /var/jenkins_home`, `Cannot run program "mvn"` ja kaks Maveni logirida, `Git client` sõltuvuste ekraanipilt, uuendatavate pluginate nimekiri, viis vastust `klass-jenkins.yaml` kohta, `grep config.xml` väljund, lause triivi kohta, vigase faili reload'i viga ja logirida.
 
 ## Miks see nii töötab
 
 **JCasC faili asukoht.** Kui keskkonnamuutuja `CASC_JENKINS_CONFIG` ja Java system property `casc.jenkins.config` puuduvad, loeb JCasC seadistuse failist `$JENKINS_HOME/jenkins.yaml`.
 
-**Pluginad ametlikus image'is.** Ametlikus image'is `jenkins/jenkins:lts-jdk21` kirjutab `jenkins-plugin-cli` vaikimisi kausta `/usr/share/jenkins/ref/plugins`. Sealt kopeerib käivitusskript pluginad kausta `JENKINS_HOME` üldjuhul ainult siis, kui neid seal veel ei ole või kui image'is on uuem versioon. Töötavas konteineris olemasoleva volume'iga on seetõttu vaja võtit `-d /var/jenkins_home/plugins`. Image'i ehitamisel määratud vaikeväärtus ei ole veel töötava teenuse seis: kui olek on volume'is, otsustab image'i käivitusskript, mida volume'isse üle kirjutatakse ja mida mitte.
+**Pluginad ametlikus image'is.** Ametlikus image'is `jenkins/jenkins:lts-jdk21` kirjutab `jenkins-plugin-cli` vaikimisi kausta `/usr/share/jenkins/ref/plugins`. Sealt kopeerib käivitusskript pluginad kausta `JENKINS_HOME` üldjuhul ainult siis, kui neid seal veel ei ole või kui image'is on uuem versioon. Töötavas konteineris olemasoleva volume'iga on seetõttu vaja võtit `-d /var/jenkins_home/plugins`. Image'i ehitamisel määratud vaikeväärtus ei ole veel töötava teenuse olek: kui olek on volume'is, otsustab image'i käivitusskript, mida volume'isse üle kirjutatakse ja mida mitte.
 
-**Vigane JCasC fail.** Selles laboris kasutatavas Jenkinsi versioonis on vigane JCasC fail käivitusel viga, mitte hoiatus. Jenkins jätab käivitumise pooleli, kui seadistust ei saa laadida, sest pooleldi seadistatud Jenkinsil võivad olla liiga laiad õigused.
+**Vigane JCasC fail.** Selles praktikumis kasutatavas Jenkinsi versioonis on vigane JCasC fail käivitusel viga, mitte hoiatus. Jenkins jätab käivitumise pooleli, kui seadistust ei saa laadida, sest pooleldi seadistatud Jenkinsil võivad olla liiga laiad õigused.
 
 **Controlleri image.** Tootmises ehitatakse controlleri image tavaliselt read `FROM jenkins/jenkins:lts-jdk21`, `COPY plugins.txt` ja `RUN jenkins-plugin-cli -f plugins.txt` abil ning JCasC fail lisatakse samamoodi. Siis hallatakse Jenkinsit nagu iga teist image'it: versioon on tag'is ja rollback tähendab eelmise tag'i kasutamist, kui `JENKINS_HOME`-i andmed uuema versiooni poolt juba ümber kirjutatud ei ole.
 

@@ -9,13 +9,13 @@ tags:
 
 Roheline build ütleb ainult, et build õnnestub. See ei ütle, kas sõltuvustes on teadaolev CVE, kas build töötab ka järgmise Java'ga ja kas pipeline ise on rünnatav. Viimane puudutab adminit otse, sest pipeline'il on ligipääs registry'le ja hiljem ka sinu serverile.
 
-Lõpus skännib teine job sõltuvused build'iga samal ajal ja kolmas proovib build'i järgmise JDK-ga, igal job'il on ainult talle vajalikud tokeni õigused, action'id on SHA-ga fikseeritud ja Dependabot hoiab neid ning kõiki image'eid värskena, ilma et andmebaasi uus seeria tuleks ilma otsuseta.
+Mooduli lõpuks skännib teine job sõltuvusi build'iga samal ajal ja kolmas proovib build'i järgmise JDK-ga. Igal job'il on ainult talle vajalikud tokeni õigused ja action'id on SHA-ga fikseeritud. Dependabot hoiab action'id ja image'id värskena, kuid andmebaasi uus põhiversioon ei tule sisse ilma sinu otsuseta.
 
 **Kui teed seda tööl iga päev:** job'id `security` ja `compat` on olemas, igal job'il on oma `permissions:` ja `bash autograde/check.sh k05 hygiene` annab `OK`. Kui see on sul juba korras, mine otse etappi „[Baas-image'id ja Compose'i teenused](#baas-imageid-ja-composei-teenused)“.
 
 ## Turvaskänn eraldi job'ina
 
-Lisad job'i `security`, mis töötab build'iga kõrvuti ja kirjutab Trivy tulemuse jooksu kokkuvõttesse. `aquasecurity/trivy-action` vanad tag'id suunati pahatahtlikele commit'idele ([GHSA-69fq-xp46-6x23](https://github.com/aquasecurity/trivy-action/security/advisories)). Seepärast kasutad täis-SHA-d.
+Lisad job'i `security`, mis töötab build'iga kõrvuti ja kirjutab Trivy tulemuse käivituse kokkuvõttesse. `aquasecurity/trivy-action` vanad tag'id suunati pahatahtlikele commit'idele ([GHSA-69fq-xp46-6x23](https://github.com/aquasecurity/trivy-action/security/advisories)). Seepärast kasutad täis-SHA-d.
 
 See intsident on hea näide, miks tag'i usaldamine on risk: sama nimi, mis eile osutas korralikule koodile, osutas järgmisel päeval koodile, mis luges runner'ilt saladusi. Kõik, kes kasutasid tag'i, käivitasid seda koodi ilma ühtki faili muutmata.
 
@@ -29,27 +29,27 @@ See intsident on hea näide, miks tag'i usaldamine on risk: sama nimi, mis eile 
     - `uses:` rida kujul `aquasecurity/trivy-action@<40 märki>  # v0.36.0`
     - sisendid `scan-type: fs`, `scan-ref: .`, `scanners: vuln`, `severity: CRITICAL,HIGH`
     - `format: table`, `output: trivy.txt`, `exit-code: "0"`
-    - kaks sammu `if: always()`: üks kirjutab `trivy.txt` sisu `$GITHUB_STEP_SUMMARY`-sse, teine laeb selle artefaktina üles
-3. Tee push ja ava jooksu *Summary*.
+    - kaks sammu `if: always()`: üks kirjutab `trivy.txt` sisu `$GITHUB_STEP_SUMMARY`-sse, teine laadib selle artefaktina üles
+3. Tee push ja ava käivituse *Summary*.
 4. Kirjuta märkmikku HIGH ja CRITICAL leidude arv, enim leide andnud teek ja kas see on otse pom'is või tuleb parent'ist (`mvn dependency:tree`).
 
-<!-- EKRAANIPILT: Actions → jooks → Summary leht, kerida security job'i kokkuvõtteni; näha Trivy tabel (Library, Vulnerability, Severity veerud) ja allosas Artifacts plokk. Pärast security job'i esimest jooksu.
+<!-- EKRAANIPILT: Actions → käivitus → Summary leht, kerida security job'i kokkuvõtteni; näha Trivy tabel (Library, Vulnerability, Severity veerud) ja allosas Artifacts plokk. Pärast security job'i esimest käivitust.
 <figure markdown="span">
-  ![Jooksu kokkuvõte Trivy leidude tabeliga](assets/k05_trivy_kokkuvote.png)
-  <figcaption>Joonis L5.3. Trivy tabel jooksu kokkuvõttes.</figcaption>
+  ![Käivituse kokkuvõte Trivy leidude tabeliga](assets/k05_trivy_kokkuvote.png)
+  <figcaption>Joonis L5.3. Trivy tabel käivituse kokkuvõttes.</figcaption>
 </figure>
 -->
 
-<!-- EKRAANIPILT: Actions → jooks pärast security job'i lisamist → Summary ülaosa graaf; näha build ja security kõrvuti (paralleelselt), mõlemad rohelised, all Artifacts: labori-seis-war ja Trivy raport.
+<!-- EKRAANIPILT: Actions → käivitus pärast security job'i lisamist → Summary ülaosa graaf; näha build ja security kõrvuti (paralleelselt), mõlemad rohelised, all Artifacts: labori-seis-war ja Trivy raport.
 <figure markdown="span">
-  ![Jooksu graaf, kus build ja security töötavad kõrvuti](assets/k05_actions_graaf.png)
+  ![Käivituse graaf, kus build ja security töötavad kõrvuti](assets/k05_actions_graaf.png)
   <figcaption>Joonis L5.4. Build ja security töötavad paralleelselt.</figcaption>
 </figure>
 -->
 
 > `Unable to resolve action` tähendab tavaliselt vale SHA-d: see peab olema täpselt 40 kuueteistkümnendmärki, lühike SHA ei tööta.
 
-Kõrvuti töötavad job'id tähendavad, et skänn ei lisa jooksule aega, kui ta pole build'ist aeglasem. `exit-code: "0"` jätab job'i roheliseks ka leidude korral: täna sa kogud infot, otsus "kas leid peatab pipeline'i" on lisaülesandes [10. Trivy poliitika](lisa.md#10-trivy-poliitika). `if: always()` on vajalik, sest muidu kaoks raport just siis, kui Trivy ise ebaõnnestub. Kui leide on null, kontrolli, kas `scan-ref` osutab repo juurele, kus on `pom.xml`.
+Kõrvuti töötavad job'id tähendavad, et skänn ei lisa käivitusele aega, kui ta pole build'ist aeglasem. `exit-code: "0"` jätab job'i roheliseks ka leidude korral: täna sa kogud infot, otsus "kas leid peatab pipeline'i" on lisaülesandes [10. Trivy poliitika](lisa.md#10-trivy-poliitika). `if: always()` on vajalik, sest muidu kaoks raport just siis, kui Trivy ise ebaõnnestub. Kui leide on null, kontrolli, kas `scan-ref` osutab repo juurele, kus on `pom.xml`.
 
 ✅ **Edasi saad minna, kui** graafis on `build` ja `security` kõrvuti, kokkuvõttes on Trivy tabel ja *Artifacts* all on WAR ja Trivy raport.
 
@@ -59,7 +59,7 @@ Trivy tabel ütleb, mis teegis on auk, aga mitte seda, kes selle teegi projekti 
 
 Ilma selle sammuta näeb turvaraport välja nagu nimekiri, mida keegi ei oska käsitleda. Tööl küsib turvameeskond sinult just seda: kas parandus on meie käes ja kui kiiresti.
 
-1. Lae Trivy raport alla ja vali üks HIGH või CRITICAL rida, millel on täidetud *Fixed Version*.
+1. Laadi Trivy raport alla ja vali üks HIGH või CRITICAL rida, millel on täidetud *Fixed Version*.
 
     ```bash
     gh run download --name trivy-raport --dir /tmp/trivy
@@ -74,13 +74,13 @@ Ilma selle sammuta näeb turvaraport välja nagu nimekiri, mida keegi ei oska k�
 
 3. Kirjuta märkmikku: teek, praegune ja parandatud versioon, otsene või transitiivne sõltuvus ning kes selle versiooni määrab (sinu pom, `spring-boot-starter-parent` või mõni muu teek).
 
-Kui teek on puus otse sinu projekti all, on parandus sinu pom'is. Kui see tuleb parent'i kaudu, saad versiooni üle kirjutada `<properties>`-is, aga siis võtad vastutuse, et uus versioon sobib ülejäänud komplektiga. Sageli on parem oodata parent'i patch-versiooni, mida Dependabot pakub. Kui `dependency:tree` ei näita teeki üldse, tuleb leid failist, mis pole Maveni sõltuvus, näiteks `k03-docker/` all olevast konfist.
+Kui teek on puus otse sinu projekti all, on parandus sinu pom'is. Kui see tuleb parent'i kaudu, saad versiooni üle kirjutada `<properties>`-is, aga siis võtad vastutuse, et uus versioon sobib ülejäänud komplektiga. Sageli on parem oodata parent'i patch-versiooni, mida Dependabot pakub. Kui `dependency:tree` ei näita teeki üldse, tuleb leid failist, mis pole Maveni sõltuvus, näiteks `k03-docker/` all olevast konfiguratsioonifailist.
 
 ✅ **Edasi saad minna, kui** märkmikus on ühe leiu kohta neli nimetatud asja ja `dependency:tree` väljund näitab teed sinu projektini.
 
 ## Compat-matrix: kas build töötab Java 25-ga
 
-Lisad job'i, mis käivitab sama build'i kahe JDK-ga. Control node'il ebaõnnestus build nii Java 17 kui ka JaCoCo 0.8.8-ga. Matrix küsib sama küsimust igal push'il: kas järgmine JDK töötab, enne kui keegi runner'i JDK-d tõstab.
+Lisad job'i, mis käivitab sama build'i kahe JDK-ga. Control node'il ebaõnnestus build nii Java 17 kui ka JaCoCo 0.8.8-ga. Matrix küsib sama küsimust igal push'il: kas järgmine JDK töötab, enne kui keegi runner'i JDK-d uuendab.
 
 JDK uuendus tuleb tavaliselt väljastpoolt: runner'i image vahetub, baas-image saab uue Java või turvauuendus nõuab uuemat versiooni. Kui sa ei tea ette, mis katki läheb, avastad selle tootmisrikke ajal.
 
@@ -109,7 +109,7 @@ Kontrollid, kas `cache: maven` midagi taastab.
 
 Vahemälu, mis ei tööta, ei anna veateadet. Build on lihtsalt aeglasem ja Maven Central saab iga push'iga sadu päringuid. Ainus viis seda teada on logist vaadata.
 
-1. Leia viimase jooksu build job'i logist read, mis algavad `Cache restored` või `Cache saved`.
+1. Leia viimase käivituse build job'i logist read, mis algavad `Cache restored` või `Cache saved`.
 
     ```bash
     run=$(gh run list -w ci -L 1 --json databaseId --jq '.[0].databaseId')
@@ -124,9 +124,9 @@ Vahemälu, mis ei tööta, ei anna veateadet. Build on lihtsalt aeglasem ja Mave
 
 3. Kirjuta märkmikku, mitu vahemälu kirjet on ja miks `compat (25)` ja `build` võivad kasutada sama kirjet.
 
-`Cache restored from key` ütleb, et runner sai `~/.m2` kätte ega pidanud kõike alla laadima. Võtmes on pom'i räsi, seega iga pom'i muutus teeb uue kirje ja vana jääb aeguma. Kui logis on igal jooksul `Cache not found`, muutub pom igas commit'is või on `cache:` rida puudu. Võrdle sammude kestusi nendega, mille esimese workflow juures üles kirjutasid: vahemäluga peaks Maveni samm olema märgatavalt lühem.
+`Cache restored from key` ütleb, et runner sai `~/.m2` kätte ega pidanud kõike alla laadima. Võtmes on pom'i räsi, seega iga pom'i muutus teeb uue kirje ja vana jääb aeguma. Kui logis on igal käivitusel `Cache not found`, muutub pom igas commit'is või on `cache:` rida puudu. Võrdle sammude kestusi nendega, mille esimese workflow juures üles kirjutasid: vahemäluga peaks Maveni samm olema märgatavalt lühem.
 
-✅ **Edasi saad minna, kui** teises jooksus on build'i logis `Cache restored from key`, `gh cache list` näitab vähemalt ühte `setup-java-…-maven-…` kirjet ja vastus on märkmikus.
+✅ **Edasi saad minna, kui** teises käivituses on build'i logis `Cache restored from key`, `gh cache list` näitab vähemalt ühte `setup-java-…-maven-…` kirjet ja vastus on märkmikus.
 
 ## Iga job oma õigustega
 
@@ -134,7 +134,7 @@ Võtad kõik tokeni õigused workflow tasemel ära ja annad iga job'ile tagasi a
 
 Trivy intsidendi pahatahtlik kood kasutas just seda tokenit. Kui tokenil on kirjutusõigus, võib kompromiteeritud action muuta sinu koodi, release'e või pakette. Lugemisõigusega token saab ainult lugeda seda, mida runner niikuinii näeb.
 
-1. Ava viimase jooksu build job'i *Set up job* ja vaata plokki *GITHUB_TOKEN Permissions*.
+1. Ava viimase käivituse build job'i *Set up job* ja vaata plokki *GITHUB_TOKEN Permissions*.
 2. Lisa faili ülaossa (mitte job'i alla) `permissions: {}` ja igale kolmele job'ile `permissions:` plokk `contents: read`.
 3. Proovi, mis juhtub ilma job'i plokita: eemalda see ajutiselt `compat` job'ilt, tee push ja vaata checkout'i viga. Siis pane tagasi.
 4. Tee push ja kontrolli.
@@ -144,7 +144,7 @@ Trivy intsidendi pahatahtlik kood kasutas just seda tokenit. Kui tokenil on kirj
     bash autograde/check.sh k05 actionlint
     ```
 
-<!-- EKRAANIPILT: Actions → jooks pärast permissions muudatust → job build → Set up job laiendatud; näha plokk "GITHUB_TOKEN Permissions" ridadega Contents: read ja Metadata: read.
+<!-- EKRAANIPILT: Actions → käivitus pärast permissions muudatust → job build → Set up job laiendatud; näha plokk "GITHUB_TOKEN Permissions" ridadega Contents: read ja Metadata: read.
 <figure markdown="span">
   ![Set up job sammu plokk GITHUB_TOKEN Permissions](assets/k05_token_oigused.png)
   <figcaption>Joonis L5.5. Pärast job'i plokki <code>contents: read</code> on tokenil ainult lugemisõigus.</figcaption>
@@ -202,7 +202,7 @@ Kinnitatud versioon, mida keegi ei uuenda, muutub ise turvaauguks. Dependabot te
 
 > Dependabot loeb faili ainult vaikeharult. Esimesed PR-id tulevad pärast seda, kui `k05-actions` jõuab main'i (image'i ja deploy juures); seni on fail lihtsalt repos.
 
-Kolm ökosüsteemi katavad kolm kohta, kust vana kood sinu pipeline'i jõuab: action'id, Java teegid ja konteineri baas. Grupp action'itele hoiab PR-ide arvu väiksena, sest neid uuendatakse sageli koos. Kui `python3` trükib vähem kui kolm nime, on mõni plokk vale taandega ja Dependabot ignoreerib seda vaikselt.
+Kolm ökosüsteemi jälgivad kolme kohta, kust vana kood sinu pipeline'i jõuab: action'id, Java teegid ja konteineri baas. Grupp action'itele hoiab PR-ide arvu väiksena, sest neid uuendatakse sageli koos. Kui `python3` trükib vähem kui kolm nime, on mõni plokk vale taandega ja Dependabot ignoreerib seda vaikselt.
 
 ✅ **Edasi saad minna, kui** `python3` trükib `['github-actions', 'maven', 'docker']` ja fail on push'itud.
 
@@ -235,9 +235,9 @@ Dependaboti viide ([`ignore`](https://docs.github.com/code-security/dependabot/w
 
 ## Miks see nii töötab
 
-**Matrix'i job'i nimi.** Matrix'i job'i nimele lisatakse sulgudesse kombinatsioon (`compat (25)`). Seetõttu saab ruleset'is nõuda ka ainult osa kombinatsioonidest. Üks matrix genereerib jooksus kuni 256 job'i ja `max-parallel` piirab, mitu neist töötab korraga.
+**Matrix'i job'i nimi.** Matrix'i job'i nimele lisatakse sulgudesse kombinatsioon (`compat (25)`). Seetõttu saab ruleset'is nõuda ka ainult osa kombinatsioonidest. Üks matrix genereerib käivituses kuni 256 job'i ja `max-parallel` piirab, mitu neist töötab korraga.
 
-**`setup-java` vahemälu.** `actions/setup-java` v5 vahemälu võti sisaldab platvormi ja pom'i räsi, kuid mitte Java versiooni. Seetõttu võivad matrix'i harud kasutada sama vahemälukirjet. Üldine põhimõte: kõik, mida vahemälu võti ei sisalda, on käivituste vahel jagatud. Võtme koostis tasub kasutatava versiooni README-st järele vaadata, mitte eeldada. GitHub hoiab repo kohta kuni 10 GB vahemälu ja kustutab kirjed, mida 7 päeva ei loeta. Jooks loeb ainult oma haru ja vaikeharu kirjeid, nii et PR-i haru ei saa main'i vahemälu üle kirjutada.
+**`setup-java` vahemälu.** `actions/setup-java` v5 vahemälu võti sisaldab platvormi ja pom'i räsi, kuid mitte Java versiooni. Seetõttu võivad matrix'i harud kasutada sama vahemälukirjet. Üldine põhimõte: kõik, mida vahemälu võti ei sisalda, on käivituste vahel jagatud. Võtme koostis tasub kasutatava versiooni README-st järele vaadata, mitte eeldada. GitHub hoiab repo kohta kuni 10 GB vahemälu ja kustutab kirjed, mida 7 päeva ei loeta. Käivitus loeb ainult oma haru ja vaikeharu kirjeid, nii et PR-i haru ei saa main'i vahemälu üle kirjutada.
 
 **Job'i `permissions:`.** Job'i `permissions:`-plokk asendab workflow tasemel määratud õigused täielikult. Kui job'i plokist jääb välja `contents: read`, ei saa checkout privaatset repot lugeda. `GITHUB_TOKEN` kehtib job'i lõpuni, kuid mitte üle 24 tunni. Repo vaikeõigus (*Settings → Actions → Workflow permissions*) on 2023. aasta veebruarist alates uutes repodes lugemine, vanemates sageli kirjutamine.
 

@@ -28,7 +28,7 @@ Mitu rida võib viidata samale lahknevusele.
 
 ## Käivita intsident
 
-Enne kui midagi katki läheb, paned kirja, milline on terve seis. Ilma selleta ei tea sa hiljem, kas mõni sümptom oli olemas juba enne intsidenti.
+Enne kui midagi katki läheb, paned kirja, milline on terve süsteemi olek. Ilma selleta ei tea sa hiljem, kas mõni sümptom oli olemas juba enne intsidenti.
 
 1. Kontrolli, et algseis on korras.
 
@@ -81,7 +81,7 @@ Esimene lahknevus mõjutab kasutajat, nii et see tuleb esimesena. Enne parandami
     curl -s http://web01/health; echo
     ```
 
-Loeb ainult see kontroll, mis käib kasutaja teed pidi. Tofu "Apply complete" ütleb, et VM on olemas, Ansible'i `ok` ütleb, et teenus on paigaldatud. Alles `/health` ütleb, et rakendus jõuab taastatud teenuseni. Kui `systemctl status` on taastatud VM-i peal roheline, aga rakendus ei saa sellega ühendust, on teenus kasutaja jaoks ikka maas.
+Arvesse läheb ainult kontroll, mis läbib sama tee nagu kasutaja. Tofu "Apply complete" ütleb, et VM on olemas, Ansible'i `ok` ütleb, et teenus on paigaldatud. Alles `/health` ütleb, et rakendus jõuab taastatud teenuseni. Kui `systemctl status` on taastatud VM-i peal roheline, aga rakendus ei saa sellega ühendust, on teenus kasutaja jaoks ikka maas.
 
 ✅ **Edasi saad minna, kui** `/health` näitab kõiki sõltuvusi UP ja `NOTES.md`-s on selgitus, miks Tofu VM-i uuesti lõi.
 
@@ -92,7 +92,7 @@ Teine lahknevus ei pruugi kedagi praegu häirida. Just seepärast tuleb see otsu
 Käsitsi muudatusel on tihti põhjus, mida koodis pole. Kui võtad selle tagasi ilma küsimata, võid tagasi tuua probleemi, mida keegi öösel parandas.
 
 1. Leia `-refresh-only` väljundist, mis muutus, kus ja millest millele.
-2. Otsusta: tagasi koodi seisu või koodi. Kaalu, mis teenus seal töötab, kas `check "ram_quota"` hoiatab ja mida see muudatus tähendab kvoodile.
+2. Otsusta: tagasi koodis kirjeldatud olekusse või koodi. Kaalu, mis teenus seal töötab, kas `check "ram_quota"` hoiatab ja mida see muudatus tähendab kvoodile.
 3. Vii otsus ellu ainult koodi või Tofu käsuga.
 
 Mõlemad otsused on õiged, kui põhjus on kirjas. Vale on ainult otsus, mida keegi ei teinud.

@@ -24,7 +24,7 @@ git add NOTES.md && git commit -m "K7 tööl [skip ci]" && git push
 
 ## Enne esitamist
 
-Kontrollid repo ja klastri seisu oma masinas. Automaatne hindaja näeb ainult repot: failid, kubeconform, objektid, hügieen, Application ja `gitops.yml`. Klastri seisu näeb koolitaja eraldi.
+Kontrollid repositooriumi ja klastri olekut oma masinas. Automaatne hindaja näeb ainult repot: failid, kubeconform, objektid, hügieen, Application ja `gitops.yml`. Klastri olekut näeb koolitaja eraldi.
 
 `hygiene` test vaatab ainult manifeste. Kubeconfig või `.env` mujal repos jääb sellest märkamata, seepärast kontrollid `git ls-files`-iga kogu repot.
 
@@ -95,7 +95,7 @@ Kui tulemus erineb sellest, mida nägid kohapeal, on vahe keskkonnas: tööriist
 
 ## Lõputest
 
-Lõputest HK6 on kohtumise lõpus. Enne seda kontrolli klastri seis ise ja saada tulemus Labori seisu.
+Lõputest HK6 on kohtumise lõpus. Enne seda kontrolli ise klastri olekut ja saada tulemus Labori seisu.
 
 Repo ja klaster on kaks eri tõde. Repo võib olla laitmatu ja klaster ikka katki, näiteks kui Secret puudub või pod ei saa image'it kätte. Seepärast on lõputest klastri vastu, mitte faili vastu.
 
@@ -143,4 +143,4 @@ Kui mõni linnuke jääb tegemata, kirjuta issue'sse, mis jäi ja miks. Koolitaj
 
 **Värske kloon.** Värske kloon põhineb samal põhimõttel, mida CI kasutab igal käivitusel: alusta tühjast kaustast ja kontrolli, kas Gitis olevast piisab.
 
-**Viis mehhanismi.** Iga laboris nähtud väljund peaks olema seletatav ühe mehhanismiga: admission, scheduler, kubelet, kube-proxy või kontroller.
+**Viis mehhanismi.** Iga praktikumis nähtud väljund peaks olema seletatav ühe mehhanismiga: admission, scheduler, kubelet, kube-proxy või kontroller.

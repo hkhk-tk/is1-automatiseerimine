@@ -16,7 +16,7 @@ tags:
 | [5. Ruleset](#5-ruleset) | lihtne | otse push main'i on keelatud |
 | [6. Trivy masinloetavalt](#6-trivy-masinloetavalt) | lihtne | Trivy leiud on JSON-ist kokku loetud |
 | [7. Smoke test](#7-smoke-test) | lihtne | ajastatud kontroll märkab seiskunud teenust |
-| [8. Matrix kahes mõõtmes](#8-matrix-kahes-mootmes) | keskmine | matrix katab JDK ja JaCoCo kombinatsioonid |
+| [8. Matrix kahes mõõtmes](#8-matrix-kahes-mootmes) | keskmine | matrix proovib läbi JDK ja JaCoCo kombinatsioonid |
 | [9. Kontekst ja sammu tingimus](#9-kontekst-ja-sammu-tingimus) | keskmine | tead, kuidas PR-i väärtus ohutult shelli jõuab |
 | [10. Trivy poliitika](#10-trivy-poliitika) | keskmine | CRITICAL leid peatab image'i enne registry't |
 | [11. Kus logimaskeering lõpeb](#11-kus-logimaskeering-lopeb) | keskmine | tead, millal maskeerimine secret'it ei peida |
@@ -854,7 +854,7 @@ Kirjuta `scripts/rotate-db.sh`, mis teeb rotatsiooni control node'il, ja muuda `
 
 - rotatsiooni ajal ja pärast seda ei ole app01 logis ühtegi `Access denied` rida
 - db01 konteinerit ei looda uuesti (`State.StartedAt` on enne ja pärast sama)
-- kuni vana kasutaja pole eemaldatud, töötab see edasi ja tagasiminek on üks käsk; kui deploy ebaõnnestub, taastab skript eelmise seisu
+- kuni vana kasutaja pole eemaldatud, töötab see edasi ja tagasiminek on üks käsk; kui deploy ebaõnnestub, taastab skript eelmise versiooni
 - uut parooli ei ole Gitis, workflow logis ega ühegi protsessi käsureal; GitHubis on see environment'i secret
 - lõpus on vana kasutaja andmebaasist eemaldatud, uuel on täpselt samad õigused ja skripti teine käivitus teeb järgmise rotatsiooni
 
@@ -893,7 +893,7 @@ Deploy job võtab image'i ghcr.io-st tag'i järgi. Kes saab paketti kirjutada, s
 
 Muuda `ci.yml`-i nii, et image'il on allkiri ja SBOM ning deploy paigaldab ainult selle repo main'i workflow allkirjastatud image'i. Kontroll on skriptis `scripts/verify-image.sh <image@sha256:…>`, mida kasutab deploy job ja saad käivitada ka control node'il:
 
-- image'i job allkirjastab digest'i keyless [cosign](https://docs.sigstore.dev/cosign/signing/overview/)'iga ja lisab CycloneDX SBOM-i attestation'ina; PR-i jooks ei allkirjasta ega lükka midagi
+- image'i job allkirjastab digest'i keyless [cosign](https://docs.sigstore.dev/cosign/signing/overview/)'iga ja lisab CycloneDX SBOM-i attestation'ina; PR-i käivitus ei allkirjasta ega lükka midagi
 - `id-token: write` on ainult image'i job'il; cosign'i versioon on mõlemas job'is kinnitatud ja action'id on SHA-ga
 - deploy kasutab digest'i (`repo@sha256:…`), mitte tag'i; skript kontrollib enne `docker compose pull`-i allkirja ja SBOM-i attestation'it sertifikaadi identiteedi järgi (repo, `ci.yml`, `refs/heads/main`)
 - kui kontroll ebaõnnestub, ei puututa töötavat konteinerit ja job on punane
@@ -920,7 +920,7 @@ printf 'FROM %s\nLABEL proov=allkirjata\n' "$ref" | docker build -t "ghcr.io/<ow
 
     **Mehhanism ja tööriistad.** `docker/build-push-action` väljund `digest` image'i job'i `outputs`-i. `sigstore/cosign-installer` kinnitatud `cosign-release`-iga. SBOM sama `trivy-action`-iga (`scan-type: image`, `format: cyclonedx`, privaatse paketi jaoks `TRIVY_USERNAME`/`TRIVY_PASSWORD`). `cosign sign --yes` ja `cosign attest --yes --type cyclonedx --predicate`. Skriptis `cosign verify` ja `cosign verify-attestation` sama `--certificate-identity` ja `--certificate-oidc-issuer https://token.actions.githubusercontent.com`-iga.
 
-    **Kontroll.** Nõuete all olevad käsud. Jooksu kokkuvõttes on allkirjastatud digest ja deploy logis on kontrollisamm enne `Praegune image` sammu.
+    **Kontroll.** Nõuete all olevad käsud. Käivituse kokkuvõttes on allkirjastatud digest ja deploy logis on kontrollisamm enne `Praegune image` sammu.
 
     **Tüüpilised lõksud.** `--certificate-identity-regexp` laia mustriga (`.*`) laseb läbi iga haru ja iga repo image'i. Kontroll pärast `pull`-i on hilja, kui sama samm teeb ka `up`-i. `id-token: write` workflow tasemel annab OIDC tokeni ka deploy job'ile. Kuna haru `k05-actions` push lükkab ja allkirjastab image'i, ei tõenda allkiri üksi midagi, kui identiteedis pole haru. Esimesel deploy'l on `prev` tag'iga viide ilma allkirjata: range rollback'i kontroll jätaks teenuse seisma.
 
@@ -963,7 +963,7 @@ gh run watch
 ??? tip "Lahenduse suund"
     **Põhiidee.** Kutsuv job on ainult viide: `needs`, `if`, `uses`, `with`, `secrets` ja `permissions`. Kõik, mis puudutab masinat ja saladusi (`runs-on`, `environment`, `concurrency`, sammud), on kutsutud job'is.
 
-    **Mehhanism.** Kutsutud workflow töötab kutsuja kontekstis: `github.sha`, `github.ref`, `github.actor` ja `vars` on samad. `environment: proxmox` kutsutud job'is laeb environment'i secret'id. `secrets: inherit` annab edasi ainult repo ja organisatsiooni omad. Kutsuja `permissions:` on ülempiir, kutsutud workflow saab õigusi ainult vähendada.
+    **Mehhanism.** Kutsutud workflow töötab kutsuja kontekstis: `github.sha`, `github.ref`, `github.actor` ja `vars` on samad. `environment: proxmox` kutsutud job'is laadib environment'i secret'id. `secrets: inherit` annab edasi ainult repo ja organisatsiooni omad. Kutsuja `permissions:` on ülempiir, kutsutud workflow saab õigusi ainult vähendada.
 
     **Kontroll.** Graafis on `deploy / deploy`, `k05 deploy` on `OK` (kontroll loeb kõiki workflow faile koos), rollback'i ja õiguste katse annavad oodatud punase sammu.
 
@@ -1008,7 +1008,7 @@ gh pr create --fill && sleep 60 && gh pr checks
 - proov-PR on suletud ja haru kustutatud
 
 ??? success "Lahendus"
-    `conftest.py` lisab testidele `vorgukogu/` kausta `sys.path`-i ja paneb asemele tühja `netmiko` mooduli ainult siis, kui Netmiko teeki pole: CI paigaldab Netmiko, kohalik kiire proov töötab ka ilma. Võlts-ühendus on tavaline klass: `__enter__`/`__exit__` `with`-i jaoks ja `send_command`, mis tagastab teksti host'i järgi; aadress `10.0.0.99` tõstab `TimeoutError`-i nagu maas ruuter. `test_diff_apply_flow` kontrollib 4. kohtumise tsükli: diff leiab erinevuse (kood 3), `--apply` muudab võlts-ruuteri seisu ja teine diff on tühi. `paths`-filtriga workflow ei käivitu PR-il, mis `vorgukogu/`-d ei puuduta: kui lisad `vorgukogu` kontrolli ruleset'is nõutud kontrollide hulka, jääb selline PR ootama.
+    `conftest.py` lisab testidele `vorgukogu/` kausta `sys.path`-i ja paneb asemele tühja `netmiko` mooduli ainult siis, kui Netmiko teeki pole: CI paigaldab Netmiko, kohalik kiire proov töötab ka ilma. Võlts-ühendus on tavaline klass: `__enter__`/`__exit__` `with`-i jaoks ja `send_command`, mis tagastab teksti host'i järgi; aadress `10.0.0.99` annab `TimeoutError`-i nagu maas olev ruuter. `test_diff_apply_flow` kontrollib 4. kohtumise tsükli: diff leiab erinevuse (kood 3), `--apply` muudab võlts-ruuteri olekut ja teine diff on tühi. `paths`-filtriga workflow ei käivitu PR-il, mis `vorgukogu/`-d ei puuduta: kui lisad `vorgukogu` kontrolli ruleset'is nõutud kontrollide hulka, jääb selline PR ootama.
 
     ```python
     """Testid ei vaja ruuterit ega võrku: ConnectHandler asendatakse võltsiga.
@@ -1444,7 +1444,7 @@ Vasta `NOTES.md`-s. Hea vastus kirjeldab, mis juhtuks sinu pipeline'is, mitte ü
 
 ## Kodutöö
 
-AWS-i kodutöö viib sama pipeline'i pilve ajutiste võtmetega, monitooringu kodutöö kontrollib süsteemi ajastatud workflow'ga väljastpoolt. Mõlemad eeldavad, et selle kohtumise Proxmoxi labor on lõpuni tehtud.
+AWS-i kodutöö viib sama pipeline'i pilve ajutiste võtmetega, monitooringu kodutöö kontrollib süsteemi ajastatud workflow'ga väljastpoolt. Mõlemad eeldavad, et selle kohtumise Proxmoxi praktikum on lõpuni tehtud.
 
 | Issue | Mis | Juhend |
 |---|---|---|

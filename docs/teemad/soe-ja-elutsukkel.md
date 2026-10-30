@@ -10,7 +10,7 @@ Pool'is on 140 VM-i ja neist kuus eri Ubuntu ja AlmaLinuxi versiooni, kolm eri h
 
 **Standard Operating Environment** (SOE) on organisatsiooni kokkulepitud ja versioonitud baas, millest iga server algab: OS-i perekond ja versioon, partitsioonid, paketihoidlad, aja- ja nimeteenus, sshd ja sudo reeglid, logi- ja monitooringuagent, hardening'u profiil. Red Hat defineerib seda kui [operatsioonisüsteemi ja tarkvara komplekti, mille IT-osakond määrab standardseks build'iks](https://www.redhat.com/en/topics/management/what-is-an-soe). SOE-l on versioon, näiteks `soe-2026.10`, ja muudatuste ajalugu.
 
-SOE on kirjeldus, millest tehakse mitu artefakti: VM-i golden image, konteineri baas-image, bare metal vastusefail ja konfihalduse baasroll. Kõik neli peavad andma sama tulemuse. Rakenduse roll lisab baasile oma seadistuse; SOE ütleb ainult, mis on kõigil ühine.
+SOE on kirjeldus, millest tehakse mitu artefakti: VM-i golden image, konteineri baas-image, bare metal vastusefail ja konfiguratsioonihalduse baasroll. Kõik neli peavad andma sama tulemuse. Rakenduse roll lisab baasile oma seadistuse; SOE ütleb ainult, mis on kõigil ühine.
 
 **IT-süsteemi elutsükli haldus** tähendab, et igal süsteemil on kirjeldatud tee loomisest muutmise kaudu mahavõtmiseni, igal etapil on omanik ja jälg. Elutsükkel on kahel tasemel: üksiku masina oma (loodud mallist, paigatud, asendatud, kustutatud) ja platvormi oma (OS-i versioon ilmub, on toetatud, toetus lõpeb). CMDB on arvestus, elutsükli haldus on töökord, mis seda arvestust kasutab ja uuendab.
 
@@ -18,7 +18,7 @@ SOE on kirjeldus, millest tehakse mitu artefakti: VM-i golden image, konteineri 
 
 SOE-d hoitakse Gitis ühe repo või kataloogina, millest ehitatakse kõik artefaktid:
 
-- **Image'i ehitus**: [Packer](https://developer.hashicorp.com/packer/docs) kloonib distributsiooni cloud image'i, käivitab ajutise VM-i, käivitab sellel konfihalduse baasrolli, koristab masina identiteedi ja salvestab tulemuse mallina. Sama roll käib hiljem töötavatel masinatel, nii et mall ja konfihaldus ei lähe lahku.
+- **Image'i ehitus**: [Packer](https://developer.hashicorp.com/packer/docs) kloonib distributsiooni cloud image'i, käivitab ajutise VM-i, käivitab sellel konfiguratsioonihalduse baasrolli, koristab masina identiteedi ja salvestab tulemuse mallina. Sama roll käib hiljem töötavatel masinatel, nii et mall ja konfiguratsioonihaldus ei lähe lahku.
 - **Testimine**: igast uuest image'ist käivitatakse test-VM ja kontrollitakse, et sshd vastab, agent raporteerib ja OpenSCAP-i profiil annab oodatud tulemuse.
 - **Versioon ja kuupäev**: image'i nimi sisaldab SOE versiooni ja ehituse kuupäeva. OpenTofu valib malli tag'i järgi data source'iga, mitte ID-ga.
 
@@ -31,7 +31,7 @@ Koristus enne malli salvestamist on kohustuslik. [systemd soovitab](https://syst
 ```mermaid
 stateDiagram-v2
     [*] --> Loodud: mall soe-2026.10 + cloud-init
-    Loodud --> Töös: konfihaldus, monitooring, CMDB
+    Loodud --> Töös: konfiguratsioonihaldus, monitooring, CMDB
     Töös --> Töös: paigad, seadistus (kohapeal)
     Töös --> Asendatud: uus mall (-/+ plaanis)
     Asendatud --> Töös
@@ -44,7 +44,7 @@ stateDiagram-v2
 
 **Loomine.** Masin tekib ainult koodist: OpenTofu plokk, mis viitab SOE mallile, ja tag'id `owner`, `service`, `expires`. Tag'id on andmed, mida ajastatud kontroll hiljem loeb.
 
-**Muutmine.** Kaks teed, mida enamik meeskondi kasutab koos. Paikamine kohapeal (mutable) on kiire ja säilitab masina identiteedi, aga masinad lähevad aja jooksul lahku, sest igaüks on läbinud eri järjestuse muudatusi. Asendus uuest mallist (immutable) annab kõigile sama seisu ja lihtsa rollback'i (eelmine mall), aga eeldab, et andmed on masinast väljas ja asendus ei katkesta teenust.
+**Muutmine.** Kaks teed, mida enamik meeskondi kasutab koos. Paikamine kohapeal (mutable) on kiire ja säilitab masina identiteedi, aga masinad lähevad aja jooksul lahku, sest igaüks on läbinud eri järjestuse muudatusi. Asendus uuest mallist (immutable) annab kõigile sama oleku ja lihtsa rollback'i (eelmine mall), aga eeldab, et andmed on masinast väljas ja asendus ei katkesta teenust.
 
 **Mahavõtmine.** OpenTofu kustutab ainult selle, mis on tema state'is. Masina ümber on rohkem: DNS-kirjed, monitooringu kirje, varundustöö, FreeIPA või AD arvutikonto, sertifikaadid, tulemüürireeglid, CMDB rida ja andmed, millel on oma säilitusnõue. Mahavõtmine on seepärast töövoog, mille iga samm on koodis või kontrollnimekirjas, ja andmehostil on kustutamise kaitse (`prevent_destroy`, Proxmoxi `protection`).
 
@@ -75,7 +75,7 @@ Eesti avalikus sektoris on sama küsimus [E-ITS](https://eits.ria.ee/)-i auditi 
 
 ## Variandid, vananev mall ja poolik mahavõtmine
 
-**Liiga palju variante.** Iga lisa-OS kahekordistab testid, mallid ja konfihalduse tingimused. Väike arv toetatud baase ja kirjalik erandite kord on odavam kui paindlikkus.
+**Liiga palju variante.** Iga lisa-OS kahekordistab testid, mallid ja konfiguratsioonihalduse tingimused. Väike arv toetatud baase ja kirjalik erandite kord on odavam kui paindlikkus.
 
 **Liiga range SOE.** Kui baas keelab midagi, mida rakendus vajab, küsivad meeskonnad erandit või ehitavad oma masina SOE-st mööda. Erandid kirjutatakse koodi koos põhjenduse ja aegumiskuupäevaga.
 
@@ -92,7 +92,7 @@ Eesti avalikus sektoris on sama küsimus [E-ITS](https://eits.ria.ee/)-i auditi 
 ## Kontrolli ennast
 
 ??? question "Mis vahe on SOE-l ja golden image'il?"
-    SOE on kokkulepitud ja versioonitud baasi kirjeldus: OS, hoidlad, seaded, agendid, hardening. Golden image on üks artefakt, mis sellest kirjeldusest ehitatakse VM-ide jaoks. Samast SOE-st tehakse ka konteineri baas-image, bare metal vastusefail ja konfihalduse baasroll ning need peavad andma sama tulemuse.
+    SOE on kokkulepitud ja versioonitud baasi kirjeldus: OS, hoidlad, seaded, agendid, hardening. Golden image on üks artefakt, mis sellest kirjeldusest ehitatakse VM-ide jaoks. Samast SOE-st tehakse ka konteineri baas-image, bare metal vastusefail ja konfiguratsioonihalduse baasroll ning need peavad andma sama tulemuse.
 
 ??? question "Kümnest mallist kloonitud VM-ist said kaks DHCP-lt sama IP. Mis on tõenäoline põhjus?"
     Mallis oli `/etc/machine-id` alles. systemd-networkd tuletab DHCP kliendi identifikaatori (DUID) machine-id'st, nii et DHCP server peab kloone samaks kliendiks. Parandus on malli koristus: machine-id tühjaks või `uninitialized`, random-seed, SSH host key'd ja cloud-init'i olek maha, ning olemasolevatel kloonidel machine-id uuesti genereerida.

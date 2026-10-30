@@ -8,11 +8,11 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - tõstad kolme playbook'i sisu rollidesse `common`, `veeb` ja `andmebaas`;
+    - viid kolme playbook'i sisu üle rollidesse `common`, `veeb` ja `andmebaas`;
     - paned rolli vaikeväärtused `defaults/main.yml`-i;
-    - seadistad kogu labori ühe käsuga `site.yml`-iga.
+    - seadistad kogu labori ühe käsuga, käivitades `site.yml`-i.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k02`. Masinates ei muutu midagi: töötav kood saab uue korra.
+Kõik käsud käivita control node'is kaustas `~/kursus/k02`. Masinates ei muutu midagi: töötav kood saab uue ülesehituse.
 
 ## A1 · Kaustad
 
@@ -25,14 +25,14 @@ git mv templates/index.html.j2 templates/labor.conf.j2 roles/veeb/templates/
 
 ## A2 · Ülesanded rollidesse
 
-Rolli failis on ainult ülesannete nimekiri, ilma `hosts`, `become` ja `tasks:` reata.
+Rolli failis on ainult ülesannete loend, ilma ridadeta `hosts`, `become` ja `tasks:`.
 
 1. `roles/common/tasks/main.yml`: kopeeri `users.yml`-ist kõik kolm ülesannet.
 2. `roles/veeb/tasks/main.yml`: kopeeri `veeb.yml`-ist kõik ülesanded.
 3. `roles/veeb/handlers/main.yml`: kopeeri handler `reload nginx`.
 4. `roles/andmebaas/tasks/main.yml`: kopeeri `andmebaas.yml`-ist kõik neli ülesannet.
 
-Taane: rolli failis algab iga ülesanne real `- name:` vasakult servast.
+Pane tähele taanet: rolli failis algab iga ülesande rida `- name:` vasakust servast.
 
 ??? tip "Vihje: nii näeb välja `roles/veeb/handlers/main.yml`"
 
@@ -52,7 +52,7 @@ veeb_pealkiri: "Veebiserver"
 veeb_port: 80
 ```
 
-Need on kõige nõrgemad väärtused: `group_vars/veeb.yml` ja `host_vars/web01.yml` kirjutavad need üle. Roll töötab ka siis, kui keegi neid muutujaid ei määra.
+Rolli vaikeväärtustel on kõige madalam prioriteet: `group_vars/veeb.yml` ja `host_vars/web01.yml` kirjutavad need üle. Roll töötab ka siis, kui keegi neid muutujaid ei määra.
 
 ## A4 · `site.yml`
 
@@ -87,19 +87,19 @@ ansible-playbook site.yml --syntax-check --ask-vault-pass
 
 ## A5 · Käivita
 
-Ennusta enne: masinates on kõik juba õige. Mis on PLAY RECAP?
+Enne käivitamist ennusta tulemust. Masinate tegelik olek vastab juba soovitud olekule. Mida näitab PLAY RECAP?
 
 ```bash
-ansible-playbook site.yml -K --ask-vault-pass
+ansible-playbook site.yml --ask-vault-pass
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kolm play'd, ülesannete ees rolli nimi (`TASK [veeb : nginx on paigaldatud]`). Kõigil viiel masinal `changed=0`: rollid tegid sama tööd mis playbook'id ja seis oli juba õige.
+    Väljundis on kolm play'd ja ülesannete ees on rolli nimi (`TASK [veeb : nginx on paigaldatud]`). Kõigis viies masinas on `changed=0`: rollid tegid sama tööd mis playbook'id ja tegelik olek vastas juba soovitud olekule.
 
 ??? warning "Kui midagi on `changed` või `failed`"
 
-    Võrdle rolli faili vana playbook'iga (`git show HEAD:k02/veeb.yml`). Sagedased vead: `- name:` on taandes, handler'i nimi erineb `notify` väärtusest või mall on vales kaustas.
+    Võrdle rolli faili vana playbook'iga (`git show HEAD:k02/veeb.yml`). Sagedased vead: rida `- name:` on taandega, handler'i nimi erineb `notify` väärtusest või mall on vales kaustas.
 
 ```bash
 find roles -type f
@@ -114,7 +114,7 @@ git commit -m "k02: rollid ja site.yml"
 git push
 ```
 
-**Valmis, kui** `site.yml` teine käivitus annab kõigil viiel masinal `changed=0`.
+**Valmis, kui** `site.yml` teisel käivitusel on kõigis viies masinas `changed=0`.
 
 ??? info "Loe juurde"
 

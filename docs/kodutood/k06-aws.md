@@ -9,20 +9,20 @@ tags:
 
 **Eeldus:** 6. kohtumise labor (`k06-jenkins/Jenkinsfile`, sinu control node on Jenkinsi agent label'iga = GitHubi kasutajanimi), [3.](k03-aws.md) ja [5. kohtumise kodutöö](k05-aws.md) (ECR repo, push-only IAM kasutaja, EC2 Compose'iga) · **Esita:** `k06-jenkins/Jenkinsfile` (uued etapid), `cloud/k06-aws/`
 
-5. kohtumisel tegi GitHub Actions push'i ja deploy'd. Nüüd teeb sama koolitaja jagatud Jenkins, mille kettale ei tohi sinu
+5. kohtumise kodutöös laadis GitHub Actions image'i registrisse ja tegi deploy. Nüüd teeb sama töö koolitaja jagatud Jenkins, mille kettale ei tohi sinu
 AWS-i võti sattuda.
 
 **Enne alustamist:**
 
-- `aws configure get region` → `eu-north-1`; tunnipõhine kulu: 1 × t3.small + avalik IPv4 (~$0.10), Fargate osaga + 1 task (~$0.025/h).
+- Käsk `aws configure get region` väljastab `eu-north-1`. Üks t3.small masin ja avalik IPv4-aadress maksavad umbes $0.10 tunnis, Fargate'i osa koos ühe task'iga umbes $0.025 tunnis.
 - Eelarvehäired (zero spend, $10) on alles.
-- `aws sts get-caller-identity` → Arn lõpeb `:user/…`, mitte `:root`. Pikaajaline võti ainult `gha-labseis`-ile, ainult ECR push.
-- Lõpus võti kustutatakse, koristus ja `bash cloud/aws-leftovers.sh`.
+- `aws sts get-caller-identity` väljundis lõpeb Arn kujul `:user/…`, mitte `:root`. Pikaajaline võti on ainult kasutajal `gha-labseis` ja see lubab ainult ECR-i laadimist.
+- Lõpus kustutad võtme ja ressursid ning käivitad `bash cloud/aws-leftovers.sh`.
 - Reeglid ja ühine veaotsing: [AWS-i reeglid](aws-reeglid.md).
 
 ## Õpiväljundid
 
-1. Lisab Jenkinsfile'i etapid, mis lükkavad image'i ECR-i build numbri ja commit'i sildiga, ja hoiab AWS-i võtit agendi masinas, mitte jagatud Jenkinsis.
+1. Lisab Jenkinsfile'i etapid, mis laadivad image'i ECR-i build'i numbri ja commit'i sildiga, ning hoiab AWS-i võtit agendi masinas, mitte jagatud Jenkinsis.
 2. Deploy'b image'i EC2-le kinnitusega ja kontrollib tulemust pipeline'is.
 3. Võrdleb Jenkinsi ja GitHub Actionsi lahendust samale ülesandele.
 
@@ -30,10 +30,10 @@ AWS-i võti sattuda.
 
 ## Osa 1 · Kus võti asub
 
-Koolitaja Jenkins on jagatud. Kui paned AWS-i võtme Jenkinsi credential'iks, on see Jenkinsi kettal ja administraatori
-käes. Sinu pipeline töötab aga **sinu control node'il** (agent), seega võib võti olla seal.
+Koolitaja Jenkins on jagatud. Kui paned AWS-i võtme Jenkinsi credential'iks, on see Jenkinsi kettal ja administraatoril
+on sellele ligipääs. Pipeline töötab aga **sinu control node'is** (agent), seega saab võtme hoida seal.
 
-Control node'il, agendi kasutaja all:
+Käivita control node'is agendi kasutajana:
 
 ```bash
 aws configure --profile labseis-ecr     # gha-labseis kasutaja UUS võti (K5 oma kustutasid)
@@ -41,7 +41,7 @@ aws --profile labseis-ecr ecr describe-repositories   # AccessDenied on õige: p
 ```
 
 **Oodatav tulemus:** `~/.aws/credentials`-is on profiil `labseis-ecr`, Jenkinsis pole AWS-i credential'it.
-**Miks:** kui jagatud Jenkins kompromiteeritakse, ei saa ründaja sinu AWS-i võtit. Hind: pipeline töötab ainult sinu agendil.
+**Miks:** kui jagatud Jenkins kompromiteeritakse, ei saa ründaja sinu AWS-i võtit. Selle hind on, et pipeline töötab ainult sinu agendis.
 
 **Mõtle:** levinud lahendus kasutab `docker.withRegistry(…, 'ecr:region:credId')` ja Jenkinsi pluginat. Millal
 on see parem kui agendi profiil? (Vihje: mitu agenti, autoskaleeruvad agendid.)
@@ -51,48 +51,48 @@ on see parem kui agendi profiil? (Vihje: mitu agenti, autoskaleeruvad agendid.)
 Lisa Jenkinsfile'i pärast olemasolevat Docker image'i etappi uus `stage('Push ECR')`:
 
 - `environment` plokis `AWS_PROFILE = 'labseis-ecr'`, `ECR = '<repositoryUri>'`;
-- `sh` sammus: login ([`aws ecr get-login-password`](https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html)
-  → `docker login`), `docker tag` Docker etapi image'ist `labori-seis:$ART_VERSION` kaks ECR-i tag'i (`$ART_VERSION` ja
-  `${GIT_COMMIT:0:7}`), `docker push` mõlemale;
-- `post { always { … } }`: `docker rmi` kohalikud sildid, et agendi ketas ei täituks (muidu tuleb "no space left on device").
+- `sh` sammus: logi ECR-i sisse ([`aws ecr get-login-password`](https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html)
+  → `docker login`), loo Docker etapi image'ist `labori-seis:$ART_VERSION` käsuga `docker tag` kaks ECR-i tag'i (`$ART_VERSION` ja
+  `${GIT_COMMIT:0:7}`) ja laadi mõlemad käsuga `docker push`;
+- `post { always { … } }`: eemalda kohalikud sildid käsuga `docker rmi`, et agendi ketas ei täituks (muidu tuleb viga "no space left on device").
 
 Vihje: `${GIT_COMMIT:0:7}` on Bashi süntaks. Jenkinsi `sh '...'` töötab `/bin/sh`-iga. Lisa `sh` sammu algusesse
 `#!/bin/bash` või kasuta `sh(script: …, label: …)` koos `bash -c`-ga.
 
-**Oodatav tulemus:** ECR-is on kaks uut tag'i: build number ja SHA. Jenkinsfile'is pole konto ID-d mujal kui muutujas `ECR`.
-**Tõend:** Jenkinsi stage view screenshot + `aws ecr list-images --repository-name labori-seis` väljund.
+**Oodatav tulemus:** ECR-is on kaks uut tag'i: build'i number ja SHA. Jenkinsfile'is pole konto ID-d mujal kui muutujas `ECR`.
+**Tõend:** Jenkinsi stage view kuvatõmmis ja käsu `aws ecr list-images --repository-name labori-seis` väljund.
 
 ## Osa 3 · Etapp "Deploy AWS"
 
 1. [`input`](https://www.jenkins.io/doc/book/pipeline/syntax/) samm: "Deploy EC2-le?" (sama mõte mis 5. kohtumise `environment`), `timeout` 10 min.
-2. `sshagent` või lihtsalt `ssh` agendi enda võtmega: `docker compose pull app01 && docker compose up -d --no-build app01`
-   EC2-l, `APP_IMAGE` = SHA tag.
-3. Kontroll: tsükkel, kuni `/version` sisaldab commit'i, muidu `error()`.
+2. Käivita EC2-s `sshagent`-i või agendi enda SSH-võtmega `docker compose pull app01 && docker compose up -d --no-build app01`,
+   kus `APP_IMAGE` on SHA tag.
+3. Kontrolli tsüklis, kuni `/version` sisaldab commit'i. Kui see ei õnnestu, lõpeta `error()`-iga.
 
 Deploy etapp käivitub ainult `main` harul (`when { branch 'main' }`).
 
-**Oodatav tulemus:** build peatub `input` juures. Pärast "Proceed" on `/version` uus.
+**Oodatav tulemus:** build peatub `input` juures. Pärast "Proceed" vastab `/version` uue versiooniga.
 **Tõend:** konsoolilogi viimased read.
 
-**Mõtle:** sama töö on nüüd tehtud kahes kohas (5. kohtumisel Actions, 6. kohtumisel Jenkins). Kirjuta issue'sse 3 rida: mida Jenkins
-tegi paremini, mida Actions, kumma valiksid oma tööl ja miks.
+**Mõtle:** sama töö on nüüd tehtud kahes kohas (5. kohtumisel Actions, 6. kohtumisel Jenkins). Kirjuta issue'sse kolm lauset: mida tegi
+paremini Jenkins, mida GitHub Actions ning kumma valiksid oma töökohas ja miks.
 
 ---
 
-## Edasijõudnu · ECS Fargate ilma ALB-ta
+## Edasijõudnutele · ECS Fargate ilma ALB-ta
 
-1. ECS → klaster `labseis` (Fargate, ilma EC2-ta).
+1. Loo ECS-is klaster `labseis` (Fargate, ilma EC2-ta).
 2. Task definition: 0.5 vCPU / 1 GB, image ECR-ist SHA sildiga, keskkonnamuutujad nagu README-s (`DB_HOST` = 3. kohtumise EC2
    privaatne IP; db, mq ja cache jäävad EC2-le), port 8080.
-3. Service: desired 1, avalik IP sees, **Load balancing: None**.
-4. Jenkinsi deploy: uus task definition'i revisjon uue image'iga (`aws ecs register-task-definition`) +
+3. Service: desired 1, avalik IP sisse lülitatud, **Load balancing: None**.
+4. Jenkinsi deploy: uus task definition'i revisjon uue image'iga (`aws ecs register-task-definition`) ja
    [`aws ecs update-service`](https://docs.aws.amazon.com/cli/latest/reference/ecs/update-service.html) `--task-definition <uus>`.
    Võti vajab selleks lisaõigusi (eraldi policy, `ecs:RegisterTaskDefinition`, `ecs:UpdateService`, `iam:PassRole` task rollile).
 
 **Miks uus revisjon, mitte `--force-new-deployment` `latest` sildiga:** revisjoni järgi näed, mis image töötab, ja saad
 minna tagasi eelmisele revisjonile.
 
-**ECS konsooli wizard pakub vaikimisi ALB-d** (~$0.024/h + LCU). Vali "None". Kui ALB tekkis, kustuta ALB **ja** target group.
+**ECS-i konsooli viisard pakub vaikimisi ALB-d** (~$0.024/h + LCU). Vali "None". Kui ALB siiski loodi, kustuta ALB **ja** target group.
 
 <!-- EKRAANIPILT: AWS konsool, ECS → Clusters → labseis → Services → Create, jaotis "Load balancing" lahti, valitud "None" (noolega märgitud); ülal näha Compute "Fargate" ja Desired tasks 1.
 <figure markdown="span">
@@ -101,20 +101,20 @@ minna tagasi eelmisele revisjonile.
 </figure>
 -->
 
-**Koristus:** service desired 0 → delete service → delete cluster. Task definition'i revisjonid võivad jääda (tasuta).
+**Koristus:** määra service'i desired väärtuseks 0, kustuta service ja seejärel klaster. Task definition'i revisjonid võivad alles jääda (need on tasuta).
 
 ## Koristus
 
-1. EC2 terminate, SG kustuta.
-2. Control node'il eemalda `labseis-ecr` võti (profiil `~/.aws/credentials`-ist välja), IAM-is kustuta võti.
+1. Lõpeta EC2 masin (terminate) ja kustuta turvagrupp.
+2. Eemalda control node'is võti `labseis-ecr` (kustuta profiil failist `~/.aws/credentials`) ja kustuta võti ka IAM-is.
 3. `bash cloud/aws-leftovers.sh` (ECS teenust, ALB-d ega target group'i ei tohi olla).
 
 ## Valmis, kui
 
 - Jenkinsi credential'ite seas pole AWS-i võtit ja `grep -nE 'AKIA|aws_secret' k06-jenkins/Jenkinsfile` on tühi
-- `aws ecr list-images --repository-name labori-seis` näitab build numbri ja SHA tag'i
+- `aws ecr list-images --repository-name labori-seis` näitab build'i numbri ja SHA tag'i
 - deploy käivitus pärast `input` kinnitust ja `/version` sisaldab sama SHA-d
-- `docker images | wc -l` agendil on pärast build'i sama mis enne
+- agendis annab `docker images | wc -l` pärast build'i sama tulemuse kui enne
 - `aws iam list-access-keys --user-name gha-labseis` on tühi, `aws-leftovers.sh`: `TULEMUS: tasulisi jääke pole`
 
 ## Veaotsing
@@ -124,6 +124,6 @@ minna tagasi eelmisele revisjonile.
 | `Unable to locate credentials` pipeline'is | agent töötab teise kasutajana kui see, kellel on `~/.aws` | `sh 'id; echo $HOME'` |
 | `Bad substitution` | `/bin/sh`, mitte bash | vt osa 2 vihje |
 | `permission denied … docker.sock` agendil | agendi kasutaja pole `docker` grupis | lisa gruppi, taaskäivita agent |
-| ECS task kohe `STOPPED` | tavaliselt DB_HOST või SG | CloudWatchi logid; EC2 SG peab lubama 3306/5672/11211 task'i SG-st |
+| ECS-i task läheb kohe olekusse `STOPPED` | tavaliselt vale `DB_HOST` või turvagrupi reegel | CloudWatchi logid; EC2 SG peab lubama 3306/5672/11211 task'i SG-st |
 
 Ühised vead: [AWS-i reeglid](aws-reeglid.md#veaotsing).

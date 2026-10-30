@@ -11,7 +11,7 @@ Valvur ärkab kolm korda nädalas sama häire peale: `/var` on üle 90%, runbook
 Käsitsi käivituse ja ajakava (cron, AWX-i schedule, Jenkinsi `cron` trigger) kõrval on lähim sugulane kontrolltsükkel, mida Kubernetes ja Argo CD kasutavad. Nende vahe on tööl oluline:
 
 - sündmusele reageerimine on servapõhine (*edge-triggered*): tegevus käivitub muutuse hetkel. Kui sündmus kaob teel, ei käivitu midagi;
-- kontrolltsükkel on tasemepõhine (*level-triggered*): kontroller võrdleb seisu ikka ja jälle ning parandab erinevuse, kuigi ta ei näinud muutust ennast.
+- kontrolltsükkel on tasemepõhine (*level-triggered*): kontroller võrdleb olekut ikka ja jälle ning parandab erinevuse, kuigi ta ei näinud muutust ennast.
 
 Seepärast paneb töökindel lahendus mõlemad kokku: sündmus annab kiire reaktsiooni ja perioodiline kontroll (öine `--check`, Argo CD sync) püüab kinni kadunud sündmused.
 
@@ -81,7 +81,7 @@ Sündmuspõhise automaatika jaoks on siin kolm õppetundi. Automaatne tegevus v�
 
 - **Torm.** Sada pod'i, sada alerti ja sada playbook'i. Kaitseks on Alertmanageri `group_by`, rulebook'i `throttle` ja AWX-i template, mille kaks käivitust ei tööta korraga.
 - **Lõputu tsükkel.** Teenuse restart tekitab "teenus maas" alerti, mis käivitab restardi. Või kaks reeglit teevad vastupidist: üks skaleerib üles, teine alla. Igal tegevusel on sageduspiir hosti kohta ja ülemine piir, mille järel tuleb eskalatsioon inimesele.
-- **Vananenud sündmus.** Alert jõudis kohale 10 minutit hiljem ja vahepeal on keegi juba koristanud. Tegevus kontrollib seisu enne muutmist uuesti (`df` playbook'i alguses) ja on idempotentne.
+- **Vananenud sündmus.** Alert jõudis kohale 10 minutit hiljem ja vahepeal on keegi juba koristanud. Tegevus kontrollib enne muutmist olekut uuesti (`df` playbook'i alguses) ja on idempotentne.
 - **Sisend on võõras.** Webhook'i payload on ründaja sisend. Nõua tokenit või HMAC-allkirja (GitHubi `X-Hub-Signature-256`), kuula ainult sisevõrgus või `127.0.0.1`-l ja ära kasuta payload'i välja otse `hosts:` mustris ega shellis. `host: "all"` peab olema viga.
 - **Kadunud sündmus.** Webhook'il pole järjekorda: kui vastuvõtja on maas, sündmus kaob ja tegevus jääb käivitamata.
 - **Auditi jälg.** Öösel tehtud automaatne tegevus peab jätma kirje: mis sündmus, milline reegel, mis tegevus, mis tulemus. Ilma selleta näeb hommikune vahetus ainult tulemust.
@@ -90,7 +90,7 @@ Sündmuspõhise automaatika jaoks on siin kolm õppetundi. Automaatne tegevus v�
 ## Kontrolli ennast
 
 ??? question "Miks ei piisa ainult sündmustest ja miks on vaja ka perioodilist kontrolli?"
-    Sündmus on servapõhine. Kui see kaob, näiteks vastuvõtja oli maas või GitHub ei saanud 10 sekundiga vastust, ei käivitu midagi ja keegi ei saa sellest teada. Perioodiline kontroll võrdleb seisu iga kord uuesti ja leiab ka selle, mille sündmus jättis vahele.
+    Sündmus on servapõhine. Kui see kaob, näiteks vastuvõtja oli maas või GitHub ei saanud 10 sekundiga vastust, ei käivitu midagi ja keegi ei saa sellest teada. Perioodiline kontroll võrdleb olekut iga kord uuesti ja leiab ka selle, mille sündmus jättis vahele.
 
 ??? question "Rulebook'is on kaks reeglit: üks teavitab ketta täitumisest, teine käivitab koristuse, kui ketas on üle 95%. Ketas läheb 90-lt 97-le, aga koristus ei käivitu. Miks?"
     `match_multiple_rules` on vaikimisi `false` ja sündmus läks esimesse sobivasse reeglisse, see tähendab teavitusse. Lahendus on järjestada reeglid kitsamast laiemani või lülitada `match_multiple_rules` sisse ja arvestada sündmuste vahemälu mälukuluga.
@@ -99,4 +99,4 @@ Sündmuspõhise automaatika jaoks on siin kolm õppetundi. Automaatne tegevus v�
     Ansible tõlgendab `app*` mustrina ja koristus läheb kõigile app-hostidele. Payload on võõras sisend. Kontrolli enne kasutamist, et väärtus on täpselt üks inventory hosti nimi (`assert` ja `groups['all']`), ning lisa host `add_host`-iga.
 
 ??? question "Alertmanager saadab sama lahendamata alerti nelja tunni pärast uuesti. Mida see tähendab tegevuse jaoks?"
-    See on `repeat_interval` vaikeväärtus ja reegel saab sama sündmuse teist korda. Tegevus peab olema idempotentne ja kontrollima seisu enne muutmist. `throttle` peab katma vähemalt selle vahemiku või peab teine sündmus minema eskalatsiooni, mitte uude koristusse.
+    See on `repeat_interval` vaikeväärtus ja reegel saab sama sündmuse teist korda. Tegevus peab olema idempotentne ja kontrollima olekut enne muutmist. `throttle` peab katma vähemalt selle vahemiku või peab teine sündmus minema eskalatsiooni, mitte uude koristusse.

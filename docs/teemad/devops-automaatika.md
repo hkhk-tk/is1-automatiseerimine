@@ -84,7 +84,7 @@ Deployment automation oleks katnud kaks puudust. Sama protseduur oleks käinud k
 
 ## Kontrolli ennast
 
-??? question "Deployment ei jõua kümne minutiga uute pod'idega olekusse Ready. Mis on klastri seis ja kes teeb rollback'i?"
+??? question "Deployment ei jõua kümne minutiga uute pod'idega olekusse Ready. Mis on klastri olek ja kes teeb rollback'i?"
     Kontroller märgib `Progressing=False` põhjusega `ProgressDeadlineExceeded`. Vanad pod'id, mida `maxUnavailable` lubas alles hoida, teenindavad edasi ja osa uusi pod'e võib jääda ootele. Kubernetes ise tagasi ei lähe. Seda teeb pipeline (`kubectl rollout undo` või eelmine digest Giti) või Argo Rollouts'i tüüpi tööriist.
 
 ??? question "Millal valiksid blue-green'i ja millal canary?"
@@ -94,4 +94,4 @@ Deployment automation oleks katnud kaks puudust. Sama protseduur oleks käinud k
     Eri build'is võivad olla teised sõltuvuste versioonid, base image või kompilaator ja tootmisse läheks binaar, mida keegi ei testinud. Üks build ja sama digest kõigis keskkondades annab tõendi, et tootmises töötab testitud artefakt. Keskkonnad erinevad ainult seadistuse ja saladuste poolest.
 
 ??? question "Kuidas saad DORA ebaõnnestunud muudatuste osakaalu ja taastumisaja pipeline'i andmetest?"
-    Iga deploy kirje sisaldab aega, versiooni ja tulemust. Ebaõnnestunuks loetakse deploy, mis lõppes rollback'i, parandusdeploy või intsidendiga. Osakaal on ebaõnnestunud deploy'de arv jagatud kõigi deploy'de arvuga. Taastumisaeg on vahe ebaõnnestunud deploy ja sellele järgnenud terve seisu vahel. Selleks peab rollback ja intsident olema seotud deploy kirjega, näiteks issue või ITSM-i kirje kaudu.
+    Iga deploy kirje sisaldab aega, versiooni ja tulemust. Ebaõnnestunuks loetakse deploy, mis lõppes rollback'i, parandusdeploy või intsidendiga. Osakaal on ebaõnnestunud deploy'de arv jagatud kõigi deploy'de arvuga. Taastumisaeg on aeg ebaõnnestunud deploy'st teenuse taastumiseni. Selleks peab rollback ja intsident olema seotud deploy kirjega, näiteks issue või ITSM-i kirje kaudu.

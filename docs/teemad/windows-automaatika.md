@@ -14,7 +14,7 @@ Seotud tööriistad, mis ei ole Ansible'i asendused:
 
 - **Group Policy** jõustab seadistuse domeeniliikmetel. Taustal värskendatakse seda vaikimisi iga 90 minuti järel kuni 30-minutilise juhusliku nihkega ([Microsoft](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc731840(v=ws.10))). GPO sobib kasutajatele ja turvapoliitikale, aga paigalduste järjekorda, health check'e ega lainetena muutmist see ei tee.
 - **WSUS** jagab uuendusi. Microsoft teatas 2024. aasta septembris, et WSUS on aegunud (deprecated): uusi funktsioone ei tule, aga teenus jääb Windows Server 2025-sse alles ([Patch My PC kokkuvõte](https://patchmypc.com/kb/wsus-deprecation-what-it-means/)).
-- **PowerShell DSC** on Microsofti soovitud seisu mudel (vt allpool).
+- **PowerShell DSC** on Microsofti soovitud oleku mudel (vt allpool).
 
 ## WinRM, moodulid ja double hop
 
@@ -26,7 +26,7 @@ Seotud tööriistad, mis ei ole Ansible'i asendused:
 
 **Uuendused ja reboot.** `ansible.windows.win_updates` paigaldab uuendused kategooriate kaupa (`SecurityUpdates`, `CriticalUpdates`), kasutab hosti seadistatud allikat (Windows Update või WSUS) ja `reboot: true` korral teeb reboot'i ning jätkab. Lainete loogika on sama mis Linuxis: `serial`, health check enne järgmist lainet, `max_fail_percentage`.
 
-**PowerShell DSC.** Klassikaline PSDSC (Windows PowerShell 5.1) kompileerib konfiguratsiooni MOF-failiks. Local Configuration Manager (LCM) on hosti teenus, mis loeb MOF-i push- või pull-mudeliga, viib hosti selle seisu ja režiimis `ApplyAndAutoCorrect` parandab drift'i ise. 12. märtsil 2025 tuli välja [DSC v3](https://devblogs.microsoft.com/powershell/?p=20702) ja see on teistsugune tööriist. LCM-i pole, DSC on käsurea tööriist, mida kutsutakse otse. Konfiguratsioon on JSON või YAML, PowerShelli ei ole vaja ja tööriist töötab ka Linuxis ja macOS-is. Vanad PSDSC ressursid töötavad adapteri kaudu. Ansible'is kutsub `ansible.windows.win_dsc` DSC ressursi `Test` ja `Set` meetodeid, nii et olemasolevaid DSC ressursse saab kasutada ilma LCM-ita ja tulemus tuleb Ansible'i recap'i.
+**PowerShell DSC.** Klassikaline PSDSC (Windows PowerShell 5.1) kompileerib konfiguratsiooni MOF-failiks. Local Configuration Manager (LCM) on hosti teenus, mis loeb MOF-i push- või pull-mudeliga, viib hosti selle soovitud olekusse ja režiimis `ApplyAndAutoCorrect` parandab triivi ise. 12. märtsil 2025 tuli välja [DSC v3](https://devblogs.microsoft.com/powershell/?p=20702) ja see on teistsugune tööriist. LCM-i pole, DSC on käsurea tööriist, mida kutsutakse otse. Konfiguratsioon on JSON või YAML, PowerShelli ei ole vaja ja tööriist töötab ka Linuxis ja macOS-is. Vanad PSDSC ressursid töötavad adapteri kaudu. Ansible'is kutsub `ansible.windows.win_dsc` DSC ressursi `Test` ja `Set` meetodeid, nii et olemasolevaid DSC ressursse saab kasutada ilma LCM-ita ja tulemus tuleb Ansible'i recap'i.
 
 <figure markdown="span">
 ```mermaid
@@ -45,7 +45,7 @@ flowchart LR
 | Tööriist | Mida teeb | Litsents/hind | Millal valida |
 |---|---|---|---|
 | [Ansible](https://docs.ansible.com/ansible/devel/os_guide/intro_windows.html) + `ansible.windows`, `microsoft.ad` | moodulid PowerShellis, WinRM/psrp/SSH, sama inventory ja RBAC mis Linuxil | GPLv3 (ansible-core) | segapark, Linuxi pool on juba Ansible'is |
-| PowerShell DSC v3 | soovitud seis JSON/YAML-is, ressursid mis tahes keeles | tasuta | Windowsi-kesksed meeskonnad, olemasolevad DSC ressursid |
+| PowerShell DSC v3 | soovitud olek JSON/YAML-is, ressursid mis tahes keeles | tasuta | Windowsi-kesksed meeskonnad, olemasolevad DSC ressursid |
 | [Chocolatey](https://chocolatey.org/) / winget | pakihaldus, idempotentne tarkvara paigaldus | Chocolatey CLI Apache 2.0, winget MIT | tarkvara paigaldus ilma MSI-de käsitsi kogumiseta |
 | Group Policy | domeeni poliitika, kasutajate ja turvaseaded | Windows Serveri osa | jõustamine, mis peab kehtima ka ilma automaatikaserverita |
 | WSUS | uuenduste jagamine sisevõrgus | Windows Serveri osa, aegunud | olemasolev taristu, mille kõrval käib `win_updates` |
@@ -57,14 +57,14 @@ flowchart LR
 
 Ükski WinRM-i ega SSH-põhine automaatika siin ei aidanud, sest OS ei käivitunud. Kahe asja olemasolu otsustas, kas taastamine võttis tunde või päevi. Esimene on out-of-band ligipääs, näiteks iLO/iDRAC/IPMI konsool füüsilistel serveritel ja hüperviisori konsool või snapshot'i taaste VM-idel. Teine on BitLockeri taastevõtmed kohas, mis ise ei sõltu samadest Windowsi masinatest. Kui võtmed on ainult AD-s ja domeenikontrollerid on samuti maas, on vaja võtmete varukoopiat mujal. Mõlemad on automaatika eeldused, mida playbook ise ei taga, ja kuuluvad automaatikaplaani nagu inventory.
 
-## WinRM-i turve, teenusekonto ja kaks soovitud seisu
+## WinRM-i turve, teenusekonto ja kaks soovitud olekut
 
 - **WinRM-i avamine.** `ConfigureRemotingForAnsible.ps1` tüüpi skriptid lubasid ajalooliselt Basic-autentimist ja ise allkirjastatud sertifikaati. Tootmises on WinRM ainult HTTPS-iga, domeeni sertifikaadiga, tulemüüris lubatud ainult control node'ilt ja autentimine käib Kerberosega.
 - **Teenusekonto.** Domeeni administraatorina käivitatud automaatika annab kompromiteeritud control node'iga kogu domeeni. Kasuta eraldi kontot, mis on kohaliku administraatori grupis ainult hallatavatel hostidel, ja vajadusel JEA-d (Just Enough Administration), mis piirab lubatud käsud.
-- **Kaks soovitud seisu.** Kui GPO ja Ansible hallavad sama registrivõtit, kirjutab GPO 90 minuti pärast Ansible'i muudatuse üle või vastupidi. Iga seade peab olema ühe allika hallata.
+- **Kaks soovitud olekut.** Kui GPO ja Ansible hallavad sama registrivõtit, kirjutab GPO 90 minuti pärast Ansible'i muudatuse üle või vastupidi. Iga seade peab olema ühe allika hallata.
 - **Reboot'i ootamatus.** `win_updates` koos `reboot: true`-ga reboot'ib ilma kinnituseta. Rakendus, mis ei kannata reboot'i (vana teenus, mis käivitub käsitsi), vajab enne laineid oma health check'i ja vajadusel eraldi akent.
 - **Double hop'i lahendus nõrgendab turvet.** CredSSP ja `runas` koos võrgumandaadiga annavad hostile mandaadi, mida saab edasi kasutada. Parem on andmed tuua hosti control node'ilt (`win_copy`, HTTP-allikas) kui lasta hostil endal võrgust lugeda.
-- **DSC v3 on uus.** Ressursside valik ja tööriistade tugi kasvavad alles. Olemasolev PSDSC kood töötab adapteri kaudu, aga LCM-i automaatset drift'i parandust enam pole: see tuleb ajakavast või pipeline'ist.
+- **DSC v3 on uus.** Ressursside valik ja tööriistade tugi kasvavad alles. Olemasolev PSDSC kood töötab adapteri kaudu, aga LCM-i automaatset triivi parandamist enam pole: see tuleb ajakavast või pipeline'ist.
 
 ## Kontrolli ennast
 
@@ -78,4 +78,4 @@ flowchart LR
     Kõige tõenäolisemalt haldab sama võtit GPO, mis värskendub iga 90 minuti järel juhusliku nihkega. Põhjuse kinnitab `gpresult /h`. Teine võimalus on PSDSC LCM režiimis `ApplyAndAutoCorrect`. Otsusta, kumb allikas seadet haldab, ja eemalda see teisest.
 
 ??? question "Mille poolest erineb DSC v3 klassikalisest PowerShell DSC-st automaatika vaates?"
-    DSC v3-l pole LCM-i, mis töötaks hostis teenusena ja parandaks drift'i ise. See on käsurea tööriist, mida kutsub välja pipeline, ajakava või Ansible. Konfiguratsioon on JSON või YAML ja PowerShelli ei ole vaja. Drift'i parandus tuleb seega sellest, mis DSC-d käivitab, nagu Ansible'i puhul.
+    DSC v3-l pole LCM-i, mis töötaks hostis teenusena ja parandaks triivi ise. See on käsurea tööriist, mida kutsub välja pipeline, ajakava või Ansible. Konfiguratsioon on JSON või YAML ja PowerShelli ei ole vaja. Drift'i parandus tuleb seega sellest, mis DSC-d käivitab, nagu Ansible'i puhul.

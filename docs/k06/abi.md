@@ -10,10 +10,10 @@ Read on laboriosade kaupa. Neljas veerg on mehhanism, mille järgi tunned vea ä
 | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
 |---|---|---|---|
 | **1. Agent ja esimene pipeline** | | | |
-| `curl -sI …/login` ei anna `200` | `ip a`, VPN klient | VPN on maas | `jenkins.lab.hkhk.ee` laheneb ja on marsruuditav ainult VPN-i kaudu |
+| `curl -sI …/login` ei anna `200` | `ip a`, VPN klient | VPN-ühendus puudub | `jenkins.lab.hkhk.ee` laheneb ja on marsruuditav ainult VPN-i kaudu |
 | `docker ps` näitab Labori seisu konteinereid ka pärast `stop`-i | `docker ps --format '{{.Names}} {{.Label "com.docker.compose.project"}}'` | GitHub Actionsi deploy käivitas stacki teise projektinimega: peata see nimega | Compose leiab oma konteinerid projekti nime järgi; teise nimega stack on tema jaoks võõras |
 | agent: `Failed to connect` või 403 | Nodes → `<gh>` saladus, `sudo cat /opt/jenkins/secret` | saladus vale või node'i nimi ei kattu (`<gh>` väiketähtedega) | controller arvutab saladuse node'i nimest; teine nimi või teine saladus on tema jaoks võõras agent |
-| agent: `Connection refused` | `curl -sI http://jenkins.lab.hkhk.ee:8080/login` | VPN maas | TCP ühendus ei jõua serverini, Jenkinsi tasemele ei jõuta üldse |
+| agent: `Connection refused` | `curl -sI http://jenkins.lab.hkhk.ee:8080/login` | VPN-ühendus puudub | TCP ühendus ei jõua serverini, Jenkinsi tasemele ei jõuta üldse |
 | build "Waiting for next available executor on '<gh>'" | `systemctl status jenkins-agent`, Build Executor Status | agent offline või executorid hõivatud | label lubab ainult sinu agenti; kui see on maas, pole buildil kuhugi minna |
 | freestyle: `sudo: a terminal is required` / `sudo apt update` ebaõnnestub | `id` buildi konsoolis | ootuspärane: kasutajal `jenkins` pole sudo-t | build töötab tavakasutajana; sudo puudumine on turvapiir, mitte viga |
 | agent jäi pärast `pkill -9` punaseks | `systemctl cat jenkins-agent \| grep Restart`, `journalctl -u jenkins-agent -n 20` | `Restart=on-failure` puudub, `RestartSec` ei ole veel möödas või unit on olekus `failed` | pärast `StartLimitBurst` taaskäivitust `StartLimitIntervalSec` jooksul (vaikimisi 5 korda 10 s jooksul) jätab systemd unit'i olekusse `failed` ja vajab `systemctl reset-failed`-i |
@@ -94,6 +94,6 @@ Read on laboriosade kaupa. Neljas veerg on mehhanism, mille järgi tunned vea ä
 | agent on roheline, aga pärast restart'i jälle punane | `journalctl -u jenkins-agent -n 30` | parandus oli ajutine, mitte teenuse püsivas seadistuses | teenus loeb käivitusel ainult seda, mis on unit'is ja selle failides |
 | roheline, aga järgmine build punane | Nexuse haru konsool | üks roheline build ei tõesta versioonimist: vaata [Neli punast buildi](lab-7-neli-punast.md) veaotsingu tabelist 400 rida | mõni viga tuleb välja alles teisel korral, kui esimene tulemus on juba olemas |
 | **8. Esitamine** | | | |
-| automaatne hindaja FAIL, kohalikult OK | `diff <(git ls-files k06-jenkins \| sort) <(find k06-jenkins -type f \| sort)` | fail on kettal, aga commit'imata | automaatne hindaja näeb ainult Gitis olevat seisu |
+| automaatne hindaja FAIL, kohalikult OK | `diff <(git ls-files k06-jenkins \| sort) <(find k06-jenkins -type f \| sort)` | fail on kettal, aga commit'imata | automaatne hindaja näeb ainult Gitis olevaid faile |
 | Releases all tulemust pole | `git ls-remote --tags origin` | tag on ainult kohalikus repos | vaja on `git push origin k06` |
-| tulemus on vana seisu järgi | `git log --oneline -1 k06` ja `git log --oneline -1 main` | tag pandi enne merge'i | tag jäi haru commit'ile, mida `main`-is pole |
+| tulemus vastab vanale versioonile | `git log --oneline -1 k06` ja `git log --oneline -1 main` | tag pandi enne merge'i | tag jäi haru commit'ile, mida `main`-is pole |

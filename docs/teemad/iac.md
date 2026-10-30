@@ -8,7 +8,7 @@ Testkeskkond tehti kaks aastat tagasi sama tiketi järgi nagu tootmine. Nüüd e
 
 ## Kus IaC lõpeb ja poliitika algab
 
-Piir käib seal, kus kaob soovitud seis. Bashi skript, mis kutsub `qm create`, on automatiseerimine, aga mitte IaC selles tähenduses: teine käivitus ebaõnnestub ID konflikti peale või loob duplikaadi ning skript ei tea, mis on muutunud. CMDB kirjeldab taristut, aga ei muuda midagi, nii et see vananeb esimesest käsitsi muudatusest. Golden image ise on artefakt, IaC on Packeri mall, millest see ehitatakse.
+Piir on seal, kus kaob soovitud olek. Bashi skript, mis kutsub `qm create`, on automatiseerimine, aga mitte IaC selles tähenduses: teine käivitus ebaõnnestub ID konflikti peale või loob duplikaadi ning skript ei tea, mis on muutunud. CMDB kirjeldab taristut, aga ei muuda midagi, nii et see vananeb esimesest käsitsi muudatusest. Golden image ise on artefakt, IaC on Packeri mall, millest see ehitatakse.
 
 Kaks asja, mis sageli segi lähevad: OpenTofu ja Terraform haldavad API objekte (VM, ketas, võrk, DNS, IAM), Ansible haldab masina sisu (paketid, failid, teenused, kasutajad). Mõlemad on deklaratiivsed, aga ainult esimesel on state, mis mäletab, mida ta lõi. Sellest tuleb praktiline erinevus: koodist eemaldatud VM kustutatakse OpenTofus, Ansible'is jääb koodist eemaldatud pakett hostile alles.
 
@@ -16,7 +16,7 @@ Poliitika koodina (policy as code) hinnatakse otsuse kohas: PR-is, plaani juures
 
 ## Plaan, poliitika kolmel tasemel ja inventory üleandmine
 
-PR käivitab vormingu- ja süntaksikontrolli, seejärel `tofu plan -out`, plaani JSON-i poliitikakontrolli ja inimese ülevaatuse. `apply` kasutab sama plaanifaili, mis üle vaadati. Pärast `apply`-d seadistab Ansible masinad ja ajastatud plaan otsib drift'i.
+PR käivitab vormingu- ja süntaksikontrolli, seejärel `tofu plan -out`, plaani JSON-i poliitikakontrolli ja inimese ülevaatuse. `apply` kasutab sama plaanifaili, mis üle vaadati. Pärast `apply`-d seadistab Ansible masinad ja ajastatud plaan otsib triivi (drift).
 
 <figure markdown="span">
 
@@ -29,7 +29,7 @@ flowchart LR
     POL -- lubatud --> R["ülevaatus"]
     R --> A["apply<br/>sama plaanifail"]
     A --> ANS["Ansible<br/>masina sisu"]
-    A -. ajastatud plaan .-> D["drift'i kontroll"]
+    A -. ajastatud plaan .-> D["triivi kontroll"]
 ```
 
   <figcaption>Joonis 1. Muudatuse tee: poliitika kontrollib plaani, mitte ainult koodi.</figcaption>
@@ -69,7 +69,7 @@ Eesti avalikus sektoris on poliitika koodina seotud [E-ITS-iga](https://eits.ria
 
 IaC teeb muudatuse kiireks ja korratavaks, ka vigase. Käsitsi tehtud viga mõjutab üht masinat, moodulis tehtud viga kõiki keskkondi, mis seda tag'i kasutavad. Seepärast on moodulitel versioonid ja uus versioon jõuab tootmisse alles pärast testkeskkonda.
 
-State on tundlik ja haavatav. Selles on saladused lihttekstina ja selle kaotus tähendab importi. Kahe tõe allika probleem tekib siis, kui sama objekti muudab nii kood kui ka keegi UI-s või teine tööriist. Plaan näitab seda drift'ina, aga ainult nende objektide kohta, mida state teab.
+State on tundlik ja haavatav. Selles on saladused lihttekstina ja selle kaotus tähendab importi. Kahe tõe allika probleem tekib siis, kui sama objekti muudab nii kood kui ka keegi UI-s või teine tööriist. Plaan näitab seda triivina, aga ainult nende objektide kohta, mida state teab.
 
 Poliitika annab vale kindlustunde, kui see ei arvesta teadmata väärtusi, kui erandite kord puudub või kui reegel kontrollib ainult koodi, mitte plaani. Liiga range poliitika ilma erandite korrata viib selleni, et samm lülitatakse pipeline'ist välja. Erand peaks olema samuti kood: allowlist koos põhjuse ja aegumiskuupäevaga.
 
@@ -78,7 +78,7 @@ Poliitika annab vale kindlustunde, kui see ei arvesta teadmata väärtusi, kui e
 ## Kontrolli ennast
 
 ??? question "Kolleeg ütleb, et tema Bashi skript `create-vms.sh` on Gitis, nii et see on IaC. Mida sa küsid?"
-    Küsid, mis juhtub teisel käivitusel ja mis juhtub, kui üks VM koodist eemaldatakse. Kui skript loob duplikaadi või ebaõnnestub ja eemaldatud VM jääb alles, on see versioonitud automatiseerimine, aga soovitud seisu ega plaani pole. IaC tööriist arvutaks erinevuse ja näitaks selle enne muudatust.
+    Küsid, mis juhtub teisel käivitusel ja mis juhtub, kui üks VM koodist eemaldatakse. Kui skript loob duplikaadi või ebaõnnestub ja eemaldatud VM jääb alles, on see versioonitud automatiseerimine, aga soovitud olekut ega plaani pole. IaC tööriist arvutaks erinevuse ja näitaks selle enne muudatust.
 
 ??? question "Miks kontrollitakse organisatsiooni poliitikat plaani JSON-i peal, mitte ainult HCL-faili peal?"
     HCL-is ei ole muutujate lõplikke väärtusi, mooduli sisu ega seda, kas muudatus on `~` või `-/+`. Plaan näitab täpselt, mida `apply` teeks, ka kustutusi. Väärtused, mis selguvad alles `apply` ajal, on `after_unknown` all ja reegel peab need keelama, muidu laseb ta muudatuse läbi.

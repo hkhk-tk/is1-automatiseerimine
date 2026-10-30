@@ -13,7 +13,7 @@ tags:
     - paigaldad MariaDB db01-le (AlmaLinux);
     - hoiad andmebaasi kasutaja parooli Vaultis.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k02`.
+Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
 
 ## A1 · Kogu
 
@@ -32,11 +32,11 @@ ansible-doc ansible.mysql.mysql_user | head -20
 
 ??? success "Oodatav tulemus"
 
-    `ansible.mysql` on nimekirjas koos versiooniga. `ansible-doc` näitab mooduli kirjeldust.
+    Kogu `ansible.mysql` on loendis koos versiooniga ja `ansible-doc` näitab mooduli kirjeldust.
 
 ??? warning "Kogu vajab `ansible-core` 2.16 või uuemat"
 
-    Kontrolli `ansible --version`. Ubuntu 24.04 paketis on 2.16. Kui control node'il on vanem (näiteks AlmaLinux 9 paketist 2.14), paigalda uuem: `sudo dnf remove -y ansible-core && sudo dnf install -y python3.12-pip && pip3.12 install --user ansible-core`.
+    Kontrolli versiooni käsuga `ansible --version`. Ubuntu 24.04 paketis on versioon 2.16. Kui control node'is on vanem versioon (näiteks AlmaLinux 9 paketist 2.14), paigalda uuem: `sudo dnf remove -y ansible-core && sudo dnf install -y python3.12-pip && pip3.12 install --user ansible-core`.
 
 ## A2 · Muutujad ja Vault
 
@@ -52,7 +52,7 @@ db_kasutaja: labor
 db_parool: "{{ vault_db_parool }}"
 ```
 
-Krüpteeritud fail. Vali Vaulti parool ja jäta see meelde; Giti see ei lähe:
+Järgmine fail on krüpteeritud. Vali Vaulti parool ja jäta see meelde. Gitti see parool ei lähe:
 
 ```bash
 ansible-vault create group_vars/andmebaas/vault.yml
@@ -73,7 +73,7 @@ ansible-vault view group_vars/andmebaas/vault.yml
 
 ??? success "Oodatav tulemus"
 
-    `cat` näitab `$ANSIBLE_VAULT;1.1;AES256` ja numbrirodu. `view` küsib Vaulti parooli ja näitab sisu.
+    `cat` näitab rida `$ANSIBLE_VAULT;1.1;AES256` ja selle all numbriridu. `ansible-vault view` küsib Vaulti parooli ja näitab faili sisu.
 
 ## A3 · Playbook
 
@@ -113,29 +113,29 @@ Fail `andmebaas.yml`:
       no_log: true
 ```
 
-`python3-PyMySQL` on vaja, sest `ansible.mysql` moodulid räägivad andmebaasiga Pythoni kaudu masinas endas.
+`python3-PyMySQL` on vaja, sest `ansible.mysql` moodulid suhtlevad andmebaasiga hallatavas masinas Pythoni teegi kaudu.
 
 ```bash
 ansible-playbook andmebaas.yml --syntax-check --ask-vault-pass
-ansible-playbook andmebaas.yml -K --ask-vault-pass
+ansible-playbook andmebaas.yml --ask-vault-pass
 ```
 
 ??? success "Oodatav tulemus"
 
-    Küsitakse kaks parooli: `BECOME password` (`sudo`) ja `Vault password`. db01-l neli ülesannet `changed`. Kasutaja ülesande juures on `censored` väljundi asemel: `no_log` töötab.
+    Ansible küsib Vaulti parooli (`Vault password`). db01-s on nelja ülesande tulemus `changed`. Kasutaja ülesande väljundi asemel on `censored`, seega `no_log` töötab.
 
 ## A4 · Kontrolli
 
 ```bash
-ansible andmebaas -b -K -m ansible.builtin.command -a "mysql -e 'SHOW DATABASES; SELECT user, host FROM mysql.user;'"
+ansible andmebaas -b -m ansible.builtin.command -a "mysql -e 'SHOW DATABASES; SELECT user, host FROM mysql.user;'"
 ssh -t db01 "mysql -u labor -p -e 'SELECT DATABASE();' labor"
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene käsk: andmebaas `labor` ja kasutaja `labor` `localhost`-is. Teine küsib parooli (`MuudaMind-2026`) ja vastab `labor`.
+    Esimese käsu väljundis on andmebaas `labor` ja kasutaja `labor` hostiga `localhost`. Teine käsk küsib parooli (`MuudaMind-2026`) ja väljastab `labor`.
 
-Käivita playbook teist korda: `changed=0`.
+Käivita playbook teist korda. Kokkuvõttes peab olema `changed=0`.
 
 ## A5 · Commit
 
@@ -147,9 +147,9 @@ git commit -m "k02: andmebaas, kogu ja Vault"
 git push
 ```
 
-Vaata enne commit'i `git status`-ist: `vault.yml` on nimekirjas, aga see on krüpteeritud. Vaulti parooli ei ole üheski failis.
+Vaata enne commit'i `git status` väljundit: `vault.yml` on loendis, kuid see on krüpteeritud. Vaulti parooli ei ole üheski failis.
 
-**Valmis, kui** kasutaja `labor` saab parooliga sisse, teine käivitus annab `changed=0` ja GitHubis on `vault.yml` loetamatu.
+**Valmis, kui** kasutaja `labor` saab parooliga andmebaasi sisse logida, teisel käivitusel on `changed=0` ja GitHubis on `vault.yml` sisu krüpteeritud.
 
 ??? info "Loe juurde"
 

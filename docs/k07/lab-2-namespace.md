@@ -6,7 +6,7 @@ tags:
 
 # 2. Namespace ja põhiobjektid
 
-Jagatud klastris ebaõnnestub deploy sageli põhjusel, mida sinu YAML-is pole: RBAC keelab, kvoot on täis või Service ei leia pod'e, sest label ei klapi. Koolitaja klastris on sul üks namespace `is-<github>`, ja enne kui sinna midagi ehitad, pead teadma, mida sul seal teha lubatakse ja kui palju ressurssi sul on. Siis lood YAML-failist Deployment'i, Service'i, ConfigMap'i ja Secret'i ning vaatad, kuidas Deployment, ReplicaSet, pod ja Service label'ite kaudu üksteist leiavad. Samadest objektidest koosneb Labori seis, ja kui seal mõni lüli katki läheb, tunned selle ära.
+Jagatud klastris ebaõnnestub deploy sageli põhjusel, mida sinu YAML-is pole: RBAC keelab, kvoot on täis või Service ei leia pod'e, sest label ei klapi. Koolitaja klastris on sul üks namespace `is-<github>`, ja enne kui sinna midagi paigaldad, pead teadma, mida sul seal teha lubatakse ja kui palju ressurssi sul on. Siis lood YAML-failist Deployment'i, Service'i, ConfigMap'i ja Secret'i ning vaatad, kuidas Deployment, ReplicaSet, pod ja Service label'ite kaudu üksteist leiavad. Samadest objektidest koosneb Labori seis, ja kui seal mõni lüli katki läheb, tunned selle ära.
 
 Katsefailid on kaustas `~/k07-katse`, mitte repos.
 
@@ -16,7 +16,7 @@ Katsefailid on kaustas `~/k07-katse`, mitte repos.
 
 Manifestides namespace'i ei ole, see tuleb context'ist. Õigused tulevad RoleBinding'ust, mille koolitaja sinu namespace'is ClusterRole'ile `edit` tegi. Sa ei näe RoleBinding'ut ise, aga saad API serverilt küsida, mida sa teha tohid.
 
-Kui sa oma õigusi ei tea, tõlgendad `Forbidden`-it valesti: otsid viga manifestist, kuigi API server keeldus sind üldse kuulamast. Teisalt peab admin teadma, mida kasutaja *saab* teha, sest see on ka see, mida ründaja tema kubeconfig'iga teha saaks.
+Kui sa oma õigusi ei tea, tõlgendad `Forbidden`-it valesti: otsid viga manifestist, kuigi API server keeldus päringut täitmast. Teisalt peab admin teadma, mida kasutaja *saab* teha, sest see on ka see, mida ründaja tema kubeconfig'iga teha saaks.
 
 1. Vaata context'i, kasutajat ja kahte põhiõigust:
 
@@ -98,7 +98,7 @@ Nimedest näed omandiahelat: pod `web-<räsi>-<juhuslik>` kuulub ReplicaSet'ile 
 
 ## Kustutatud pod tuleb tagasi
 
-Kustutad pod'i ja vaatad, kuidas klaster selle asendab. Kubernetes võrdleb pidevalt soovitud ja tegelikku seisu. ReplicaSet-kontroller näeb vahet "soovitud 1, tegelik 0" ja loob uue pod'i.
+Kustutad pod'i ja vaatad, kuidas klaster selle asendab. Kubernetes võrdleb pidevalt soovitud ja tegelikku olekut. ReplicaSet-kontroller näeb vahet "soovitud 1, tegelik 0" ja loob uue pod'i.
 
 Klassikalises serveris taastab seiskunud teenuse systemd samal masinal. Siin on uus pod uue nimega ja võib-olla teisel node'il. Seepärast ei tohi miski sõltuda pod'i nimest ega IP-st, ainult Service'ist ja label'itest.
 
@@ -150,7 +150,7 @@ Service'i ja pod'i seos on ainult label'is. Üks kirjaviga selector'is ja Servic
     kubectl expose deployment web --name=web-lb --port=8081 --target-port=80 --type=LoadBalancer
     ```
 
-> Endpoints on `<none>`: Service'i `selector` ei vasta pod'i label'ile. Võrdle `kubectl get svc web -o yaml | grep -A2 selector` ja `kubectl get pods --show-labels`.
+> Kui Endpoints on `<none>`, ei vasta Service'i `selector` pod'i label'ile. Võrdle `kubectl get svc web -o yaml | grep -A2 selector` ja `kubectl get pods --show-labels`.
 
 Endpoints'i IP-d on samad mis pod'ide IP-d. See on tõend, et selector leidis pod'id ja et need on Ready. LoadBalancer'i viga ei tulnud võrgust, vaid kvoodist: API server keeldus objekti salvestamast, enne kui ükski kontroller seda nägi.
 
@@ -158,11 +158,11 @@ Endpoints'i IP-d on samad mis pod'ide IP-d. See on tõend, et selector leidis po
 
 ## Pod karantiini label'iga
 
-Seda võtet kasutavad adminid tootmises. Kui üks pod käitub imelikult, ei kustuta sa seda, vaid muudad tema label'it. Service ja ReplicaSet kaotavad ta silmist: liiklus lõpeb, kontroller loob asenduse, ja vigane pod jääb uurimiseks alles.
+Seda võtet kasutavad adminid tootmises. Kui üks pod käitub imelikult, ei kustuta sa seda, vaid muudad tema label'it. Service ja ReplicaSet ei vali seda pod'i enam: liiklus lõpeb, kontroller loob asenduse, ja vigane pod jääb uurimiseks alles.
 
-Pärast pod'i kustutamist näitab `kubectl logs` midagi ainult siis, kui logikoguja jõudis read ära saata, ja protsessi mälu ning ühenduste seisu ei näita enam miski. Label'i muutmine annab sulle aega põhjust otsida, ilma et kasutajad seda pod'i näeksid.
+Pärast pod'i kustutamist näitab `kubectl logs` midagi ainult siis, kui logikoguja jõudis read ära saata, ja protsessi mälu ning ühenduste olekut ei näita enam miski. Label'i muutmine annab sulle aega põhjust otsida, ilma et kasutajad seda pod'i näeksid.
 
-1. Vali üks pod ja tõsta ta välja:
+1. Vali üks pod ja vii see karantiini:
 
     ```bash
     P=$(kubectl get pod -l app=web -o jsonpath='{.items[0].metadata.name}')

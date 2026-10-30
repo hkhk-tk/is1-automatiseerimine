@@ -4,7 +4,7 @@ tags: [RPA, BPM, äriprotsessid, hallatud teenused]
 
 # RPA, äriprotsessid ja IT-automatiseerimine
 
-Finantsosakond ostis RPA litsentsi ja robot sisestab arveid ERP-süsteemi. Nüüd küsitakse, kas sama robot võiks luua ka uued kasutajad AD-s ja käivitada VM-id hüperviisori veebiliidesest. Demo töötab ja projekt tundub odav. RPA automatiseerib inimese klikke graafilises liideses ja sobib sinna, kus API-t pole. Taristul on API, SSH või NETCONF ning seal annab IT-automatiseerimine soovitud seisu, dry-run'i, idempotentsuse ja oma identiteediga auditijälje, mida robot ei anna.
+Finantsosakond ostis RPA litsentsi ja robot sisestab arveid ERP-süsteemi. Nüüd küsitakse, kas sama robot võiks luua ka uued kasutajad AD-s ja käivitada VM-id hüperviisori veebiliidesest. Demo töötab ja projekt tundub odav. RPA automatiseerib inimese klikke graafilises liideses ja sobib sinna, kus API-t pole. Taristul on API, SSH või NETCONF ning seal annab IT-automatiseerimine soovitud oleku kirjelduse, dry-run'i, idempotentsuse ja oma identiteediga auditijälje, mida robot ei anna.
 
 ## RPA, BPA ja BPM: kes mida automatiseerib
 
@@ -20,7 +20,7 @@ IT-automatiseerimise sihtmärk on masin või teenus, äritehing jääb BPA ja BP
 
 Robot taristu juures:
 
-- robot ei tea soovitud seisu, vaid kordab klikkide järjekorda, ja teine käivitus teeb sama klikkide rea uuesti;
+- robot ei tea soovitud olekut, vaid kordab klikkide järjekorda, ja teine käivitus teeb sama klikkide rea uuesti;
 - dry-run'i ja diff'i pole, nii et kontrolli enne muudatust ei saa teha;
 - liides muutub uuendusega ja selektor ei leia nuppu, aga robot võib leida vale nupu ja jätkata;
 - robot logib sisse inimese või jagatud kontoga, nii et sihtsüsteemi audit näitab kasutajat, mitte automaatikat;
@@ -46,7 +46,7 @@ flowchart LR
     AWX -->|tulemus| BPM
     RPA -->|tulemus| BPM
 ```
-  <figcaption>Joonis 1. Protsess juhib, IT-automaatika teeb tehnilise töö. RPA katab ainult selle sammu, millel API-t pole.</figcaption>
+  <figcaption>Joonis 1. Protsess juhib, IT-automaatika teeb tehnilise töö. RPA-t kasutatakse ainult sammus, millel API-t pole.</figcaption>
 </figure>
 
 ## RPA- ja protsessimootorid
@@ -80,7 +80,7 @@ See on äriprotsessi automatiseerimine sündmuse peale (sünni registreerimine k
 ## Kontrolli ennast
 
 ??? question "Hüperviisori veebiliidesel on REST API, aga meeskond tahab VM-ide loomiseks RPA robotit, sest see on kiirem teha. Mida vastad?"
-    API olemasolul on RPA vale tööriist. Robot ei tea soovitud seisu, teine käivitus loob teise VM-i, dry-run'i pole ja liidese uuendus lõhub töö vaikselt. OpenTofu provider või Ansible'i moodul kasutab API-t ning annab plan'i, idempotentsuse, state'i ja oma identiteediga auditi.
+    API olemasolul on RPA vale tööriist. Robot ei tea soovitud olekut, teine käivitus loob teise VM-i, dry-run'i pole ja liidese uuendus lõhub töö vaikselt. OpenTofu provider või Ansible'i moodul kasutab API-t ning annab plan'i, idempotentsuse, state'i ja oma identiteediga auditi.
 
 ??? question "Mis vahe on BPM-il ja IT-automatiseerimisel uue töötaja konto loomisel?"
     BPM juhib protsessi: kes taotleb, kes kinnitab, mis järjekorras sammud käivad ja kus on iga taotluse olek. IT-automatiseerimine teeb tehnilise sammu, näiteks AD konto, grupid ja postkasti, idempotentselt ning tagastab tulemuse. Protsess kutsub automaatikat API kaudu ja kumbki ei tee teise tööd.

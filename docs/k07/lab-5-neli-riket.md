@@ -56,7 +56,7 @@ Vaatad kogu namespace'i, mitte ainult kasutaja teed. Kõik rikked ei ole kasutaj
 
 `progressDeadlineSeconds` (vaikimisi 600) järel märgib Deployment'i kontroller rollout'i `ProgressDeadlineExceeded`, aga midagi tagasi ei keera: vana ReplicaSet teenindab edasi ja ükski häire ei käivitu, kui seda tingimust keegi ei jälgi.
 
-1. Vaata kõigi Deployment'ide ja pod'ide seisu:
+1. Vaata kõigi Deployment'ide ja pod'ide olekut:
 
     ```bash
     kubectl get deploy,rs,pods
@@ -94,7 +94,7 @@ Kui kaks riket on samas ajas, aga eri objektides, on need tõenäoliselt sõltum
 
 ## Parandus Gitist
 
-Gitis on õige seis. Kõik neli parandad ühe `apply`-ga ja kontrollid, et klaster ja Git on jälle samad.
+Gitis on kirjas õige soovitud olek. Kõik neli parandad ühe `apply`-ga ja kontrollid, et klaster ja Git on jälle samad.
 
 Käsitsi parandus klastris oleks kiire, aga see jätaks klastri ja Giti lahku samamoodi nagu rike. Kui parandus tuleb Gitist, on järgmine inimene kindel, et failis olev ongi see, mis töötab.
 
@@ -113,7 +113,7 @@ Käsitsi parandus klastris oleks kiire, aga see jätaks klastri ja Giti lahku sa
     kubectl diff -f k07-k8s/ && echo "klaster = Git"
     ```
 
-> `apply` ei paranda: vigane võib olla ConfigMap, mida pod loeb ainult käivitusel, nagu nägid ConfigMap'i katses. Siis `kubectl rollout restart deploy/app01`.
+> Kui `apply` viga ei paranda, võib vigane olla ConfigMap, mida pod loeb ainult käivitusel, nagu nägid ConfigMap'i katses. Sel juhul käivita `kubectl rollout restart deploy/app01`.
 
 Esimene `diff` oli sinu vastuste kontroll. Kui seal oli rida, mida sinu neljas põhjuses polnud, jäi midagi märkamata: lisa see issue'sse. Tühi `diff` lõpus tõestab, et klastris pole enam ühtegi käsitsi muudatust. Kui `diff` jääb mittetühjaks ka pärast `apply`-d, on mõni väli selline, mida `apply` ei muuda, ja see vajab eraldi tegevust.
 
@@ -137,7 +137,7 @@ git switch main && git pull
 
 ## Miks see nii töötab
 
-**`kubectl diff`.** `kubectl diff -f k07-k8s/` näitab drift'i Giti ja klastri seisu vahel. Argo CD teeb seda võrdlust pidevalt.
+**`kubectl diff`.** `kubectl diff -f k07-k8s/` näitab drift'i Gitis kirjeldatud ja klastri tegeliku oleku vahel. Argo CD teeb seda võrdlust pidevalt.
 
 **Ajajoon.** Ajajoon on intsidendi ülevaatuse alus. Kubernetes ei pea vaikimisi eraldi muudatuste logi (auditilogi lülitab sisse API serveri `--audit-policy-file`), kuid muudatustest jääb jälg kolme kohta: objekti `creationTimestamp`, ReplicaSet'ide revisjonid ja Events. Kaks esimest säilivad, Events kustutatakse vaikeseadega tunni pärast.
 

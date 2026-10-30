@@ -7,7 +7,7 @@ tags:
   - GitOps
 ---
 
-# 7. kohtumine, labor: Labori seis Kubernetese klastris ja GitOps
+# 7. kohtumine · Praktikum: Labori seis Kubernetese klastris ja GitOps
 
 !!! info "Selle korra töö"
     - **Masin:** control node VPN-i kaudu, repo kaust `k07-k8s/`, katsefailid `~/k07-katse`
@@ -18,7 +18,7 @@ tags:
     - **Testitud:** k3s `v1.35.9+k3s1` (Traefik 3.7, containerd 2.2), kubectl `v1.35.0`, Helm `v4.2.4`, podinfo chart `6.15.0`, Argo CD ja `argocd` CLI `v3.5.2`, OpenTofu kursuse VM-i versioon, image'id `mariadb:11.4`, `nginx:1.30-alpine`, `busybox:1.37`, Ubuntu 24.04
     - **Dokumentatsioon:** [Kubernetes](https://kubernetes.io/docs/) · [kubectl](https://kubernetes.io/docs/reference/kubectl/) · [k3s](https://docs.k3s.io/) · [Helm](https://helm.sh/docs/) · [Argo CD](https://argo-cd.readthedocs.io/)
 
-Kohtumise lõpuks töötab Labori seis koolitaja klastris sinu namespace'is: neli Deployment'i probe'ide ja ressursipiiridega, andmebaas PVC-l ja NetworkPolicy taga, rakendus Ingress'i kaudu väljast kättesaadav. Klastri seisu hoiab Argo CD sinu repo järgi ja uue image'i tag'i kirjutab Giti pipeline. Vahepeal paned püsti oma ühe node'iga k3s-i, leiad neli koolitaja tehtud riket ja paigaldad Helmiga valmis chart'i.
+Kohtumise lõpuks töötab Labori seis koolitaja klastris sinu namespace'is: neli Deployment'i probe'ide ja ressursipiiridega, andmebaas PVC-l ja NetworkPolicy taga, rakendus Ingress'i kaudu väljast kättesaadav. Klastri olekut hoiab Argo CD sinu repositooriumi järgi ja uue image'i tag'i kirjutab Giti pipeline. Vahepeal paigaldad oma ühe node'iga k3s-i klastri, leiad neli koolitaja tehtud riket ja paigaldad Helmiga valmis chart'i.
 
 Iga moodul lõpeb tõendiga issue's (milestone `K7`). Kui commit sulgeb mooduli issue, lisa sõnumisse `closes #N`.
 

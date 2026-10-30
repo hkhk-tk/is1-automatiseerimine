@@ -8,7 +8,7 @@ tags:
 
 # 7. Golden image Packeriga
 
-Iga VM sünnib pilvemallist, mille sees on ainult Ubuntu ja agent, nii et Ansible teeb igal uuel masinal uuesti paketid, kasutajad, motd ja tulemüüri seisu. Käsitsi klõpsitud mallist ei tea keegi poole aasta pärast, mis seal sees on. Packeriga ehitad koodist golden image'i `labseis-base-<kuupäev>`. Selles on roll `common` juba sees ja OpenTofu jaoks on see lihtsalt teine `clone` allikas, mida valid muutujaga. Lõpuks on mall dev01 peal proovitud ja Labori seisu Ubuntu masinad tulevad sellest.
+Iga VM luuakse pilvemallist, mille sees on ainult Ubuntu ja agent, nii et Ansible teeb igal uuel masinal uuesti paketid, kasutajad, motd ja tulemüüri seadistuse. Käsitsi klõpsitud mallist ei tea keegi poole aasta pärast, mis seal sees on. Packeriga ehitad koodist golden image'i `labseis-base-<kuupäev>`. Selles on roll `common` juba sees ja OpenTofu jaoks on see lihtsalt teine `clone` allikas, mida valid muutujaga. Lõpuks on mall dev01 peal proovitud ja Labori seisu Ubuntu masinad tulevad sellest.
 
 Enne alustamist peab `tofu workspace show` andma `default` ja `tofu plan` ütlema "No changes".
 
@@ -18,7 +18,7 @@ Enne alustamist peab `tofu workspace show` andma `default` ja `tofu plan` ütlem
 
 Packer kasutab sama tokenit mis OpenTofu ja loeb ühenduse keskkonnast nagu Tofu, aga tahab tokenit kahes osas: tokeni ID (`kasutaja@pve!nimi`) ja saladus (uuid). Need tulevad samast `proxmox.env` failist shelli asendustega, nii et ükski uus fail saladust ei hoia.
 
-1. Paigalda Packer [ametlikust apt-repost](https://developer.hashicorp.com/packer/install) ja kontrolli versiooni.
+1. Paigalda Packer [ametlikust apt-paketihoidlast](https://developer.hashicorp.com/packer/install) ja kontrolli versiooni.
 
     ```bash
     wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
@@ -47,7 +47,7 @@ Packer kasutab sama tokenit mis OpenTofu ja loeb ühenduse keskkonnast nagu Tofu
 
 Nüüd kirjutad kausta `k04-tofu/packer/` Packeri faili, mis kirjeldab ühe ehituse algusest lõpuni. Allikas on `proxmox-clone`: see kloonib olemasoleva malli, käivitab VM-i, ühendub SSH-ga, käivitab provisioner'id ja teeb VM-ist uue malli. Packeri keel on sama HCL, mida tunned Tofust, aga plokid on teised: `source` ütleb, kust alustada, `build` ütleb, mida teha.
 
-Ilma koodita on mall must kast. Kui keegi küsib "kas uues mallis on turvauuendused", on ainus aus vastus ehitusfail ja selle logi.
+Ilma koodita on mall must kast. Kui keegi küsib "kas uues mallis on turvauuendused", on ainus usaldusväärne vastus ehitusfail ja selle logi.
 
 Nõuded ([`proxmox-clone` argumendid](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/clone)):
 
@@ -130,7 +130,7 @@ Plaan peab olema "No changes", sest `template_names` on tühi ja data source ots
 
 ## Proovi malli dev-is
 
-Uus mall läheb kõigepealt masinale, mis kellelegi korda ei lähe. Dev-workspace on just selleks: sama kood, teine state, üks väike VM. Seal kontrollid, et kloon saab oma identiteedi ja et `common` on juba sees.
+Uus mall läheb kõigepealt masinale, mille rike kedagi ei mõjuta. Dev-workspace on just selleks: sama kood, teine state, üks väike VM. Seal kontrollid, et kloon saab oma identiteedi ja et `common` on juba sees.
 
 Vigane mall, mis läheb otse Labori seisu, teeb vigaseks kõik masinad, mis sellest järgmisena tehakse. Dev-is maksab sama viga ühe VM-i.
 
@@ -157,13 +157,13 @@ Vigane mall, mis läheb otse Labori seisu, teeb vigaseks kõik masinad, mis sell
     tofu workspace select default
     ```
 
-motd ja grupp `labops` tõestavad, et roll `common` käivitus ehituse ajal ja tulemus jäi malli. Erinev machine-id dev01-l ja web01-l tõestab, et koristus töötas. `/etc/hosts`-is pole Labori seisu plokki, sest ehitus-VM-i aadress ei kuulu ühtegi teise masinasse. Selle ploki paneb `site.yml` õigete hostidega igal jooksul. Kui machine-id oleks sama, peaksid malli uuesti ehitama, enne kui sellest ühtki VM-i teed.
+motd ja grupp `labops` tõestavad, et roll `common` käivitus ehituse ajal ja tulemus jäi malli. Erinev machine-id dev01-l ja web01-l tõestab, et koristus töötas. `/etc/hosts`-is pole Labori seisu plokki, sest ehitus-VM-i aadress ei kuulu ühtegi teise masinasse. Selle ploki paneb `site.yml` õigete hostidega igal käivitusel. Kui machine-id oleks sama, peaksid malli uuesti ehitama, enne kui sellest ühtki VM-i teed.
 
 ✅ **Edasi saad minna, kui** dev01 vastas `kasutaja`-na, motd ja `labops` olid olemas, machine-id erines web01 omast, dev01 on kustutatud ja `tofu workspace show` annab `default`.
 
 ## Vii uus mall esmalt ühele hostile
 
-dev01 tõestas, et mall boodib ja identiteet on puhas. See ei tõesta, et teenus töötab uue malli peal koos ülejäänud Labori seisuga. Tootmises läheb uus mall esmalt ühele hostile, mille rike on piiratud, ja ülejäänud tulevad alles siis, kui see host on teenuses. Siin on see host rmq01.
+dev01 tõestas, et mall käivitub ja identiteet on puhas. See ei tõesta, et teenus töötab uue malli peal koos ülejäänud Labori seisuga. Tootmises läheb uus mall esmalt ühele hostile, mille rike on piiratud, ja ülejäänud tulevad alles siis, kui see host on teenuses. Siin on see host rmq01.
 
 Piirang: korraga on asendamisel üks host, teised töötavad edasi ja enne järgmist sammu on `/health` UP. Ilma selleta läheb vigane mall kolmele hostile korraga ja rollback on kolm asendust.
 
@@ -199,7 +199,7 @@ Piirang: korraga on asendamisel üks host, teised töötavad edasi ja enne järg
 
 ## Vii Labori seis golden image'ile
 
-Nüüd viid ülejäänud Ubuntu masinad uuele mallile ja paned malli nime koodi. Mall on `clone` ploki osa, nii et `test01` katsetest tead juba, mida plaan sellest arvab. Siin näed, kuidas `up.sh` kaitse ja golden image koos töötavad: kaitse peatab, inimene loeb plaani ja lubab teadlikult.
+Nüüd viid ülejäänud Ubuntu masinad uuele mallile ja paned malli nime koodi. Mall on `clone` ploki osa, nii et `test01` katsetest tead juba, mida plaan selle peale näitab. Siin näed, kuidas `up.sh` kaitse ja golden image koos töötavad: kaitse peatab, inimene loeb plaani ja lubab teadlikult.
 
 Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et keegi plaani loeks, kaovad ka andmed, mis olid VM-i kettal. Meil on andmed ainult db01-l, mis on AlmaLinux ja jääb pilvemallile.
 
@@ -220,7 +220,7 @@ Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et
 
 4. Võrdle `NOTES.md`-s seda aega esimese `time ./up.sh` tulemusega ja Ansible'i `PLAY RECAP`-i `changed` arvu Ubuntu hostidel.
 
-Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks AlmaLinuxi masinat rahule: rmq01 on juba uuel mallil ja `template_names`-is on ainult `ubuntu`. Pärast seda `apply`-d vastab kood jälle tegelikkusele ja canary aken on suletud. Ansible'i esimene play andis Ubuntu hostidel vähem `changed`-e kui esimesel `up.sh` jooksul, sest kasutajad, motd ja paketid olid juba olemas. `/etc/hosts` plokk ja hosti roll tulevad endiselt Ansible'ist, sest need sõltuvad sellest, millised masinad Labori seisus on.
+Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks AlmaLinuxi masinat rahule: rmq01 on juba uuel mallil ja `template_names`-is on ainult `ubuntu`. Pärast seda `apply`-d vastab kood jälle tegelikkusele ja canary aken on suletud. Ansible'i esimene play andis Ubuntu hostidel vähem `changed`-e kui esimesel `up.sh` käivitusel, sest kasutajad, motd ja paketid olid juba olemas. `/etc/hosts` plokk ja hosti roll tulevad endiselt Ansible'ist, sest need sõltuvad sellest, millised masinad Labori seisus on.
 
 > Rollback käib sama teed teistpidi: eemalda `template_names` või pane eelmise malli nimi ja `ALLOW_DESTROY=1 ./up.sh`. Seepärast ära kustuta eelmist malli enne, kui uus on vähemalt korra Labori seisus töötanud.
 
@@ -228,11 +228,11 @@ Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks AlmaLinuxi masinat 
 
 ## Kaalu golden image'i ja cloud-init'i
 
-Paned kirja otsuse, mis tööl tuleb teha iga paketi ja seade kohta: kas see läheb malli, cloud-init'i esimesse boodi või Ansible'i.
+Paned kirja otsuse, mis tööl tuleb teha iga paketi ja seade kohta: kas see läheb malli, cloud-init'i esimesse käivitusse või Ansible'i.
 
 Kui see otsus jääb tegemata, kasvab mall vaikides ja keegi ei tea enam, milline seade tuleb kust. Siis parandatakse sama viga kahes kohas ja üks parandus jääb järgmisel ehitusel kaotsi.
 
-Kirjuta `NOTES.md`-sse tabel kolme veeruga (Mall, cloud-init boodil, Ansible) ja pane igasse veergu vähemalt kaks oma Labori seisu asja. Tabeli alla kirjuta kolm lauset:
+Kirjuta `NOTES.md`-sse tabel kolme veeruga (Mall, cloud-init esimesel käivitusel, Ansible) ja pane igasse veergu vähemalt kaks oma Labori seisu asja. Tabeli alla kirjuta kolm lauset:
 
 - mis juhtub golden image'iga kuu aja pärast, kui keegi seda uuesti ei ehita;
 - miks IP, võti ja hostinimi ei saa malli minna;

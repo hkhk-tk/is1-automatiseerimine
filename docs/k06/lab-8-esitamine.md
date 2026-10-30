@@ -6,7 +6,7 @@ tags:
 
 # 8. Esitamine
 
-Väljalase, mille sisu keegi enne ei vaadanud, toob kaasa unustatud faile, saladusi repos ja tag'i, mis ei viita sellele, mida testiti. Töö jõuab `main`-i, tag `k06` käivitab automaatse hindaja ja tulemus on GitHubi Releases all. Enne seda käivitad samad kontrollid ise ja vaatad, et ükski saladus ega varukoopia pole Gitis. Järjekord on sama nagu igas väljalaskes: kontrolli ise, vaata, mis täpselt välja läheb, ühenda põhiharuga ja märgi seis tag'iga, millele saab hiljem viidata.
+Väljalase, mille sisu keegi enne ei vaadanud, toob kaasa unustatud faile, saladusi repos ja tag'i, mis ei viita sellele, mida testiti. Töö jõuab `main`-i, tag `k06` käivitab automaatse hindaja ja tulemus on GitHubi Releases all. Enne seda käivitad samad kontrollid ise ja vaatad, et ükski saladus ega varukoopia pole Gitis. Järjekord on sama nagu igas väljalaskes: kontrolli ise, vaata, mis täpselt välja läheb, ühenda põhiharuga ja märgi see versioon tag'iga, millele saab hiljem viidata.
 
 **Kui teed seda tööl iga päev:** `gh pr create`, merge ja tag'i push on sul igapäevane töö. Kui see on sul juba korras, mine otse etappi [„Enne esitamist“](#enne-esitamist).
 
@@ -32,10 +32,10 @@ Tühi `diff` ja tühi `git status` tähendavad, et automaatne hindaja näeb täp
 
 ## Enne esitamist
 
-Nüüd käivitad kõik kontrollid viimase seisu peal ja vaatad üle failide sisu. Pipeline'i tulemust (roheline build, quality gate, WAR Nexuses) see VPN-i tõttu ei näe, selle kontrollib koolitaja klastris ja PR-i tõenditest.
+Nüüd käivitad kõik kontrollid viimase commit'i peal ja vaatad üle failide sisu. Pipeline'i tulemust (roheline build, quality gate, WAR Nexuses) automaatne hindaja VPN-i tõttu ei näe, selle kontrollib koolitaja klastris ja PR-i tõenditest.
 
 1. Võrdle Jenkinsfile'i etappide järjekorda: Build → Test → Checkstyle → SonarQube → Quality Gate → Avaldamine (Nexus ‖ Docker image) → Deploy. Failis on ainult credential ID-d, mitte saladused.
-2. Käivita automaatse hindaja kontrollid viimase seisu peal. Täpne nimekiri on failis `autograde/TESTS.md`.
+2. Käivita automaatse hindaja kontrollid viimase commit'i peal. Täpne nimekiri on failis `autograde/TESTS.md`.
 
     ```bash
     for t in files agent stages triggers quality nexus secrets docker; do
@@ -106,7 +106,7 @@ Märgi iga rida alles siis, kui tõend on PR-i kirjelduses, mitte siis, kui tö�
 - [ ] 2. Triggerid, options ja post: lause webhooki kohta, polling logi, `trigger-jenkins.sh` väljund, kahe buildi põhjuse klassid, `archiveArtifacts` viga ja parandus, kaks `du`, `triggers` `OK`
 - [ ] 3. Quality gate ja Nexus: Sonari projekt, quality gate'i tingimused, ebaõnnestunud tingimus, Nexuse logirida ja ajad, kolm `sha1sum` rida, Nexus Browse, redeploy katse `400`, `quality` + `nexus` + `secrets` `OK`
 - [ ] 4. Image, paralleel ja deploy: `docker image ls` + `docker inspect`, `parallel` ajad, proovi-jobi Graph View, `/version`, kolm buildi (SCM, Paigalda, Abort), konteineri räsi ja healthcheck, `files` + `docker` `OK`
-- [ ] 5. Jenkins koodina: `casc/plugins.txt`, `casc/jenkins.yaml`, `Cannot run program "mvn"`, Maveni logiread, `Git client` sõltuvused, uuendatavad pluginad, viis vastust `klass-jenkins.yaml` kohta, drift'i lause, vigase faili logirida
+- [ ] 5. Jenkins koodina: `casc/plugins.txt`, `casc/jenkins.yaml`, `Cannot run program "mvn"`, Maveni logiread, `Git client` sõltuvused, uuendatavad pluginad, viis vastust `klass-jenkins.yaml` kohta, triivi lause, vigase faili logirida
 - [ ] 6. Õigused, varundus ja taaste: naabri 403, `vaatleja` vaade, `du` + `ls -l` enne ja pärast `chmod`-i, `plugins.txt` diff, taastatud Jenkinsi `credential loetav`, võtmeta taaste tulemus, sandbox ja arhiiv kustutatud
 - [ ] 7. Neli punast buildi: `fix(...)` commit'id, logiread, agendi restart'i kontroll, kaks Nexuse versiooni, intsidendi tabel
 - [ ] 8. Esitamine: tühi `diff`, `NOTES.md` ülekande lausetega, tag `k06`, Releases tulemus

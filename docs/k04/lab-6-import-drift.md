@@ -101,7 +101,7 @@ Drift on muudatus, mille kohta pole otsust. Kui seda ei leia, võtab järgmine `
     ```
 
 4. Otsusta iga muudatuse kohta ja kirjuta otsus koos põhjusega `NOTES.md`-sse:
-    - mc01 peatatud: tagasi koodi seisu (`tofu apply`)
+    - mc01 peatatud: tagasi koodis kirjeldatud olekusse (`tofu apply`)
     - web01 RAM: vali ise, kas tagasi (`tofu apply`) või koodi (`terraform.tfvars`-is `memory = 1024`)
     - `htop`: kelle ala see on ja millise Ansible'i käsuga selle leiaksid?
 
@@ -114,9 +114,9 @@ Drift on muudatus, mille kohta pole otsust. Kui seda ei leia, võtab järgmine `
 </figure>
 -->
 
-`-refresh-only` näitas kahte muudatust, `htop`-i mitte. Tofu näeb ainult seda, mida Proxmoxi API VM-i kohta ütleb, mitte seda, mis on masina failisüsteemis. Selle ala drift'i leiab Ansible: korduv `site.yml` jooks, mis annab `changed`, ütleb sama, mida `-refresh-only` ütleb Proxmoxi kohta.
+`-refresh-only` näitas kahte muudatust, `htop`-i mitte. Tofu näeb ainult seda, mida Proxmoxi API VM-i kohta ütleb, mitte seda, mis on masina failisüsteemis. Selle ala drift'i leiab Ansible: korduv `site.yml` käivitus, mis annab `changed`, ütleb sama, mida `-refresh-only` ütleb Proxmoxi kohta.
 
-> `tofu apply -refresh-only` kirjutaks tegelikkuse state'i, Proxmoxis midagi muutmata. See värskendab ainult state'i: kood tahab järgmisel plaanil ikka oma seisu.
+> `tofu apply -refresh-only` kirjutaks tegelikkuse state'i, Proxmoxis midagi muutmata. See värskendab ainult state'i: kood nõuab järgmisel plaanil ikka koodis kirjeldatud olekut.
 
 ✅ **Edasi saad minna, kui** `-refresh-only` näitas `started` ja `memory` muutust, aga mitte `htop`-i, `NOTES.md`-s on kolm otsust ja `tofu plan` ütleb "No changes".
 
@@ -130,7 +130,7 @@ Nõuded:
 
 - `env/dev.tfvars`: `vms` ainult `dev01`-ga (`vm_id` = `IS1_VMID_BASE` + 9, IP `.19`, Ubuntu, 512 MB, grupp `web`) ja `inventory_path = "../k02-ansible/inventory-dev.ini"`
 - `local_file.inventory` `lifecycle`-is `precondition`: põhi-inventory't (`inventory.ini`) tohib kirjutada ainult workspace `default`
-- repo juure `.gitignore`-is `k02-ansible/inventory-dev.ini`
+- repositooriumi juurkausta `.gitignore`-is `k02-ansible/inventory-dev.ini`
 - `backend.hcl`-is on `workspace_key_prefix = "<github>/env"` (lisasid selle state'i bucketisse viies)
 
 1. Tee workspace ja proovi plaani kõigepealt ilma dev-failita.
@@ -189,4 +189,4 @@ git push
 
 **Workspace'i piir.** Kui dev- ja tootmiskeskkond vajavad eri õigusi, eri bucketit või eri provider'it, ei piisa workspace'ist. Siis on vaja eraldi kausta või kontot, sest workspace ei eralda ligipääsuõigusi.
 
-Kui jõudsid kiiremini: [Lisaülesanded → 5. Ketas kasvab lõpuni](lisa.md#5-ketas-kasvab-lopuni), otsustad drift'i üle, mida ei saa koodi seisu tagasi võtta, ja kasvatad failisüsteemi töötaval masinal.
+Kui jõudsid kiiremini: [Lisaülesanded → 5. Ketas kasvab lõpuni](lisa.md#5-ketas-kasvab-lopuni), otsustad drift'i üle, mida ei saa koodis kirjeldatud olekusse tagasi viia, ja kasvatad failisüsteemi töötaval masinal.

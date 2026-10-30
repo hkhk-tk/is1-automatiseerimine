@@ -12,7 +12,7 @@ hide:
 
 # IT-infrastruktuuri automatiseerimine&nbsp;I
 
-Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi tööst ja jõuad selleni, et rakenduse paigaldus, taristu, tarne ja käitus on kood, mida saab korrata ja kontrollida.
+Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad käsitsi tehtud Linuxi tööst ja jõuad selleni, et rakenduse paigaldus, taristu, tarne ja käitus on kood, mida saab korrata ja kontrollida.
 
 [Alusta siit](00-ulevaade/keskkond.md){ .md-button .md-button--primary } [Vaata õppepäevi](#oppepaevad){ .md-button }
 
@@ -62,7 +62,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **Linuxi haldusest automatiseerimiseni**
 
-    Sama ülesanne käsitsi, Bashiga ja Ansible'iga.
+    Lahendad sama ülesande käsitsi, Bashiga ja Ansible'iga.
 
     [Ava õppepäev →](k01/index.md)
 
@@ -70,7 +70,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **Ansible mitmele masinale**
 
-    Muutujad, mallid, handler'id ja rollid; üks käsk seadistab kogu labori.
+    Muutujad, mallid, handler'id ja rollid. Päeva lõpuks seadistab üks käsk kogu labori.
 
     [Ava õppepäev →](k02/index.md)
 
@@ -78,7 +78,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **Docker ja Podman**
 
-    Rakendus koos vajaliku käituskeskkonnaga.
+    Pakid rakenduse koos vajaliku käituskeskkonnaga konteinerisse.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -86,7 +86,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **OpenTofu (Terraform)**
 
-    Virtuaalmasinad koodis kirjeldatud plaani järgi.
+    Lood virtuaalmasinad koodis kirjeldatud plaani järgi.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -102,7 +102,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **Jenkins, SonarQube ja Nexus**
 
-    Kvaliteedivärav ja versioonitud artefakt.
+    Pipeline kvaliteediväravaga ja versioonitud artefakt.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -110,7 +110,7 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 
     **Kubernetes ja GitOps**
 
-    Rakendus klastris, Git on tõe allikas.
+    Rakendus töötab klastris ja Git on tõe allikas.
 
     <span class="tuleb">Avaneb enne kohtumist</span>
 
@@ -134,6 +134,6 @@ Seitse kohtumist, üks kasvav automaatika. Alustad käsitsi tehtud Linuxi töös
 </svg>
 </figure>
 
-Iga kohtumine on loeng, praktikum ja lühike kodutöö. Töö on sinu GitHubi repos ja automaatne hindaja kontrollib seda iga `git push`-i järel. Täpsemalt: [Töö repos ja hindamine](00-ulevaade/too-ja-hindamine.md).
+Iga kohtumine on loeng, praktikum ja lühike kodutöö. Töö on sinu GitHubi repositooriumis ja automaatne hindaja kontrollib tag'iga esitatud versiooni. Täpsemalt: [Töö repositooriumis ja hindamine](00-ulevaade/too-ja-hindamine.md).
 
 </div>

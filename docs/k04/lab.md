@@ -6,7 +6,7 @@ tags:
   - Ansible
 ---
 
-# 4. kohtumine, labor: OpenTofu (Terraform) Proxmoxis
+# 4. kohtumine · Praktikum: OpenTofu (Terraform) Proxmoxis
 
 !!! info "Selle korra töö"
     - **Masin:** control node `ssh kasutaja@10.10.<nr>.10`, töökaust `~/labori-seis/k04-tofu`, märkmed `k04-tofu/NOTES.md`
@@ -14,11 +14,11 @@ tags:
     - **Esitamine:** haru `k04-tofu` → PR → merge → tag `k04`
     - **Eelmisest korrast vaja:** `main`-is 2. kohtumise kaust `k02-ansible/` (`site.yml`, `ansible.cfg`, rollid, roll `common` ootab cloud-init'i), Vault'i parool
     - **Vaja koolitajalt:** `~/.config/is1/proxmox.env` (ajutine API token, kehtib 5. kohtumise eelõhtuni) ja `~/.config/is1/s3.env` control node'il, intsidendiülesande käivitamine
-    - **Packer:** paigaldad golden image'i ülesandes control node'ile (HashiCorpi apt-repo), pluginad `hashicorp/proxmox` ja `hashicorp/ansible`
+    - **Packer:** paigaldad golden image'i ülesandes control node'ile (HashiCorpi apt-paketihoidla), pluginad `hashicorp/proxmox` ja `hashicorp/ansible`
     - **Testitud:** OpenTofu 1.12.6 (S3 lukk `use_lockfile` vajab 1.10+), `bpg/proxmox` 0.115.x, `hashicorp/local` 2.5.x, Proxmox VE 8.x / 9.x, mallid Ubuntu 24.04 ja AlmaLinux 9 GenericCloud Base, S3 backend Garage; lisaülesannetes `kreuzwerker/docker` `~> 3.6`, `hashicorp/helm` `~> 3.0` (vanemates on `kubernetes` plokk), Terraform 1.7+ (`terraform test` koos `mock_provider`-iga), Conftest 0.62 (OPA 1.6); Packer koos pluginatega, Garage ja `hashicorp/kubernetes` kursuse VM-i versioonis
     - **Dokumentatsioon:** [OpenTofu](https://opentofu.org/docs/) · [bpg/proxmox provider](https://registry.terraform.io/providers/bpg/proxmox/latest/docs) · [Packer](https://developer.hashicorp.com/packer/docs) · [Terraform](https://developer.hashicorp.com/terraform/docs) · [Proxmox VE](https://pve.proxmox.com/pve-docs/)
 
-Koolitaja kustutas enne seda kohtumist sinu web01…db01, control node jäi alles. Kohtumise lõpuks on viis VM-i koodis, moodulis ja testitud, state on bucketis lukuga ning `./up.sh` tõstab Labori seisu nullist üles koos Ansible'i rollidega. Ubuntu masinad tulevad Packeriga ehitatud golden image'ist, kus roll `common` on juba sees. db01 on kustutamise eest kaitstud, käsitsi loodud VM on koodi alla toodud, drift on leitud ja otsustatud ning sa oled taastanud stacki, mille state ja tegelikkus läksid lahku.
+Koolitaja kustutas enne seda kohtumist sinu web01…db01, control node jäi alles. Kohtumise lõpuks on viis VM-i koodis, moodulis ja testitud, state on bucketis lukuga ning `./up.sh` loob Labori seisu nullist uuesti koos Ansible'i rollidega. Ubuntu masinad tulevad Packeriga ehitatud golden image'ist, kus roll `common` on juba sees. db01 on kustutamise eest kaitstud, käsitsi loodud VM on koodi alla toodud, drift on leitud ja otsustatud ning sa oled taastanud stacki, mille state ja tegelikkus läksid lahku.
 
 Töö käib igas moodulis sama rütmiga: kirjutad ennustuse `NOTES.md`-sse, loed plaani, teed `apply` ja kontrollid tulemust teisest kohast kui Tofu ise (UI, VM-i sees, Ansible, `/health`). Mitu etappi on katsed, mille plaani ainult loed. Need näitavad, mida Tofu teeks, ilma et midagi katki läheks.
 

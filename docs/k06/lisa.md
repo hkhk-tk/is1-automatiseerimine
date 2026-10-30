@@ -936,7 +936,7 @@ Vihje: juhendi [Shared Libraries](https://www.jenkins.io/doc/book/pipeline/share
 
 ## Võrguinsenerile
 
-Rada jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21, image [3. kohtumise lisa 15](../k03/lisa.md#15-vorgukogu-konteineris)). Jenkins teeb siin sama, mida võrgutiimis teeb RANCID või Oxidized: igal ööl võtab ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
+Rada jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21, image [3. kohtumise lisa 15](../k03/lisa.md#15-vorgukogu-konteineris)). Jenkins teeb siin sama, mida võrgumeeskondades teevad RANCID või Oxidized: kogub igal ööl ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
 
 ### 17. vorgukogu öösel Jenkinsiga
 
@@ -1064,7 +1064,7 @@ git -C ~/vork-konf pull -q && git -C ~/vork-konf log --stat -1
     echo "OK: commit $(git rev-parse --short HEAD) (${hosts% })"
     ```
 
-    Täislahendus: `labori-seis/deploy/lisa-lahendused/k06/vork-jenkins/`. Kontrollitud: ShellCheck, `varunda.sh` kohaliku bare-repo'ga (tühi repo, muutuseta jooks, ühe ruuteri muudatus, puuduv ruuter ei kustuta tema faile). Kontrollimata: Jenkinsfile Jenkinsis ja `docker run` agendil.
+    Täislahendus: `labori-seis/deploy/lisa-lahendused/k06/vork-jenkins/`. Kontrollitud: ShellCheck, `varunda.sh` kohaliku bare-repo'ga (tühi repo, muutuseta käivitus, ühe ruuteri muudatus, puuduv ruuter ei kustuta tema faile). Kontrollimata: Jenkinsfile Jenkinsis ja `docker run` agendil.
 
 ## Arutelu
 

@@ -9,7 +9,7 @@ tags:
 
 Kaskaadis kaotab kõige rohkem aega see, kes parandab esimest nähtud sümptomit: `dependency failed to start` ütleb, et midagi ahelas on katki, aga mitte, mis. Failis `k03-docker/intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident` pordil 8090, sinu image'itega, ja selles on kolm viga eri kohtades. Liigu väljast sisse nagu tootmisintsidendis: sümptomist põhjuseni, parandus failis, mitte töötavas konteineris, ja uuesti luuakse ainult need teenused, mida parandus puudutab. Kiirus pole eesmärk, iga järeldus peab põhinema käsu väljundil, mitte oletusel. Lõpuks on kolm parandust koodis ja tõend, et need peavad vastu ka uuel masinal ja daemoni restardil.
 
-**Kui teed seda tööl iga päev:** Compose'i stacki veaotsingu alustad `docker compose ps -a` ja `docker inspect -f '{{json .State.Health}}'`-iga ning tead, mida `depends_on` daemoni restardil ei tee. Kui see on sul juba korras, paranda kolm riket ilma tabelita ja mine otse etappi „[Hooldusreboot: stack tõuseb ise](#hooldusreboot-stack-touseb-ise)“.
+**Kui teed seda tööl iga päev:** Compose'i stacki veaotsingu alustad `docker compose ps -a` ja `docker inspect -f '{{json .State.Health}}'`-iga ning tead, mida `depends_on` daemoni restardil ei tee. Kui see on sul juba korras, paranda kolm riket ilma tabelita ja mine otse etappi „[Hoolduse järgne taaskäivitus: stack käivitub ise](#hoolduse-jargne-taaskaivitus-stack-kaivitub-ise)“.
 
 Veaotsingu tabelit L3.7 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
 
@@ -109,11 +109,11 @@ Parandus peab hoidma `front`- ja `back`-võrgu jaotuse. Lahendus, mis paneb kõi
 
 ✅ **Edasi saad minna, kui** web01 on `(healthy)` ja `curl -s localhost:8090/health` annab `"status":"UP"`. Esita see commit'ina `fix(intsident): web01 …`.
 
-## Hooldusreboot: stack tõuseb ise
+## Hoolduse järgne taaskäivitus: stack käivitub ise
 
-Kolm riket on parandatud, aga stack elab ainult seni, kuni keegi daemonit ei puutu. Hooldusaknas taaskäivitatakse Docker või kogu VM. Kontrolli, kas intsidendistack tuleb sellest tagasi ilma sinu käeta. Samal ajal peab hoolduseks käsitsi peatatud teenus jääma seisma.
+Kolm riket on parandatud, aga stack töötab ainult seni, kuni keegi daemonit ei puutu. Hooldusaknas taaskäivitatakse Docker või kogu VM. Kontrolli, kas intsidendistack tuleb sellest tagasi ilma sinu käeta. Samal ajal peab hoolduseks käsitsi peatatud teenus jääma seisma.
 
-`live-restore` on vaikimisi välja lülitatud, nii et `systemctl restart docker` peatab kõik hosti konteinerid. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i: see kehtib ainult `docker compose up`-i ajal. Konteinerid tõusevad seega korraga ja suvalises järjekorras.
+`live-restore` on vaikimisi välja lülitatud, nii et `systemctl restart docker` peatab kõik hosti konteinerid. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i: see kehtib ainult `docker compose up`-i ajal. Konteinerid käivituvad seega korraga ja suvalises järjekorras.
 
 1. Peata mc01, nagu hoolduseks, ja taaskäivita daemon. Pärast seda ära anna ühtegi `dci` käsku peale `ps`-i.
 
@@ -126,17 +126,17 @@ Kolm riket on parandatud, aga stack elab ainult seni, kuni keegi daemonit ei puu
 2. Paranda fail nende nõuete järgi:
     - pärast daemoni restarti on db01, rmq01, app01 ja web01 `healthy` 120 s jooksul ilma käsitsi sekkumiseta;
     - käsitsi peatatud mc01 jääb `Exited` olekusse;
-    - app01 ja web01 taluvad seda, et sõltuvus tõuseb neist hiljem: kumbagi ei tohi käsitsi taaskäivitada;
+    - app01 ja web01 taluvad seda, et sõltuvus käivitub neist hiljem: kumbagi ei tohi käsitsi taaskäivitada;
     - nõue on kirjas ühes kohas, mitte viie teenuse juures eraldi.
 3. Uuenda stacki (`dci up -d --wait`), korda sammu 1 käske ja lõpuks käivita mc01: `dci start mc01`.
 
-Kui stack ei tõusnud, vaata enne faili muutmist iga konteineri poliitikat: `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)`. Kui mc01 tõusis koos teistega, on poliitika vale. Kui app01 oli `Up`, aga `unhealthy` ka siis, kui db01 oli juba `healthy`, on viga rakenduses: see ei talu sõltuvuse puudumist.
+Kui stack ei käivitunud, vaata enne faili muutmist iga konteineri poliitikat: `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)`. Kui mc01 käivitus koos teistega, on poliitika vale. Kui app01 oli `Up`, aga `unhealthy` ka siis, kui db01 oli juba `healthy`, on viga rakenduses: see ei talu sõltuvuse puudumist.
 
 ✅ **Edasi saad minna, kui** teine restart andis 120 s pärast neli `healthy` teenust ja mc01 olekuga `Exited`, `/health` pordil 8090 andis HTTP 200 ja `"cache":"DOWN"` ning pärast `dci start mc01` `"cache":"UP"`. Esita see commit'ina `fix(intsident): restart-poliitika …` ja kirjuta sõnumisse, miks valisid just selle poliitika.
 
 ## Stack nullist
 
-Viimane kontroll kustutab konteinerid ja käivitab stacki nullist. Kui stack tõuseb ilma sinu käeta, on parandused failis, mitte töötavates konteinerites.
+Viimane kontroll kustutab konteinerid ja käivitab stacki nullist. Kui stack käivitub ilma sinu sekkumiseta, on parandused failis, mitte töötavates konteinerites.
 
 ```bash
 dci down && dci up -d --wait

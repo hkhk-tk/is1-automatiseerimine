@@ -10,10 +10,10 @@ tags:
 !!! abstract "Eesmärgid"
 
     - paigaldad nginx-i grupi `veeb` masinatesse;
-    - teed veebilehe ja nginx-i seadistuse mallist;
-    - laadid nginx-i uuesti ainult siis, kui seadistus muutus (handler).
+    - lood veebilehe ja nginx-i konfiguratsiooni mallist;
+    - laadid nginx-i konfiguratsiooni uuesti ainult siis, kui see muutus (handler).
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k02`.
+Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
 
 ## A1 · Mallid
 
@@ -100,7 +100,7 @@ Fail `veeb.yml`:
 
 ```bash
 ansible-playbook veeb.yml --syntax-check
-ansible-playbook veeb.yml -K
+ansible-playbook veeb.yml
 ```
 
 ??? success "Oodatav tulemus"
@@ -113,7 +113,7 @@ ansible-playbook veeb.yml -K
     changed: [app01]
     ```
 
-    Handler käis üks kord masina kohta, kuigi teda teavitasid kaks ülesannet.
+    Handler käivitati igas masinas üks kord, kuigi seda teavitasid kaks ülesannet.
 
 ## A3 · Kontrolli
 
@@ -125,35 +125,35 @@ ssh app01 curl -s http://localhost | grep Masin
 
 ??? success "Oodatav tulemus"
 
-    `nginx -t`: `syntax is ok` ja `test is successful`. web01 lehel on pealkiri `IS1 labor · peamine veebiserver` (`host_vars`), app01 lehel `Masin: app01 (Ubuntu 24.04)`.
+    Käsk `nginx -t` väljastab `syntax is ok` ja `test is successful`. web01 veebilehel on pealkiri `IS1 labor · peamine veebiserver` (`host_vars`), app01 veebilehel `Masin: app01 (Ubuntu 24.04)`.
 
     VPN-iga saad lehte vaadata ka brauseris: `http://<web01-ip>/`.
 
 ## A4 · Teine käivitus ja handler
 
 ```bash
-ansible-playbook veeb.yml -K
+ansible-playbook veeb.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    `changed=0` ja handler'it ei käivitata: rida `RUNNING HANDLER` puudub.
+    Kokkuvõttes on `changed=0` ja handler'it ei käivitata: väljundis puudub rida `RUNNING HANDLER`.
 
-Muuda nüüd ainult veebilehte: `group_vars/veeb.yml`-is `veeb_pealkiri: "IS1 labor 2"`. Ennusta enne: kas handler käivitub?
+Muuda nüüd ainult veebilehte: määra failis `group_vars/veeb.yml` väärtuseks `veeb_pealkiri: "IS1 labor 2"`. Enne käivitamist ennusta, kas handler käivitub.
 
 ```bash
-ansible-playbook veeb.yml -K
+ansible-playbook veeb.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    `Veebileht on olemas` on app01-l `changed` (web01-l jääb `host_vars` väärtus). Handler ei käivitu: veebileht ei teavita handler'it, sest nginx loeb faili igal päringul ise. Uuesti laadimist on vaja ainult seadistuse muutumisel.
+    Ülesande `Veebileht on olemas` tulemus on app01-s `changed`, web01-s jääb kehtima `host_vars` väärtus. Handler ei käivitu, sest veebilehe ülesanne handler'it ei teavita: nginx loeb lehe faili igal päringul uuesti. Konfiguratsiooni on vaja uuesti laadida ainult siis, kui konfiguratsioon muutub.
 
-Muuda nüüd port: `veeb_port: 8080`, käivita, kontrolli `ssh app01 curl -s http://localhost:8080 | grep Masin`, siis pane tagasi `80` ja käivita uuesti.
+Muuda nüüd porti: määra `veeb_port: 8080`, käivita playbook ja kontrolli tulemust käsuga `ssh app01 curl -s http://localhost:8080 | grep Masin`. Seejärel taasta väärtus `80` ja käivita playbook uuesti.
 
 ??? success "Oodatav tulemus"
 
-    Seadistuse muutus käivitas handler'i `reload nginx`; leht vastab pordil 8080. Pärast tagasipanekut vastab jälle pordil 80.
+    Konfiguratsiooni muutus käivitas handler'i `reload nginx` ja leht vastab pordil 8080. Pärast väärtuse taastamist vastab leht jälle pordil 80.
 
 ## A5 · Commit
 
@@ -164,7 +164,7 @@ git commit -m "k02: veebiserver malli ja handler'iga"
 git push
 ```
 
-**Valmis, kui** web01 ja app01 näitavad oma nime ja teine käivitus annab `changed=0` ilma handler'ita.
+**Valmis, kui** web01 ja app01 veebilehel on masina nimi ning teisel käivitusel on `changed=0` ja handler'it ei käivitata.
 
 ??? info "Loe juurde"
 

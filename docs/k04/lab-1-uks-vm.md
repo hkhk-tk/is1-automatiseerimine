@@ -28,7 +28,7 @@ Tokenil on sinu pool'is samad õigused kui sinu kasutajal ja Proxmoxi task-logis
     tofu version
     ```
 
-2. Kui `tofu` puudub või on vanem kui 1.10, paigalda see [ametliku skriptiga](https://opentofu.org/docs/intro/install/) deb-repost. Loe skript enne käivitamist läbi.
+2. Kui `tofu` puudub või on vanem kui 1.10, paigalda see [ametliku skriptiga](https://opentofu.org/docs/intro/install/) deb-paketihoidlast. Loe skript enne käivitamist läbi.
 
     ```bash
     curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
@@ -91,7 +91,7 @@ Esimene `validate` ebaõnnestub, sest provider on laadimata. Järjekord jääb k
 
 Nüüd lood esimese ressursi. Argumente on meelega vähe, kõik muu tuleb mallist. Nii näed, mida mall juba annab ja mida pead hiljem ise kirjutama.
 
-Ennustus enne plaani on harjumus, mis päästab tootmises. Kui sa ei tea, mida ootad, ei märka sa ka plaani rida, mis sinna ei kuulu.
+Ennustuse kirjutamine enne plaani on tootmises kasulik harjumus. Kui sa ei tea, mida ootad, ei märka sa ka plaani rida, mis sinna ei kuulu.
 
 Lisa ressurss [`proxmox_virtual_environment_vm`](https://search.opentofu.org/provider/bpg/proxmox/latest/docs/resources/virtual_environment_vm) nimega `test01`.
 
@@ -143,7 +143,7 @@ Kui VM kaob või muutub öösel, otsitakse süüdlast kõigepealt Proxmoxi task-
 
 Plaani kõige ohtlikum osa ütleb, kas muudatus tehakse olemasolevale VM-ile või tehakse VM uuesti. Tee kolm muudatust ükshaaval. Iga kord kirjuta enne ennustus `NOTES.md`-sse ja loe plaanist kõigepealt `destroy` read.
 
-Tootmises tähendab `-/+` andmebaasi masinal kadunud andmeid. Plaan ütleb selle ausalt ette, aga ainult sellele, kes plaani loeb.
+Tootmises tähendab `-/+` andmebaasi masinal kadunud andmeid. Plaan näitab seda ette, kuid ainult sellele, kes plaani loeb.
 
 1. Lisa `memory { dedicated = 768 }`, siis `tofu plan` ja `tofu apply`.
 2. Lisa `cpu { cores = 1, type = "x86-64-v2-AES" }` ja `agent { enabled = true, timeout = "3m" }`, siis `tofu plan` ja `tofu apply`.
@@ -180,13 +180,13 @@ Lisa `test01`-le `initialization` ja `network_device` plokk ([Proxmoxi cloud-ini
 
 `NOTES.md`-sse: miks ssh ei vasta? Vastus on lehe lõpus lõigus [Miks see nii töötab](#miks-see-nii-tootab).
 
-Siin lähevad "Apply complete" ja töötav masin esimest korda lahku. Tofu tegi oma töö õigesti: Proxmoxi seadistus muutus ja UI näitab seda. VM-i sees pole aga midagi juhtunud, sest keegi ei käivitanud cloud-init'i uuesti.
+Siin lähevad teade "Apply complete" ja masina tegelik olek esimest korda lahku. Tofu tegi oma töö õigesti: Proxmoxi seadistus muutus ja UI näitab seda. VM-i sees pole aga midagi juhtunud, sest keegi ei käivitanud cloud-init'i uuesti.
 
 ✅ **Edasi saad minna, kui** plaan oli `~ update in-place`, Cloud-Init vahekaardil on IP ja kasutaja ning `NOTES.md`-s on põhjus, miks ssh ei vasta.
 
 ## Tee VM uuesti
 
-cloud-init seadistab masina esimesel boodil, nii et muudatus jõuab VM-i alles siis, kui masin tehakse uuesti.
+cloud-init seadistab masina esimesel käivitusel, nii et muudatus jõuab VM-i alles siis, kui masin tehakse uuesti.
 
 Iga asendus annab samale IP-le uue host key. Et `ssh-keygen -R` ei muutuks pimesi kinnitamiseks, võrdled sõrmejälge kanalist, mis ei käi läbi sama võrgu.
 
@@ -199,11 +199,11 @@ Iga asendus annab samale IP-le uue host key. Et `ssh-keygen -R` ei muutuks pimes
     ssh-keygen -l -F <IS1_NET>.19
     ```
 
-2. Ava UI-s `test01` → **Console** ja keri boodi väljundis plokini `BEGIN SSH HOST KEY FINGERPRINTS`. Võrdle ED25519 rida sammu 1 viimase käsu väljundiga.
+2. Ava UI-s `test01` → **Console** ja keri käivituse väljundis plokini `BEGIN SSH HOST KEY FINGERPRINTS`. Võrdle ED25519 rida sammu 1 viimase käsu väljundiga.
 
 `-replace` näitab asendust kohe plaanis; vana `taint` töötab ka, aga ei näita mõju enne.
 
-Konsool tuleb Proxmoxi API kaudu, mitte VM-i võrgust. Sõrmejäljed väljastab sinna cloud-init'i moodul `keys_to_console` esimese boodi lõpus.
+Konsool tuleb Proxmoxi API kaudu, mitte VM-i võrgust. Sõrmejäljed väljastab sinna cloud-init'i moodul `keys_to_console` esimese käivituse lõpus.
 
 <!-- EKRAANIPILT: Proxmoxi UI, AlmaLinuxi VM (nt ajutine test AlmaLinuxi mallist ilma cpu.type'ita) → Console (xterm.js/serial). Näha kerneli viga, et CPU ei toeta x86-64-v2 (nt "Fatal glibc error: CPU does not support x86-64-v2" või kernel panic). Tehakse ettevalmistusel, mitte õppija sammuna.
 <figure markdown="span">
@@ -212,7 +212,7 @@ Konsool tuleb Proxmoxi API kaudu, mitte VM-i võrgust. Sõrmejäljed väljastab 
 </figure>
 -->
 
-> Kui `apply` ootab "waiting for QEMU agent" kuni timeout'ini ja ebaõnnestub, ava UI-s VM-i konsool ja vaata, kas masin boodib. AlmaLinux vajab `cpu.type = "x86-64-v2-AES"`.
+> Kui `apply` ootab "waiting for QEMU agent" kuni timeout'ini ja ebaõnnestub, ava UI-s VM-i konsool ja vaata, kas masin käivitub. AlmaLinux vajab `cpu.type = "x86-64-v2-AES"`.
 
 ✅ **Edasi saad minna, kui** `ssh kasutaja@<IS1_NET>.19 hostname` vastab `test01` ilma parooli küsimata ja konsooli ED25519 sõrmejälg klapib `ssh-keygen -l -F` väljundiga.
 
@@ -250,7 +250,7 @@ Leia vastused ja kirjuta käsud koos vastustega `NOTES.md`-sse ([cloud-init doku
 
 VM kaob koodiga ja Giti läheb ainult see, mis sinna kuulub. Kood jääb alles, sest viis VM-i tulevad sama kujuga.
 
-Unustatud test-VM sööb pool'i RAM-i ja viie VM-i `apply` ebaõnnestub kvoodi taha. Giti sattunud `.terraform/` teeb repo suureks, state'iga lekivad masinate andmed.
+Unustatud test-VM kasutab pool'i RAM-i ja viie VM-i `apply` ebaõnnestub, sest kvoot saab täis. Giti sattunud `.terraform/` teeb repositooriumi suureks, state'iga lekivad masinate andmed.
 
 1. Kustuta `test01`, data source jääb alles.
 
@@ -259,7 +259,7 @@ Unustatud test-VM sööb pool'i RAM-i ja viie VM-i `apply` ebaõnnestub kvoodi t
     tofu state list
     ```
 
-2. Lisa repo juure `.gitignore`-i read `k04-tofu/**/.terraform/` ja `k04-tofu/**/*.tfstate*`, siis commit.
+2. Lisa repositooriumi juurkausta `.gitignore`-i read `k04-tofu/**/.terraform/` ja `k04-tofu/**/*.tfstate*`, siis commit.
 
     ```bash
     cd ~/labori-seis
@@ -283,16 +283,16 @@ Unustatud test-VM sööb pool'i RAM-i ja viie VM-i `apply` ebaõnnestub kvoodi t
 
 **Full clone.** Full clone kopeerib malli ketta ja VM ei sõltu pärast loomist mallist. Linked clone oleks kiirem ja võtaks vähem ruumi, aga seob VM-i malliga: malli ei saa kustutada, kuni sellest tehtud VM-id on alles.
 
-**Cloud-init ja `-replace`.** cloud-init saab seadistuse väikeselt virtuaalselt CD-lt, millel on `user-data`, `network-config` ja `meta-data` koos `instance-id`-ga. Kui `instance-id` on sama mis eelmisel boodil, peab cloud-init masinat juba seadistatuks ega seadista võrku ja kasutajaid uuesti. Seepärast jõuab cloud-init'i draivi muudatus VM-i alles pärast `-replace`-i, mis loob VM-i uuesti. Iga `-replace` annab VM-ile uue host key, nii et `known_hosts`-ist tuleb vana rida eemaldada.
+**Cloud-init ja `-replace`.** cloud-init saab seadistuse väikeselt virtuaalselt CD-lt, millel on `user-data`, `network-config` ja `meta-data` koos `instance-id`-ga. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ega seadista võrku ja kasutajaid uuesti. Seepärast jõuab cloud-init'i draivi muudatus VM-i alles pärast `-replace`-i, mis loob VM-i uuesti. Iga `-replace` annab VM-ile uue host key, nii et `known_hosts`-ist tuleb vana rida eemaldada.
 
-**QEMU agent.** `qemu-guest-agent` räägib hüperviisoriga virtio-serial kanali kaudu (VM-is seade `/dev/virtio-ports/org.qemu.guest_agent.0`) ja annab Proxmoxile VM-i IP. Provider ootab agenti vaikimisi 15 minutit. Meil on timeout 3 minutit, et katkine boot annaks vea kiiresti.
+**QEMU agent.** `qemu-guest-agent` suhtleb hüperviisoriga virtio-serial kanali kaudu (VM-is seade `/dev/virtio-ports/org.qemu.guest_agent.0`) ja annab Proxmoxile VM-i IP. Provider ootab agenti vaikimisi 15 minutit. Meil on timeout 3 minutit, et katkine boot annaks vea kiiresti.
 
 <figure markdown="span">
   ![Viis sammu: kloon, riistvara, cloud-init draiv, esimene boot, agent teatab IP](assets/k04_kloon_ja_boot.svg)
   <figcaption>Joonis L4.4. Mis juhtub ühe VM-iga <code>tofu apply</code> ajal. Sammud 1–3 teeb Tofu API kaudu, samm 4 toimub VM-i sees, sammus 5 jõuab IP agendi kaudu state'i.</figcaption>
 </figure>
 
-**Provider kui protsess.** `tofu init` laeb provider'i kausta `.terraform/providers/…`. See on Go binaar, mille Tofu käivitab alamprotsessina ja millega ta räägib gRPC kaudu. Tofu ise ei tea Proxmoxist midagi, kogu API tundmine on provider'is.
+**Provider kui protsess.** `tofu init` laeb provider'i kausta `.terraform/providers/…`. See on Go binaar, mille Tofu käivitab alamprotsessina ja millega ta suhtleb gRPC kaudu. Tofu ise ei tea Proxmoxist midagi, kogu API tundmine on provider'is.
 
 **`.terraform/` ja lukufail.** Kaust `.terraform/` on uuesti allalaaditav ja provider'ite binaarfailide tõttu suur (`bpg/proxmox`-iga kümneid megabaite). `.terraform.lock.hcl` on mõne kilobaidi suurune ja määrab, millised täpsed provider'i versioonid ja kontrollsummad projekti kuuluvad. Seepärast läheb Giti ainult lukufail.
 
@@ -304,6 +304,6 @@ Unustatud test-VM sööb pool'i RAM-i ja viie VM-i `apply` ebaõnnestub kvoodi t
 
 **`serial` ja `lineage`.** `serial` on state'i versiooninumber ja kasvab iga muutva `apply`-ga. `lineage` on state'i loomisel määratud püsiv unikaalne ID. Kaks faili sama `lineage`-iga on sama state'i eri versioonid, eri `lineage`-iga failid on eri state'id. State on ainus koht, kus on kirjas, et koodi `test01` on Proxmoxis kindel VM ID. Avaliku võtme hoidmine state'is on ohutu, aga samasse kohta jõuaks ka parool, kui see oleks ressursi argument.
 
-**Provisioner.** Provisioner käivitub ainult ressursi loomisel ja Tofu ei salvesta selle tulemust state'i. Tofu ei tea, mida skript tegi, ega märka, et skript muutus: plaan ütleb "No changes". Masina sisu jääb Tofule nähtamatuks ja ainus viis seda uuendada on masin uuesti teha. Ansible kontrollib sama faili igal käivitusel ja näitab erinevust `changed`-ina. OpenTofu dokumentatsioon nimetab provisioner'eid viimaseks abinõuks ([provisioner'id](https://opentofu.org/docs/language/resources/provisioners/syntax/)): mis peab olema igas masinas, kuulub malli, esimese boodi töö cloud-init'ile ja seadistus Ansible'ile.
+**Provisioner.** Provisioner käivitub ainult ressursi loomisel ja Tofu ei salvesta selle tulemust state'i. Tofu ei tea, mida skript tegi, ega märka, et skript muutus: plaan ütleb "No changes". Masina sisu jääb Tofule nähtamatuks ja ainus viis seda uuendada on masin uuesti teha. Ansible kontrollib sama faili igal käivitusel ja näitab erinevust `changed`-ina. OpenTofu dokumentatsioon nimetab provisioner'eid viimaseks abinõuks ([provisioner'id](https://opentofu.org/docs/language/resources/provisioners/syntax/)): mis peab olema igas masinas, kuulub malli, esimese käivituse töö cloud-init'ile ja seadistus Ansible'ile.
 
 Kui jõudsid kiiremini: [Lisaülesanded → 1. Validate'i ja plaani piirid](lisa.md#1-validatei-ja-plaani-piirid), tekitad igale kontrolli etapile vea, mida ainult see etapp leiab.

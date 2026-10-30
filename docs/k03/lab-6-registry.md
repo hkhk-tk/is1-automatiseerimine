@@ -78,7 +78,7 @@ Mõlemal tag'il on sama digest: nimi on erinev, sisu sama. `pull` digesti järgi
 
 ## Stack registry'st
 
-Kustutad oma image'id lokaalselt ja käivitad stacki ainult registry'st: nii käivitavad rakenduse GitHub Actionsi pipeline ja Kubernetese klaster. Kui stack tõuseb ilma ühegi lokaalse build'ita, on registry's kõik vajalik ja `.env` viitab õigetele tag'idele.
+Kustutad oma image'id lokaalselt ja käivitad stacki ainult registry'st: nii käivitavad rakenduse GitHub Actionsi pipeline ja Kubernetese klaster. Kui stack käivitub ilma ühegi lokaalse build'ita, on registry's kõik vajalik ja `.env` viitab õigetele tag'idele.
 
 Kui mõni image on ainult sinu masinas, töötab deploy sinu juures ja ebaõnnestub igal teisel masinal. Seda viga on lihtne mitte märgata, sest sinu masinas on kõik alati olemas.
 

@@ -9,26 +9,26 @@ tags:
 
 **Eeldus:** 2. kohtumise labor (`site.yml`, rollid, Vault), [1. kohtumise kodutöö](k01-aws.md) (konto, `aws login`, võtmepaar `control`) · **Esita:** `k02/aws.md`
 
-Laboris seadistas `site.yml` Proxmoxi masinaid. Siin lisad AWS-i virtuaalmasina gruppi `veeb` ja seadistad selle samade rollidega. Rolle ega playbook'i ei muuda: kõik erinevused lähevad inventory'sse ja muutujatesse.
+Praktikumis seadistas `site.yml` Proxmoxi masinaid. Kodutöös lisad AWS-i virtuaalmasina gruppi `veeb` ja seadistad selle samade rollidega. Rolle ega playbook'i ei muuda: kõik erinevused kirjutad inventory'sse ja muutujatesse.
 
 **Enne alustamist:**
 
-- `aws configure get region` → `eu-north-1`; tunnipõhine kulu: 1 × t3.micro + avalik IPv4, kokku alla $0.05.
+- Käsk `aws configure get region` väljastab `eu-north-1`. Üks t3.micro masin ja avalik IPv4-aadress maksavad kokku alla $0.05 tunnis.
 - Eelarvehäired on alles.
-- Lõpus koristus ja `bash cloud/aws-leftovers.sh`.
+- Lõpus kustutad ressursid ja käivitad `bash cloud/aws-leftovers.sh`.
 - Reeglid ja ühine veaotsing: [AWS-i reeglid](aws-reeglid.md).
 
 ## Õpiväljundid
 
 1. Lisab pilvemasina olemasolevasse gruppi ja seadistab selle samade rollidega.
-2. Kirjutab grupi väärtuse ühe masina jaoks üle (`ansible_user`) ja selgitab, miks see võidab.
+2. Kirjutab grupi väärtuse ühe masina jaoks üle (`ansible_user`) ja selgitab, miks see väärtus kehtib.
 3. Kontrollib, et teine käivitus annab ka pilves `changed=0`, ja koristab ressursid.
 
 ---
 
 ## Osa 1 · Masin
 
-Käivita control node'il (SG reegel peab lubama control node'i avaliku IP):
+Käivita control node'il (turvagrupi reegel peab lubama control node'i avalikku IP-aadressi):
 
 ```bash
 MYIP=$(curl -s https://checkip.amazonaws.com)/32
@@ -44,9 +44,9 @@ aws ec2 run-instances --image-id "$AMI" --instance-type t3.micro \
     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=ansible-k02}]'
 ```
 
-Mõne minuti pärast: `aws ec2 describe-instances` näitab `running` ja avalikku IP-d. Kontrolli: `ssh ubuntu@<avalik-ip> hostname`.
+Mõne minuti pärast näitab `aws ec2 describe-instances` olekut `running` ja avalikku IP-aadressi. Kontrolli: `ssh ubuntu@<avalik-ip> hostname`.
 
-## Osa 2 · Masin gruppi
+## Osa 2 · Masin gruppi `veeb`
 
 Lisa `k02/inventory.ini`-s grupi `[veeb]` alla rida:
 
@@ -54,19 +54,19 @@ Lisa `k02/inventory.ini`-s grupi `[veeb]` alla rida:
 ec2 ansible_host=<avalik-ip> ansible_user=ubuntu
 ```
 
-`[all:vars]` ütleb kõigile `ansible_user=kasutaja`, aga masina real antud väärtus on täpsem ja võidab. Sama reegel nagu `host_vars` ja `group_vars` puhul.
+`[all:vars]` määrab kõigile masinatele `ansible_user=kasutaja`, kuid masina real antud väärtus on täpsem ja kehtib selle masina puhul. Sama reegel kehtib `host_vars`-i ja `group_vars`-i puhul.
 
 ```bash
 ansible ec2 -m ansible.builtin.ping
-ansible-playbook site.yml -K --ask-vault-pass --limit ec2
+ansible-playbook site.yml --ask-vault-pass --limit ec2
 curl -s http://<avalik-ip>/ | grep Masin
 ```
 
-EC2-l on kasutajal `ubuntu` paroolita `sudo`: kui `-K` küsib, vajuta Enter.
+EC2-l on kasutajal `ubuntu` paroolita `sudo`, nagu ka labori masinates.
 
-**Oodatav tulemus:** play'd `Kõik masinad` ja `Veebiserverid` teevad EC2-l muudatused, `Andmebaas` jääb vahele, sest ec2 pole selles grupis. Lehel on `Masin: ec2 (Ubuntu 24.04)`.
+**Oodatav tulemus:** play'd `Kõik masinad` ja `Veebiserverid` teevad EC2-s muudatused. Play `Andmebaas` jäetakse vahele, sest ec2 ei kuulu sellesse gruppi. Lehel on `Masin: ec2 (Ubuntu 24.04)`.
 
-Käivita teist korda: `changed=0`.
+Käivita playbook teist korda. Kokkuvõttes peab olema `changed=0`.
 
 Kirjuta faili `k02/aws.md` kolm lauset: mis erines pilvemasinas, kuhu selle erinevuse kirjutasid ja miks rolle polnud vaja muuta.
 

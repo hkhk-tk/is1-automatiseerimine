@@ -9,21 +9,21 @@ tags:
 
 **Eeldus:** 3. kohtumise labor (`k03-docker/`: app/db/web Dockerfile'id, `compose.yaml`, Trivy lokaalselt), [1. kohtumise kodutöö](k01-aws.md) · **Esita:** `cloud/k03-aws/user-data.sh`
 
-Klassis ehitab `docker compose up` kõik image'id samas masinas, kus need töötavad. Teises masinas tähendab see uut
-Maven build'i ja võimalikku erinevat sisu. Siin ehitad app image'i üks kord, lükkad registry'sse ja EC2 tõmbab selle
-ilma võtmeta.
+Praktikumis ehitab `docker compose up` kõik image'id samas masinas, kus need töötavad. Teises masinas tähendaks see uut
+Maveni ehitust ja võib-olla ka erinevat sisu. Kodutöös ehitad app image'i ühe korra, laadid selle registrisse ja EC2 tõmbab selle
+sealt ilma pääsuvõtmeta.
 
 **Enne alustamist:**
 
-- `aws configure get region` → `eu-north-1`; tunnipõhine kulu: 1 × t3.small + avalik IPv4 (~$0.10), ECR salvestus sente kuus.
+- Käsk `aws configure get region` väljastab `eu-north-1`. Üks t3.small masin ja avalik IPv4-aadress maksavad umbes $0.10 tunnis, ECR-i salvestus mõne sendi kuus.
 - Eelarvehäired (zero spend, $10) on alles.
-- `aws sts get-caller-identity` → Arn lõpeb `:user/…`, mitte `:root`.
-- Lõpus koristus ja `bash cloud/aws-leftovers.sh`.
+- `aws sts get-caller-identity` väljundis lõpeb Arn kujul `:user/…`, mitte `:root`.
+- Lõpus kustutad ressursid ja käivitad `bash cloud/aws-leftovers.sh`.
 - Reeglid ja ühine veaotsing: [AWS-i reeglid](aws-reeglid.md).
 
 ## Õpiväljundid
 
-1. Loob ECR repo ja lükkab sinna image'i commit'i sildiga, võrdleb ECR skänni ja lokaalse Trivy tulemust.
+1. Loob ECR-i repositooriumi, laadib sinna image'i commit'i sildiga ning võrdleb ECR-i skannimise ja kohaliku Trivy tulemust.
 2. Annab EC2-le registry lugemisõiguse IAM rolliga, mitte võtmega.
 3. Käivitab sama `compose.yaml` teises masinas, kus app image tuleb registry'st ja seda ei ehitata.
 
@@ -40,18 +40,18 @@ Lisa lifecycle policy, mis hoiab alles 10 viimast image'it (`aws ecr put-lifecyc
 [ECR juhendis](https://docs.aws.amazon.com/AmazonECR/latest/userguide/lifecycle_policy_examples.html)).
 
 **Oodatav tulemus:** `repositoryUri` kujul `<konto>.dkr.ecr.eu-north-1.amazonaws.com/labori-seis`.
-**Miks lifecycle:** iga push lisab ~300 MB. Ilma reeglita kasvab salvestus 5. ja 6. kohtumise pipeline'idega iga commit'iga.
+**Miks lifecycle:** iga push lisab ~300 MB. Ilma reeglita kasvab salvestusmaht 5. ja 6. kohtumise pipeline'ide tõttu iga commit'iga.
 
-### 1.1 Push käsitsi
+### 1.1 Image'i laadimine käsitsi
 
 Control node'il ([ECR-i push juhend](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)):
 
-1. Logi Docker ECR-i sisse: `aws ecr get-login-password` pipe'iga `docker login --username AWS --password-stdin <registri host>`.
-2. Ehita app image samamoodi nagu laboris, tag `<repositoryUri>:$(git rev-parse --short HEAD)`.
-3. `docker push`.
+1. Logi Dockeriga ECR-i sisse: suuna `aws ecr get-login-password` väljund käsule `docker login --username AWS --password-stdin <registri host>`.
+2. Ehita app image samamoodi nagu praktikumis ja anna sellele tag `<repositoryUri>:$(git rev-parse --short HEAD)`.
+3. Laadi image käsuga `docker push` registrisse.
 
-**Oodatav tulemus:** konsoolis ECR → labori-seis → image sildiga, mõne minuti pärast ka skänni tulemus.
-**Tõend:** ECR skänni kokkuvõte vs `trivy image` lokaalselt: kas CRITICAL/HIGH arvud klapivad? Kui ei, siis miks?
+**Oodatav tulemus:** konsoolis ECR → labori-seis on sildiga image ja mõne minuti pärast ka skannimise tulemus.
+**Tõend:** ECR-i skannimise kokkuvõte ja kohaliku `trivy image` tulemus. Kas CRITICAL ja HIGH arvud klapivad? Kui ei, siis miks?
 
 <!-- EKRAANIPILT: AWS konsool, Amazon ECR → Private repositories → labori-seis → image, mille tag on commit'i lühike SHA, vahekaart/vaade "Vulnerabilities" (scan on push lõpetanud). Näha tag, Pushed at ja CRITICAL/HIGH/MEDIUM arvud. Konto ID hägustada.
 <figure markdown="span">
@@ -60,14 +60,14 @@ Control node'il ([ECR-i push juhend](https://docs.aws.amazon.com/AmazonECR/lates
 </figure>
 -->
 
-**Kui pushil tuleb** `no basic auth credentials`: registry host loginis ja image nimes ei klapi
-(region või konto ID). Host on `repositoryUri` osa enne esimest `/`-i.
+**Kui `docker push` annab vea** `no basic auth credentials`: sisselogimisel ja image'i nimes kasutatud registri host ei klapi
+(regioon või konto ID). Host on `repositoryUri` osa enne esimest `/`-i.
 
 **Mõtle:** `get-login-password` token kehtib 12 tundi. Mis juhtub masinaga, mis tõmbab image'i homme hommikul?
 
 ---
 
-## Osa 2 · Masin, millel on õigus, aga pole võtit
+## Osa 2 · Ligipääs registrile ilma pääsuvõtmeta
 
 ### 2.1 IAM roll EC2 jaoks
 
@@ -85,17 +85,17 @@ Konsool loob samanimelise [*instance profile*'i](https://docs.aws.amazon.com/AWS
 
 ### 2.2 EC2 t3.small
 
-Nagu 1. kohtumise kodutöös, aga `t3.small`, silt `Name=docker-k03` ja `--iam-instance-profile Name=labseis-ec2-ecr`. SG: 22 sinu IP-st,
-8080 sinu IP-st (Compose avaldab web01 pordil 8080).
+Loo masin nagu 1. kohtumise kodutöös, kuid tüübiga `t3.small`, sildiga `Name=docker-k03` ja võtmega `--iam-instance-profile Name=labseis-ec2-ecr`. Luba turvagrupis pordid 22
+ja 8080 oma IP-aadressilt (Compose avaldab web01 pordil 8080).
 
 User-data on lühike Bashi skript `cloud/k03-aws/user-data.sh`, mis paigaldab Docker Engine'i ja Compose'i
-ametlikust Dockeri apt repost ning lisab kasutaja `ubuntu` gruppi `docker`. Kirjuta see ise
+Dockeri ametlikust apt-repositooriumist ning lisab kasutaja `ubuntu` gruppi `docker`. Kirjuta see ise
 [Dockeri juhendi](https://docs.docker.com/engine/install/ubuntu/) järgi.
 
 **Oodatav tulemus:** `ssh ubuntu@<ip> docker compose version` töötab ilma `sudo`-ta.
-**Kui** `permission denied … docker.sock`: grupp hakkab kehtima uuest sisselogimisest, logi välja ja sisse.
+**Kui** näed `permission denied … docker.sock`: grupikuuluvus hakkab kehtima järgmisel sisselogimisel, seega logi välja ja uuesti sisse.
 
-### 2.3 Registry sisselogimine ilma tokenita
+### 2.3 Registrisse sisselogimine ilma tokenita
 
 EC2-l:
 
@@ -107,13 +107,13 @@ Seadista `~/.docker/config.json`-is `credHelpers` nii, et sinu registry host kas
 ([amazon-ecr-credential-helper](https://github.com/awslabs/amazon-ecr-credential-helper)).
 
 **Oodatav tulemus:** `docker pull <repositoryUri>:<tag>` töötab ilma `docker login`-ita, ka homme.
-**Miks:** helper küsib tokeni iga kord instance profile'i kaudu. 12 tunni probleemi pole enam.
+**Miks:** helper küsib tokeni iga kord instance profile'i kaudu, seega tokeni 12-tunnine kehtivusaeg ei sega.
 
 ---
 
-## Osa 3 · Sama Compose, teine allikas
+## Osa 3 · Sama Compose, image registrist
 
-Klooni oma repo EC2-le (või `scp` ainult `k03-docker/` + `.env`). Tee `.env` EC2-l, Giti seda ei panda.
+Klooni oma repositoorium EC2-le või kopeeri `scp`-ga ainult kaust `k03-docker/`. Loo fail `.env` EC2-s, Giti seda ei lisata.
 
 Sinu `compose.yaml`-is on app teenusel nii `build:` kui `image: ${APP_IMAGE:-…}`. Kasuta seda:
 
@@ -123,14 +123,14 @@ docker compose pull app01
 docker compose up -d
 ```
 
-**Oodatav tulemus:** `docker compose ps` → kõik `healthy`. `docker compose images` näitab, et app01 image on ECR-ist,
-db01 ja web01 ehitati kohapeal. `curl http://<ip>:8080/health` sinu masinast → `UP`.
-**Tõend:** `docker compose ps` väljund + `/version` vastus (commit klapib sildiga).
+**Oodatav tulemus:** `docker compose ps` näitab kõiki teenuseid olekus `healthy`. `docker compose images` näitab, et app01 image on ECR-ist,
+db01 ja web01 ehitati kohapeal. Oma arvutist annab `curl http://<ip>:8080/health` vastuse `UP`.
+**Tõend:** `docker compose ps` väljund ja `/version` vastus (commit vastab image'i sildile).
 
 **Kui `up` hakkab app01-te ehitama:** `APP_IMAGE` pole samas shellis eksporditud või `pull` ebaõnnestus. `docker images` näitab, mis on kohalikult olemas.
 
 ??? info "Miks nii"
-    Maven build t3.small-il (2 GB) on aeglane ja mälu võib otsa saada.
+    Maveni ehitus t3.small-masinas (2 GB) on aeglane ja mälu võib otsa saada.
 
 **Mõtle:** db01 ja web01 ehitati EC2-l uuesti. Mis riski see toob (kaks masinat, "sama" image, erinev sisu)?
 Kuidas 5. kohtumise pipeline selle lahendaks?
@@ -139,19 +139,19 @@ Kuidas 5. kohtumise pipeline selle lahendaks?
 
 ## Koristus
 
-EC2 terminate, SG kustuta, `bash cloud/aws-leftovers.sh`. **ECR repo ja IAM roll jäävad** (5., 6. ja 7. kohtumise kodutööd vajavad neid).
+Lõpeta EC2 masin (terminate), kustuta turvagrupp ja käivita `bash cloud/aws-leftovers.sh`. **ECR repo ja IAM roll jäävad** (5., 6. ja 7. kohtumise kodutööd vajavad neid).
 
 ## Valmis, kui
 
 - `aws ecr describe-images --repository-name labori-seis` näitab commit'i sildiga image'it ja skänni tulemust
 - `aws ecr get-lifecycle-policy --repository-name labori-seis` tagastab reegli
 - EC2-l pole `~/.aws/credentials` faili ja `docker pull <repositoryUri>:<tag>` töötab ilma `docker login`-ita
-- `docker compose ps` EC2-l: kõik `healthy`, `docker compose images` näitab app01 image'it ECR-ist
+- EC2-s näitab `docker compose ps` kõiki teenuseid olekus `healthy` ja `docker compose images` app01 image'it ECR-ist
 - `aws-leftovers.sh`: `TULEMUS: tasulisi jääke pole` (INFO: ECR repo)
 
 ## Lisaülesanne
 
-Lükka ka db ja web image ECR-i (kaks uut repot või sildid `labori-seis:db-<sha>`) ja käivita EC2-l
+Laadi ka db ja web image ECR-i (kaks uut repot või sildid `labori-seis:db-<sha>`) ja käivita EC2-l
 `docker compose up -d --no-build`. Mida tuleb `compose.yaml`-is muuta, et Proxmoxi labor ehitaks edasi kohapeal?
 
 ## Veaotsing
@@ -162,5 +162,5 @@ Lükka ka db ja web image ECR-i (kaks uut repot või sildid `labori-seis:db-<sha
 |---|---|---|
 | `denied: … not authorized to perform: ecr:BatchGetImage` | instance profile puudub või vale roll | `curl -s http://169.254.169.254/latest/meta-data/iam/info` (IMDSv2: vaja tokenit) |
 | `no basic auth credentials` | `credHelpers` võti ei ole täpselt registry host | paranda võti registry hostiks |
-| app01 restartib | `.env` paroolid erinevad db01 omast | `docker compose logs app01` |
+| app01 käivitub korduvalt uuesti | `.env` paroolid erinevad db01 omast | `docker compose logs app01` |
 | `/health` timeout väljast | SG-s pole 8080 sinu IP-le | lisa reegel |

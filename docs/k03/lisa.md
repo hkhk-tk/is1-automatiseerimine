@@ -26,7 +26,7 @@ tags:
 | [14. Uuendus ilma katkestuseta](#14-uuendus-ilma-katkestuseta) | raske | app01 uuendus ilma ühegi 502-ta |
 | [Lisaprojekt: uuendus ja rollback](#lisaprojekt-uuendus-ja-rollback) | raske | `uuenda.sh` läheb vea korral ise tagasi |
 | [Lisaprojekt: oma registry control node'is](#lisaprojekt-oma-registry-control-nodeis) | raske | TLS-i ja parooliga registry, garbage collection read-only režiimis |
-| [Lisaprojekt: rootless Docker](#lisaprojekt-rootless-docker) | raske | rootless daemon tõuseb reboot'i järel ise |
+| [Lisaprojekt: rootless Docker](#lisaprojekt-rootless-docker) | raske | rootless daemon käivitub pärast taaskäivitust ise |
 | [15. vorgukogu konteineris](#15-vorgukogu-konteineris) | lihtne | `vorgukogu` image ilma võtmeta, sama väljund |
 
 Failid lähevad kausta `k03-docker/` (ülesanne 15 kausta `vorgukogu/`), iga ülesanne on eraldi issue label'iga `edasijõudnu` ja põhjendused käivad TOEND.md-sse.
@@ -89,7 +89,7 @@ docker info -f '{{.Swarm.LocalNodeState}}'; docker network ls    # pärast koris
 
     Kontroll: `docker service ls --filter name=websw` näitab `3/3`, praegune image on `nginx:1.30-alpine@sha256:…`, `UpdateStatus.State` on `rollback_completed`. Pärast koristust annab `docker info -f '{{.Swarm.LocalNodeState}}'` vastuse `inactive`.
 
-    **Miks nii.** Manager hoiab soovitud seisu (`--replicas 3`) Raft'i logis ja võrdleb seda task'ide tegeliku seisuga. Kustutatud konteineri task märgitakse `Failed` olekusse ja orkestraator loob uue task'i uue konteineriga. `service create` lahendab tag'i digestiks (`--no-resolve-image` lülitab selle välja), ja `rollback` läheb tagasi teenuse `PreviousSpec`-ile, registry ajalugu selleks vaja pole. Swarmi teenused ja Compose'i konteinerid elavad samal daemonil kõrvuti, seepärast jääb põhistack tööle ja pärast koristust on host endises seisus. Mida see näitas ja miks kursus läheb edasi Kubernetesesse, on lehe [Kogu stack Compose'iga](lab-4-compose.md#miks-see-nii-tootab) lõpus.
+    **Miks nii.** Manager hoiab soovitud olekut (`--replicas 3`) Raft'i logis ja võrdleb seda task'ide tegeliku olekuga. Kustutatud konteineri task märgitakse `Failed` olekusse ja orkestraator loob uue task'i uue konteineriga. `service create` lahendab tag'i digestiks (`--no-resolve-image` lülitab selle välja), ja `rollback` läheb tagasi teenuse `PreviousSpec`-ile, registry ajalugu selleks vaja pole. Swarmi teenused ja Compose'i konteinerid töötavad samas daemonis kõrvuti, seepärast jääb põhistack tööle ja pärast koristust on host endises olekus. Mida see näitas ja miks kursus läheb edasi Kubernetesesse, on lehe [Kogu stack Compose'iga](lab-4-compose.md#miks-see-nii-tootab) lõpus.
 
 ### 2. BuildKit cache mount
 
@@ -131,7 +131,7 @@ Vihje: Maven näitab allalaadimisi ainult siis, kui `go-offline` real pole `-q`-
       | awk '{s += ($2 == "MB") ? $1 * 1024 : ($2 == "kB") ? $1 : $1 / 1024} END {printf "%.1f MB, %d faili\n", s / 1024, NR}'
     ```
 
-    Kontroll: esimene build pärast sõltuvuse tagasipanekut laeb alla ainult selle sõltuvuse ja tema transitiivsed sõltuvused (paar MB), ilma cache mount'ita kogu hoidla (sadu MB). `docker buildx du --verbose | grep -B2 -A4 cachemount` näitab cache'i suurust. CI vastus: GitHubi runner on iga job'i jaoks uus VM ja cache mount elab ainult kohaliku builder'i olekus. `cache-to type=gha` ekspordib kihid, mitte cache mount'e. Kihtide cache aitab seni, kuni `pom.xml` ei muutu. NB: `prune.sh`-i `docker builder prune` kustutab ka cache mount'id.
+    Kontroll: esimene build pärast sõltuvuse tagasipanekut laeb alla ainult selle sõltuvuse ja tema transitiivsed sõltuvused (paar MB), ilma cache mount'ita kogu hoidla (sadu MB). `docker buildx du --verbose | grep -B2 -A4 cachemount` näitab cache'i suurust. CI vastus: GitHubi runner on iga job'i jaoks uus VM ja cache mount on olemas ainult kohaliku builder'i olekus. `cache-to type=gha` ekspordib kihid, mitte cache mount'e. Kihtide cache aitab seni, kuni `pom.xml` ei muutu. NB: `prune.sh`-i `docker builder prune` kustutab ka cache mount'id.
 
     **Miks nii.** Cache mount on BuildKit'i hallatav kaust, mis ühendatakse `RUN`-i ajaks ja mis ei jõua image'i kihti. Kiht `dependency:go-offline` tühistatakse ikka iga `pom.xml`-i muudatusega, aga Maven leiab `/root/.m2/repository`-st juba olemasolevad artefaktid ja laeb alla ainult puuduva. Mõõtmiseks eemalda `go-offline` realt ajutiselt `-q`, et Maven näitaks allalaadimisi.
 
@@ -157,7 +157,7 @@ docker compose start rmq01
 
 **Valmis, kui:**
 
-- rmq01 seisu ajal annab `curl` koodi 503;
+- kui rmq01 on peatatud, annab `curl` koodi 503;
 - Kuma näitab monitori `DOWN` olekut ja sündmuste ajaloos on üleminek;
 - teavituskanalisse tuli üks teade peatamisel ja teine pärast `start`-i;
 - tead, millal Kuma teate saadab.
@@ -226,7 +226,7 @@ shellcheck scan.sh
 
     Kontroll: `./scan.sh; echo $?` annab 0, kui sinu image'id on puhtad, ja `trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed labseis-web:127; echo $?` annab 1 või leidude arv on suurem kui 1.30 puhul. `shellcheck scan.sh` ei väljasta midagi.
 
-    **Miks nii.** Skript ei lõpeta esimese leiu juures: pipeline'i logis on siis korraga näha kõigi kolme image'i seis. Koondkood on 1, kui mõni image ebaõnnestus. `--ignore-unfixed` jätab välja leiud, millele pole parandust, sest neid ei saa image'i uuesti ehitamisega lahendada.
+    **Miks nii.** Skript ei lõpeta esimese leiu juures: pipeline'i logis on siis korraga näha kõigi kolme image'i olek. Koondkood on 1, kui mõni image ebaõnnestus. `--ignore-unfixed` jätab välja leiud, millele pole parandust, sest neid ei saa image'i uuesti ehitamisega lahendada.
 
 ### 5. Skeemi muudatus olemasolevas baasis
 
@@ -334,7 +334,7 @@ git diff --stat compose.yaml
     docker compose up -d --force-recreate --no-deps app01
     ```
 
-    Kontroll: `hc-b` annab vähemalt ühe `unhealthy`, sest java ei vasta 5 s pärast. `hc-c` jõuab `healthy`-ni alles umbes 60 s pärast, ka siis, kui rakendus oli valmis 30 s pärast. `hc-d` jõuab umbes 2 s jooksul pärast valmisolekut ja `unhealthy` on 0. Viimane rida taastab `compose.yaml`-i seisu.
+    Kontroll: `hc-b` annab vähemalt ühe `unhealthy`, sest java ei vasta 5 s pärast. `hc-c` jõuab `healthy`-ni alles umbes 60 s pärast, ka siis, kui rakendus oli valmis 30 s pärast. `hc-d` jõuab umbes 2 s jooksul pärast valmisolekut ja `unhealthy` on 0. Viimane rida taastab `compose.yaml`-i algse sisu.
 
     **Miks nii.** Pikk intervall teeb aeglase deploy: teenus on ammu valmis, aga keegi ei tea. Liiga lühike `start_period` teeb valehäire: teenus loetakse haigeks enne, kui ta jõudis käivituda. Koopia asemel on lihtsam override-fail: Compose'i `healthcheck` ilma `test`-ita võtab käsu image'ist ja muudab ainult ajastust. `start_period` ajal ebaõnnestumised ei loe, aga esimene õnnestumine teeb konteineri kohe `healthy`-ks. Seega `healthy`-ni kulub käivitusaeg pluss kuni üks `interval`. `start_interval` (Engine 25+) laseb käivitusajal kontrollida tihedamalt ilma tavaintervalli lühendamata.
 
@@ -461,7 +461,7 @@ curl -s localhost:8080/api/results; echo
 **Valmis, kui:**
 
 - kolme workeriga näitab `list_queues` järjekorral `results` kolme consumer'it;
-- TOEND.md-s on `list_queues` väljund workerite seisu ajal ja pärast `start`-i;
+- TOEND.md-s on `list_queues` väljund ajal, mil workerid on peatatud, ja pärast `start`-i;
 - TOEND.md-s on kirjas, mis juhtus järjekorraga ja kas midagi läks kaotsi;
 - põhistack on lõpus jälle üleval.
 
@@ -508,9 +508,9 @@ curl -s localhost:8080/api/results; echo
     "${M[@]}" start worker && sleep 15 && "${M[@]}" exec rmq01 rabbitmqctl list_queues name messages consumers
     ```
 
-    Kontroll: workerite seisu ajal vastas `api` `{"status":"accepted"}` ja järjekorras oli 5 sõnumit 0 consumer'iga, pärast `start`-i on 0 sõnumit ja 3 consumer'it ning `GET /api/results` näitab `micro-1` kuni `micro-5`. Kaotsi ei läinud midagi. Lõks: workeri healthcheck kontrollib baasi ja järjekorra ühendust, mitte listener'it, seega katkine consumer on ikkagi `healthy`. Lõpus `"${M[@]}" down -v && docker compose up -d --wait`. Täisfail on koolitajal.
+    Kontroll: kui workerid olid peatatud, vastas `api` `{"status":"accepted"}` ja järjekorras oli 5 sõnumit 0 consumer'iga, pärast `start`-i on 0 sõnumit ja 3 consumer'it ning `GET /api/results` näitab `micro-1` kuni `micro-5`. Kaotsi ei läinud midagi. Lõks: workeri healthcheck kontrollib baasi ja järjekorra ühendust, mitte listener'it, seega katkine consumer on ikkagi `healthy`. Lõpus `"${M[@]}" down -v && docker compose up -d --wait`. Täisfail on koolitajal.
 
-    **Miks nii.** Eraldi projekti nimi hoiab volume'id põhistackist lahus. web01 suunab liikluse `api`-le template'i muutujaga `APP_UPSTREAM`, `worker`-il pole porti ega liiklust. Järjekord `results` on durable ja Spring saadab sõnumid vaikimisi persistent'ina, seega workeriteta jäävad sõnumid järjekorda ja elavad üle ka rmq01 restardi.
+    **Miks nii.** Eraldi projekti nimi hoiab volume'id põhistackist lahus. web01 suunab liikluse `api`-le template'i muutujaga `APP_UPSTREAM`, `worker`-il pole porti ega liiklust. Järjekord `results` on durable ja Spring saadab sõnumid vaikimisi persistent'ina, seega workeriteta jäävad sõnumid järjekorda ja säilivad ka pärast rmq01 taaskäivitust.
 
 ### 10. Docker socket'i audit
 
@@ -532,8 +532,8 @@ shellcheck audit.sh
 
 **Valmis, kui:**
 
-- esimene jooks märgib ainult `sockproov`-i;
-- teine jooks ei märgi midagi;
+- esimene käivitus märgib ainult `sockproov`-i;
+- teine käivitus ei märgi midagi;
 - `shellcheck audit.sh` vaikib;
 - TOEND.md-s on üks lause: kuidas annaksid monitooringutööriistale vajaliku info ilma socket'ita.
 
@@ -563,7 +563,7 @@ Vihje: alusta käsust `docker inspect -f '{{.Name}} {{.HostConfig.Privileged}} {
     docker rm -f sockproov; ./audit.sh; echo "kood $?"
     ```
 
-    Kontroll: esimene jooks väljastab ainult `sockproov docker.sock` ja koodi 1, teine ei väljasta midagi ja annab koodi 0. Socket'i `:ro` mount ei aita, sest see piirab faili, mitte API-kutseid. Ilma socket'ita saab monitooring info cgroup'idest (cAdvisor, node_exporter) või socket proxy kaudu, mis lubab ainult `GET /containers` ja `GET /events` (nt `tecnativa/docker-socket-proxy`).
+    Kontroll: esimene käivitus väljastab ainult `sockproov docker.sock` ja koodi 1, teine ei väljasta midagi ja annab koodi 0. Socket'i `:ro` mount ei aita, sest see piirab faili, mitte API-kutseid. Ilma socket'ita saab monitooring info cgroup'idest (cAdvisor, node_exporter) või socket proxy kaudu, mis lubab ainult `GET /containers` ja `GET /events` (nt `tecnativa/docker-socket-proxy`).
 
     **Miks nii.** Üks `docker inspect` konteineri kohta kõigi väljadega, põhjused massiivi. Väljumiskood 1, kui midagi leiti, teeb skriptist cron'i või monitooringu kontrolli.
 
@@ -588,10 +588,10 @@ journalctl -t labseis-backup -n 5 --no-pager
 
 **Valmis, kui:**
 
-- `systemctl --user list-timers` näitab järgmise jooksu aega;
+- `systemctl --user list-timers` näitab järgmise käivituse aega;
 - `./backup.sh --verify` annab koodi 0;
-- kaheksas jooks kustutab vanima faili ja `backup/`-is on 7 faili;
-- journal'is on iga jooksu tulemus.
+- kaheksas käivitus kustutab vanima faili ja `backup/`-is on 7 faili;
+- journal'is on iga käivituse tulemus.
 
 ??? success "Lahendus"
     ```bash
@@ -637,7 +637,7 @@ journalctl -t labseis-backup -n 5 --no-pager
     for _ in $(seq 1 8); do ./backup.sh > /dev/null; sleep 1; done; ls backup/ | wc -l
     ```
 
-    Kontroll: `list-timers` näitab `NEXT` aega, `--verify` annab koodi 0 ja journal'is on `VERIFY OK … result=N`, pärast kaheksat jooksu on `backup/`-is 7 faili. Lõks: ilma `enable-linger`-ita ei käivitu kasutaja timer, kui keegi pole sisse logitud. Prod-failis pole `MARIADB_ROOT_PASSWORD`-i keskkonnas, siis loe parool failist `/run/secrets/DB_ROOT_PASSWORD`. Täisskript on koolitajal.
+    Kontroll: `list-timers` näitab `NEXT` aega, `--verify` annab koodi 0 ja journal'is on `VERIFY OK … result=N`, pärast kaheksat käivitust on `backup/`-is 7 faili. Lõks: ilma `enable-linger`-ita ei käivitu kasutaja timer, kui keegi pole sisse logitud. Prod-failis pole `MARIADB_ROOT_PASSWORD`-i keskkonnas, siis loe parool failist `/run/secrets/DB_ROOT_PASSWORD`. Täisskript on koolitajal.
 
     **Miks nii.** Kolm kohta, kus lihtne skript eksib: `docker compose exec … | gzip` annab ilma `pipefail`-ita koodi 0 ka siis, kui dump ebaõnnestus; poolik fail ei tohi saada lõplikku nime (kirjuta `.part` ja `mv`); `mariadb-dump` kirjutab viimaseks reaks `-- Dump completed`, ja see on odav terviklikkuse kontroll. Ajutine MariaDB tuleb `--network none`-ga ja valmisolekut kontrollib `healthcheck.sh --connect`, mis init-faasi ajutise serveri ajal (`--skip-networking`) ei läbi.
 
@@ -733,7 +733,7 @@ docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.base.d
 
 **Tase:** raske · **Eeldus:** [Tootmiskeskkonda sobiv stack](lab-5-tootmine.md) · **Esita:** `k03-docker/rotate-db-password.sh`, TOEND.md
 
-Prod-failis on andmebaasi parool failis `secrets/DB_PASSWORD`. Auditi järel tuleb kasutaja `labseis` parool vahetada töötavas stackis: andmed ei kao, katkestus on ainult app01 uuesti loomise aeg ja ebaõnnestumisel läheb kõik eelmisse seisu. MariaDB-l pole topeltparooli (MySQL 8 `RETAIN CURRENT PASSWORD`), nii et vana ja uus parool ei kehti korraga.
+Prod-failis on andmebaasi parool failis `secrets/DB_PASSWORD`. Auditi järel tuleb kasutaja `labseis` parool vahetada töötavas stackis: andmed ei kao, katkestus on ainult app01 uuesti loomise aeg ja ebaõnnestumisel läheb kõik tagasi eelmisse olekusse. MariaDB-l pole topeltparooli (MySQL 8 `RETAIN CURRENT PASSWORD`), nii et vana ja uus parool ei kehti korraga.
 
 - enne esimest käivitust salvesta algseis: `ps`, tabeli `result` ridade arv ja `sha256sum secrets/DB_PASSWORD`;
 - `rotate-db-password.sh` kontrollib enne muudatust, et failis olev parool töötab baasis ja `/health` on `UP`; kui ei, ei muuda midagi;
@@ -819,7 +819,7 @@ Praegu uuendad app01-te käsitsi ja kui uus image ei käivitu, otsid eelmise tag
 - salvestab praeguse image'i ja uuendab ainult app01-te: `APP_IMAGE=… docker compose up -d --no-deps --no-build --wait app01`;
 - pärast uuendust küsib `/health`-i web01 kaudu;
 - ebaõnnestumisel paneb tagasi eelmise image'i ja lõpetab koodiga 1;
-- iga jooksu tulemus läheb `logger -t labseis-deploy` kaudu journal'isse.
+- iga käivituse tulemus läheb `logger -t labseis-deploy` kaudu journal'isse.
 
 **Kontroll:**
 
@@ -833,8 +833,8 @@ sudo journalctl -t labseis-deploy -n 4 --no-pager
 
 **Valmis, kui:**
 
-- kolm esimest jooksu lõppesid koodiga ≠ 0, app01 jäi vanale image'ile ja on `healthy`;
-- neljas jooks viis `/version`-i uuele tag'ile ja teiste teenuste `RunningFor` ei muutunud;
+- kolm esimest käivitust lõppesid koodiga ≠ 0, app01 jäi vanale image'ile ja on `healthy`;
+- neljas käivitus viis `/version`-i uuele tag'ile ja teiste teenuste `RunningFor` ei muutunud;
 - journal'is on neli rida.
 
 Vihje: praeguse image'i nime annab `docker inspect -f '{{.Config.Image}}' labori-seis-app01-1`.
@@ -846,7 +846,7 @@ Vihje: praeguse image'i nime annab `docker inspect -f '{{.Config.Image}}' labori
 
     Rollback sõltub sellest, kas vana image on veel olemas. Lokaalne cache pole selleks usaldusväärne koht, sest `prune.sh` kustutab vanad image'id. Registry on õige koht, ja seepärast on mõistlik registry's hoida vähemalt mõnda eelmist versiooni. Kui tahad garanteerida, et rollback toob täpselt sama sisu, salvesta tag'i asemel digest.
 
-    Skript võtab tagasi ainult image'i, volume jääb uude seisu. Kui uus versioon muutis skeemi, peab skeem ühilduma ka eelmise image'iga (expand/contract: kõigepealt lisatakse veerg, mida vana kood ignoreerib, ja eemaldatakse alles järgmises versioonis). Muidu on rollback ainult taastamine varukoopiast koos andmekaoga.
+    Skript võtab tagasi ainult image'i, volume jääb uude olekusse. Kui uus versioon muutis skeemi, peab skeem ühilduma ka eelmise image'iga (expand/contract: kõigepealt lisatakse veerg, mida vana kood ignoreerib, ja eemaldatakse alles järgmises versioonis). Muidu on rollback ainult taastamine varukoopiast koos andmekaoga.
 
 ### Lisaprojekt: oma registry control node'is
 
@@ -947,7 +947,7 @@ Turvanõue "konteinerid ilma root-daemonita" ei tähenda alati Podmani: osa tiim
 
 - sama image töötab kaks korda, `docker run` (rootful) ja `docker --context rootless run`, mõlemal nimega volume'iga;
 - TOEND.md-s on tabel kolme veeruga (rootful Docker, rootless Docker, rootless Podman mc01-st ja db01-st) ja kuue reaga: protsessi UID hostis, `uid_map`, volume'i asukoht hostis, `-p 80:80` tulemus, `--memory 256m` tulemus, mis juhtub konteineriga daemoni restardil ja reboot'il;
-- rootless daemon ja tema konteiner tõusevad pärast control node'i reboot'i ilma sisselogimiseta.
+- rootless daemon ja selle konteiner käivituvad pärast control node'i taaskäivitust ilma sisselogimiseta.
 
 **Kontroll:**
 
@@ -967,7 +967,7 @@ systemctl --user is-enabled docker; loginctl show-user "$USER" -p Linger
 - pärast reboot'i enne sisselogimist vastab rootless konteineri port ja `Linger` on `yes`.
 
 ??? tip "Lahenduse suund"
-    Rootless daemon on kasutaja teenus (`systemctl --user status docker`) oma socket'iga `/run/user/<UID>/docker.sock`, ja tal on eraldi image'id ning volume'id kaustas `~/.local/share/docker`. Seepärast tõmbab ta db-image'i uuesti, ja kooli CA peab olema ka kasutaja kaustas `~/.config/docker/certs.d/<registry>/`. UID-i vastavuse näed `/proc/<pid>/uid_map`-ist: konteineri 0 on sinu UID, 1… on `/etc/subuid` vahemiku algus. Port 80 ebaõnnestub `net.ipv4.ip_unprivileged_port_start` tõttu, vali kõrgem port, mitte kogu hosti sysctl'i muudatus. `--memory` vajab, et systemd oleks kasutaja sessioonile `memory` kontrolleri delegeerinud (`cgroup.controllers` kasutaja `user@<UID>.service` all), muidu ignoreerib daemon piirangut hoiatusega. Reboot'i jaoks vajad kaht asja: linger ja `systemctl --user enable docker`; konteineri enda tõstab `restart: unless-stopped`. Tüüpiline lõks: `docker` ilma `--context`-ita räägib endiselt rootful daemoniga, nii et "töötav" konteiner võib olla vales daemonis. Täislahendus on koolitajal.
+    Rootless daemon on kasutaja teenus (`systemctl --user status docker`) oma socket'iga `/run/user/<UID>/docker.sock`, ja tal on eraldi image'id ning volume'id kaustas `~/.local/share/docker`. Seepärast tõmbab ta db-image'i uuesti, ja kooli CA peab olema ka kasutaja kaustas `~/.config/docker/certs.d/<registry>/`. UID-i vastavuse näed `/proc/<pid>/uid_map`-ist: konteineri 0 on sinu UID, 1… on `/etc/subuid` vahemiku algus. Port 80 ebaõnnestub `net.ipv4.ip_unprivileged_port_start` tõttu, vali kõrgem port, mitte kogu hosti sysctl'i muudatus. `--memory` vajab, et systemd oleks kasutaja sessioonile `memory` kontrolleri delegeerinud (`cgroup.controllers` kasutaja `user@<UID>.service` all), muidu ignoreerib daemon piirangut hoiatusega. Reboot'i jaoks vajad kaht asja: linger ja `systemctl --user enable docker`; konteineri enda käivitab uuesti `restart: unless-stopped`. Tüüpiline lõks: `docker` ilma `--context`-ita räägib endiselt rootful daemoniga, nii et "töötav" konteiner võib olla vales daemonis. Täislahendus on koolitajal.
 
     **Miks nii.** Rootless Docker kasutab sama user namespace'i mudelit mis Podman: konteineri root on hostis sinu kasutaja ja konteinerist välja pääsenud ründaja saab ainult sinu õigused. Pordipiir ja kasutajaruumi võrk (`slirp4netns` või `pasta`) on samad. Vahe on elutsüklis: Dockeril on endiselt daemon, nüüd kasutaja kohta, ja selle restart peatab tema konteinerid. Compose, Dockeri socket ja kõik tööriistad töötavad muutmata, mis on rootless Dockeri peamine põhjus Podmani asemel. Serveris, kus töötab üks teenus ja standard on AlmaLinux/RHEL, on Quadlet lihtsam; arendusmasinas ja CI agendil, kus tööriistad eeldavad Dockeri API-t, on rootless Docker väiksem muudatus.
 

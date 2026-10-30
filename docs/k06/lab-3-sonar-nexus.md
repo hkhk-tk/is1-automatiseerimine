@@ -7,13 +7,13 @@ tags:
 
 # 3. Quality gate ja Nexus
 
-Kui tootmises on vigane fail, on esimesed küsimused, kes selle läbi lasi ja milline täpselt see fail oli. Praegu ei oska su pipeline kumbagi öelda: roheline build tähendab ainult, et testid läbisid, ja WAR on ainult workspace'is. Sonar analüüsib iga buildi ja quality gate peatab halva koodi enne, kui WAR Nexusesse jõuab. Maven laeb sõltuvused kooli Nexusest ja pipeline laeb sinna versioonitud WAR-i, mille räsi klapib Jenkinsi omaga.
+Kui tootmises on vigane fail, on esimesed küsimused, kes selle läbi lasi ja milline täpselt see fail oli. Praegu ei oska pipeline kummalegi küsimusele vastata: roheline build tähendab ainult, et testid läbisid, ja WAR on ainult workspace'is. Sonar analüüsib iga buildi ja quality gate peatab halva koodi enne, kui WAR Nexusesse jõuab. Maven laeb sõltuvused kooli Nexusest ja pipeline laeb sinna versioonitud WAR-i, mille räsi klapib Jenkinsi omaga.
 
 **Kui teed seda tööl iga päev:** `withSonarQubeEnv` ja `waitForQualityGate` on sul mõnes pipeline'is juba kasutusel. Kui see on sul juba korras, mine otse etappi [„Lae WAR Nexusesse“](#lae-war-nexusesse).
 
 ## Loo Sonari token ja credential
 
-Jenkins peab Sonarisse kirjutama ja selleks vajab ta tokenit. Teed tokeni, mis kehtib ainult sinu projektile, ja paned selle Jenkinsi folderisse, kust pipeline seda ID järgi küsib. Jenkinsfile'i jõuab ainult ID `sonar`, mitte väärtus.
+Jenkins peab Sonarisse kirjutama ja selleks vajab ta tokenit. Lood tokeni, mis kehtib ainult sinu projektile, ja paned selle Jenkinsi folderisse, kust pipeline seda ID järgi küsib. Jenkinsfile'i jõuab ainult ID `sonar`, mitte väärtus.
 
 Kasutaja token kehtiks kõigile sinu õigustega projektidele. Kui see lekib buildi logist, saab keegi kirjutada üle ka teiste projektide analüüse.
 
@@ -67,7 +67,7 @@ Katvus tuleb Test etapi JaCoCo XML-ist (`target/site/jacoco/jacoco.xml`), seega 
 </figure>
 -->
 
-> Katvus on 0 %: Sonar käivitus enne `verify`-d või workspace tühjendati vahepeal. Lisa ajutiselt `sh 'ls target/site/jacoco'`.
+> Kui katvus on 0 %, käivitus Sonar enne `verify`-d või workspace tühjendati vahepeal. Kontrolliks lisa ajutiselt `sh 'ls target/site/jacoco'`.
 
 `ANALYSIS SUCCESSFUL` tähendab ainult, et raport jõudis serverisse. Otsust selles veel pole: server töötleb raportit taustal ja hinnang tekib mõne sekundi või minuti pärast. Seepärast on järgmine etapp eraldi.
 
@@ -92,7 +92,7 @@ Quality gate on Sonari serveris kirjas olevate tingimuste kogum, näiteks "uue k
 bash autograde/check.sh k06 quality
 ```
 
-> Etapp ootab kuni timeout'ini: webhook ei jõudnud kohale. See pole sinu Jenkinsfile'i viga, koolitaja vaatab Sonari *Webhooks → Recent deliveries*.
+> Kui etapp ootab ajapiirini, ei jõudnud webhook kohale. See ei ole Jenkinsfile'i viga: anna koolitajale teada, et ta kontrolliks Sonaris *Webhooks → Recent deliveries*.
 
 `Quality gate is OK` tuli Jenkinsi tänu Sonari webhookile, mitte sellele, et Jenkins pidevalt küsiks. Kui etapp läks roheliseks mõne sekundiga, töötavad analüüs, taustatöötlus, webhook ja ootav samm. Kui see võttis minuteid, oli Sonaris järjekord, sest naabrid analüüsisid samal ajal.
 
@@ -160,7 +160,7 @@ bash autograde/check.sh k06 nexus
 bash autograde/check.sh k06 secrets
 ```
 
-> 400: sama versioon on juba olemas. 403: groupId pole `ee.hkhk.<gh>` või credential on vale. 401: parool.
+> Vastus 400 tähendab, et sama versioon on juba olemas, 403, et groupId ei ole `ee.hkhk.<gh>` või credential on vale, ja 401, et parool on vale.
 
 Logirida `Uploaded:` näitab täielikku teed ja tee ise kirjeldab artefakti: repo, groupId kaustadena, artifactId ja versioon. Kui buildi nimi ajaloos ja versioon teel on samad, saad igast buildist ühe klikiga õige faili juurde. `secrets` `OK` tähendab, et parool on Jenkinsis ja failis on ainult ID.
 
@@ -201,7 +201,7 @@ Kolm võrdset räsi tõestavad, et Nexuses on täpselt see WAR, mis läbis quali
 
 ## Proovi sama versiooni üle kirjutada
 
-Viimaseks kontrollid ise reeglit, millele kogu versioonimine toetub: Nexus ei luba sama versiooni teist korda. Laed allalaaditud WAR-i käsitsi sama versiooni alla tagasi, nagu teeks kolleeg, kes "parandab" tootmises olevat faili.
+Viimaseks kontrollid ise reeglit, millele kogu versioonimine toetub: Nexus ei luba sama versiooni teist korda. Laed allalaaditud WAR-i käsitsi sama versiooni alla tagasi.
 
 Kui hosted repo lubaks redeploy'd, saaks iga credential'i omanik vaikselt asendada tootmises oleva faili ja konteineri räsi kontroll näitaks juba uut, võltsitud faili.
 
@@ -225,7 +225,7 @@ Vastus `400` ilma ühegi muutuseta Nexuses tõestab, et repo poliitika on *Disab
 
 ## Miks see nii töötab
 
-**Sonari tokenid ja harud.** Projektitoken lubab analüüsida ainult ühte projekti, kasutaja token kõiki selle kasutaja projekte. SonarQube Community Build (selles laboris versioon 26.9) ei toeta ilma kolmanda osapoole pluginata haruanalüüsi: proovi-haru build kirjutab sama projekti analüüsi üle.
+**Sonari tokenid ja harud.** Projektitoken lubab analüüsida ainult ühte projekti, kasutaja token kõiki selle kasutaja projekte. SonarQube Community Build (selles praktikumis versioon 26.9) ei toeta ilma kolmanda osapoole pluginata haruanalüüsi: proovi-haru build kirjutab sama projekti analüüsi üle.
 
 **Sonar ja `vm.max_map_count`.** SonarQube'i sisemine Elasticsearch hoiab indekseid `mmap`-iga ja nõuab vähemalt `vm.max_map_count=524288`, `fs.file-max=131072` ning protsessile vähemalt 131072 avatud faili ja 8192 lõime. Linuxi vaikeväärtusega 65530 Sonar ei käivitu. Koolitaja masinas on failis `/etc/sysctl.d/99-sonarqube.conf` väärtus 524288, laaditud käsuga `sysctl --system`. Vastus **502 Bad Gateway** tähendab, et Sonari ees olev Nginx on üleval, aga Sonar veel mitte: `curl -s localhost:9000/api/system/status` näitab `STARTING` või `UP`.
 

@@ -13,7 +13,7 @@ Töötad edasi kaustas `~/k07-katse`, kus Deployment `web` on alles.
 
 **Kui teed seda tööl iga päev:** eristad `exceeded quota`, `FailedScheduling` ja `OOMKilled`-i ühe `kubectl describe` järgi. Kui see on sul juba korras, tee esimeste etappide tõendi käsud ära ja mine otse etappi „[Kaks katkist pod'i](#kaks-katkist-podi)“.
 
-## Kvoot ütleb ei
+## Kvoot keelab pod'i loomise
 
 Küsid meelega rohkem pod'e, kui kvoot lubab. ResourceQuota kontrollib iga pod'i juba loomisel, enne scheduler'it. Kui pod ei mahu, ei teki seda üldse: `kubectl get pods` ei näita midagi ja põhjus on ReplicaSet'i Events'is.
 
@@ -111,7 +111,7 @@ OOMKilled ei jäta rakenduse logisse sageli midagi, sest protsess tapetakse ilma
 3. Muuda `bs=32M`, loo pod uuesti (`kubectl delete -f malu.yaml && kubectl apply -f malu.yaml`) ja vaata olekut.
 4. Vaata, kui palju mälu sinu pod'id kasutavad: `kubectl top pods`
 
-> `kubectl top` annab `Forbidden`: sinu rollil pole `metrics.k8s.io` lugemise õigust. Ütle koolitajale ja jätka.
+> Kui `kubectl top` annab vea `Forbidden`, ei ole sinu rollil `metrics.k8s.io` lugemise õigust. Teata koolitajale ja jätka.
 
 Esimene katse lõppes `reason: OOMKilled` ja `exitCode: 137`, teine `Completed` ja koodiga 0. Ainus vahe oli puhvri suurus limiidi suhtes. `kubectl top` näitab tegelikku kasutust ja seda saad võrrelda requests'iga: kui kasutus on kogu aeg palju väiksem, küsib pod liiga palju ja raiskab node'i mahtu.
 

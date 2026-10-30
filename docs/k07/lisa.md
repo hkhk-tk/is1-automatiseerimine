@@ -266,7 +266,7 @@ Vihje: kui Argo CD selfHeal on sees, tühistab see ajutise muudatuse kohe; tee k
 
     Kontroll: tabelis olevad koodid ja lõpus rida `Ingress = Git`.
 
-    **Miks nii.** Kui reegel katab ainult lehe tee, ei ole ka `/style.css` kättesaadav ja leht avaneb ilma stiilita. [Prefix võrdleb tee osi kaldkriipsude vahel, mitte märke, Exact kogu teed](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types): `/healthz` ei sobiks `Prefix /health` alla.
+    **Miks nii.** Kui reegel hõlmab ainult lehe teed, ei ole ka `/style.css` kättesaadav ja leht avaneb ilma stiilita. [Prefix võrdleb tee osi kaldkriipsude vahel, mitte märke, Exact kogu teed](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types): `/healthz` ei sobiks `Prefix /health` alla.
 
 ### 5. k9s või Lens
 
@@ -367,7 +367,7 @@ kubectl --context k3s01 describe pod uus | grep -A2 Events
     $K taint node $N katse- && $K delete pod uus && $K delete -f ~/k07-katse/ds.yaml
     ```
 
-    Kontroll: esimene `uus` on `Pending` ja Events'is on `untolerated taint {katse: jah}`, teine on `Running` sama node'i peal. Kui kustutad taint'i ajal DaemonSet'i pod'i, näitab `get ds` `DESIRED 0`, mitte `Pending` pod'i.
+    Kontroll: esimene `uus` on `Pending` ja Events'is on `untolerated taint {katse: jah}`, teine on `Running` samas node'is. Kui kustutad taint'i ajal DaemonSet'i pod'i, näitab `get ds` `DESIRED 0`, mitte `Pending` pod'i.
 
     **Miks nii.** DaemonSet'i pod'id saavad vaikimisi tolerations'id mõnele süsteemsele taint'ile (näiteks `not-ready`), aga mitte sinu lisatud `katse=jah`-le. Logikogujale annad tavaliselt toleration'i kõigile taint'idele, sest logi on vaja just probleemsetelt node'idelt.
 
@@ -943,7 +943,7 @@ kubectl get cronjob db01-backup
 - issue's on vastus: miks varukoopia samal node'il samas klastris ei kaitse node'i kadumise eest
 
 ??? success "Lahendus"
-    Parool läheb `MYSQL_PWD` keskkonnamuutujasse, mitte `-p`-ga käsureale, kus `ps` seda näeks. Dump kirjutatakse ajutisse faili ja nimetatakse ümber alles õnnestumisel: pooleli jäänud töö ei kirjuta eelmist head koopiat üle. `--single-transaction` annab InnoDB tabelitest järjekindla seisu ilma lukkudeta. PVC on `WaitForFirstConsumer`, nii et Argo näitab Application'it `Progressing`, kuni esimene töö PVC kasutusele võtab.
+    Parool läheb `MYSQL_PWD` keskkonnamuutujasse, mitte `-p`-ga käsureale, kus `ps` seda näeks. Dump kirjutatakse ajutisse faili ja nimetatakse ümber alles õnnestumisel: pooleli jäänud töö ei kirjuta eelmist head koopiat üle. `--single-transaction` annab InnoDB tabelitest järjekindla hetktõmmise ilma lukkudeta. PVC on `WaitForFirstConsumer`, nii et Argo näitab Application'it `Progressing`, kuni esimene töö PVC kasutusele võtab.
 
     ```yaml
     apiVersion: v1
@@ -1013,7 +1013,7 @@ kubectl get cronjob db01-backup
     sql <<< "SELECT code FROM lab WHERE code='lab-07';"
     ```
 
-    Kontroll: `kubectl logs job/proov-1` viimane rida on `-- Dump completed on …`, `DELETE` järel annab `SELECT` tühja tulemuse ja pärast taastamist `lab-07`. Täielik dump taastab kogu baasi dump'i hetke seisu: tulemused, mis tulid pärast dump'i, kaovad. Seepärast tehakse taastamise proov tootmises koopia peal.
+    Kontroll: `kubectl logs job/proov-1` viimane rida on `-- Dump completed on …`, `DELETE` järel annab `SELECT` tühja tulemuse ja pärast taastamist `lab-07`. Täielik dump taastab kogu baasi dump'i tegemise hetke olekusse: tulemused, mis tulid pärast dump'i, kaovad. Seepärast tehakse taastamise proov tootmises koopia peal.
 
     **Miks nii.** Rida kustutada on siin ohutu, sest Labori seisu andmed on taastatavad algandmed.
 
@@ -1113,7 +1113,7 @@ kubectl --context k3s01 auth can-i create rolebindings -n opilane --as=$SA
 
 **Tase:** keskmine · **Eeldus:** app01 tulemüür lubab TCP 10250 ja UDP 8472, agendi token koolitajalt
 
-Jagatud klastris tahab meeskond oma workload'e eraldi node'il hoida, et naabri koormus seda ei segaks. Liidad oma app01 klassi klastriga ja suunad sinna pod'i taint'i ja `nodeSelector`-iga.
+Jagatud klastris soovib meeskond hoida oma workload'e eraldi node'il, et naabri koormus seda ei segaks. Liidad oma app01 klassi klastriga ja suunad sinna pod'i taint'i ja `nodeSelector`-iga.
 
 1. Käivita app01-l k3s agent. Kõigi õppijate VM-id on nimega `app01` ja klaster lükkab sama nimega teise node'i tagasi, seepärast on node'i nimes sinu GitHubi nimi:
 
@@ -1248,8 +1248,8 @@ Labori seisu kontrollisid seni käsitsi: Deployment'id, Endpoints, curl Ingress'
 2. Skript ainult loeb ega väljasta ühtegi Secret'i väärtust.
 3. Kontrolli väljund on `jsonpath`-ist, mitte `grep`-ist.
 4. Väljumiskood on mitteläbinud kontrollide arv; `kubectl diff` kood 1 ja kood >1 annavad eri sõnumi.
-5. Käivita töötava seisu peal, siis tekita rike (näiteks `kubectl scale deploy/mc01 --replicas=0`, selfHeal väljas) ja käivita uuesti.
-6. Taasta seis Gitist ja commit'i skript.
+5. Käivita skript, kui kõik töötab, seejärel tekita rike (näiteks `kubectl scale deploy/mc01 --replicas=0`, selfHeal väljas) ja käivita uuesti.
+6. Taasta olek Gitist ja commit'i skript.
 
 | Kontroll | OK, kui | FAIL-i sõnum ütleb |
 |---|---|---|
@@ -1273,7 +1273,7 @@ for t in files kubeconform objects hygiene; do bash autograde/check.sh k07 $t; d
 **Valmis, kui:**
 
 - `shellcheck` ei leia vigu
-- töötava seisu peal on kuus `OK`-d ja `kood 0`
+- kui kõik töötab, on väljundis kuus `OK`-d ja `kood 0`
 - rikke ajal on vähemalt üks `FAIL` õige põhjusega ja kood võrdub `FAIL`-ide arvuga
 - automaatse hindaja neli testi annavad endiselt `OK`
 
@@ -1331,7 +1331,7 @@ for t in files kubeconform objects hygiene; do bash autograde/check.sh k07 $t; d
     exit "$fails"
     ```
 
-    Kontroll: töötava seisu peal kuus `OK` rida ja `kood 0`. `kubectl scale deploy/mc01 --replicas=0` (selfHeal väljas) muudab ka `spec.replicas`-it, nii et Deployment'i kontroll jääb `OK`-ks ja rikke tabavad Argo olek (`OutOfSync`) ja `kubectl diff` (kood 1): kokku `kood 2`. `/health` jääb `UP`-iks, sest vahemälu puudumisel ei muutu üldolek. Just sellepärast on skriptis drift'i kontroll: Deployment'i olek üksi ei näe, et keegi muutis soovitud seisu ennast.
+    Kontroll: kui kõik töötab, on väljundis kuus `OK` rida ja `kood 0`. `kubectl scale deploy/mc01 --replicas=0` (selfHeal väljas) muudab ka `spec.replicas`-it, nii et Deployment'i kontroll jääb `OK`-ks ja rikke tabavad Argo olek (`OutOfSync`) ja `kubectl diff` (kood 1): kokku `kood 2`. `/health` jääb `UP`-iks, sest vahemälu puudumisel ei muutu üldolek. Just sellepärast on skriptis drift'i kontroll: Deployment'i olekust üksi ei selgu, et keegi muutis soovitud olekut ennast.
 
     **Miks nii.** Tabeli järjekord on sama, mida kasutasid nelja rikke otsimisel: kõigepealt kas oled õiges kohas, siis kas pod'id on valmis, siis kas kasutaja jõuab nendeni, ja lõpuks kas klaster vastab Gitile.
 
@@ -1548,7 +1548,7 @@ Vihje: kui `helm list` näitab veel podinfot, tee enne `helm uninstall podinfo`.
 ??? tip "Lahenduse suund"
     Application on sama kujuga kui `labori-seis`: `project`, `destination` ja `syncPolicy` samad, `source.path` osutab chart'i kaustale ja `source.helm` all on `releaseName: podinfo` ning `valueFiles`. Fail on `argocd/` alamkaustas, nii et ei `kubectl apply -f k07-k8s/` ega `labori-seis` Application seda klastrisse ei vii: teed sellele ühe korra käsitsi `kubectl apply`, edasi muudad ainult Giti.
 
-    Lõksud: `valueFiles` tee on `source.path`-i suhtes, mitte repo juure suhtes, ja fail peab olema samas repos. Kui `helm install`-iga tehtud release on alles, haldavad samu objekte kaks tööriista ja järgmine `helm upgrade` kirjutab Argo seisu üle. Kui sync annab `exceeded quota`, on namespace'is mõni katse-pod alles.
+    Lõksud: `valueFiles` tee on `source.path`-i suhtes, mitte repo juure suhtes, ja fail peab olema samas repos. Kui `helm install`-iga tehtud release on alles, haldavad samu objekte kaks tööriista ja järgmine `helm upgrade` kirjutab Argo rakendatud oleku üle. Kui sync annab `exceeded quota`, on namespace'is mõni katse-pod alles.
 
     **Miks nii.** Argo CD repo-server käivitab `helm template` ja sync'ib tulemuse nagu tavalised manifestid. Helmi release'i Secret'it ei teki, seetõttu ei näe `helm list` ega `helm history` midagi ja rollback tehakse käsuga `git revert` nagu Labori seisu puhul. Label `app.kubernetes.io/managed-by: Helm` on siiski olemas, sest selle kirjutab chart'i template, mitte Helmi programm.
 

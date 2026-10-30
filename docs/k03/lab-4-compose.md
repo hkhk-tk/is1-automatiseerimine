@@ -7,7 +7,7 @@ tags:
 
 # 4. Kogu stack Compose'iga
 
-Viis `docker run` käsku shelli ajaloos ei ole soovitud seis: järgmine admin ei tea, millise võtmega mida käivitati, ja reboot'i järel tõusevad teenused vales järjekorras. Võrk, nimed, volume'id ja muutujad, mis `docker run`-iga olid pikad käsuread, lähevad nüüd faili, mida saab Gitis hoida, üle vaadata ja korduvalt käivitada. Compose on Ansible'i playbook'i vaste konteineritele: fail kirjeldab soovitud seisu ja `up -d` viib süsteemi sinna. Kirjuta fail teenus teenuse haaval ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)), iga teenuse järel `docker compose up -d <teenus>` ja kontroll, kõik käsud kaustas `k03-docker/`. Lõpuks käib kogu Labori seis ühe `compose.yaml`-iga ja üks tulemus läbib ahela web01-st db01-ni.
+Viis `docker run` käsku shelli ajaloos ei ole soovitud olek: järgmine admin ei tea, millise võtmega mida käivitati, ja pärast taaskäivitust käivituvad teenused vales järjekorras. Võrk, nimed, volume'id ja muutujad, mis `docker run`-iga olid pikad käsuread, lähevad nüüd faili, mida saab Gitis hoida, üle vaadata ja korduvalt käivitada. Compose on Ansible'i playbook'i vaste konteineritele: fail kirjeldab soovitud olekut ja `up -d` viib süsteemi sellesse olekusse. Kirjuta fail teenus teenuse haaval ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)), iga teenuse järel `docker compose up -d <teenus>` ja kontroll, kõik käsud kaustas `k03-docker/`. Lõpuks käib kogu Labori seis ühe `compose.yaml`-iga ja üks tulemus läbib ahela web01-st db01-ni.
 
 **Kui teed seda tööl iga päev:** sinu Compose'i failides on healthcheck'id ja `depends_on` tingimusega `service_healthy` ning teine `docker compose up -d` ei loo midagi uuesti. Kui see on sul juba korras, kirjuta `compose.yaml` tabeli L3.3 järgi ise ja mine otse etappi „[Riku ja vaata](#riku-ja-vaata)“.
 
@@ -174,7 +174,7 @@ Stacki uurid samamoodi kui iga töötavat teenust, kui kasutaja ütleb "läks ae
     docker compose logs --since 10m --timestamps app01 | grep -ciE 'error|exception'
     ```
 
-4. Too web01-st välja konf, mille entrypoint template'ist tegi, ja võrdle seda oma template'iga.
+4. Kopeeri web01-st välja konfiguratsioon, mille entrypoint template'ist tegi, ja võrdle seda oma template'iga.
 
     ```bash
     docker compose cp web01:/etc/nginx/conf.d/default.conf /tmp/web01-default.conf
@@ -191,7 +191,7 @@ Logis tekkisid read samal hetkel, kui tegid päringu, ja `/olematu` andis 404 re
 
 Ansible'i playbook andis teisel käivitusel `changed=0`. Compose'i `up -d` võrdleb iga teenuse seadistuse räsi konteineri sildiga `com.docker.compose.config-hash` ja loob uuesti ainult selle, mis erineb. Muudad üht väärtust ja vaatad, kes uuesti luuakse.
 
-Kui sa ei tea, mida `up -d` puudutab, kardad seda tootmises käivitada ja hakkad konteinereid käsitsi parandama. Nii tekib vahe faili ja tegeliku seisu vahel, ja järgmine `up -d` kirjutab sinu käsitsi parandused üle.
+Kui sa ei tea, mida `up -d` puudutab, kardad seda tootmises käivitada ja hakkad konteinereid käsitsi parandama. Nii tekib erinevus faili ja tegeliku oleku vahel, ja järgmine `up -d` kirjutab sinu käsitsi parandused üle.
 
 1. Käivita `up -d` muutmata failiga ja loe väljundit.
 
@@ -275,7 +275,7 @@ Peatad ühe sõltuvuse, lood rakenduse uuesti ja taaskäivitad terve masina. Nee
 
 3. Taaskäivita control node (`sudo reboot`) ja vaata pärast sisselogimist `docker compose ps`.
 
-Healthcheck märkis app01 `unhealthy`, aga keegi teda ei taaskäivitanud. Kui rmq01 tagasi tuli, taastas rakendus ühenduse ise. Recreate ilma 502-ta tõestab `nginx.conf`-i resolver'it: web01 leidis app01 uue IP 10 sekundi jooksul. Reboot'i järel tõstis stacki `restart: unless-stopped`, mitte sina.
+Healthcheck märkis app01 `unhealthy`, aga keegi teda ei taaskäivitanud. Kui rmq01 tagasi tuli, taastas rakendus ühenduse ise. Recreate ilma 502-ta tõestab `nginx.conf`-i resolver'it: web01 leidis app01 uue IP 10 sekundi jooksul. Pärast taaskäivitust käivitas stacki `restart: unless-stopped`, mitte sina.
 
 ✅ **Edasi saad minna, kui** `/health` andis 503 ja app01 läks `unhealthy`, pärast `start`-i läks kõik `healthy` ilma app01 taaskäivituseta, recreate'i järel vastas web01 ilma 502-ta ja pärast reboot'i oli stack üleval ilma käsuta.
 
@@ -314,13 +314,13 @@ Testid kasutavad `.env.example` väärtusi, mitte sinu `.env`-i. Seepärast peab
 
 **Logide ajavahemik.** Logide ajavahemiku piiramiseks saab kasutada valikuid `--since` ja `--until` (suhteline aeg, näiteks `10m`, või ajatempel). Valik `--timestamps` lisab igale reale Dockeri enda ajatempli. Kui rakendus kirjutab oma ajatempli teises ajavööndis, on erinevus kohe näha.
 
-**Compose ja orkestraator.** Compose haldab üht hosti. Kui host läheb rikki, on stack maas. Kui tahad kahte app01 koopiat, uuendust ilma 502-ta või teenuse kolimist teisele masinale, Compose ei aita. Seda tööd teeb orkestraator. Dockeril on oma sisseehitatud orkestraator Swarm ([Lisaülesanded → 1. Swarm ühel node'il](lisa.md#1-swarm-uhel-nodeil)). Orkestraatoris ei käivita sa konteinerit ise. Ütled, et koopiaid peab olema kolm, ja manager hoiab seda seisu: kustutatud koopia asemele tuleb uus, ilma et keegi oleks käsu andnud. See on sama control loop, mida teeb Kubernetes. Swarmi uuendus vahetab koopiad ükshaaval ja teenus vastab kogu aja, sest avaldatud port on Swarmi ingress-võrgus ja suunab liikluse ainult töötavatele koopiatele.
+**Compose ja orkestraator.** Compose haldab üht hosti. Kui host läheb rikki, on stack maas. Kui tahad kahte app01 koopiat, uuendust ilma 502-ta või teenuse kolimist teisele masinale, Compose ei aita. Seda tööd teeb orkestraator. Dockeril on oma sisseehitatud orkestraator Swarm ([Lisaülesanded → 1. Swarm ühel node'il](lisa.md#1-swarm-uhel-nodeil)). Orkestraatoris ei käivita sa konteinerit ise. Ütled, et koopiaid peab olema kolm, ja manager hoiab seda olekut: kustutatud koopia asemele tuleb uus, ilma et keegi oleks käsu andnud. See on sama control loop, mida teeb Kubernetes. Swarmi uuendus vahetab koopiad ükshaaval ja teenus vastab kogu aja, sest avaldatud port on Swarmi ingress-võrgus ja suunab liikluse ainult töötavatele koopiatele.
 
 **Miks Kubernetes, mitte Swarm.** Swarm on lihtne ja loeb sama Compose'i vormingut (`docker stack deploy -c`). Meie `compose.yaml` töötaks seal peaaegu muutmata, välja arvatud kaks asja: `build:` ei toimi, image peab olema registry's, ja `depends_on` jäetakse kõrvale. Orkestraator eeldab, et rakendus talub puuduvat sõltuvust ja ühendub ise uuesti, nagu Labori seis Compose'i rikketestis tegi. Swarmi ökosüsteem on aga väike ja areneb aeglaselt. Kubernetest toetavad pilvede hallatud teenused, monitooringu- ja turvatööriistad, ja seda küsitakse tööpakkumistes.
 
 Sisuline vahe on mudelis. Kubernetes eristab liveness'i ja readiness'i kontrolli (`livenessProbe` ja `readinessProbe`), Swarmil on üks healthcheck. Kubernetesel on namespace'id, RBAC, NetworkPolicy, püsikettad CSI kaudu ja laiendused (operaatorid, Helm), mis teevad temast platvormi, mitte ainult konteinerite käivitamise vahendi. Hind on keerukus, ja seepärast kasutame 7. kohtumisel k3s-i, mis paneb sama API ühe binaarina kokku.
 
-**Compose'ist Kubernetesesse.** Tabel L3.4 näitab, kuidas tänane töö Kubernetesesse üle läheb. Mõisted jäävad samaks, muutub ainult see, kes soovitud seisu hoiab.
+**Compose'ist Kubernetesesse.** Tabel L3.4 näitab, kuidas tänane töö Kubernetesesse üle läheb. Mõisted jäävad samaks, muutub ainult see, kes soovitud olekut hoiab.
 
 | Compose'is | Kubernetesis |
 |---|---|

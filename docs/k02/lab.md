@@ -14,15 +14,15 @@ tags:
 
 | Etapp | Mida teed | Valmis, kui |
 |---|---|---|
-| [1. Algseis](lab-1-algseis.md) | projekt k01 põhjal, uued grupid, `group_vars` ja `host_vars` | web01 näitab teist väärtust kui teised |
-| [2. Kasutajad](lab-2-kasutajad.md) | kolm kasutajat `loop`-iga, `register` | teine käivitus `changed=0` |
-| [3. Veebiserver](lab-3-veebiserver.md) | nginx, mall, handler | web01 ja app01 näitavad oma nime |
-| [4. Andmebaas](lab-4-andmebaas.md) | MariaDB db01-l, kogu, parool Vaultis | kasutaja `labor` saab sisse |
-| [5. Rollid](lab-5-rollid.md) | kõik kolm osa rollideks, `site.yml` | `site.yml` teine käivitus `changed=0` |
-| [6. Kontrollitud muudatus ja esitamine](lab-6-esitamine.md) | `--check --diff`, `serial`, `git push` | projekt GitHubis, Vaulti parool mitte |
+| [1. Algseis](lab-1-algseis.md) | projekt 1. kohtumise failide põhjal, uued grupid, `group_vars` ja `host_vars` | web01-l on muutuja väärtus teistest erinev |
+| [2. Kasutajad](lab-2-kasutajad.md) | kolm kasutajat `loop`-iga, `register` | teisel käivitusel on `changed=0` |
+| [3. Veebiserver](lab-3-veebiserver.md) | nginx, mall ja handler | web01 ja app01 veebilehel on masina nimi |
+| [4. Andmebaas](lab-4-andmebaas.md) | MariaDB db01-s, kogu, parool Vaultis | kasutaja `labor` saab andmebaasi sisse logida |
+| [5. Rollid](lab-5-rollid.md) | kõik kolm osa rollideks, `site.yml` | `site.yml` teisel käivitusel on `changed=0` |
+| [6. Kontrollitud muudatus ja esitamine](lab-6-esitamine.md) | `--check --diff`, `serial` ja töö esitamine | projekt on GitHubis, Vaulti parool ei ole |
 
 *Tabel 1. Praktikumi etapid.*
 
-Kinni jäid? [Abi](abi.md)
+Vajad abi? [Abi](abi.md)
 
 Jäi aega üle? [Lisaülesanded](lisa.md)

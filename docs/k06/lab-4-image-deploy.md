@@ -7,7 +7,7 @@ tags:
 
 # 4. Image, paralleel ja deploy
 
-Kui testkeskkonda läheb teine fail kui see, mis läbis kontrollid, või paigaldus käivitub iga commit'i peale, ei saa testkeskkonna tulemusi usaldada. Pipeline teab nüüd, kas kood on hea, aga ei vii seda kuhugi. Sama WAR, mis läbis quality gate'i ja on Nexuses, läheb Docker image'isse ning Nexuse upload ja image'i build käivituvad korraga. Avaldamine käib ainult põhiharult ja testkeskkonda paigaldab pipeline alles siis, kui inimene selle kinnitab. Iga otsus on Jenkinsfile'is kirjas, nii et seda saab üle vaadata nagu iga teist koodi.
+Kui testkeskkonda läheb teine fail kui see, mis läbis kontrollid, või paigaldus käivitub iga commit'i peale, ei saa testkeskkonna tulemusi usaldada. Pipeline kontrollib nüüd koodi, kuid ei paigalda seda kuhugi. Sama WAR, mis läbis quality gate'i ja on Nexuses, läheb Docker image'isse ning Nexuse upload ja image'i build käivituvad korraga. Avaldamine käib ainult põhiharult ja testkeskkonda paigaldab pipeline alles siis, kui inimene selle kinnitab. Iga otsus on Jenkinsfile'is kirjas, nii et seda saab üle vaadata nagu iga teist koodi.
 
 **Kui teed seda tööl iga päev:** build once (sama artefakt Nexuses ja image'is) ja kinnitusega deploy on sul tööl juba nõue. Kui see on sul juba korras, mine otse etappi [„Paigalda testkeskkonda kinnitusega“](#paigalda-testkeskkonda-kinnitusega).
 
@@ -32,7 +32,7 @@ bash autograde/check.sh k06 files
 
 ## Ehita image pipeline'is
 
-Nüüd ehitab image'i pipeline, mitte sina. `docker build` töötab agendil kasutajana `jenkins`, nii et see kasutaja peab Docker daemoniga rääkida saama. Build context on `target/`, mis sisaldab juba kontrollitud WAR-i.
+Nüüd ehitab image'i pipeline, mitte sina. `docker build` töötab agendil kasutajana `jenkins`, nii et see kasutaja peab saama Docker daemoniga suhelda. Build context on `target/`, mis sisaldab juba kontrollitud WAR-i.
 
 `docker` grupp võrdub sellel masinal root-õigusega ja Jenkinsfile'i muutja saab selle õiguse endale. Seepärast on see lubatud ühe õppija agendil, aga mitte jagatud controlleris. Mitme meeskonnaga agentidel kasutatakse selle asemel rootless-Dockerit, Podmani või ajutisi agente, mis pärast buildi kustutatakse.
 
@@ -54,7 +54,7 @@ docker inspect --format '{{.Config.Env}}' labori-seis:<tag> | tr ' ' '\n' | grep
 bash autograde/check.sh k06 docker
 ```
 
-> `permission denied ... /var/run/docker.sock`: kasutaja `jenkins` pole `docker` grupis või agenti pole pärast seda taaskäivitatud (`sudo systemctl restart jenkins-agent`).
+> Teade `permission denied ... /var/run/docker.sock` tähendab, et kasutaja `jenkins` ei ole `docker` grupis või agenti pole pärast seda taaskäivitatud (`sudo systemctl restart jenkins-agent`).
 
 Image'i tag ja Nexuse versioon on sama string, nii et ühest leiad alati teise. `GIT_SHA` image'i keskkonnas on kolmas sõltumatu viide samale commit'ile. Iga build lisab ühe WAR-i suuruse kihi, nii et koristus `cleanup` plokis hoiab agendi ketta stabiilsena.
 
@@ -107,7 +107,7 @@ Job on tavaline Pipeline job, mitte multibranch, seega pole `when { branch 'main
 4. Jenkinsis folderis `<gh>`: **New Item → `labori-seis-proov` → Copy from `labori-seis`**. Configure → *Branch Specifier* `*/k06-proov`. **Build Now**.
 5. Kui build on läbi, kustuta job `labori-seis-proov` ja haru: `git push origin --delete k06-proov && git branch -D k06-proov`.
 
-Proovi-job tegi kõik kontrollid, aga `Avaldamine` oli hall. See tõestab tingimuse mõlemat poolt: põhiharu avaldab, muu haru mitte. Proovi-job kustutatakse, sest ta analüüsis sama Sonari projekti ja Community Build ei erista harusid: tema analüüs kirjutas sinu põhiharu oma üle.
+Proovi-job tegi kõik kontrollid, aga `Avaldamine` oli hall. See tõestab tingimuse mõlemat poolt: põhiharu avaldab, muu haru mitte. Proovi-job kustutatakse, sest see analüüsis sama Sonari projekti ja Community Build ei erista harusid: selle analüüs kirjutas sinu põhiharu oma üle.
 
 ✅ **Edasi saad minna, kui** `labori-seis-proov` töötas Build'ist Quality Gate'ini ja `Avaldamine` oli Graph View's vahele jäetud (hall), Nexusesse uut versiooni ei tulnud ja proovi-job ning haru on kustutatud.
 

@@ -40,7 +40,7 @@ Application on alamkaustas, et ta ei haldaks iseennast ja et `kubectl apply -f k
     kubectl get deploy app01 -o jsonpath='{.metadata.annotations.argocd\.argoproj\.io/tracking-id}'; echo
     ```
 
-> `repository not accessible`: repoURL-is on kirjaviga või repo pole org'is `hkhk-tk`. `destination … is not permitted in project`: destination namespace ei ole sinu oma.
+> Kui näed `repository not accessible`, on `repoURL`-is kirjaviga või repositoorium ei ole org'is `hkhk-tk`. Kui näed `destination … is not permitted in project`, ei ole destination namespace sinu oma.
 
 `Synced Healthy` tuli mõne sekundiga, sest klastris oli juba täpselt see, mis Gitis: rikete parandamise lõpus tegid `kubectl diff` tühjaks. Argo ei loonud midagi uuesti, ta võttis olemasolevad objektid üle, sest nimed on samad. Tracking-id annotatsioon on märk, mille järgi Argo hiljem teab, mis on tema hallata. Kui olek on kohe `OutOfSync`, on mõni rike parandamata või parandus Giti viimata.
 
@@ -78,7 +78,7 @@ UI ja `argocd` CLI räägivad argocd-server'i API-ga (CLI gRPC kaudu), mitte Kub
 </figure>
 -->
 
-> `permission denied`: sinu kontol on õigus ainult oma projektile, nimi on `is-<github>/labori-seis`. Kontot pole: sama info on `kubectl get application labori-seis -o yaml` all `status`.
+> Kui näed `permission denied`, on sinu kontol õigus ainult oma projektile, mille nimi on `is-<github>/labori-seis`. Kui sul Argo CD kontot pole, leiad sama info käsu `kubectl get application labori-seis -o yaml` väljundi plokist `status`.
 
 `app resources` loetleb kõik objektid, mida Argo haldab. Secret'it `labori-seis` seal pole, sest seda pole Gitis, ja see on õige. `proj get` näitab piire, mille koolitaja sulle seadis: üks repo, üks namespace, klastritasandi objekte mitte. Isegi kui keegi kirjutaks sinu repo'sse ClusterRole'i, ei laseks Argo seda luua.
 
@@ -150,7 +150,7 @@ Kolm SHA-d tähendavad kolme eri asja. Boti commit'i sõnumis on rakenduse koodi
 
 ## Drift ja selfHeal
 
-Teed käsitsi muudatuse, nagu koolitaja rikete juures tegi, ja vaatad, mida Argo teeb. `selfHeal: true` keerab drift'i Giti seisu tagasi. Tee see ajal, kui eelmise etapi `ci` töötab.
+Teed käsitsi muudatuse, nagu koolitaja rikete juures tegi, ja vaatad, mida Argo teeb. `selfHeal: true` viib klastri drift'i järel tagasi Gitis kirjeldatud olekusse. Tee see ajal, kui eelmise etapi `ci` töötab.
 
 selfHeal'i käivitab application-controller'i watch Kubernetese API-s, mitte Giti lugemine: objekti muutus paneb Application'i kohe uuesti võrdlusesse. Käsitsi `kubectl edit` elab seepärast paar sekundit ja intsidendi ajal tuleb kas parandus commit'ida või selfHeal teadlikult välja lülitada.
 
@@ -200,7 +200,7 @@ Mõnes meeskonnas on selfHeal tootmises teadlikult väljas, et intsidendi ajal s
 
 > Application'it ennast Argo ei halda. Kui muudad poliitikat käsitsi, kaob muudatus alles siis, kui teed failile uuesti `kubectl apply`.
 
-`argocd app diff` näitas täpselt ühte erinevust, `replicas`, ja see on sama info, mille sa rikete juures `kubectl diff`-iga käsitsi leidsid. Sync kirjutas Giti seisu klastrisse ja OutOfSync kadus. Kui oleksid tahtnud kahte koopiat alles jätta, oleks õige tee olnud muuta faili ja commit'ida, mitte jätta drift'i.
+`argocd app diff` näitas täpselt ühte erinevust, `replicas`, ja see on sama info, mille sa rikete juures `kubectl diff`-iga käsitsi leidsid. Sync rakendas Gitis kirjeldatud oleku klastris ja OutOfSync kadus. Kui oleksid tahtnud kahte koopiat alles jätta, oleks õige tee olnud muuta faili ja commit'ida, mitte jätta drift'i.
 
 ✅ **Edasi saad minna, kui** `replicas: 2` püsis seni, kuni tegid sync'i, Application oli selle aja `OutOfSync`, pärast sync'i on 1 koopia ja `automated` näitab jälle `"prune":true,"selfHeal":true`.
 
@@ -264,7 +264,7 @@ Süntaksiviga manifestis on tavaline ja ohutu küsimus on: kas GitOps'i töörii
     kubectl get application labori-seis -w
     ```
 
-Sync status oli `Unknown` ja tingimuses oli `ComparisonError` koos YAML-i reanumbriga. `/health` vastas ikka `UP`: klastris ei muutunud midagi, sest Argo ei suutnud uut soovitud seisu üldse välja arvutada. Kui sel ajal oleks CI kirjutanud uue tag'i, poleks see klastrisse jõudnud. Seepärast käivitad `kubeconform`-i enne push'i, mitte pärast.
+Sync status oli `Unknown` ja tingimuses oli `ComparisonError` koos YAML-i reanumbriga. `/health` vastas ikka `UP`: klastris ei muutunud midagi, sest Argo ei suutnud uut soovitud olekut üldse välja arvutada. Kui sel ajal oleks CI kirjutanud uue tag'i, poleks see klastrisse jõudnud. Seepärast käivitad `kubeconform`-i enne push'i, mitte pärast.
 
 ✅ **Edasi saad minna, kui** katkise failiga oli olek `Unknown` ja `ComparisonError`, `/health` jäi `UP`-iks ja pärast faili eemaldamist on olek jälle `Synced Healthy`.
 
@@ -350,7 +350,7 @@ Uus pod on `Running 0/1`: liveness kontrollib `/health/live`-i ja see vastab, re
 
 ## Miks see nii töötab
 
-**Boti push ja tsükkel.** `GITHUB_TOKEN`-iga tehtud push ei käivita `push`- ega `pull_request`-sündmusega workflow'sid, seega boti commit ei tekita tsüklit. `gitops.yml` ei kirjuta üle commit'i, mis muutis ainult manifeste, muidu taastaks CI mõne minuti pärast sinu tehtud vea asemel eelmise seisu.
+**Boti push ja tsükkel.** `GITHUB_TOKEN`-iga tehtud push ei käivita `push`- ega `pull_request`-sündmusega workflow'sid, seega boti commit ei tekita tsüklit. `gitops.yml` ei kirjuta üle commit'i, mis muutis ainult manifeste, muidu taastaks CI mõne minuti pärast sinu tehtud vea asemel eelmise oleku.
 
 **Vanem SHA ei kirjuta uuemat üle.** Workflow kontrollib ka, kas manifestis on juba uuem SHA. Kui kaks `ci`-käivitust lõpevad vales järjekorras, ei asenda vanem SHA uuemat.
 

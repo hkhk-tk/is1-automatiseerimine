@@ -5,7 +5,7 @@ tags:
   - GitHub Actions
 ---
 
-# 5. kohtumine, labor: Maven ja GitHub Actions
+# 5. kohtumine · Praktikum: Maven ja GitHub Actions
 
 !!! info "Selle korra töö"
     - **Masin:** control node (VPN), sinu repo juurkaust, workflow'd kaustas `.github/workflows/`, tõendid märkmikus

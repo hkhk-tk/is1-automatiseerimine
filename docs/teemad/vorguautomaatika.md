@@ -8,11 +8,11 @@ Hooldusaknas tuleb 140 kommutaatoril vahetada NTP serverid ja SNMPv3 kasutaja. K
 
 ## NetOps, source of truth ja piir SDN-iga
 
-**NetOps**-is on soovitud seis versioonihalduses, muudatus läbib review ja automaatsed kontrollid ning seadmete nimekiri ja omadused tulevad *source of truth*'ist, näiteks NetBoxist. Seadmeid seadistatakse source of truth'i järgi; Oxidizedi tüüpi varukoopia näitab ainult seda, mis seadmetes juba on.
+**NetOps**-is on soovitud olek versioonihalduses, muudatus läbib review ja automaatsed kontrollid ning seadmete nimekiri ja omadused tulevad *source of truth*'ist, näiteks NetBoxist. Seadmeid seadistatakse source of truth'i järgi; Oxidizedi tüüpi varukoopia näitab ainult seda, mis seadmetes juba on.
 
 - SDN tõstab control plane'i seadmetest välja tsentraalsesse kontrollerisse (OpenFlow, tootjate fabric'u kontrollerid). Võrguautomaatika jätab marsruutimise ja kommutatsiooni seadmetesse ja muudab ainult seda, kuidas konfiguratsioon sinna jõuab.
 - Monitooringuga on liidesed samad: SNMP polling ja gNMI streaming telemetry annavad olekut, automaatika kasutab seda muudatuse eel- ja järelkontrolliks.
-- "Intent-based networking" on tootjate termin sama idee kohta: soovitud seis kirjeldatakse ja süsteem viib seadmed sinna. Mõiste sisu sõltub tootjast.
+- "Intent-based networking" on tootjate termin sama idee kohta: soovitud olek kirjeldatakse ja süsteem viib seadmed sinna. Mõiste sisu sõltub tootjast.
 
 ## CLI, NETCONF ja API: kolm liidest seadmega
 
@@ -72,7 +72,7 @@ Võrguautomaatikale tuleb siit kolm järeldust. Eelkontroll on samuti kood ja se
 
 - **Mõjuala.** Playbook, mis töötab 200 seadmel paralleelselt, levitab vea sama kiiresti kui paranduse. Ansible'is piirab seda `serial` koos `max_fail_percentage`-iga, Nornir'is filter ja lained. Esimene laine on laboriseade või üks vähem tähtis sait.
 - **Iseenda välja lukustamine.** ACL-i või marsruudi muudatus halduspordil katkestab ühenduse keset tööd. NETCONF-i `confirmed-commit`, Junose `commit confirmed` ja NAPALM-i `revert_in` võtavad muudatuse ise tagasi. IOS-il teeb sama `configure terminal revert timer` koos `configure confirm`-iga, mis eeldab seadistatud `archive`-it. Kui seade seda ei toeta, kasutatakse ajutist `reload in`-i.
-- **Idempotentsus.** `*_config` võrdleb tekstiridu. Kui seade kirjutab rea teisiti, kui sina selle saatsid (lühend, vaikeväärtus, järjekord), on iga jooks `changed`. Ressursimoodulid võrdlevad struktuuri ja on täpsemad, aga katavad ainult osa konfist.
+- **Idempotentsus.** `*_config` võrdleb tekstiridu. Kui seade kirjutab rea teisiti, kui sina selle saatsid (lühend, vaikeväärtus, järjekord), annab iga käivitus `changed`. Ressursimoodulid võrdlevad struktuuri ja on täpsemad, aga katavad ainult osa konfist.
 - **Mandaadid.** Automaatika teenusekonto, millel on igal seadmel *privilege 15*, on ründaja jaoks kogu võrk. Piiramiseks kasutatakse TACACS+-i käsupõhist autoriseerimist, eraldi kontot lugemiseks ja kirjutamiseks ning AAA accounting'ut, mis näitab, milline konto millise käsu saatis.
 - **Source of truth'i kvaliteet.** Kui NetBoxis on vale VLAN, viib automaatika vea kõigisse seadmetesse. Andmetel peavad olema samad kontrollid mis koodil: kohustuslikud väljad, lubatud vahemikud ja review.
 - **Python või Ansible.** Python annab täieliku kontrolli veakäsitluse ja parsimise üle ning sinu vastutusel on ka hooldus. Ansible annab inventory, `--check`-i ja recap'i, aga tootja kollektsioonide versioonid ja CLI parserid tuleb hoida kontrolli all. Paljudes meeskondades käivitab töö Ansible ja keerulisem osa on Pythoni filter või moodul.
@@ -83,7 +83,7 @@ Võrguautomaatikale tuleb siit kolm järeldust. Eelkontroll on samuti kood ja se
 
 ## Kontrolli ennast
 
-??? question "Playbook muudab `cisco.ios.ios_config`-iga ACL-i ja iga jooks näitab `changed`, kuigi seadmes ei muutu midagi. Mis on tõenäoline põhjus ja mis on kaks lahendust?"
+??? question "Playbook muudab `cisco.ios.ios_config`-iga ACL-i ja iga käivitus näitab `changed`, kuigi seadmes ei muutu midagi. Mis on tõenäoline põhjus ja mis on kaks lahendust?"
     Seade salvestab rea teisel kujul, kui moodul saatis, näiteks lühendatud märksõna või lisatud vaikeväärtusega, ja tekstivõrdlus ei leia vastet. Üks lahendus on kirjutada read täpselt seadme `show running-config` kujul. Teine on kasutada ressursimoodulit (`ios_acls`), mis võrdleb struktuuri, mitte teksti.
 
 ??? question "Miks on NETCONF-iga muudatus ohutum kui sama muudatus CLI kaudu, kui seade toetab `candidate` andmehoidlat?"
@@ -92,5 +92,5 @@ Võrguautomaatikale tuleb siit kolm järeldust. Eelkontroll on samuti kood ja se
 ??? question "Millal valiksid Nornir'i Ansible'i asemel?"
     Siis, kui töö loogika on programmeerimine: tingimused seadme vastuse põhjal, mitme API andmete ühendamine, oma veakäsitlus ja testid Pythonis. Ansible on parem, kui sama muudatus läheb paljudele seadmetele ja meeskond tunneb Ansible'it juba serverite poolt. Nornir annab paralleelsuse ja inventory, aga ei anna `--check`-i ega moodulite idempotentsust.
 
-??? question "NetBox on inventory allikas ja keegi märgib seal 30 kommutaatorit kogemata teise saidi alla. Mis juhtub järgmisel öisel jooksul ja kuidas seda ette ära hoida?"
+??? question "NetBox on inventory allikas ja keegi märgib seal 30 kommutaatorit kogemata teise saidi alla. Mis juhtub järgmisel öisel käivitusel ja kuidas seda ette ära hoida?"
     Kommutaatorid saavad teise saidi muutujad, näiteks NTP serverid, VLAN-id ja syslogi sihtkoha, ning automaatika seadistab need seadmetesse. Kaitseks on play alguses `assert`, mis peatab jooksu, kui grupi suurus muutub oodatust rohkem, NetBoxi muudatuste review ja esimene laine ühe seadmega.

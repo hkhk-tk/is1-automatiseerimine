@@ -6,7 +6,7 @@ tags:
 
 # 2. Triggerid, options ja post
 
-Build, mille keegi peab nupust käivitama, jääb tegemata just siis, kui seda kõige rohkem vaja on, ja build ilma piirideta hõivab agendi ning ketta seni, kuni keegi seda märkab. Praegu on sinu pipeline'iga just nii. Lõpuks käivitub build commit'i peale ise ja väljast saab selle käivitada API tokeniga. Jenkinsfile ütleb, kui kaua build tohib kesta, mitu jooksu korraga on lubatud ja mis pärast jooksu alles jääb.
+Build, mille keegi peab nupust käivitama, jääb tegemata just siis, kui seda kõige rohkem vaja on, ja build ilma piirideta hõivab agendi ning ketta seni, kuni keegi seda märkab. Praegu on sinu pipeline'iga just nii. Lõpuks käivitub build commit'i peale ise ja väljast saab selle käivitada API tokeniga. Jenkinsfile ütleb, kui kaua build tohib kesta, mitu buildi korraga on lubatud ja mis pärast buildi alles jääb.
 
 **Kui teed seda tööl iga päev:** `pollSCM` ja `options` ploki kirjutad peast ning buildi käivitamine API tokeniga on sul skriptis juba olemas. Kui see on sul juba korras, mine otse etappi [„Arhiveeri WAR ja korista õiges järjekorras“](#arhiveeri-war-ja-korista-oiges-jarjekorras).
 
@@ -29,9 +29,9 @@ Päring vastab sinu masinast, sest sina oled VPN-i sees ja `getent` annab sisev�
 
 ## Lase commit'il buildi käivitada
 
-Kui GitHub ei saa Jenkinsit kutsuda, küsib Jenkins ise. `pollSCM` vaatab ajakava järgi, kas harul on uus commit, ja käivitab buildi ainult siis, kui on. `H/2` tähendab "iga kahe minuti järel, minut valitakse jobi nimest", nii et 15 õppija pollimised ei tule samal sekundil.
+Kui GitHub ei saa Jenkinsit kutsuda, küsib Jenkins ise. `pollSCM` kontrollib ajakava järgi, kas harul on uus commit, ja käivitab buildi ainult siis, kui on. `H/2` tähendab "iga kahe minuti järel, minut valitakse jobi nimest", nii et 15 õppija pollimised ei tule samal sekundil.
 
-Ilma `H`-ta teeksid kõik jobid oma `git ls-remote`-i samal sekundil: sada jobi annavad Giti serverile iga kahe minuti järel saja päringu tipu.
+Ilma `H`-ta teeksid kõik jobid oma `git ls-remote`-i samal sekundil: sada jobi teevad Giti serverile iga kahe minuti järel samal hetkel sada päringut.
 
 1. Lisa Jenkinsfile'i `pipeline {}` sisse pärast `tools` plokki:
 
@@ -56,7 +56,7 @@ Ilma `H`-ta teeksid kõik jobid oma `git ls-remote`-i samal sekundil: sada jobi 
 bash autograde/check.sh k06 triggers
 ```
 
-> Build ei käivitu ise: `triggers` jõustub alles pärast esimest käsitsi buildi.
+> Kui build ei käivitu ise, ei ole `triggers` veel jõustunud: see jõustub alles pärast esimest käsitsi käivitatud buildi.
 
 Polling logis on viimane räsi, mida Jenkins nägi, ja otsus "Changes found" või "No changes". Kui logis on vale räsi, vaatab job teist haru või teist repot.
 
@@ -76,7 +76,7 @@ Kolmas viis buildi alustada on `POST` Jenkinsi API-le, näiteks GitHub Actionsi 
 
 3. Vaata buildi lehelt, kes selle käivitas.
 
-> 403: kasutasid parooli või token on kustutatud. 404: jobi tee on vale (`<gh>/labori-seis`).
+> Vastus 403 tähendab, et kasutasid parooli või token on kustutatud. Vastus 404 tähendab, et jobi tee on vale (`<gh>/labori-seis`).
 
 Skript sai vastuseks `201` ja järjekorra aadressi, ootas, kuni järjekorrast tuli build, ja seejärel buildi tulemust.
 
@@ -107,7 +107,7 @@ Väljundis on kaks erinevat klassi: `hudson.model.Cause$UserIdCause` sinu skript
 
 ## Pane buildile piirid
 
-Jenkinsi vaikimisi pole job'il ajapiiri ega ajaloo piiri ja samaaegsete buildide arv on piiramata: teine jooks saab kausta `workspace@2`, aga jagab sama testkonteinerit, Nexuse versiooni ja agendi ketast. Lisa Jenkinsfile'i plokk `options` ([direktiivid](https://www.jenkins.io/doc/book/pipeline/syntax/#options)). Nõuded:
+Vaikimisi pole Jenkinsis job'il ajapiiri ega ajaloo piiri ja samaaegsete buildide arv on piiramata: teine build saab kausta `workspace@2`, aga jagab sama testkonteinerit, Nexuse versiooni ja agendi ketast. Lisa Jenkinsfile'i plokk `options` ([direktiivid](https://www.jenkins.io/doc/book/pipeline/syntax/#options)). Nõuded:
 
 - kogu buildi aeg on piiratud 30 minutiga (`timeout`)
 - alles jääb 10 viimast buildi ja 5 viimase artefaktid (`buildDiscarder`, `logRotator` koos `artifactNumToKeepStr`-iga)
@@ -146,7 +146,7 @@ WAR tuleb arhiveerida buildi juurde enne, kui workspace tühjendatakse. `post` t
     sudo du -sh /opt/jenkins/workspace/* /opt/jenkins/tools 2> /dev/null | sort -h
     ```
 
-> `ERROR: No artifacts found that match the file pattern`: workspace tühjendati enne arhiveerimist.
+> Teade `ERROR: No artifacts found that match the file pattern` tähendab, et workspace tühjendati enne arhiveerimist.
 
 Ajutine variant ebaõnnestus, sest `always` käivitub enne `success`-i ja WAR oli selleks ajaks kustutatud. Parandatud variant näitab vahet: workspace on tühi, aga WAR on buildi juures alles ja selle fingerprint seob faili konkreetse buildiga. `tools` jääb alles, sest see pole workspace'i osa: Maven laaditakse üks kord node'i kohta, mitte iga buildi jaoks.
 

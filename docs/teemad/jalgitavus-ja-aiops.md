@@ -68,7 +68,7 @@ Signaal oli olemas, aga teavitustee polnud kontrollitud. Sama riski näed labori
 - **Kardinaalsus ja hind.** Iga unikaalne label'ite kombinatsioon on Prometheuses eraldi aegrida. `user_id` või päringu URL label'ina paisutab mälu ja kettakasutuse. Logide ja trace'ide maht on sageli suurim jälgitavuse kulu ning sampling vähendab kulu, aga vähendab ka nähtavust.
 - **Vale korrelatsioon.** Statistiline mudel paneb kokku asjad, mis tulid koos ajaloos, mitte asjad, millel on põhjuslik seos. Uus arhitektuur või hooajaline koormus annab valesid gruppe ja valvaja võib usaldada mudelit rohkem kui oma vaatlust.
 - **Automaatne parandus peidab põhjuse.** Restart, mis käivitub igal ööl, muudab mälulekke nähtamatuks. Iga automaatne tegevus peab andma ticket'i ja loenduri, et kordumine oleks näha.
-- **Hilinenud ja aegunud signaal.** `resolved` võib jõuda kohale pärast seda, kui tegevus juba käivitus. Tegevus kontrollib seisu enne muutmist uuesti ja sel on sageduspiir.
+- **Hilinenud ja aegunud signaal.** `resolved` võib jõuda kohale pärast seda, kui tegevus juba käivitus. Tegevus kontrollib enne muutmist olekut uuesti ja sel on sageduspiir.
 - **Logid on sisend.** AI-tööriist, mis loeb logisid, loeb ka ründaja kirjutatud teksti. Logist tulnud juhist ei täideta ja tööriistal on ainult lugemisõigus.
 
 ## Kontrolli ennast
