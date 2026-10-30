@@ -90,7 +90,7 @@ voti="$ssh_kaust/id_ed25519"
 config="$ssh_kaust/config"
 vigu=0
 
-# 1. Kaust ~/.ssh, ainult sinu loetav
+# 1. Kaust ~/.ssh, ligipääs ainult omanikule
 mkdir -p "$ssh_kaust"
 chmod 700 "$ssh_kaust"
 
@@ -101,11 +101,11 @@ else
     ssh-keygen -t ed25519 -N "" -f "$voti" -C "kasutaja@control"
 fi
 
-# 3. config-fail olemas ja ainult sinu loetav
+# 3. SSH konfiguratsioonifail, ligipääs ainult omanikule
 touch "$config"
 chmod 600 "$config"
 
-# 4.–5. Üks masin: nimi config-faili, võti masinasse, masina nimi
+# 4.–5. Iga masin: kirje konfiguratsioonifaili, avalik võti masinasse, hostinimi
 seadista() {
     local nimi="$1"
     local ip="$2"

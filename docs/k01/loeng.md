@@ -178,7 +178,7 @@ Töötad kahes masinas. **Control node** on masin, kust juhid tööd ja kuhu üh
 
 Praktikumis teed ülesande kõigepealt web01-s käsitsi ja kontrollid tulemust käskudega `cat` ja `stat`. Kui käsk ei väljasta midagi, ei tähenda see veel, et ülesanne on tehtud. Tulemust tõendab ainult kontrollnimekirja järgi tehtud kontroll.
 
-## 4. Skript ja selle piir
+## 4. Skripti piirid
 
 **Küsimus:** miks ei piisa sellest, et käsud on failis?
 
@@ -347,7 +347,7 @@ ansible [core 2.16.3]
 
 *Tabel 6.1. `ansible --version` väljund.*
 
-### Inventory: millised masinad
+### Inventory: hallatavate masinate loend
 
 **Inventory** on fail, kus on kirjas masinad, mida Ansible haldab, ja kuidas nendega ühenduda. Meie laboris:
 
@@ -538,7 +538,7 @@ Juhendi lõpus on näited (`EXAMPLES`), millest on kõige lihtsam alustada.
 
 Pane tähele ülesannete nimesid: „Kaust **on** olemas“, mitte „Tee kaust“. Playbook kirjeldab olekut, mitte tegevust. `state: directory` määrab, et see tee peab olema kaust. `content: |` tähendab, et järgmised taandega read on faili sisu.
 
-### YAML minimaalselt
+### YAML-i põhireeglid
 
 YAML on lihtne tekstivorming, kus struktuur tuleb **taandest**. Kolm reeglit katavad meie playbook'i:
 
