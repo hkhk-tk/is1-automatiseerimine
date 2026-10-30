@@ -25,7 +25,8 @@ Classroom 50 loob sulle repositooriumi `<klassiruum>-labori-seis-<github>`.
 ## Igal kohtumisel
 
 1. 1. kohtumisel salvestad failid kausta `k01/` ja töötad otse harus `main`. Alates 2. kohtumisest töötad oma harus: `git switch -c k02` jne.
-2. Kohtumise lõpus esita töö tag'iga. Alates 2. kohtumisest tee enne seda pull request harusse `main` ja ühenda see (merge).
+2. Iga kohtumise ülesanded on sinu repositooriumis issue'na (vahekaart **Issues**). Issue'is on märkeruut iga praktikumi osa ja kodutöö kohta. Märgi osa tehtuks, kui oled selle lõpetanud.
+3. Kohtumise lõpus esita töö tag'iga. Alates 2. kohtumisest tee enne seda pull request harusse `main` ja ühenda see (merge).
 
     ```bash
     git switch main && git pull
