@@ -9,8 +9,8 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - teed päeva ülesande web01-s käsitsi ja kontrollid tulemust;
-    - paned samad käsud skripti ja näed, mida skript teisel käivitusel teeb.
+    - täidad päeva ülesande masinas web01 käsitsi ja kontrollid tulemust;
+    - koondad samad käsud Bashi skripti ja uurid selle käitumist korduval käivitamisel.
 
 !!! info "Päeva ülesanne"
 
@@ -47,9 +47,13 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
     640 kasutaja /home/kasutaja/automation-lab/training.conf
     ```
 
-    Need kaks kontrollkäsku kasutad kogu päeva.
+    Neid kahte kontrollkäsku kasutad kogu päeva.
 
-Proovi `mkdir ~/automation-lab` uuesti. Tuleb viga `File exists`: käsk ei tea, et kaust on juba olemas ja õige. Eemalda kaust ja mine tagasi control node'ile:
+Käivita `mkdir ~/automation-lab` uuesti. Kuna sama nimega kaust on juba olemas, lõpetab `mkdir` veaga `File exists`.
+
+Mida peaks skript tegema teisiti, kui tahame seda mitu korda käivitada?
+
+Eemalda kaust ja mine tagasi control node'i:
 
 ```bash
 rm -r ~/automation-lab
@@ -58,7 +62,7 @@ exit
 
 ## A2 · Skriptina
 
-Control node'il, oma repos, loo fail `~/kursus/k01/prepare-training.sh`:
+Loo control node'is oma repositooriumisse fail `~/kursus/k01/prepare-training.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -69,7 +73,7 @@ chmod 0640 ~/automation-lab/training.conf
 echo "Valmis"
 ```
 
-`mkdir -p` ei anna viga, kui kaust on juba olemas. Kopeeri skript web01-le ja käivita seal:
+`mkdir -p` ei anna viga, kui kaust on juba olemas. Kopeeri skript masinasse web01 ja käivita see seal:
 
 ```bash
 cd ~/kursus/k01
@@ -79,7 +83,7 @@ ssh web01 bash prepare-training.sh
 
 ## A3 · Teine käivitus
 
-Ennusta enne: kas skript kirjutab faili teisel korral uuesti? Vaata faili muutmise aega enne ja pärast:
+Enne käivitamist ennusta tulemust: kas skript kirjutab faili teisel käivitusel uuesti? Vaata faili muutmise aega enne ja pärast käivitamist:
 
 ```bash
 ssh web01 stat -c '%y' automation-lab/training.conf
@@ -89,7 +93,7 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    Aeg on teisel korral uus: fail kirjutati üle, kuigi sisu oli juba õige. Skript ei kontrolli seisu, ta lihtsalt teeb käsud uuesti. Ansible'is näed sama tööd tegemas moodulit, mis kontrollib enne, kas muutmine on vaja.
+    Teisel käivitusel on muutmise aeg uus: fail kirjutati üle, kuigi selle sisu oli juba õige. Meie skript ei kontrolli enne faili kirjutamist, kas selle sisu on juba õige. Seetõttu kirjutatakse fail igal käivitusel uuesti. Ansible'is teeb sama töö moodul, mis kontrollib enne tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
 
 ```bash
 cd ~/kursus
@@ -98,4 +102,4 @@ git commit -m "k01: prepare-training.sh"
 git push
 ```
 
-**Valmis, kui** skript on GitHubis ja oskad öelda, mis juhtus teisel käivitusel.
+**Valmis, kui** skript on GitHubis ja oskad selgitada, mis juhtus teisel käivitusel.

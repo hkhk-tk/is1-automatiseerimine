@@ -13,7 +13,7 @@ Vasta [1. kohtumise testile](https://docs.google.com/forms/d/e/1FAIpQLSdd-Ah3csw
 
 ## H1 · Muuda üht väärtust
 
-Muuda playbook'is `training.yml` faili sisu: `enabled=true` → `enabled=false`. Käivita kaks korda:
+Muuda playbook'is `training.yml` hallatava faili sisu: `enabled=true` → `enabled=false`. Käivita playbook kaks korda:
 
 ```bash
 ansible-playbook training.yml
@@ -22,17 +22,19 @@ ansible-playbook training.yml
 
 ??? success "Oodatav tulemus"
 
-    Esimene kord: failiülesanne `changed`. Teine kord: `changed=0`. Kontroll masinas:
+    Esimesel käivitusel on faili ülesande olek `changed`, teisel käivitusel on kokkuvõttes `changed=0`. Kontrolli faili sisu masinas:
 
     ```bash
     ssh web01 cat ~/automation-lab/training.conf
     ```
 
-Commit'i sõnumisse kirjuta üks lause: mis muutus ja mida näitas teine käivitus. `git push`.
+Tee muudatustest commit. Kirjelda commit'i sõnumis lühidalt, mida muutsid. Seejärel saada muudatused GitHubi.
+
+💭 **Mõtle:** mida näitas teine käivitus ja miks Ansible ei muutnud faili uuesti?
 
 ## H2 · Sama seadistus kõigile Ubuntu masinatele
 
-Muuda `training.yml`-is `hosts: web01` → `hosts: ubuntu`. Proovi enne ühe uue masinaga, siis kõigiga:
+Muuda `training.yml`-is `hosts: web01` → `hosts: ubuntu`. Kontrolli muudatust kõigepealt masinas `app01` ja rakenda see seejärel kõigile Ubuntu grupi masinatele:
 
 ```bash
 ansible-playbook training.yml --limit app01 --check --diff
@@ -41,25 +43,25 @@ ansible-playbook training.yml
 
 ??? success "Oodatav tulemus"
 
-    `--check` näitab app01 kohta muudatusi, aga ei tee neid. Päris käivitusel on app01 ja rmq01 `changed`, web01 `ok`, sest seal oli kõik juba õige.
+    `--check` näitab, mida Ansible masinas app01 muudaks, kuid ei tee muudatusi. Tavalisel käivitusel on app01 ja rmq01 olek `changed` ning web01 olek `ok`, sest web01 tegelik olek vastas juba soovitud olekule.
 
-`git push`.
+Tee muudatustest commit ja saada need GitHubi.
 
-## H3 · Boonus: sama tööriist, eri nimi
+## H3 · Boonus: sama programm, erinev paketinimi
 
-Lisa `tools.yml`-i tööriist `dig` (DNS-päringud). Ubuntul on see paketis `dnsutils`, AlmaLinuxil `bind-utils`. Kasuta sama mustrit nagu `vim`-i puhul: kaks ülesannet, `when` ja silt `paketid`.
+Lisa `tools.yml`-i programm `dig`, millega saab teha DNS-päringuid. Ubuntus on see paketis `dnsutils`, AlmaLinuxis paketis `bind-utils`. Kasuta sama mustrit nagu `vim`-i puhul: kaks ülesannet, `when` ja silt `paketid`.
 
 ```bash
-ansible-playbook tools.yml -K --tags paketid
+ansible-playbook tools.yml --tags paketid
 ansible all -m ansible.builtin.command -a "dig +short github.com"
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene käsk: Ubuntu masinatel `dnsutils` `changed`, AlmaLinuxi masinatel `bind-utils` `changed`, vastupidised ülesanded `skipping`. Teine käsk: igast masinast üks või mitu IP-aadressi.
+    Esimese käsu järel on Ubuntu masinates paketi `dnsutils` ülesande olek `changed` ja AlmaLinuxi masinates paketi `bind-utils` ülesande olek `changed`. Teise distributsiooni ülesanded on olekus `skipping`. Teine käsk kuvab igast masinast ühe või mitu IP-aadressi.
 
-`git push`.
+Tee muudatustest commit ja saada need GitHubi.
 
 ---
 
-Jäid kinni? Küsi [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehel, lisa käsk ja kogu veateade tekstina.
+Vajad abi? Kirjuta [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehele. Lisa käsk ja kogu veateade tekstina.

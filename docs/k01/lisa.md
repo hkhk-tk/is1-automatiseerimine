@@ -6,7 +6,7 @@ tags:
 
 # 1. kohtumine · Lisaülesanded
 
-Kui praktikum on tehtud ja aega jääb. Kõik ülesanded käivad control node'il kaustas `~/kursus/k01`.
+Need ülesanded on mõeldud neile, kes on praktikumi lõpetanud ja kellel jääb aega üle. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## L1 · Kasutaja kõigis masinates
 
@@ -14,22 +14,20 @@ Lisa uus playbook `users.yml`, mis loob kõigis viies masinas kasutaja `kolleeg`
 
 ??? tip "Vihje"
 
-    Moodul on `ansible.builtin.user`. Parameetrid näed käsuga `ansible-doc ansible.builtin.user`; vaata juhendi lõpus näiteid (`EXAMPLES`).
+    Kasuta moodulit `ansible.builtin.user`. Mooduli parameetrid näed käsuga `ansible-doc ansible.builtin.user`. Näited on dokumentatsiooni lõpus jaotises `EXAMPLES`.
 
 ```bash
-ansible-playbook users.yml -K
+ansible-playbook users.yml
 ansible all -m ansible.builtin.command -a "id kolleeg"
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene käivitus: viis `changed`. Teine: `changed=0`. `id kolleeg` vastab igast masinast.
-
-**Miks:** kasutajate haldus on üks sagedasemaid korduvaid töid. Sama playbook teeb seda viie või saja masina peal.
+    Esimesel käivitusel on kõigi viie masina olek `changed`, teisel käivitusel on kokkuvõttes `changed=0`. Käsk `id kolleeg` annab vastuse igast masinast.
 
 ## L2 · ansible-lint
 
-Paigalda `ansible-lint` ja lase sellel oma playbook'id läbi vaadata:
+Paigalda `ansible-lint` ja kontrolli sellega oma playbook'e:
 
 === "Ubuntu"
 
@@ -47,13 +45,13 @@ Paigalda `ansible-lint` ja lase sellel oma playbook'id läbi vaadata:
 ansible-lint training.yml tools.yml
 ```
 
-Paranda vähemalt üks leitud märkus ja käivita uuesti.
+Paranda vähemalt üks leitud märkus ja käivita kontroll uuesti.
 
-**Miks:** `--syntax-check` ütleb ainult, kas fail on loetav. `ansible-lint` leiab levinud vigu ja halbu tavasid enne, kui playbook masinaid muudab.
+`--syntax-check` kontrollib ainult, kas faili saab lugeda. `ansible-lint` kontrollib playbook'e levinud vigade ja soovitatud stiilireeglite suhtes enne, kui playbook masinaid muudab.
 
-## L3 · Fail masinast tagasi
+## L3 · Failide kopeerimine hallatavatest masinatest
 
-Moodul `ansible.builtin.fetch` toob faili hallatavast masinast control node'ile. Too kõigist viiest masinast fail `/etc/os-release` kausta `~/kursus/k01/os/`.
+Moodul `ansible.builtin.fetch` kopeerib faili hallatavast masinast control node'i. Kopeeri kõigist viiest masinast fail `/etc/os-release` kausta `~/kursus/k01/os/`.
 
 ??? tip "Vihje"
 
@@ -61,6 +59,6 @@ Moodul `ansible.builtin.fetch` toob faili hallatavast masinast control node'ile.
     ansible all -m ansible.builtin.fetch -a "src=/etc/os-release dest=os/"
     ```
 
-    Vaata, millise kaustastruktuuri `fetch` tegi: `find os -type f`.
+    Vaata käsuga `find os -type f`, millise kaustastruktuuri `fetch` lõi.
 
-**Miks:** sageli on vaja masinatest midagi kokku koguda (konfiguratsioon, logi, versioon). Ad-hoc `fetch` teeb seda kõigist masinatest ühe käsuga.
+`fetch` sobib näiteks konfiguratsioonifailide, logide või muu kontrollimiseks vajaliku info kogumiseks hallatavatest masinatest.

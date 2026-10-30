@@ -8,21 +8,21 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    - kirjutad playbook'i, mis teeb Ubuntul ja AlmaLinuxil õiget asja (`when`);
-    - valid, millistes masinates töö tehakse (`hosts`, `--limit`);
+    - kirjutad playbook'i, mis valib Ubuntu ja AlmaLinuxi jaoks sobivad ülesanded (`when`);
+    - valid, millistes masinates playbook käivitatakse (`hosts`, `--limit`);
     - käivitad ainult osa ülesandeid (`tags`).
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k01`.
+Kõik käsud käivitad control node'is kaustas `~/kursus/k01`. Fail `tools.yml` on esitamisel kohustuslik. Tingimuste (`when`) ja siltide (`tags`) eest annab automaatne hindaja boonuspunkte.
 
-## A1 · Probleem: sama programm, eri paketinimi
+## A1 · Probleem: sama programm, erinev paketinimi
 
-Tekstiredaktor `vim` on Ubuntul pakett `vim`, AlmaLinuxil `vim-enhanced`. Üks ülesanne ühe nimega ei tööta mõlemal. Fakt `ansible_facts['os_family']` ütleb, kumb on kumb: Ubuntul `Debian`, AlmaLinuxil `RedHat`.
+Tekstiredaktori `vim` pakett on Ubuntus `vim`, AlmaLinuxis `vim-enhanced`. Sama paketinime ei saa siin kasutada mõlema distributsiooni puhul. Fakt `ansible_facts['os_family']` näitab distributsioonide perekonda: Ubuntus on see `Debian`, AlmaLinuxis `RedHat`.
 
 ```bash
 ansible all -m ansible.builtin.setup -a 'filter=ansible_os_family'
 ```
 
-## A2 · `when`: ülesanne ainult õigel distrol
+## A2 · `when`: ülesande käivitamine vastavalt distributsioonile
 
 Loo fail `tools.yml`:
 
@@ -60,18 +60,18 @@ Loo fail `tools.yml`:
       tags: motd
 ```
 
-`become: true` play tasemel tähendab, et kõik ülesanded teevad tööd `sudo` kaudu. `when` paneb ülesande käima ainult siis, kui tingimus on tõene.
+Kui `become: true` on play tasemel, käivitatakse kõik ülesanded `sudo` kaudu. `when` määrab tingimuse, mille korral ülesanne käivitatakse.
 
 ```bash
 ansible-playbook tools.yml --syntax-check
-ansible-playbook tools.yml -K
+ansible-playbook tools.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    Ubuntu masinatel on AlmaLinuxi ülesanne `skipping`, AlmaLinuxi masinatel Ubuntu omad `skipping`. PLAY RECAP reas on `skipped` väljal vahele jäetud ülesannete arv.
+    Ubuntu masinates on AlmaLinuxi ülesande olek `skipping` ja AlmaLinuxi masinates on Ubuntu ülesannete olek `skipping`. PLAY RECAP real näitab väli `skipped` vahele jäetud ülesannete arvu.
 
-Logi mõnda masinasse ja vaata teadet:
+Logi mõnda masinasse sisse ja vaata teadet:
 
 ```bash
 ssh mc01
@@ -79,32 +79,32 @@ ssh mc01
 
 ??? success "Oodatav tulemus"
 
-    Sisselogimisel on rida `Seda masinat haldab Ansible.` Logi välja: `exit`.
+    Sisselogimisel kuvatakse rida `Seda masinat haldab Ansible.` Logi välja käsuga `exit`.
 
 ## A3 · Sihtmasinad
 
-Sama playbook ainult ühe grupi või ühe masina vastu, ilma faili muutmata:
+`--limit` võimaldab sama playbook'i käivitada ainult valitud grupis või masinas, ilma playbook'i muutmata:
 
 ```bash
-ansible-playbook tools.yml -K --limit alma
-ansible-playbook tools.yml -K --limit web01
+ansible-playbook tools.yml --limit alma
+ansible-playbook tools.yml --limit web01
 ```
 
 ??? success "Oodatav tulemus"
 
-    PLAY RECAP näitab ainult valitud masinaid. `--limit` piirab töö ka siis, kui playbook'is on `hosts: all`. Nii proovid muudatust kõigepealt ühel masinal.
+    PLAY RECAP näitab ainult valitud masinaid. `--limit` piirab käivitamise ka siis, kui playbook'is on `hosts: all`. Nii saad muudatust enne kõigisse masinatesse rakendamist proovida näiteks ühes masinas.
 
 ## A4 · Sildid
 
-Muuda teadet failis (`content:` rida), näiteks lisa `Küsimused: Maria.` ja käivita ainult sildiga `motd` ülesanne:
+Muuda teadet failis (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne:
 
 ```bash
-ansible-playbook tools.yml -K --tags motd
+ansible-playbook tools.yml --tags motd
 ```
 
 ??? success "Oodatav tulemus"
 
-    Käivitub ainult `Teade sisselogimisel` (ja faktide kogumine). Paketiülesanded jäävad vahele. Viis masinat `changed=1`.
+    Käivitub ainult ülesanne `Teade sisselogimisel` ja faktide kogumine. Paketiülesanded jäävad vahele. Kõigi viie masina kokkuvõttes on `changed=1`.
 
 ```bash
 ansible-playbook tools.yml --list-tags

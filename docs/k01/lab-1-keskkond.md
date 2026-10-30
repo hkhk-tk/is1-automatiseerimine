@@ -9,24 +9,24 @@ tags:
 
 !!! abstract "Eesmärgid"
 
-    Lõpuks:
+    Pärast selle osa läbimist:
 
-    - on control node'il nimi `control`;
-    - on control node'il SSH-võti ja see võti on kõigis viies labori VM-is;
-    - kannavad VM-id nimesid `web01`, `app01`, `rmq01`, `mc01`, `db01`;
-    - logid control node'ilt igasse VM-i käsuga `ssh web01`, ilma IP-d ja parooli küsimata.
+    - on control node'i hostinimi `control`;
+    - on control node'is SSH-võtmepaar ja avalik võti on lisatud kõigisse viide labori virtuaalmasinasse;
+    - on virtuaalmasinate hostinimed `web01`, `app01`, `rmq01`, `mc01` ja `db01`;
+    - saad control node'ist virtuaalmasinatega ühenduda nende nime järgi ja ilma parooli sisestamata.
 
 ## Enne alustamist
 
-[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) on tehtud: VPN töötab ja VS Code avab terminali control node'il.
+[Töökeskkonna ettevalmistus](../00-ulevaade/keskkond.md) peab olema tehtud: VPN-ühendus töötab ja VS Code avab terminali control node'is.
 
-Hoia Proxmox brauseris lahti. Viie masina IP-d leiad sealt: masin → **Summary** → rida **IPs**. Kirjutad need sammus A3 otse skripti. Kasutaja kõigis masinates on `kasutaja`. Ubuntu masinad on `web01`, `app01` ja `rmq01`, AlmaLinuxi masinad `mc01` ja `db01`.
+Hoia Proxmox brauseris avatuna. Viie masina IP-aadressid leiad sealt: vali masin, ava **Summary** ja vaata rida **IPs**. Need aadressid kirjutad sammus A3 skripti. Kõigis masinates on kasutaja `kasutaja`. Ubuntu masinad on `web01`, `app01` ja `rmq01`, AlmaLinuxi masinad `mc01` ja `db01`.
 
-Kõik käsud käivad **control node'il**, VS Code'i terminalis.
+Kõik käsud käivita **control node'is** VS Code'i terminalis.
 
 ## A1 · Control node'i nimi
 
-Masinal pole veel nime, prompt näitab midagi muud kui `control`. Pane nimi ja ava uus shell, et prompt uueneks:
+Control node'i hostinimi ei ole veel `control`. Terminali prompt kuvab praegust hostinime. Muuda hostinimi ja ava uus shell, et prompt uueneks:
 
 ```bash
 sudo hostnamectl set-hostname control
@@ -39,21 +39,21 @@ exec bash
     kasutaja@control:~$
     ```
 
-    Laboris `sudo` parooli ei küsi, sest mall lubab seda kasutajale `kasutaja`. `hostnamectl` muudab masina nime jäädavalt, ka pärast taaskäivitust.
+    Laboris `sudo` parooli ei küsi, sest mall lubab seda kasutajale `kasutaja`. `hostnamectl` muudab hostinime püsivalt, see jääb alles ka pärast taaskäivitust.
 
 ## A2 · Mida skript teeb
 
-Viie masina seadistamine käsitsi tähendab viis korda samu käske. Just sellist tööd tasub automatiseerida. Enne kui skripti käivitad, vaata, mida see teeb. Iga punkt on ka skriptis kommentaarina:
+Viie masina käsitsi seadistamine tähendab samade käskude käivitamist viis korda. Just sellist tööd tasub automatiseerida. Enne skripti käivitamist vaata, mida see teeb. Iga punkt on skriptis ka kommentaarina:
 
-1. **Kaust `~/.ssh`.** SSH hoiab võtmeid ja seadeid kodukausta peidetud kaustas `.ssh`. Kaust peab olema ainult sinu loetav (`chmod 700`), muidu SSH keeldub seda kasutamast.
-2. **Võtmepaar.** `ssh-keygen` teeb kaks faili: privaatvõti `id_ed25519` jääb control node'ile, avalik võti `id_ed25519.pub` läheb teistesse masinatesse. Kui võti on juba olemas, skript uut ei tee.
-3. **`~/.ssh/config`.** Siia kirjutab skript iga masina kohta nime ja IP. Pärast seda piisab käsust `ssh web01`, IP-d pole vaja meeles pidada. Kui nimi on failis juba olemas, skript seda teist korda ei lisa.
-4. **Võti masinasse.** `ssh-copy-id` küsib masina parooli **üks kord** ja lisab sinu avaliku võtme sinna. Edaspidi parooli ei küsita.
-5. **Masina nimi ja hostivõtmed.** Skript paneb masinale nime ja teeb esimesel korral uued SSH hostivõtmed, sest kõik masinad on samast mallist ja neil on sama võti.
-6. **Kontroll.** Lõpus küsib skript igalt masinalt nime ilma paroolita. Kui mõni küsib parooli või ei vasta, on seadistus pooleli.
+1. **Kaust `~/.ssh`.** SSH hoiab kasutaja võtmeid ja seadeid kodukausta peidetud kaustas `.ssh`. Kaustale määratakse õigused `700`, nii et sellele pääseb ligi ainult omanik. Liiga laiade õiguste korral keeldub SSH kausta kasutamast.
+2. **SSH-võtmepaar.** `ssh-keygen` loob kaks faili: privaatvõti `id_ed25519` jääb control node'i, avalik võti `id_ed25519.pub` lisatakse teistesse masinatesse. Kui võtmepaar on juba olemas, skript uut ei loo.
+3. **SSH konfiguratsioonifail `~/.ssh/config`.** Skript lisab sinna iga masina nime ja IP-aadressi. Seejärel piisab käsust `ssh web01` ja IP-aadressi ei pea meeles pidama. Kui masin on failis juba olemas, skript seda teist korda ei lisa.
+4. **Avalik võti hallatavasse masinasse.** `ssh-copy-id` lisab avaliku võtme hallatava masina faili `~/.ssh/authorized_keys`. Esimesel ühendusel tuleb sisestada selle masina kasutaja parool, edaspidi parooli ei küsita.
+5. **Hostinimi ja SSH hostivõtmed.** Skript määrab masinale hostinime ja loob esimesel käivitusel uued SSH hostivõtmed, sest samast mallist kloonitud virtuaalmasinatel võivad alguses olla samad SSH hostivõtmed. Hostivõti on serveri võti, millega klient kontrollib, millise serveriga ta ühendub. See on eraldi asi kasutaja SSH-võtmest, mille lõid punktis 2.
+6. **Kontroll.** Lõpus küsib skript igalt masinalt hostinime ilma paroolita. Kui mõni masin küsib parooli või ei vasta, on seadistus pooleli.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
-<svg viewBox="0 0 720 210" role="img" aria-label="control node'il on võtmepaar ja config-fail; avalik võti läheb ssh-copy-id-ga viide VM-i" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 210" role="img" aria-label="control node'is on võtmepaar ja SSH konfiguratsioonifail; avalik võti lisatakse ssh-copy-id abil viide virtuaalmasinasse" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:15px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:13px}.lx .c{fill:var(--md-default-fg-color);font-size:13px;font-family:var(--md-code-font-family,monospace)}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
 <defs><marker id="lxs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
 <rect class="hi" x="10" y="20" width="300" height="170" rx="10"/><text class="b" x="26" y="46">control · ~/.ssh/</text>
@@ -65,12 +65,12 @@ Viie masina seadistamine käsitsi tähendab viis korda samu käske. Just sellist
 <text class="c" x="436" y="80">~/.ssh/authorized_keys</text><text class="s" x="436" y="102">siia lisatakse avalik võti</text>
 <text class="c" x="436" y="140">hostnamectl set-hostname</text><text class="s" x="436" y="162">masin saab oma nime</text>
 </svg>
-<figcaption>Joonis 1. Privaatvõti jääb control node'ile, avalik võti läheb igasse VM-i.</figcaption>
+<figcaption>Joonis 1. Privaatvõti jääb control node'i, avalik võti lisatakse igasse virtuaalmasinasse.</figcaption>
 </figure>
 
 ## A3 · Loo skript
 
-Loo control node'il fail `~/ssh-seadistus.sh` (VS Code: **File → New File**, salvesta kodukausta). Kopeeri sisse alljärgnev ja **muuda viis IP-d** Proxmoxi järgi:
+Loo control node'is fail `~/ssh-seadistus.sh` (VS Code'is **File → New File** ja salvesta kodukausta). Kopeeri faili alljärgnev skript ja **asenda viis IP-aadressi** Proxmoxist leitud aadressidega:
 
 ```bash
 #!/usr/bin/env bash
@@ -178,7 +178,7 @@ fi
 
     Bashi põhimõisted on [loengu](loeng.md#5-bash-kui-esimene-samm) 5. peatükis.
 
-Enne käivitamist kontrolli süntaksit. See loeb skripti läbi, aga ei käivita midagi:
+Enne käivitamist kontrolli skripti süntaksit. Käsk loeb skripti läbi, kuid ei käivita seda:
 
 ```bash
 bash -n ~/ssh-seadistus.sh && echo "süntaks korras"
@@ -190,7 +190,7 @@ bash -n ~/ssh-seadistus.sh && echo "süntaks korras"
 bash ~/ssh-seadistus.sh
 ```
 
-Iga masina juures küsib `ssh-copy-id` parooli üks kord, et võti masinasse viia. Sisesta ühine parool, mille said juhendajalt. `sudo` laboris parooli ei küsi.
+Iga masina juures küsib `ssh-copy-id` üks kord parooli, et lisada avalik võti masinasse. Sisesta kasutaja `kasutaja` parool, mille said juhendajalt. `sudo` laboris parooli ei küsi.
 
 ??? success "Oodatav tulemus"
 
@@ -213,7 +213,7 @@ Iga masina juures küsib `ssh-copy-id` parooli üks kord, et võti masinasse vii
 
 ## A5 · Käivita teist korda
 
-Ennusta enne: mida skript teisel korral teeb? Kas küsib parooli? Kas lisab config-faili topelt read?
+Enne käivitamist ennusta tulemust. Mida skript teisel käivitusel teeb? Kas see küsib parooli? Kas see lisab SSH konfiguratsioonifaili samad read teist korda?
 
 ```bash
 bash ~/ssh-seadistus.sh
@@ -232,11 +232,11 @@ grep -c '^Host ' ~/.ssh/config
     5
     ```
 
-    Võtit ei tehta uuesti, config-faili ei lisata midagi ja `ssh-copy-id` ei küsi parooli, sest võti on juba masinas. Nimi pannakse siiski uuesti, sest nime panemine ei kontrolli enne, kas nimi on juba õige. Skript on peaaegu idempotentne: teine käivitus ei muuda midagi, aga teeb osa tööd siiski uuesti.
+    Uut võtmepaari ei looda, konfiguratsioonifaili midagi ei lisata ja `ssh-copy-id` ei küsi parooli, sest avalik võti on juba masinas. Hostinimi määratakse siiski uuesti, sest skript ei kontrolli enne, kas hostinimi on juba õige. Teine käivitus jätab lõpptulemuse samaks, kuid osa käske käivitatakse siiski uuesti. Järgmises osas võrdled seda Ansible'i moodulite käitumisega.
 
 ??? question "Mõtle (valikuline)"
 
-    Kuidas muudaksid funktsiooni nii, et `hostnamectl` käivitatakse ainult siis, kui masina nimi pole veel õige? Vihje: `ssh -n "$nimi" hostname` annab praeguse nime.
+    Kuidas muudaksid funktsiooni nii, et `hostnamectl` käivitatakse ainult siis, kui hostinimi ei ole veel õige? Vihje: `ssh -n "$nimi" hostname` kuvab praeguse hostinime.
 
 ## A6 · Proovi ise
 
@@ -249,21 +249,21 @@ exit
 
 ??? success "Oodatav tulemus"
 
-    `cat` näitab viit `Host` plokki. `ssh web01` logib sisse ilma parooli küsimata, prompt on `kasutaja@web01`. `exit` viib tagasi control node'ile.
+    `cat` kuvab viis `Host`-plokki. `ssh web01` logib sisse ilma parooli küsimata ja prompt on `kasutaja@web01`. Käsk `exit` viib tagasi control node'i.
 
-!!! warning "Privaatvõti ei lahku control node'ilt"
+!!! warning "Privaatvõti jääb control node'i"
 
-    `~/.ssh/id_ed25519` (ilma `.pub`-ita) on sinu privaatvõti. Seda ei kopeerita kuhugi, ei panda Giti ega saadeta kellelegi. Avaliku võtme (`.pub`) võib jagada.
+    Fail `~/.ssh/id_ed25519` (ilma laiendita `.pub`) on privaatvõti. Seda ei kopeerita mujale, ei lisata Giti ega saadeta kellelegi. Avalikku võtit (`.pub`) võib jagada.
 
 ## A7 · Võti GitHubi ja kursuse repo
 
-Control node'i võtmega saad ka GitHubiga parooli ja tokenita suhelda. Kuva avalik võti:
+Sama SSH-võtit saad kasutada GitHubiga autentimiseks, nii et Git-toimingute jaoks ei ole vaja parooli ega access token'it. Kuva avalik võti:
 
 ```bash
 cat ~/.ssh/id_ed25519.pub
 ```
 
-GitHubis: profiilipilt → **Settings → SSH and GPG keys → New SSH key**. *Title:* `control`, kleebi kogu rida, **Add SSH key**. Kontrolli:
+Ava GitHubis profiilipildi alt **Settings → SSH and GPG keys → New SSH key**. Kirjuta väljale *Title* `control`, kleebi väljale *Key* kogu rida ja vajuta **Add SSH key**. Seejärel kontrolli ühendust:
 
 ```bash
 ssh -T git@github.com
@@ -271,13 +271,13 @@ ssh -T git@github.com
 
 ??? success "Oodatav tulemus"
 
-    Esimesel korral kinnita `yes`, siis:
+    Esimesel ühendusel kinnita `yes`. Seejärel kuvatakse:
 
     ```
     Hi <sinu-github-kasutaja>! You've successfully authenticated, but GitHub does not provide shell access.
     ```
 
-Ava [Classroom 50 ülesanne](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) ja võta see vastu. Sulle tekib privaatne repo orgis `hkhk-tk`. Repo lehel: **Code → SSH**, kopeeri aadress.
+Ava [Classroom 50 ülesanne](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) ja võta see vastu. Organisatsiooni `hkhk-tk` tekib sulle privaatne repositoorium. Ava repositooriumi lehel **Code → SSH** ja kopeeri aadress.
 
 ```bash
 git config --global user.name "Eesnimi Perenimi"
@@ -288,25 +288,25 @@ cd ~/kursus
 mkdir -p k01
 ```
 
-Kõik selle kohtumise failid lähevad kausta `~/kursus/k01/`.
+Kõik selle kohtumise failid salvestad kausta `~/kursus/k01/`.
 
 ## Veaotsing
 
 | Mida näed | Põhjus | Mida teha |
 |---|---|---|
-| `Connection timed out` | vale IP või masin ei tööta | võrdle skripti alguses olevaid IP-sid Proxmoxiga, kontrolli, et masin töötab |
-| `Permission denied (publickey,password)` | vale parool | proovi uuesti, kasutaja on `kasutaja` |
-| `REMOTE HOST IDENTIFICATION HAS CHANGED` | masin loodi uuesti | `ssh-keygen -R <ip>`, siis käivita skript uuesti |
-| `Bad owner or permissions on ~/.ssh/config` | config on teistele loetav | `chmod 600 ~/.ssh/config` |
-| kontrollis `VIGA ... ei vasta ilma paroolita` | võti ei jõudnud masinasse | käivita skript uuesti ja vaata selle masina väljundit |
+| `Connection timed out` | IP-aadress on vale või masin ei tööta | võrdle skripti alguses olevaid IP-aadresse Proxmoxiga ja kontrolli, et masin töötab |
+| `Permission denied (publickey,password)` | parool on vale | proovi uuesti, kasutaja on `kasutaja` |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` | masina SSH hostivõti muutus, näiteks loodi masin uuesti | `ssh-keygen -R <ip>` ja käivita skript uuesti |
+| `Bad owner or permissions on ~/.ssh/config` | konfiguratsioonifail on teistele kasutajatele kirjutatav | `chmod 600 ~/.ssh/config` |
+| kontrollis `VIGA ... ei vasta ilma paroolita` | avalik võti ei jõudnud masinasse | käivita skript uuesti ja vaata selle masina väljundit |
 
 *Tabel 1. Levinud vead.*
 
 ??? info "Loe juurde"
 
-    - [OpenSSH: ssh_config](https://man.openbsd.org/ssh_config) (mida config-failis olevad read tähendavad)
+    - [OpenSSH: ssh_config](https://man.openbsd.org/ssh_config) (mida SSH konfiguratsioonifaili read tähendavad)
     - [`ssh-copy-id`](https://man.openbsd.org/ssh-copy-id)
     - [GNU Bash: Shell Functions](https://www.gnu.org/software/bash/manual/html_node/Shell-Functions.html)
     - [systemd: hostnamectl](https://www.freedesktop.org/software/systemd/man/latest/hostnamectl.html)
 
-**Valmis, kui** skript lõpetas reaga „Valmis: kõik viis masinat töötavad.“ ja `ssh web01` logib sisse parooli küsimata.
+**Valmis, kui** skript lõpetab reaga „Valmis: kõik viis masinat töötavad.“ ja `ssh web01` logib sisse parooli küsimata.

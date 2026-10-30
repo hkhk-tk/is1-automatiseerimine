@@ -9,14 +9,14 @@ tags:
 !!! abstract "Eesmärgid"
 
     - kirjutad päeva ülesande playbook'ina;
-    - näed teisel käivitusel `changed=0`;
-    - parandad käsitsi tehtud muudatuse ja vaatad muudatust enne `--check --diff`-iga.
+    - kontrollid playbook'i käitumist korduval käivitamisel;
+    - tekitad failis käsitsi muudatuse ning kontrollid `--check --diff` abil, mida Ansible parandaks.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k01`.
+Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Playbook
 
-Loo fail `training.yml`. Taane on tühikutega, mitte tabulaatoriga:
+Loo fail `training.yml`. Kasuta taandeks tühikuid, mitte tabulaatorit:
 
 ```yaml
 - name: Koolituse seadistus
@@ -45,7 +45,7 @@ ansible-playbook training.yml --syntax-check
 
 ## A2 · Esimene käivitus
 
-Ennusta enne: kaust ja fail on skripti osast juba olemas ja õiged. Mida Ansible teeb?
+Enne käivitamist ennusta tulemust. Kaust ja fail on eelmisest ülesandest juba olemas ning vastavad nõuetele. Kas Ansible muudab midagi?
 
 ```bash
 ansible-playbook training.yml
@@ -53,7 +53,7 @@ ansible-playbook training.yml
 
 ??? success "Oodatav tulemus"
 
-    Mõlemad ülesanded `ok`, kokkuvõttes `changed=0`. Ansible võrdles soovitud ja tegelikku seisu ning erinevust polnud.
+    Mõlema ülesande olek on `ok` ja kokkuvõttes on `changed=0`. Ansible võrdles soovitud olekut masina tegeliku olekuga ega leidnud erinevust.
 
 Eemalda kaust ja käivita uuesti:
 
@@ -75,7 +75,7 @@ ansible-playbook training.yml
     web01 : ok=3  changed=2  unreachable=0  failed=0 ...
     ```
 
-    `ok=3`, sest ka faktide kogumine (`Gathering Facts`) loetakse ülesandeks.
+    Kokkuvõttes on `ok=3`, sest ka faktide kogumine (`Gathering Facts`) loetakse ülesandeks.
 
 ## A3 · Teine käivitus
 
@@ -87,11 +87,13 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    `changed=0` ja muutmise aeg on sama. Erinevalt skriptist ei kirjutanud Ansible faili üle.
+    Kokkuvõttes on `changed=0` ja faili muutmise aeg jäi samaks. Erinevalt skriptist ei kirjutanud Ansible faili üle.
 
 ## A4 · Triiv
 
-Muuda faili käsitsi, nagu teeks kolleeg öösel, ja vaata enne, mida Ansible muudaks:
+**Triiv (drift)** tähendab, et masina tegelik olek erineb konfiguratsioonis kirjeldatud soovitud olekust.
+
+Muuda faili käsitsi ja kontrolli enne playbook'i käivitamist, millise muudatuse Ansible tuvastab:
 
 ```bash
 ssh web01 "sed -i 's/enabled=true/enabled=false/' automation-lab/training.conf"
@@ -106,9 +108,9 @@ ansible-playbook training.yml --check --diff
     changed: [web01]
     ```
 
-    `--check` ei muutnud midagi, `--diff` näitas erinevust.
+    Võti `--check` ei muutnud masinas midagi ja `--diff` näitas erinevust.
 
-Nüüd päriselt ja kontroll:
+Rakenda muudatus ja kontrolli tulemust:
 
 ```bash
 ansible-playbook training.yml
@@ -117,7 +119,7 @@ ssh web01 cat automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    `changed` ainult failiülesandel. Failis on jälle `enabled=true`.
+    Olek `changed` on ainult failiülesandel. Failis on jälle `enabled=true`.
 
 ## A5 · Commit
 
@@ -128,7 +130,7 @@ git commit -m "k01: ansible.cfg, inventory ja training.yml"
 git push
 ```
 
-**Valmis, kui** teine käivitus annab `changed=0` ja triivi järel taastas playbook õige sisu.
+**Valmis, kui** teine käivitus annab `changed=0` ja pärast triivi taastas playbook faili soovitud oleku.
 
 ??? info "Loe juurde"
 

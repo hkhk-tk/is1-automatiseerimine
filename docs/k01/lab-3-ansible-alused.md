@@ -10,9 +10,9 @@ tags:
 
     - paigaldad Ansible'i control node'ile;
     - kirjutad `ansible.cfg` ja inventory kõigi viie masinaga;
-    - käivitad ad-hoc käske, ka administraatori õigustega.
+    - käivitad ad-hoc käske tavakasutaja ja administraatori õigustega.
 
-Kõik käsud käivad control node'il kaustas `~/kursus/k01`.
+Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Paigalda Ansible
 
@@ -35,7 +35,7 @@ ansible --version
 
 ??? success "Oodatav tulemus"
 
-    Esimene rida on kujul `ansible [core 2.x.y]`. Rida `config file = None`: seadistusfaili veel pole.
+    Esimene rida on kujul `ansible [core 2.x.y]`. Rida `config file = None` näitab, et konfiguratsioonifaili veel ei ole.
 
 ## A2 · `ansible.cfg` ja inventory
 
@@ -66,7 +66,7 @@ db01
 ansible_user=kasutaja
 ```
 
-Nimed `web01` jne töötavad ilma IP-deta, sest [1. Keskkonna](lab-1-keskkond.md) skript kirjutas need faili `~/.ssh/config`. Grupid `ubuntu` ja `alma` lubavad hiljem käivitada töö ühe distro masinatel.
+Masinate nimed (`web01` jne) töötavad ilma IP-aadressideta, sest [1. osa](lab-1-keskkond.md) skript lisas need SSH konfiguratsioonifaili `~/.ssh/config`. Gruppide `ubuntu` ja `alma` abil saad hiljem käivitada ülesandeid ainult ühe distributsiooni masinates.
 
 ```bash
 ansible --version | grep 'config file'
@@ -96,16 +96,16 @@ ansible all -m ansible.builtin.ping
 
 ??? success "Oodatav tulemus"
 
-    Viis plokki `SUCCESS` ja `"ping": "pong"`. Ansible jõudis SSH-ga igasse masinasse ja seal töötab Python.
+    Kõik viis masinat vastavad `SUCCESS` ja `"ping": "pong"`. See tähendab, et Ansible sai igasse masinasse SSH kaudu ühenduse ja masinas töötab Python.
 
-Käsk kõigis masinates korraga ja ainult ühes grupis:
+Käivita nüüd käsk kõigis masinates ja seejärel ainult grupis `alma`:
 
 ```bash
 ansible all -m ansible.builtin.command -a uptime
 ansible alma -m ansible.builtin.command -a "df -h /"
 ```
 
-Faktid: mis OS igas masinas on?
+Vaata Ansible'i faktidest, milline operatsioonisüsteem igas masinas töötab:
 
 ```bash
 ansible all -m ansible.builtin.setup -a 'filter=ansible_distribution*'
@@ -113,7 +113,7 @@ ansible all -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 
 ??? success "Oodatav tulemus"
 
-    web01, app01, rmq01: `"ansible_distribution": "Ubuntu"`. mc01, db01: `"AlmaLinux"`. Neid fakte kasutad lehel 5, et teha Ubuntul ja AlmaLinuxil õiget asja.
+    Masinates web01, app01 ja rmq01 on `"ansible_distribution": "Ubuntu"`, masinates mc01 ja db01 `"AlmaLinux"`. Hiljem kasutad neid fakte tingimustes, et valida Ubuntu ja AlmaLinuxi jaoks sobivad ülesanded.
 
 ??? question "Mõtle"
 
@@ -121,27 +121,27 @@ ansible all -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 
 ## A4 · Ad-hoc käsk õigustega
 
-Paigalda kõigisse masinatesse tööriist `tree`. Paketi paigaldamiseks on vaja administraatori õigusi: `--become` (`-b`) tõstab need `sudo` kaudu ja `-K` küsib `sudo` parooli üks kord.
+Paigalda kõigisse masinatesse tööriist `tree`. Paketi paigaldamiseks on vaja administraatori õigusi. Võti `--become` (`-b`) käivitab ülesande kõrgemate õigustega. Meie laboris kasutatakse selleks `sudo`-t.
 
 ```bash
-ansible all -m ansible.builtin.package -a "name=tree state=present" -b -K
+ansible all -m ansible.builtin.package -a "name=tree state=present" -b
 ```
 
 ??? success "Oodatav tulemus"
 
-    `BECOME password:` küsib parooli: sisesta ühine parool (laboris `sudo` seda ei kontrolli, töökohas kontrollib). Seejärel viis plokki `CHANGED`: Ubuntul paigaldas `apt`, AlmaLinuxil `dnf`. Moodul `package` valis paketihalduri ise.
+    Kõigi viie masina olek on `CHANGED`. Ubuntus paigaldas paketi `apt`, AlmaLinuxis `dnf`. Moodul `package` valis paketihalduri ise.
 
 Käivita sama käsk uuesti.
 
 ??? success "Oodatav tulemus"
 
-    Kõik viis `SUCCESS` ja `"changed": false`: `tree` oli juba olemas, midagi ei tehtud.
+    Kõik viis masinat vastavad `SUCCESS` ja `"changed": false`. Pakett `tree` oli juba paigaldatud, seega Ansible midagi ei muutnud.
 
-??? warning "Parool küsitakse, aga tuleb viga"
+!!! info "Laboris `sudo` parooli ei küsi"
 
-    `-K` küsib ühe parooli kõigi masinate jaoks. Kui mõnes masinas on teine parool, tuleb seal `Incorrect sudo password`. Kõigis labori masinates on alguses sama parool.
+    Labori masinates on `sudo` seadistatud parooli küsimata. Töökohas küsib `sudo` tavaliselt parooli. Sel juhul lisa käsule `-K` (`--ask-become-pass`): Ansible küsib parooli üks kord ja kasutab seda kõigis masinates. Kui vastuseks tuleb `Missing sudo password`, on just see põhjus.
 
-**Valmis, kui** `ansible all -m ansible.builtin.ping` annab viis `pong`-i ja teine `tree` paigaldus annab kõikjal `changed: false`.
+**Valmis, kui** käsu `ansible all -m ansible.builtin.ping` peale vastavad kõik viis masinat `pong` ja paketi `tree` teine paigaldus annab kõikjal `changed: false`.
 
 ??? info "Loe juurde"
 

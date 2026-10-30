@@ -96,7 +96,8 @@ nav:
               - 5. Playbook viiele masinale: k01/lab-5-parem-playbook.md
               - 6. Lõpuülesanne ja esitamine: k01/lab-6-esitamine.md
               - Abi: k01/abi.md
-              - Linux + Bash spikker: k01/spikker.md
+              - Linuxi ja Bashi spikker: k01/spikker.md
+              - Linux ja Bash edasijõudnutele: k01/spikker-edasijoudnutele.md
           - Kodutöö: k01/kodutoo.md
           - Lisaülesanded: k01/lisa.md
       - 2. kohtumine · Ansible mitmele masinale:
