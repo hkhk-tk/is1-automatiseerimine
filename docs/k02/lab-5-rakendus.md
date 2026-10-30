@@ -8,6 +8,10 @@ tags:
 
 Kõik kolm taustateenust töötavad. Nüüd paigaldad app01-sse Tomcati koos Labori seisu rakendusega ja web01-sse Nginxi, mis suunab brauseri päringud rakendusse. Selle osa lõpus avaneb Labori seis web01 kaudu.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Templating (Jinja2)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_templating.html) · [Facts and magic variables (`groups`, `hostvars`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html) · [Handlers](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html)
+
 ## A1 · Rakenduse seaded
 
 Rakendus loeb andmebaasi, vahemälu ja järjekorra aadressid ning paroolid keskkonnamuutujatest. Need on failis `/etc/labori-seis/env`, mis tehakse mallist. Aadressid tulevad inventory gruppidest, paroolid Vaultist.

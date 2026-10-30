@@ -8,6 +8,10 @@ tags:
 
 Andmebaas töötab. Rakendus vajab veel kahte teenust: Memcached hoiab sagedasti küsitavaid andmeid mälus ja RabbitMQ edastab sõnumeid rakenduse osade vahel. Memcachedi rolli kirjutad ise, RabbitMQ rollis on uus kogu moodul.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Roles](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html) · [Handlers](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html)
+
 ## A1 · Memcached: kirjuta roll ise
 
 Memcachedi roll kasutab samu võtteid nagu `mariadb`: paigaldus, mall ja handler, teenus ja tulemüür. Seepärast kirjutad selle ise. AlmaLinuxis kuulab Memcached vaikimisi ainult kohalikke ühendusi, aga rakendus ühendub app01-st. Seaded on failis `/etc/sysconfig/memcached`.

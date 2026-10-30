@@ -9,6 +9,10 @@ tags:
 
 Andmebaas on teiste teenuste alus, seega alustad sellest. Selles osas paigaldad db01-sse MariaDB, kasutad Ansible'iga kaasa mitte tulevaid mooduleid (**kogu**), hoiad paroole krüpteeritult (**Vault**) ja muudad konfiguratsiooni nii, et teenus taaskäivitatakse ainult siis, kui konfiguratsioon muutus (**handler**).
 
+!!! abstract "Dokumentatsioonis"
+
+    [Using collections](https://docs.ansible.com/projects/ansible/latest/collections_guide/index.html) · [Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/index.html) · [Handlers](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html)
+
 ## A1 · Kogud
 
 Andmebaasi ja RabbitMQ kasutajate haldamise moodulid ei ole `ansible-core`'is, vaid eraldi **kogudes** (collections). Fail `requirements.yml` loetleb vajalikud kogud koos versioonidega, et kõigil oleks sama komplekt. Loo fail `requirements.yml`:

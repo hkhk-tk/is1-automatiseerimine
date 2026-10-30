@@ -8,6 +8,10 @@ tags:
 
 Labori seis töötab. Enne esitamist kontrollid kahte asja, mida automatiseerimisel töös vajad: kuidas muudatust enne rakendamist näha ja ühe masina peal proovida, ning kas kogu playbook on idempotentne.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Check mode and diff mode](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html) · [Strategies (`serial`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_strategies.html)
+
 ## A1 · Muudatus enne rakendamist
 
 Muuda failis `roles/common/defaults/main.yml` teate teksti, näiteks lisa lõppu ` Küsimused: IT-tugi.`. Vaata enne käivitamist, mida Ansible ühes masinas muudaks:

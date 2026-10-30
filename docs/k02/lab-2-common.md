@@ -10,6 +10,10 @@ tags:
 
 Esimene roll `common` käib kõigis masinates. See kirjutab igasse masinasse kõigi viie masina nimed ja IP-aadressid, sest rakendus app01-s otsib andmebaasi nime `db01` järgi.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Roles](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html) · [Templating (Jinja2)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_templating.html)
+
 ## A1 · Rolli kaustad
 
 ```bash

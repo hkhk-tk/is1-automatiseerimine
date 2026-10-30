@@ -8,6 +8,10 @@ tags:
 
 Eelmises osas tegid ülesande ühes masinas käsitsi ja skriptiga. Nüüd paigaldad Ansible'i, kirjeldad talle viis masinat ja käivitad käske kõigis masinates korraga. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Start automating with Ansible](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_ansible.html) · [Building an inventory](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html) · [Introduction to ad hoc commands](https://docs.ansible.com/projects/ansible/latest/command_guide/intro_adhoc.html)
+
 ## A1 · Paigalda Ansible
 
 Ansible paigaldatakse ainult control node'i. Hallatavates masinates piisab SSH-st ja Pythonist, mis seal juba on.

@@ -10,6 +10,10 @@ tags:
 
 Selles osas kirjutad playbook'i `haldus.yml`, mis loob kõigisse masinatesse kaks administraatori kontot ja hoiab käigus teenuse cron. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Using variables](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html) · [Loops](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_loops.html) · [Group and host variables](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html)
+
 ## A1 · Muutuja ja tsükkel
 
 Muutuja defineeritakse play osas `vars` ja seda kasutatakse kujul `{{ muutuja }}`. Kui muutuja väärtus on loend, käivitab võti `loop` sama ülesande iga loendi elemendiga. Jooksev element on muutujas `item`.

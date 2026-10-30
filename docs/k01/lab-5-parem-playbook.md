@@ -8,6 +8,10 @@ tags:
 
 Seni käis playbook ainult ühes masinas. Nüüd kirjutad playbook'i, mis paigaldab tööriistad kõigisse viide masinasse, kuigi neis on kaks eri distributsiooni. Lisaks õpid käivitama playbook'i ainult osas masinatest (`--limit`) ja ainult osa ülesandeid (`tags`). Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Conditionals](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_conditionals.html) · [Patterns (`--limit`)](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_patterns.html) · [Tags](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_tags.html) · [Privilege escalation (`become`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)
+
 ## A1 · Probleem: sama programm, erinev paketinimi
 
 Tekstiredaktori vim pakett on Ubuntus `vim`, AlmaLinuxis aga `vim-enhanced`. Üks ülesanne kindla paketinimega ei sobi seega mõlemale distributsioonile. Ansible'i faktidest näed, millisesse distributsioonide perekonda masin kuulub:

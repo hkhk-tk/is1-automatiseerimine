@@ -98,6 +98,8 @@ Ansible'i kirjutas Michael DeHaan ja see ilmus 2012. aastal. 2015. aastal ostis 
 
 Ansible'is kirjeldad failis, milline peab masin olema, ja Ansible teeb masinas ainult need muudatused, mis on selleks vajalikud.
 
+Ansible'i ametlik dokumentatsioon on kursuse põhiallikas. Selle [Getting started](https://docs.ansible.com/projects/ansible/latest/getting_started/index.html) osa käsitleb samu teemasid samas järjekorras nagu tänane päev: control node, inventory, ad-hoc käsud ja playbook. Iga praktikumi osa alguses on link vastavale dokumentatsiooni peatükile.
+
 Bashi skriptist eristavad Ansible'it kolm asja:
 
 - **Soovitud olek, mitte käsud.** Kirjutad „kaust on olemas õigustega 0750“, mitte „tee kaust, siis muuda õigusi“.

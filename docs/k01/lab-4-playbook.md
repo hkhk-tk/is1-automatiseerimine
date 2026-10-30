@@ -8,6 +8,10 @@ tags:
 
 Ad-hoc käsk sobib kiireks kontrolliks, aga seadistust, mida tahad korrata, hoitakse failis. Selles osas kirjutad päeva ülesande **playbook'ina**, käivitad selle mitu korda ja vaatad, kuidas Ansible taastab käsitsi muudetud faili. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Getting started: Creating a playbook](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_playbook.html) · [Ansible playbooks](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_intro.html)
+
 ## A1 · Kirjuta playbook
 
 Playbook kirjeldab sama tulemust, mida skript 2. osas tegi: kaust õigustega `0750` ja selles fail kahe reaga. Erinevus on selles, et iga ülesanne kirjeldab soovitud olekut, mitte käsku. Loo fail `training.yml` (taandeks tühikud, mitte tabulaator):

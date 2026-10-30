@@ -8,6 +8,10 @@ tags:
 
 1. kohtumisel oli inventory's kaks gruppi distributsiooni järgi. Labori seisus on igal masinal oma ülesanne, seega lisandub grupp iga teenuse kohta ja distributsioonigrupid koostatakse teenusegruppidest. Selles osas lood projekti kausta, kirjeldad masinad gruppidena ja paned paika muutujad.
 
+!!! abstract "Dokumentatsioonis"
+
+    [Building an inventory: metagroups](https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html) · [How to build your inventory](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_inventory.html)
+
 ## A1 · Uus haru ja kaust
 
 Alates 2. kohtumisest teed iga kohtumise töö eraldi harus ja ühendad selle päeva lõpus pull request'iga harusse `main`. Nii on `main`-is alati ainult valmis ja kontrollitud töö.
