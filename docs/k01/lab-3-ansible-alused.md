@@ -76,6 +76,25 @@ ansible-inventory --graph
 
 ## A3 · Esimesed ad-hoc käsud
 
+Ad-hoc käsk käivitab ühe mooduli: `ansible <masinad> -m <moodul> -a "<parameetrid>"`. Selles osas kasutad nelja moodulit:
+
+| Moodul | Mida teeb | Parameetrid |
+|---|---|---|
+| [`ansible.builtin.ping`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/ping_module.html) | kontrollib, kas Ansible saab masinaga ühenduse ja seal töötab Python | puuduvad |
+| [`ansible.builtin.command`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/command_module.html) | käivitab masinas ühe käsu | käsk ise, näiteks `-a uptime` |
+| [`ansible.builtin.setup`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/setup_module.html) | kogub masina kohta fakte | `filter`: ainult nende faktide nimed, mis sobivad mustriga |
+| [`ansible.builtin.package`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/package_module.html) | paigaldab või eemaldab paketi, kasutades distributsiooni paketihaldurit (`apt` või `dnf`) | `name`: paketi nimi, `state: present`: pakett peab olemas olema |
+
+*Tabel 1. Moodulid selles osas.*
+
+Mooduli kirjelduse, kõik parameetrid ja näited näed käsuga `ansible-doc`. Vaata, milliseid väärtusi saab moodulil `package` olla parameetril `state`:
+
+```bash
+ansible-doc ansible.builtin.package
+```
+
+Parameetrite loend on osas `OPTIONS`, kasutusnäited osas `EXAMPLES`. Väljumiseks vajuta `q`.
+
 ```bash
 ansible all -m ansible.builtin.ping
 ```
@@ -117,7 +136,7 @@ ansible all -m ansible.builtin.package -a "name=tree state=present" -b
 
     Kõigi viie masina olek on `CHANGED`. Ubuntus paigaldas paketi `apt`, AlmaLinuxis `dnf`. Moodul `package` valis paketihalduri ise.
 
-Käivita sama käsk uuesti.
+**Ennusta:** mida näitab sama käsk teisel käivitusel? Käivita see uuesti.
 
 ??? success "Oodatav tulemus"
 

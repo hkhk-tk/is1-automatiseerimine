@@ -31,7 +31,20 @@ Loo fail `training.yml`. Kasuta taandeks tühikuid, mitte tabulaatorit:
         mode: "0640"
 ```
 
-Kontrolli enne käivitamist:
+| Moodul | Mida teeb | Parameetrid selles playbook'is |
+|---|---|---|
+| [`ansible.builtin.file`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/file_module.html) | haldab faili või kausta olemasolu, õigusi ja omanikku | `path`: tee, `state: directory`: see peab olema kaust, `mode`: õigused |
+| [`ansible.builtin.copy`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/copy_module.html) | kirjutab faili sisu (failist või tekstist) | `dest`: sihtfail, `content`: faili sisu, `mode`: õigused |
+
+*Tabel 1. Moodulid selles playbook'is.*
+
+Vaata ise, milliseid väärtusi saab moodulil `file` olla parameetril `state` (näiteks `absent`, `directory`, `file`, `touch`):
+
+```bash
+ansible-doc ansible.builtin.file
+```
+
+Kontrolli playbook'i süntaksit enne käivitamist:
 
 ```bash
 ansible-playbook training.yml --syntax-check
@@ -39,7 +52,7 @@ ansible-playbook training.yml --syntax-check
 
 ## A2 · Esimene käivitus
 
-Enne käivitamist ennusta tulemust. Kaust ja fail on eelmisest ülesandest juba olemas ning vastavad nõuetele. Kas Ansible muudab midagi?
+**Ennusta:** kaust ja fail on eelmisest osast juba olemas ja vastavad nõuetele. Kas Ansible muudab midagi?
 
 ```bash
 ansible-playbook training.yml
@@ -49,7 +62,9 @@ ansible-playbook training.yml
 
     Mõlema ülesande olek on `ok` ja kokkuvõttes on `changed=0`. Ansible võrdles soovitud olekut masina tegeliku olekuga ega leidnud erinevust.
 
-Eemalda masinast web01 kaust `automation-lab` ja käivita playbook uuesti:
+Eemalda masinast web01 kaust `automation-lab` ja käivita playbook uuesti.
+
+**Ennusta:** mitu ülesannet on nüüd `changed`?
 
 ```bash
 ssh web01 rm -r automation-lab
@@ -73,6 +88,8 @@ ansible-playbook training.yml
 
 ## A3 · Teine käivitus
 
+**Ennusta:** kas faili muutmise aeg muutub, kui playbook käivitada uuesti? Võrdle skriptiga osas 2.
+
 ```bash
 ssh web01 stat -c '%y' automation-lab/training.conf
 ansible-playbook training.yml
@@ -87,7 +104,9 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 **Triiv (drift)** tähendab, et masina tegelik olek erineb konfiguratsioonis kirjeldatud soovitud olekust.
 
-Muuda faili käsitsi ja kontrolli enne playbook'i käivitamist, millise muudatuse Ansible tuvastab:
+Muuda faili käsitsi ja kontrolli enne playbook'i käivitamist, millise muudatuse Ansible tuvastab.
+
+**Ennusta:** mida näitab `--check --diff` ja kas fail masinas muutub?
 
 ```bash
 ssh web01 "sed -i 's/enabled=true/enabled=false/' automation-lab/training.conf"

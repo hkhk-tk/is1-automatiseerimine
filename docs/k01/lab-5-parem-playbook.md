@@ -54,7 +54,23 @@ Loo fail `tools.yml`:
       tags: motd
 ```
 
+| Moodul | Mida teeb | Parameetrid selles playbook'is |
+|---|---|---|
+| [`ansible.builtin.apt`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/apt_module.html) | Ubuntu (Debiani) paketihaldur | `update_cache: true`: uuenda paketiloendit, `cache_valid_time: 3600`: jäta uuendamine vahele, kui loend on alla tunni vana |
+| [`ansible.builtin.package`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/package_module.html) | paigaldab paketi distributsiooni paketihalduriga | `name`: paketi nimi, `state: present`: pakett peab olemas olema |
+| [`ansible.builtin.copy`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/copy_module.html) | kirjutab faili sisu | `dest`: sihtfail, `content`: sisu, `mode`: õigused |
+
+*Tabel 1. Moodulid selles playbook'is.*
+
+`when` ja `tags` ei ole mooduli parameetrid, vaid ülesande võtmesõnad: need on samal taandel kui mooduli nimi. Kontrolli ise, mida teeb `cache_valid_time`:
+
+```bash
+ansible-doc ansible.builtin.apt
+```
+
 Kui `become: true` on play tasemel, käivitatakse kõik ülesanded `sudo` kaudu. `when` määrab tingimuse, mille korral ülesanne käivitatakse.
+
+**Ennusta:** millised ülesanded jäävad Ubuntu masinates vahele (`skipping`) ja millised AlmaLinuxi masinates?
 
 ```bash
 ansible-playbook tools.yml --syntax-check
@@ -90,7 +106,9 @@ ansible-playbook tools.yml --limit web01
 
 ## A4 · Sildid
 
-Muuda playbook'is teate teksti (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne:
+Muuda playbook'is teate teksti (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne.
+
+**Ennusta:** millised ülesanded käivituvad ja mitu on `changed`?
 
 ```bash
 ansible-playbook tools.yml --tags motd

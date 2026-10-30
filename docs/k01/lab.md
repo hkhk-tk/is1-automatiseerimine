@@ -13,6 +13,8 @@ tags:
     - **Failid:** kursuse repositooriumi kaust `~/kursus/k01/`
     - **Esitamine:** tag `k01` GitHubis
 
+Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi. Seejärel käivita käsk ja võrdle tulemust oma ennustusega. Kui need erinevad, uuri, miks.
+
 | Etapp | Mida teed | Valmis, kui |
 |---|---|---|
 | [1. Keskkond](lab-1-keskkond.md) | SSH-võti, masinate nimed, repo | `ssh web01` töötab parooli küsimata |

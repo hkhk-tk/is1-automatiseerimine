@@ -48,7 +48,7 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
 
 Käivita `mkdir ~/automation-lab` uuesti. Kuna sama nimega kaust on juba olemas, lõpetab `mkdir` veaga `File exists`.
 
-💭 **Mõtle:** mida peaks skript tegema teisiti, et seda saaks käivitada mitu korda?
+**Mõtle:** mida peaks skript tegema teisiti, et seda saaks käivitada mitu korda?
 
 Eemalda kaust ja naase control node'i:
 
@@ -80,7 +80,9 @@ ssh web01 bash prepare-training.sh
 
 ## A3 · Teine käivitus
 
-Enne käivitamist ennusta tulemust: kas skript kirjutab faili teisel käivitusel uuesti? Vaata faili muutmise aega enne ja pärast käivitamist:
+**Ennusta:** kas skript kirjutab faili teisel käivitusel uuesti?
+
+Vaata faili muutmise aega enne ja pärast käivitamist:
 
 ```bash
 ssh web01 stat -c '%y' automation-lab/training.conf

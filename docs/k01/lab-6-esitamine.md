@@ -16,6 +16,8 @@ Lisa playbook'i `training.yml` kolmas ülesanne: kaustas `automation-lab` peab o
 Seda kausta haldab Ansible. Ära muuda käsitsi.
 ```
 
+**Ennusta:** mis on esimese ja mis teise käivituse kokkuvõttes `changed`?
+
 Käivita playbook kaks korda ja kontrolli seejärel faili sisu ning õigusi masinas:
 
 ```bash
