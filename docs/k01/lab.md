@@ -10,7 +10,7 @@ tags:
 !!! info "Selle korra töö"
 
     - **Masinad:** control node ja viis labori VM-i (web01, app01, rmq01 Ubuntu; mc01, db01 AlmaLinux), kasutaja `kasutaja`
-    - **Failid:** sinu kursuse repo, kaust `~/kursus/k01/`
+    - **Failid:** kursuse repositooriumi kaust `~/kursus/k01/`
     - **Esitamine:** tag `k01` GitHubis
 
 | Etapp | Mida teed | Valmis, kui |
@@ -20,7 +20,7 @@ tags:
 | [3. Ansible'i alused](lab-3-ansible-alused.md) | paigaldus, `ansible.cfg`, inventory, ad-hoc käsud | kõik viis masinat vastavad `pong` |
 | [4. Esimene playbook](lab-4-playbook.md) | päeva ülesanne playbook'ina, triiv | teine käivitus annab `changed=0` |
 | [5. Playbook viiele masinale](lab-5-parem-playbook.md) | `when`, `--limit`, `tags` | `tools.yml` teine käivitus annab `changed=0` |
-| [6. Lõpuülesanne ja esitamine](lab-6-esitamine.md) | iseseisev playbook'i ülesanne ja töö esitamine | viis faili GitHubis |
+| [6. Lõpuülesanne ja esitamine](lab-6-esitamine.md) | iseseisev playbook'i ülesanne ja töö esitamine | viis faili ja tag `k01` on GitHubis |
 
 *Tabel 1. Praktikumi etapid.*
 

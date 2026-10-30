@@ -14,7 +14,7 @@ tags:
 
 !!! info "Päeva ülesanne"
 
-    Masinas **web01** on kasutaja `kasutaja` kodukaustas kaust `automation-lab` õigustega `0750` ja selles fail `training.conf` õigustega `0640`. Failis on kaks rida:
+    Masinas **web01** peab kasutaja `kasutaja` kodukaustas olema kaust `automation-lab` õigustega `0750` ja selles fail `training.conf` õigustega `0640`. Failis on kaks rida:
 
     ```ini
     environment=training
@@ -51,9 +51,9 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
 
 Käivita `mkdir ~/automation-lab` uuesti. Kuna sama nimega kaust on juba olemas, lõpetab `mkdir` veaga `File exists`.
 
-Mida peaks skript tegema teisiti, kui tahame seda mitu korda käivitada?
+💭 **Mõtle:** mida peaks skript tegema teisiti, et seda saaks käivitada mitu korda?
 
-Eemalda kaust ja mine tagasi control node'i:
+Eemalda kaust ja naase control node'i:
 
 ```bash
 rm -r ~/automation-lab
@@ -93,7 +93,7 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    Teisel käivitusel on muutmise aeg uus: fail kirjutati üle, kuigi selle sisu oli juba õige. Meie skript ei kontrolli enne faili kirjutamist, kas selle sisu on juba õige. Seetõttu kirjutatakse fail igal käivitusel uuesti. Ansible'is teeb sama töö moodul, mis kontrollib enne tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
+    Teisel käivitusel on muutmise aeg uus: fail kirjutati üle, kuigi selle sisu oli juba õige. Meie skript ei kontrolli enne faili kirjutamist, kas selle sisu on juba õige. Seetõttu kirjutatakse fail igal käivitusel uuesti. Ansible'is teeb sama töö moodul, mis kontrollib kõigepealt tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
 
 ```bash
 cd ~/kursus

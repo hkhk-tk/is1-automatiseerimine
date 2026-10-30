@@ -11,7 +11,7 @@ tags:
 | `Connection timed out` | VPN pole ühendatud või IP-aadress on vale | ühenda VPN, kontrolli IP-aadressi |
 | `Permission denied (publickey,password)` | avalik võti pole hallatavas masinas või parool on vale | käivita uuesti `bash ~/ssh-seadistus.sh` |
 | `REMOTE HOST IDENTIFICATION HAS CHANGED` | masin loodi uuesti | `ssh-keygen -R <ip>` |
-| `ssh -T git@github.com` → `Permission denied` | control node'i võti pole GitHubis | [1. Keskkond, A7](lab-1-keskkond.md#a7-voti-githubi-ja-kursuse-repo) |
+| `ssh -T git@github.com` → `Permission denied` | control node'i võti pole GitHubis | [1. Keskkond, A6](lab-1-keskkond.md#a6-voti-githubi-ja-kursuse-repo) |
 | **Bash** | | |
 | `./prepare-training.sh: Permission denied` | fail pole käivitatav | `chmod u+x prepare-training.sh` või `bash prepare-training.sh` |
 | `$'\r': command not found` | Windowsi reavahetused | VS Code all paremal `CRLF` → `LF`, salvesta |
