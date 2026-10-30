@@ -6,7 +6,7 @@ tags:
 
 # 6. Iseseisev ülesanne ja töö esitamine
 
-Lisad playbook'i iseseisvalt ühe ülesande ja esitad päeva töö.
+Viimases osas lisad playbook'i ise ühe ülesande ja esitad seejärel päeva töö.
 
 ## A1 · Iseseisev ülesanne
 
@@ -16,9 +16,9 @@ Lisa playbook'i `training.yml` kolmas ülesanne: kaustas `automation-lab` peab o
 Seda kausta haldab Ansible. Ära muuda käsitsi.
 ```
 
-**Ennusta:** mis on esimese ja mis teise käivituse kokkuvõttes `changed`?
+Sobiva mooduli ja parameetrid leiad playbook'i teisest ülesandest.
 
-Käivita playbook kaks korda ja kontrolli seejärel faili sisu ning õigusi masinas:
+**Ennusta:** mis on esimese ja mis teise käivituse kokkuvõttes `changed`?
 
 ```bash
 ansible-playbook training.yml
@@ -28,15 +28,15 @@ ssh web01 "cat automation-lab/README.txt; stat -c '%a %n' automation-lab/README.
 
 ??? success "Oodatav tulemus"
 
-    Esimesel käivitusel on uue ülesande olek `changed` ja olemasolevate ülesannete olek `ok`. Teisel käivitusel peab kokkuvõttes olema `changed=0`. Käsk `stat` näitab õigusi `644`.
+    Esimesel käivitusel on uus ülesanne `changed`, kaks varasemat `ok`. Teisel käivitusel on kokkuvõttes `changed=0`. Failis on üks rida ja õigused on `644`.
 
 ??? tip "Vihje"
 
-    Kopeeri playbook'is olemasolev `ansible.builtin.copy` ülesanne ja muuda selle väärtusi `name`, `dest`, `content` ja `mode`.
+    Kopeeri `ansible.builtin.copy` ülesanne ja muuda väärtusi `name`, `dest`, `content` ja `mode`.
 
 ## A2 · Töö esitamine
 
-Tee muudatustest commit, saada need GitHubi ja lisa tag `k01`:
+Töö esitatakse tag'iga `k01`: automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele. Tee muudatustest commit, saada see GitHubi ja lisa tag:
 
 ```bash
 cd ~/kursus
@@ -47,20 +47,18 @@ git tag k01
 git push origin k01
 ```
 
-Töö esitatakse tag'iga `k01`. Automaatne hindaja kontrollib tag'iga `k01` märgitud versiooni ja tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele.
-
 Kohustuslik osa (kõik viis faili olemas ja süntaktiliselt korras) annab 80 punkti. `when` ja `tags` failis `tools.yml` ning `README.txt` annavad kumbki 10 boonuspunkti.
 
-Kui midagi jäi puudu, paranda see, tee uus commit ja saada tag uuesti GitHubi:
+Kui hindaja leiab vea, paranda see, tee uus commit ja saada tag uuesti:
 
 ```bash
 git tag -f k01
 git push -f origin k01
 ```
 
-Ava oma repositoorium GitHubis ja kontrolli, et kaustas `k01/` on järgmised failid:
+Kontrolli GitHubis, et kaustas `k01/` on kõik viis faili:
 
-| Fail | Kus see valmib |
+| Fail | Kus see valmis |
 |---|---|
 | `prepare-training.sh` | [2. Käsitsi ja skriptiga](lab-2-kasitsi.md) |
 | `ansible.cfg`, `inventory.ini` | [3. Ansible'i alused](lab-3-ansible-alused.md) |
@@ -69,6 +67,6 @@ Ava oma repositoorium GitHubis ja kontrolli, et kaustas `k01/` on järgmised fai
 
 *Tabel 1. Esitatavad failid.*
 
-**Valmis, kui** kõik viis faili on GitHubis, tag `k01` on GitHubis olemas ja Classroom 50 näitab kohustusliku osa eest 80 punkti.
+**Valmis, kui** kõik viis faili ja tag `k01` on GitHubis ning Classroom 50 näitab kohustusliku osa eest 80 punkti.
 
 Edasi: [Kodutöö](kodutoo.md).

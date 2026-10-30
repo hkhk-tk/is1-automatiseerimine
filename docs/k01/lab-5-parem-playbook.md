@@ -6,19 +6,21 @@ tags:
 
 # 5. Playbook viiele masinale
 
-Kirjutad playbook'i, mis töötab nii Ubuntus kui ka AlmaLinuxis (`when`), ja käivitad selle ainult osas masinatest (`--limit`) või ainult osa ülesannetega (`tags`). Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
+Seni käis playbook ainult ühes masinas. Nüüd kirjutad playbook'i, mis paigaldab tööriistad kõigisse viide masinasse, kuigi neis on kaks eri distributsiooni. Lisaks õpid käivitama playbook'i ainult osas masinatest (`--limit`) ja ainult osa ülesandeid (`tags`). Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Probleem: sama programm, erinev paketinimi
 
-Tekstiredaktori `vim` pakett on Ubuntus `vim`, AlmaLinuxis `vim-enhanced`. Sama paketinime ei saa siin kasutada mõlema distributsiooni puhul. Fakt `ansible_facts['os_family']` näitab, millisesse distributsioonide perekonda masin kuulub: Ubuntus on see `Debian`, AlmaLinuxis `RedHat`.
+Tekstiredaktori vim pakett on Ubuntus `vim`, AlmaLinuxis aga `vim-enhanced`. Üks ülesanne kindla paketinimega ei sobi seega mõlemale distributsioonile. Ansible'i faktidest näed, millisesse distributsioonide perekonda masin kuulub:
 
 ```bash
 ansible all -m ansible.builtin.setup -a 'filter=ansible_os_family'
 ```
 
-## A2 · `when`: ülesande käivitamine vastavalt distributsioonile
+Ubuntus on väärtus `Debian`, AlmaLinuxis `RedHat`. Selle järgi saab ülesannet käivitada ainult sobivas masinas.
 
-Loo fail `tools.yml`:
+## A2 · Tingimus `when`
+
+Võti `when` määrab tingimuse, mille korral ülesanne käivitatakse. Kui tingimus ei ole tõene, jäetakse ülesanne vahele ja selle olek on `skipping`. Loo fail `tools.yml`:
 
 ```yaml
 - name: Tööriistad
@@ -54,6 +56,8 @@ Loo fail `tools.yml`:
       tags: motd
 ```
 
+Rida `become: true` play tasemel tähendab, et kõik ülesanded käivitatakse `sudo` kaudu, sest pakette paigaldada ja `/etc` all faile muuta saab ainult administraator. Playbook'is on kolm moodulit:
+
 | Moodul | Mida teeb | Parameetrid selles playbook'is |
 |---|---|---|
 | [`ansible.builtin.apt`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/apt_module.html) | Ubuntu (Debiani) paketihaldur | `update_cache: true`: uuenda paketiloendit, `cache_valid_time: 3600`: jäta uuendamine vahele, kui loend on alla tunni vana |
@@ -62,15 +66,9 @@ Loo fail `tools.yml`:
 
 *Tabel 1. Moodulid selles playbook'is.*
 
-`when` ja `tags` ei ole mooduli parameetrid, vaid ülesande võtmesõnad: need on samal taandel kui mooduli nimi. Kontrolli ise, mida teeb `cache_valid_time`:
+`when` ja `tags` ei ole mooduli parameetrid, vaid ülesande võtmesõnad. Seepärast on nad samal taandel kui mooduli nimi. Kui tahad teada, miks `cache_valid_time` on kasulik, vaata `ansible-doc ansible.builtin.apt`.
 
-```bash
-ansible-doc ansible.builtin.apt
-```
-
-Kui `become: true` on play tasemel, käivitatakse kõik ülesanded `sudo` kaudu. `when` määrab tingimuse, mille korral ülesanne käivitatakse.
-
-**Ennusta:** millised ülesanded jäävad Ubuntu masinates vahele (`skipping`) ja millised AlmaLinuxi masinates?
+**Ennusta:** millised ülesanded jäävad Ubuntu masinates vahele ja millised AlmaLinuxi masinates?
 
 ```bash
 ansible-playbook tools.yml --syntax-check
@@ -79,21 +77,19 @@ ansible-playbook tools.yml
 
 ??? success "Oodatav tulemus"
 
-    Ubuntu masinates on AlmaLinuxi ülesande olek `skipping` ja AlmaLinuxi masinates on Ubuntu ülesannete olek `skipping`. PLAY RECAP real näitab väli `skipped` vahele jäetud ülesannete arvu.
+    Ubuntu masinates on AlmaLinuxi ülesande olek `skipping`, AlmaLinuxi masinates Ubuntu kahe ülesande olek `skipping`. PLAY RECAP real näitab väli `skipped`, mitu ülesannet jäi vahele.
 
-Logi mõnda masinasse sisse ja vaata sisselogimisel kuvatavat teadet:
+Teade `/etc/motd` kuvatakse sisselogimisel. Kontrolli seda mõnes masinas:
 
 ```bash
 ssh mc01
 ```
 
-??? success "Oodatav tulemus"
+Sisselogimisel on ekraanil rida `Seda masinat haldab Ansible.` Logi välja käsuga `exit`.
 
-    Sisselogimisel kuvatakse rida `Seda masinat haldab Ansible.` Logi välja käsuga `exit`.
+## A3 · Ainult osa masinatest: `--limit`
 
-## A3 · Sihtmasinad
-
-`--limit` võimaldab sama playbook'i käivitada ainult valitud grupis või masinas, ilma playbook'i muutmata:
+Muudatust on ohutum proovida kõigepealt ühes masinas või grupis. Võti `--limit` käivitab playbook'i ainult valitud masinates, ilma et playbook'is peaks rida `hosts: all` muutma:
 
 ```bash
 ansible-playbook tools.yml --limit alma
@@ -102,11 +98,11 @@ ansible-playbook tools.yml --limit web01
 
 ??? success "Oodatav tulemus"
 
-    PLAY RECAP näitab ainult valitud masinaid. `--limit` piirab käivitamise ka siis, kui playbook'is on `hosts: all`. Nii saad muudatust enne kõigisse masinatesse rakendamist proovida näiteks ühes masinas.
+    PLAY RECAP näitab ainult valitud masinaid: esimesel korral mc01 ja db01, teisel korral web01.
 
-## A4 · Sildid
+## A4 · Ainult osa ülesandeid: sildid
 
-**Silt** (`tags`) on ülesandele antud nimi. Võtmega `--tags` käivitad ainult nende siltidega ülesanded. Kui muutsid ainult sisselogimise teadet, ei ole vaja paketiülesandeid uuesti käivitada. Playbook'is on kaks silti: `paketid` ja `motd`. Kõik playbook'i sildid näed käsuga:
+**Silt** (`tags`) on ülesandele antud nimi. Võtmega `--tags` käivitad ainult nende siltidega ülesanded. Kui muudad ainult sisselogimise teadet, ei ole vaja paketiülesandeid uuesti läbi käia. Playbook'is on kaks silti, `paketid` ja `motd`. Kõik playbook'i sildid näed käsuga:
 
 ```bash
 ansible-playbook tools.yml --list-tags
@@ -122,11 +118,13 @@ ansible-playbook tools.yml --tags motd
 
 ??? success "Oodatav tulemus"
 
-    Käivitub ainult ülesanne `Teade sisselogimisel` ja faktide kogumine. Paketiülesanded jäävad vahele. Kõigi viie masina kokkuvõttes on `changed=1`.
+    Käivituvad ainult faktide kogumine ja ülesanne `Teade sisselogimisel`. Kõigi viie masina kokkuvõttes on `changed=1`.
 
 ## A5 · Korduv käivitus ja commit
 
-**Ennusta:** kõik paketid on paigaldatud ja teade on olemas. Mida näitab kogu playbook'i käivitus nüüd?
+Lõpuks kontrolli, et kogu playbook on idempotentne.
+
+**Ennusta:** kõik paketid on paigaldatud ja teade on olemas. Mida näitab playbook'i käivitus nüüd?
 
 ```bash
 ansible-playbook tools.yml
@@ -134,7 +132,7 @@ ansible-playbook tools.yml
 
 ??? success "Oodatav tulemus"
 
-    Kõigi viie masina kokkuvõttes on `changed=0`. Ubuntu ülesanded on AlmaLinuxi masinates endiselt `skipping` ja vastupidi.
+    Kõigi viie masina kokkuvõttes on `changed=0`.
 
 Salvesta playbook repositooriumi ja saada see GitHubi:
 
@@ -152,4 +150,3 @@ git push
     - [Conditionals (`when`)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_conditionals.html)
     - [Tags](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_tags.html)
     - [Patterns: targeting hosts and groups](https://docs.ansible.com/projects/ansible/latest/inventory_guide/intro_patterns.html)
-    - [Understanding privilege escalation: become](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)

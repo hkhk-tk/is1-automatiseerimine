@@ -7,7 +7,7 @@ tags:
 
 # 2. Käsitsi ja skriptiga
 
-Teed päeva ülesande kõigepealt käsitsi, siis Bashi skriptiga, ja vaatad, mis juhtub skripti teisel käivitusel.
+Enne kui ülesande Ansible'ile annad, teed selle ise: kõigepealt käsitsi, siis Bashi skriptiga. Nii näed hiljem, mida Ansible teisiti teeb.
 
 !!! info "Päeva ülesanne"
 
@@ -20,6 +20,8 @@ Teed päeva ülesande kõigepealt käsitsi, siis Bashi skriptiga, ja vaatad, mis
 
 ## A1 · Käsitsi
 
+Logi masinasse web01 ja tee ülesanne nelja käsuga:
+
 ```bash
 ssh web01
 mkdir ~/automation-lab
@@ -28,7 +30,7 @@ printf '%s\n' 'environment=training' 'enabled=true' > ~/automation-lab/training.
 chmod 0640 ~/automation-lab/training.conf
 ```
 
-Kontrolli:
+Kontrolli faili sisu ja õigusi. Samu kahte käsku kasutad kogu päeva, et kontrollida, kas tulemus on õige:
 
 ```bash
 cat ~/automation-lab/training.conf
@@ -44,22 +46,18 @@ stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
     640 kasutaja /home/kasutaja/automation-lab/training.conf
     ```
 
-    Neid kahte kontrollkäsku kasutad kogu päeva.
+Käivita nüüd `mkdir ~/automation-lab` veel kord. Kuna kaust on juba olemas, lõpetab `mkdir` veaga `File exists`. Sama juhtuks, kui need käsud oleksid skriptis ja käivitaksid skripti teist korda.
 
-Käivita `mkdir ~/automation-lab` uuesti. Kuna sama nimega kaust on juba olemas, lõpetab `mkdir` veaga `File exists`.
-
-**Mõtle:** mida peaks skript tegema teisiti, et seda saaks käivitada mitu korda?
-
-Eemalda kaust ja naase control node'i:
+Eemalda kaust, et skript saaks järgmises sammus alustada tühjalt, ja naase control node'i:
 
 ```bash
 rm -r ~/automation-lab
 exit
 ```
 
-## A2 · Skriptina
+## A2 · Skriptiga
 
-Loo control node'is fail `~/kursus/k01/prepare-training.sh`:
+Samad käsud failis on skript. `mkdir -p` ei anna viga, kui kaust on juba olemas, nii et skripti saab käivitada mitu korda. Loo control node'is fail `~/kursus/k01/prepare-training.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -70,7 +68,7 @@ chmod 0640 ~/automation-lab/training.conf
 echo "Valmis"
 ```
 
-`mkdir -p` ei anna viga, kui kaust on juba olemas. Kopeeri skript masinasse web01 ja käivita see seal:
+Kopeeri skript masinasse web01 ja käivita see seal:
 
 ```bash
 cd ~/kursus/k01
@@ -78,7 +76,9 @@ scp prepare-training.sh web01:
 ssh web01 bash prepare-training.sh
 ```
 
-## A3 · Teine käivitus
+## A3 · Korduv käivitus
+
+Skript ei anna teisel käivitusel viga. Aga kas see teeb midagi, mida ei peaks?
 
 **Ennusta:** kas skript kirjutab faili teisel käivitusel uuesti?
 
@@ -92,7 +92,7 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    Muutmise aeg on uus: skript kirjutas faili üle, kuigi sisu oli juba õige. Ansible'i moodul kontrollib enne tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
+    Muutmise aeg on uus: skript kirjutas faili üle, kuigi sisu oli juba õige. Skript ei kontrolli enne, milline on masina tegelik olek. 4. osas teed sama katse Ansible'iga.
 
 Salvesta skript repositooriumi ja saada see GitHubi:
 

@@ -263,29 +263,23 @@ Kui keegi muudab faili käsitsi, tekib **triiv (drift)**: tegelik olek erineb so
 
 Idempotentsus sõltub lahendusest, mitte tööriistast. Käsumoodulid (`command`, `shell`) ei tea soovitud olekut ja võivad anda igal käivitusel `changed`. Ka Bashi skripti saab kirjutada idempotentseks.
 
-## 7. Kontroll ja ohutu käivitamine
+## 7. Kontrolli tulemust masinas
 
-Tööriista aruanne kirjeldab käivitamist, kontroll näitab tulemust. Need on kaks eri küsimust:
-
-> Kas automaatika teatas, et sai valmis?
-
-> Kas masina olek vastab nõuetele?
-
-Ülesanne on tehtud alles siis, kui mõlemale küsimusele saab vastata „jah“. Seepärast kontrollid pärast iga lahendust tulemust ise:
+Kui Ansible lõpetab vigadeta, tähendab see ainult seda, et ülesanded käivitusid. See ei tõenda, et masinas on vajalik tulemus. Kui playbook'is on vale tee, vale õigus või vale masin, lõpetab Ansible samuti edukalt, aga ülesanne jääb tegemata. Seepärast kontrolli pärast käivitamist masinat ennast:
 
 ```bash
-cat ~/automation-lab/training.conf
-stat -c '%a %U %n' ~/automation-lab ~/automation-lab/training.conf
+ssh web01 cat automation-lab/training.conf
+ssh web01 stat -c '%a %U %n' automation-lab automation-lab/training.conf
 ```
 
-Enne muutva käsu käivitamist mõtle, millises masinas ja mida see muudab. Ansible'is aitavad kaks võtit: `--check --diff` näitab muudatust enne selle tegemist ja `--limit web01` piirab käivitamise ühe masinaga.
+Muudatuse mõju saab piirata juba enne käivitamist. Võti `--check --diff` näitab, mida Ansible muudaks, ilma midagi muutmata. Võti `--limit web01` käivitab playbook'i ainult ühes masinas. Nii proovid muudatust enne, kui see jõuab kõigisse masinatesse.
 
 ## 8. Kokkuvõte
 
 - **Skriptis tuleb iga kontroll ise kirjutada,** Ansible'i moodulites on need olemas.
 - **Playbook kirjeldab soovitud olekut:** inventory määrab masinad, playbook ülesanded ja moodul võrdleb soovitud olekut tegelikuga.
 - **`changed=0` korduval käivitusel** näitab, et playbook käitus idempotentselt.
-- **Aruanne ei ole tulemus:** kontrolli masina olekut.
+- **Edukas käivitus ei tõenda tulemust:** kontrolli masinat ennast.
 
 Järgmisel kohtumisel seadistad playbook'iga mitut masinat korraga: lisanduvad grupid, muutujad, mallid ja rollid.
 
