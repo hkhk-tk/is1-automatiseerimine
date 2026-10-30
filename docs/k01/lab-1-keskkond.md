@@ -5,52 +5,22 @@ tags:
   - Praktikum
 ---
 
-# 1. Keskkond: SSH-võti, nimed ja ühendus
+# 1. Keskkond: SSH-võti ja ühendus masinatega
 
-!!! abstract "Eesmärgid"
+Selles osas seadistad control node'ist paroolita SSH-ühenduse viie masinaga. Ansible vajab just sellist ühendust.
 
-    Pärast selle osa läbimist:
-
-    - on control node'i hostinimi `control`;
-    - on control node'is SSH-võtmepaar ja avalik võti on lisatud kõigisse viide labori virtuaalmasinasse;
-    - on virtuaalmasinate hostinimed `web01`, `app01`, `rmq01`, `mc01` ja `db01`;
-    - saad control node'ist virtuaalmasinatega ühenduda nende nime järgi ja ilma parooli sisestamata.
-
-## Enne alustamist
-
-Enne selle osa alustamist peab [töökeskkond](../00-ulevaade/keskkond.md) olema valmis: VPN-ühendus töötab ja VS Code'i terminal avaneb control node'is.
-
-Jäta Proxmox brauseris avatuks, sest selles osas on vaja viie virtuaalmasina IP-aadresse. Masina IP-aadressi näed, kui valid Proxmoxis masina ja avad vahelehe **Summary**. Aadress on real **IPs**. Neid aadresse kasutad sammudes A2 ja A3.
-
-| Masin (nime lõpp Proxmoxis) | Operatsioonisüsteem |
-|---|---|
-| `web01`, `app01`, `rmq01` | Ubuntu 24.04 |
-| `mc01`, `db01` | AlmaLinux 9 |
-
-*Tabel 1. Labori virtuaalmasinad.*
-
-Kõigis masinates on kasutajanimi `kasutaja`. Selle osa käsud käivitad control node'is, VS Code'i terminalis.
+[Töökeskkond](../00-ulevaade/keskkond.md) peab olema valmis. Hoia Proxmox brauseris lahti: masina IP-aadress on vahelehel **Summary** real **IPs**.
 
 ## A1 · Control node'i nimi
-
-Control node'i hostinimi ei ole veel `control`. Terminali prompt kuvab praegust hostinime. Muuda hostinimi ja ava uus shell, et prompt uueneks:
 
 ```bash
 sudo hostnamectl set-hostname control
 exec bash
 ```
 
-??? success "Oodatav tulemus"
-
-    ```
-    kasutaja@control:~$
-    ```
-
-    Laboris `sudo` parooli ei küsi, sest virtuaalmasinate mallis on kasutajal `kasutaja` lubatud kasutada `sudo`-t ilma paroolita. `hostnamectl` muudab hostinime püsivalt, nii et see jääb alles ka pärast taaskäivitust.
+Prompt on nüüd `kasutaja@control:~$`.
 
 ## A2 · Üks masin käsitsi
-
-Seadista SSH-ühendus masinaga web01 käsitsi. IP-aadressi võta Proxmoxist.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 210" role="img" aria-label="control node'is on võtmepaar ja SSH konfiguratsioonifail; avalik võti lisatakse ssh-copy-id abil viide virtuaalmasinasse" xmlns="http://www.w3.org/2000/svg">
@@ -68,6 +38,8 @@ Seadista SSH-ühendus masinaga web01 käsitsi. IP-aadressi võta Proxmoxist.
 <figcaption>Joonis 1. Privaatvõti jääb control node'i, avalik võti lisatakse igasse virtuaalmasinasse.</figcaption>
 </figure>
 
+Loo võtmepaar, lisa web01 SSH konfiguratsioonifaili, kopeeri avalik võti masinasse ja määra masina nimi. Asenda IP-aadress Proxmoxist leitud aadressiga:
+
 ```bash
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 printf 'Host web01\n    HostName 192.168.125.11\n    User kasutaja\n' >> ~/.ssh/config
@@ -80,11 +52,11 @@ ssh web01 hostname
 
 ## A3 · Ülejäänud masinad skriptiga
 
-Sama töö nelja masinaga käsitsi tähendaks samade käskude kordamist neli korda. Skript teeb selle kõigi viie masinaga korraga.
+Sama töö tuleks teha veel neli korda. Skript teeb selle kõigi viie masinaga korraga.
 
 ??? example "Skript `~/ssh-seadistus.sh`"
 
-    Loo control node'is fail `~/ssh-seadistus.sh`, kopeeri sinna skript ja asenda IP-aadressid Proxmoxist leitud aadressidega:
+    Loo control node'is fail `~/ssh-seadistus.sh`, kopeeri sinna skript ja asenda IP-aadressid:
 
     ```bash
     #!/usr/bin/env bash
@@ -182,62 +154,43 @@ bash ~/ssh-seadistus.sh
 
 Lõpus peab olema rida `Valmis: kõik viis masinat töötavad.`
 
-!!! warning "Privaatvõti jääb control node'i"
+Privaatvõti `~/.ssh/id_ed25519` jääb control node'i. Seda ei kopeerita mujale ega lisata Giti.
 
-    Fail `~/.ssh/id_ed25519` on privaatvõti. Seda ei kopeerita mujale, ei lisata Giti ega saadeta kellelegi. Avalikku võtit `id_ed25519.pub` võib jagada.
+## A4 · Võti GitHubi ja kursuse repositoorium
 
-## A4 · Võti GitHubi ja kursuse repo
-
-Sama SSH-võtit saad kasutada GitHubiga autentimiseks, nii et Git-toimingute jaoks ei ole vaja parooli ega access token'it. Kuva avalik võti:
+Lisa sama avalik võti GitHubi, siis töötab `git` ilma paroolita. Kuva võti:
 
 ```bash
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Ava GitHubis profiilipildi alt **Settings → SSH and GPG keys → New SSH key**. Kirjuta väljale *Title* `control`, kleebi väljale *Key* kogu rida ja vajuta **Add SSH key**. Seejärel kontrolli ühendust:
+Ava GitHubis **Settings → SSH and GPG keys → New SSH key**, kleebi võti väljale *Key* ja salvesta. Kontrolli:
 
 ```bash
 ssh -T git@github.com
 ```
 
-??? success "Oodatav tulemus"
+Vastus algab `Hi <kasutajanimi>!`.
 
-    Esimesel ühendusel kinnita `yes`. Seejärel kuvatakse:
-
-    ```
-    Hi <sinu-github-kasutaja>! You've successfully authenticated, but GitHub does not provide shell access.
-    ```
-
-Ava [Classroom 50 ülesanne](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) ja võta see vastu. Organisatsioonis `hkhk-tk` luuakse sulle privaatne repositoorium. Ava repositooriumi lehel **Code → SSH** ja kopeeri aadress.
+Võta vastu [Classroom 50 ülesanne](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments). GitHubis luuakse sulle repositoorium. Kopeeri selle aadress (**Code → SSH**) ja klooni see:
 
 ```bash
 git config --global user.name "Eesnimi Perenimi"
 git config --global user.email "sinu@email.ee"
-cd ~
-git clone git@github.com:hkhk-tk/<sinu-repo>.git kursus
-cd ~/kursus
-mkdir -p k01
+git clone git@github.com:hkhk-tk/<sinu-repo>.git ~/kursus
+mkdir -p ~/kursus/k01
 ```
 
-Kõik selle kohtumise failid salvestad kausta `~/kursus/k01/`.
+Selle kohtumise failid lähevad kausta `~/kursus/k01/`.
 
-## Veaotsing
+## Kui midagi ei tööta
 
-| Mida näed | Põhjus | Mida teha |
-|---|---|---|
-| `Connection timed out` | IP-aadress on vale või masin ei tööta | võrdle skripti alguses olevaid IP-aadresse Proxmoxiga ja kontrolli, et masin töötab |
-| `Permission denied (publickey,password)` | parool on vale | sisesta parool uuesti ja kontrolli, et kasutajanimi on `kasutaja` |
-| `REMOTE HOST IDENTIFICATION HAS CHANGED` | masina SSH hostivõti muutus, näiteks loodi masin uuesti | `ssh-keygen -R <ip>` ja käivita skript uuesti |
-| `Bad owner or permissions on ~/.ssh/config` | konfiguratsioonifail on teistele kasutajatele kirjutatav | `chmod 600 ~/.ssh/config` |
-| skripti kontrollis on `VIGA ... ei vasta ilma paroolita` | avalik võti ei jõudnud masinasse | käivita skript uuesti ja vaata selle masina väljundit |
+| Viga | Mida teha |
+|---|---|
+| `Connection timed out` | kontrolli IP-aadressi Proxmoxis ja et masin töötab |
+| `Permission denied` | kontrolli parooli ja kasutajanime `kasutaja` |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` | `ssh-keygen -R <ip>` ja proovi uuesti |
 
-*Tabel 2. Levinud vead.*
+*Tabel 1. Levinud vead.*
 
-??? info "Loe juurde"
-
-    - [OpenSSH: ssh_config](https://man.openbsd.org/ssh_config) (mida SSH konfiguratsioonifaili read tähendavad)
-    - [`ssh-copy-id`](https://man.openbsd.org/ssh-copy-id)
-    - [GNU Bash: Shell Functions](https://www.gnu.org/software/bash/manual/html_node/Shell-Functions.html)
-    - [systemd: hostnamectl](https://www.freedesktop.org/software/systemd/man/latest/hostnamectl.html)
-
-**Valmis, kui** käsk `ssh <masin> hostname` vastab kõigis viies masinas õige nimega ja parooli ei küsita.
+**Valmis, kui** `ssh web01 hostname` (ja sama teiste masinatega) vastab ilma parooli küsimata.

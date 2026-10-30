@@ -7,10 +7,7 @@ tags:
 
 # 2. Käsitsi ja skriptina
 
-!!! abstract "Eesmärgid"
-
-    - täidad päeva ülesande masinas web01 käsitsi ja kontrollid tulemust;
-    - koondad samad käsud Bashi skripti ja uurid selle käitumist korduval käivitamisel.
+Teed päeva ülesande kõigepealt käsitsi, siis Bashi skriptiga, ja vaatad, mis juhtub skripti teisel käivitusel.
 
 !!! info "Päeva ülesanne"
 
@@ -62,7 +59,7 @@ exit
 
 ## A2 · Skriptina
 
-Loo control node'is oma repositooriumisse fail `~/kursus/k01/prepare-training.sh`:
+Loo control node'is fail `~/kursus/k01/prepare-training.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -93,7 +90,7 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
 ??? success "Oodatav tulemus"
 
-    Teisel käivitusel on muutmise aeg uus: fail kirjutati üle, kuigi selle sisu oli juba õige. Meie skript ei kontrolli enne faili kirjutamist, kas selle sisu on juba õige. Seetõttu kirjutatakse fail igal käivitusel uuesti. Ansible'is teeb sama töö moodul, mis kontrollib kõigepealt tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
+    Muutmise aeg on uus: skript kirjutas faili üle, kuigi sisu oli juba õige. Ansible'i moodul kontrollib enne tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
 
 ```bash
 cd ~/kursus

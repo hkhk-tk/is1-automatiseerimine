@@ -6,13 +6,7 @@ tags:
 
 # 4. Esimene playbook
 
-!!! abstract "Eesmärgid"
-
-    - kirjutad päeva ülesande playbook'ina;
-    - kontrollid playbook'i käitumist korduval käivitamisel;
-    - tekitad failis käsitsi muudatuse ning kontrollid `--check --diff` abil, mida Ansible parandaks.
-
-Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
+Kirjutad päeva ülesande playbook'ina, käivitad selle korduvalt ja vaatad, kuidas Ansible parandab käsitsi tehtud muudatuse. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Playbook
 

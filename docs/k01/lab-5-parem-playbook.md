@@ -6,13 +6,7 @@ tags:
 
 # 5. Playbook viiele masinale
 
-!!! abstract "Eesmärgid"
-
-    - kirjutad playbook'i, mis valib Ubuntu ja AlmaLinuxi jaoks sobivad ülesanded (`when`);
-    - valid, millistes masinates playbook käivitatakse (`hosts`, `--limit`);
-    - käivitad ainult osa ülesandeid (`tags`).
-
-Kõik käsud käivitad control node'is kaustas `~/kursus/k01`. Fail `tools.yml` on esitamisel kohustuslik. Tingimuste (`when`) ja siltide (`tags`) eest annab automaatne hindaja boonuspunkte.
+Kirjutad playbook'i, mis töötab nii Ubuntus kui ka AlmaLinuxis (`when`), ja käivitad selle ainult osas masinatest (`--limit`) või ainult osa ülesannetega (`tags`). Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Probleem: sama programm, erinev paketinimi
 

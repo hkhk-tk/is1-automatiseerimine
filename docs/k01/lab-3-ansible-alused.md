@@ -6,28 +6,14 @@ tags:
 
 # 3. Ansible'i alused
 
-!!! abstract "Eesmärgid"
-
-    - paigaldad Ansible'i control node'ile;
-    - koostad faili `ansible.cfg` ja inventory, kus on kõik viis masinat;
-    - käivitad ad-hoc käske tavakasutaja ja administraatori õigustega.
-
-Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
+Paigaldad Ansible'i, kirjeldad inventory's viis masinat ja käivitad käske kõigis masinates korraga. Kõik käsud käivitad control node'is kaustas `~/kursus/k01`.
 
 ## A1 · Paigalda Ansible
 
-=== "Ubuntu"
-
-    ```bash
-    sudo apt update
-    sudo apt install -y ansible-core
-    ```
-
-=== "AlmaLinux"
-
-    ```bash
-    sudo dnf install -y ansible-core
-    ```
+```bash
+sudo apt update
+sudo apt install -y ansible-core
+```
 
 ```bash
 ansible --version
@@ -66,7 +52,7 @@ db01
 ansible_user=kasutaja
 ```
 
-Masinate nimed (`web01` jne) töötavad ilma IP-aadressideta, sest [1. osa](lab-1-keskkond.md) skript lisas need SSH konfiguratsioonifaili `~/.ssh/config`. Gruppide `ubuntu` ja `alma` abil saad hiljem käivitada ülesandeid ainult ühe distributsiooni masinates.
+Nimed töötavad ilma IP-aadressideta, sest need on failis `~/.ssh/config`. Gruppide `ubuntu` ja `alma` abil saad käivitada ülesandeid ainult ühe distributsiooni masinates.
 
 ```bash
 ansible --version | grep 'config file'
@@ -121,7 +107,7 @@ ansible all -m ansible.builtin.setup -a 'filter=ansible_distribution*'
 
 ## A4 · Ad-hoc käsk õigustega
 
-Paigalda kõigisse masinatesse tööriist `tree`. Paketi paigaldamiseks on vaja administraatori õigusi. Võti `--become` (`-b`) käivitab ülesande kõrgemate õigustega. Meie laboris kasutatakse selleks `sudo`-t.
+Paigalda kõigisse masinatesse tööriist `tree`. Paketi paigaldamiseks on vaja administraatori õigusi: võti `--become` (`-b`) käivitab ülesande `sudo` kaudu.
 
 ```bash
 ansible all -m ansible.builtin.package -a "name=tree state=present" -b
@@ -137,9 +123,7 @@ Käivita sama käsk uuesti.
 
     Kõik viis masinat vastavad `SUCCESS` ja `"changed": false`. Pakett `tree` oli juba paigaldatud, seega Ansible midagi ei muutnud.
 
-!!! info "Laboris `sudo` parooli ei küsi"
-
-    Labori masinates on `sudo` seadistatud parooli küsimata. Töökohas küsib `sudo` tavaliselt parooli. Sel juhul lisa käsule `-K` (`--ask-become-pass`): Ansible küsib parooli üks kord ja kasutab seda kõigis masinates. Kui vastuseks tuleb `Missing sudo password`, on just see põhjus.
+Laboris `sudo` parooli ei küsi. Kui töökohas küsib, lisa käsule `-K`.
 
 **Valmis, kui** käsule `ansible all -m ansible.builtin.ping` vastavad kõik viis masinat `pong` ja paketi `tree` teine paigaldus annab kõikjal `changed: false`.
 

@@ -6,10 +6,7 @@ tags:
 
 # 6. Lõpuülesanne ja esitamine
 
-!!! abstract "Eesmärgid"
-
-    - lisad iseseisvalt olemasolevasse playbook'i uue ülesande;
-    - esitad töö GitHubis.
+Lisad playbook'i iseseisvalt ühe ülesande ja esitad päeva töö.
 
 ## A1 · Lõpuülesanne
 
@@ -50,7 +47,7 @@ git push origin k01
 
 Töö esitatakse tag'iga `k01`. Automaatne hindaja kontrollib tag'iga `k01` märgitud versiooni ja tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele.
 
-Kõik viis faili on kohustuslikud: hindaja kontrollib, et need on olemas ja süntaktiliselt korras. Kohustuslik osa annab 80 punkti. Lisaks saab 10 punkti boonust `tools.yml`-i ülesannete eest, kus on kasutatud `when`-i ja silte (`tags`), ning 10 punkti boonust lõpuülesande (`README.txt`) eest.
+Kohustuslik osa (kõik viis faili olemas ja süntaktiliselt korras) annab 80 punkti. `when` ja `tags` failis `tools.yml` ning `README.txt` annavad kumbki 10 boonuspunkti.
 
 Kui midagi jäi puudu, paranda see, tee uus commit ja saada tag uuesti GitHubi:
 
