@@ -58,7 +58,7 @@ kubeconfig'is on kliendisertifikaat või token, millega API server sind tuvastab
 
 Vastus `No resources found` tõestab kolme asja korraga: võrk jõudis API serverini, sertifikaat klappis ja sinu kasutaja tohib selles namespace'is pod'e lugeda. `Forbidden` oleks tähendanud, et ühendus on korras, aga õigused mitte. Helm hoiatab hiljem, kui fail on grupile või teistele loetav, seepärast `chmod 600`.
 
-✅ **Edasi saad minna, kui** `kubectl get pods` vastab ilma veata (`No resources found` sobib), server on `https://k3s.lab.hkhk.ee:6443` ja context'i namespace on `is-<github>`.
+**Edasi saad minna, kui** `kubectl get pods` vastab ilma veata (`No resources found` sobib), server on `https://k3s.lab.hkhk.ee:6443` ja context'i namespace on `is-<github>`.
 
 ## Käivita VM k3s01
 
@@ -85,7 +85,7 @@ k3s server vajab vähemalt 2 GB mälu. Liiga väikese mäluga VM käivitub, aga 
 
 `status: done` tähendab, et cloud-init lõpetas töö: kasutaja, võti ja võrk on paigas. `free` näitab veidi alla 2048 MB, sest osa mälust võtab kernel enne, kui see kasutajale näha on.
 
-✅ **Edasi saad minna, kui** ssh vastab `k3s01`, `nproc` annab `2` ja `free` üle 1800 MB.
+**Edasi saad minna, kui** ssh vastab `k3s01`, `nproc` annab `2` ja `free` üle 1800 MB.
 
 ## k3s ja kaks klastrit ühes kubectl'is
 
@@ -129,7 +129,7 @@ kubectl ei küsi kinnitust ega näita väljundis, millisesse klastrisse käsk l�
 
 Tärn `get-contexts` väljundis näitab context'i, mida kubectl kasutab, kui sa `--context`-i ei anna. See jääb klassi omaks, sest `KUBECONFIG`-i esimese faili `current-context` võidab. `can-i '*' '*'` annab oma klastris `yes` ja klassis `no`: sama kubectl, kaks väga erinevat volitust. Just seepärast paned oma klastri käskudele context'i alati kirja.
 
-✅ **Edasi saad minna, kui** `get-contexts` näitab kahte context'i (`*` klassi omal, `k3s01` teine), `get nodes -o wide` näitab VM-i IP-d ja `containerd://2.2` ning `can-i '*' '*'` vastab oma klastris `yes` ja klassis `no`.
+**Edasi saad minna, kui** `get-contexts` näitab kahte context'i (`*` klassi omal, `k3s01` teine), `get nodes -o wide` näitab VM-i IP-d ja `containerd://2.2` ning `can-i '*' '*'` vastab oma klastris `yes` ja klassis `no`.
 
 ## Mis node'il tegelikult töötab
 
@@ -177,13 +177,15 @@ Kui tead, et Service on kerneli reegel, ei otsi sa rikke korral "Service'i prots
 
 Kaks `web`-pod'i on node'il kaks `pause`-protsessi ja kaks network namespace'i. ClusterIP ei ole ühegi võrguliidese aadress: see on olemas ainult NAT-tabelis, mis suunab paketi ühe pod'i IP-le. `tere.txt` kuupäev tõestab, et PVC on node'i kaust, kuhu konteiner kirjutas. `Allocated resources` näitab, mida pod'id küsisid, mitte seda, mida nad kasutavad: node võib olla "täis" ja samal ajal peaaegu jõude.
 
-✅ **Edasi saad minna, kui** iptables'is on rida `default/web` ClusterIP-ga, local-path kaustas `pvc-…_default_katse` on fail kuupäevaga ja `Allocated resources` näitab requests'ide summat protsendina node'i mahust.
+**Edasi saad minna, kui** iptables'is on rida `default/web` ClusterIP-ga, local-path kaustas `pvc-…_default_katse` on fail kuupäevaga ja `Allocated resources` näitab requests'ide summat protsendina node'i mahust.
 
 ## Control plane seiskub, workload töötab edasi
 
 Peatad k3s teenuse ajal, kui pod'id töötavad. API server, scheduler ja kontrollerid ehk control plane kaovad. Vaatad, kas nginx teenindab edasi ja mida näeb sel ajal kubectl.
 
 Tootmisklastris juhtub see uuenduse, aegunud sertifikaadi või etcd rikke ajal. Kui tead, et workload töötab edasi, ei hakka sa paanikas pod'e taaskäivitama. Samas ei paranda sel ajal keegi ka ühtegi pod'i, mis ebaõnnestub.
+
+**Ennusta:** kui k3s on peatatud, kas nginx vastab ClusterIP-l ja mida näitab `kubectl get pods`?
 
 1. Jäta ClusterIP meelde ja peata node'il k3s:
 
@@ -210,7 +212,7 @@ Tootmisklastris juhtub see uuenduse, aegunud sertifikaadi või etcd rikke ajal. 
 
 Kui k3s oli maas, sai kubectl `connection refused`, aga node'il oli kaks nginx'i master-protsessi ja ClusterIP vastas `HTTP/1.1 200 OK`. See tõestab, et data plane (konteinerid ja NAT-reeglid) ei vaja töötamiseks API serverit. Pärast taaskäivitust on pod'idel samad nimed ja RESTARTS on 0, seega neid ei loodud uuesti. Kui RESTARTS oleks kasvanud, oleks k3s peatamisel tapnud ka konteinerid.
 
-✅ **Edasi saad minna, kui** k3s peatatuna andis kubectl vea, curl ClusterIP-le andis `200` ja pärast taaskäivitust on pod'id samade nimedega ja RESTARTS 0.
+**Edasi saad minna, kui** k3s peatatuna andis kubectl vea, curl ClusterIP-le andis `200` ja pärast taaskäivitust on pod'id samade nimedega ja RESTARTS 0.
 
 ## Koristus
 
@@ -230,9 +232,9 @@ Unustatud `KUBECONFIG` jätab alles context'i, mis osutab välja lülitatud masi
 
 `current-context` näitab nüüd klassi context'i, sest alles jäi ainult `~/.kube/config`. Kui see näitab `k3s01`, on `KUBECONFIG` mõnes teises terminalis või `.bashrc`-is alles.
 
-✅ **Edasi saad minna, kui** `kubectl config current-context` näitab klassi context'i ja `k3s01` on Proxmoxis olekus *stopped*.
+**Edasi saad minna, kui** `kubectl config current-context` näitab klassi context'i ja `k3s01` on Proxmoxis olekus *stopped*.
 
-📎 **Selle mooduli tõend:** issue `K7.1` kommentaaris `kubectl config get-contexts` väljund, üks `pause` rida, iptables'i rida `default/web`, `Allocated resources` plokk ja katse "k3s maas" kolm rida: kubectl'i viga, curl'i `200` ja pod'id pärast taaskäivitust.
+**Selle osa tõend:** issue `K7.1` kommentaaris `kubectl config get-contexts` väljund, üks `pause` rida, iptables'i rida `default/web`, `Allocated resources` plokk ja katse "k3s maas" kolm rida: kubectl'i viga, curl'i `200` ja pod'id pärast taaskäivitust.
 
 ## Miks see nii töötab
 

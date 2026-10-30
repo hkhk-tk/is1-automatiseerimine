@@ -61,7 +61,7 @@ Kui sa oma õigusi ei tea, tõlgendad `Forbidden`-it valesti: otsid viga manifes
 
 Nende vastuste põhjal joonistub välja sinu piir. Workload'e ja Secret'eid tohid luua, aga Role'e, RoleBinding'uid, namespace'e ega kvooti mitte. Seega ei saa sa endale ise õigusi juurde anda ega naaberõppija tööd puutuda. `get nodes` võib vastata `yes`, sest node'ide lugemine on lisatud eraldi: näed, kus pod'id töötavad, aga node'e muuta ei saa. `kube-system` vastus `no` tõestab, et RoleBinding kehtib ainult sinu namespace'is.
 
-✅ **Edasi saad minna, kui** context'i NAMESPACE veerus on `is-<github>`, deployment'e `yes`, namespace'e `no`, `kube-system`-is `no`, ja tead oma [kvoodi](https://kubernetes.io/docs/concepts/policy/resource-quotas/) piire (requests 1 CPU / 2 Gi, 15 pod'i, 1 NodePort, 0 LoadBalancer'it) ning LimitRange'i vaikeväärtusi.
+**Edasi saad minna, kui** context'i NAMESPACE veerus on `is-<github>`, deployment'e `yes`, namespace'e `no`, `kube-system`-is `no`, ja tead oma [kvoodi](https://kubernetes.io/docs/concepts/policy/resource-quotas/) piire (requests 1 CPU / 2 Gi, 15 pod'i, 1 NodePort, 0 LoadBalancer'it) ning LimitRange'i vaikeväärtusi.
 
 ## Deployment failist, mitte peast
 
@@ -94,13 +94,15 @@ Peast kirjutatud YAML-is on taandevead ja valesti kirjutatud väljanimed. API se
 
 Nimedest näed omandiahelat: pod `web-<räsi>-<juhuslik>` kuulub ReplicaSet'ile `web-<räsi>`, ReplicaSet Deployment'ile. `--dry-run=server` saatis faili API serverile kontrolliks, aga ei salvestanud seda. Nii leiad kvoodi, LimitRange'i ja skeemi vead enne, kui midagi klastris muutub. Kui ownerReference oleks puudu, oleks pod "orb" ja keegi ei looks seda uuesti.
 
-✅ **Edasi saad minna, kui** `--dry-run=server` vastas `(server dry run)`, näed üht Deployment'i, üht ReplicaSet'i ja üht pod'i olekus READY 1/1 ning pod'i omanik on `ReplicaSet`.
+**Edasi saad minna, kui** `--dry-run=server` vastas `(server dry run)`, näed üht Deployment'i, üht ReplicaSet'i ja üht pod'i olekus READY 1/1 ning pod'i omanik on `ReplicaSet`.
 
 ## Kustutatud pod tuleb tagasi
 
 Kustutad pod'i ja vaatad, kuidas klaster selle asendab. Kubernetes võrdleb pidevalt soovitud ja tegelikku olekut. ReplicaSet-kontroller näeb vahet "soovitud 1, tegelik 0" ja loob uue pod'i.
 
 Klassikalises serveris taastab seiskunud teenuse systemd samal masinal. Siin on uus pod uue nimega ja võib-olla teisel node'il. Seepärast ei tohi miski sõltuda pod'i nimest ega IP-st, ainult Service'ist ja label'itest.
+
+**Ennusta:** mis nimega ja mis IP-ga on pod pärast kustutamist ning kes selle loob?
 
 1. Jälgi pod'e teises terminalis:
 
@@ -118,7 +120,7 @@ Klassikalises serveris taastab seiskunud teenuse systemd samal masinal. Siin on 
 
 Jälgimisaknas tekkis uus pod enne, kui vana oli lõplikult kadunud: kontroller ei oota koristust, vaid täidab puuduva koha kohe. IP oli uus, node võis olla teine. Sündmustes on `SuccessfulCreate` ReplicaSet'i nimel, mitte sinu nimel, sest pod'i lõi kontroller.
 
-✅ **Edasi saad minna, kui** vana pod oli Terminating, uus tekkis sekunditega uue nime ja IP-ga, Events'is on `SuccessfulCreate` ja `kubectl get pods -l app=web` näitab nüüd kahte pod'i.
+**Edasi saad minna, kui** vana pod oli Terminating, uus tekkis sekunditega uue nime ja IP-ga, Events'is on `SuccessfulCreate` ja `kubectl get pods -l app=web` näitab nüüd kahte pod'i.
 
 ## Service ja port-forward
 
@@ -154,13 +156,15 @@ Service'i ja pod'i seos on ainult label'is. Üks kirjaviga selector'is ja Servic
 
 Endpoints'i IP-d on samad mis pod'ide IP-d. See on tõend, et selector leidis pod'id ja et need on Ready. LoadBalancer'i viga ei tulnud võrgust, vaid kvoodist: API server keeldus objekti salvestamast, enne kui ükski kontroller seda nägi.
 
-✅ **Edasi saad minna, kui** Endpoints'i IP-d on samad mis pod'ide IP-d, curl annab `HTTP/1.1 200 OK` ja LoadBalancer annab vea `exceeded quota: … services.loadbalancers=0`.
+**Edasi saad minna, kui** Endpoints'i IP-d on samad mis pod'ide IP-d, curl annab `HTTP/1.1 200 OK` ja LoadBalancer annab vea `exceeded quota: … services.loadbalancers=0`.
 
 ## Pod karantiini label'iga
 
 Seda võtet kasutavad adminid tootmises. Kui üks pod käitub imelikult, ei kustuta sa seda, vaid muudad tema label'it. Service ja ReplicaSet ei vali seda pod'i enam: liiklus lõpeb, kontroller loob asenduse, ja vigane pod jääb uurimiseks alles.
 
 Pärast pod'i kustutamist näitab `kubectl logs` midagi ainult siis, kui logikoguja jõudis read ära saata, ja protsessi mälu ning ühenduste olekut ei näita enam miski. Label'i muutmine annab sulle aega põhjust otsida, ilma et kasutajad seda pod'i näeksid.
+
+**Ennusta:** mitu pod'i on pärast label'i muutmist ja mitu IP-d jääb Service'i Endpoints'isse?
 
 1. Vali üks pod ja vii see karantiini:
 
@@ -182,7 +186,7 @@ Pärast pod'i kustutamist näitab `kubectl logs` midagi ainult siis, kui logikog
 
 Pärast label'i muutmist on pod'e kolm: kaks `app=web` ja üks `app=karantiin`. Endpoints'is on ainult kaks IP-d ja karantiinis pod'i IP sealt kadus. `ownerReferences` on tühi, sest ReplicaSet vabastas pod'i, mis tema selector'iga enam ei sobi. Pod töötab edasi ja tema logid on alles, aga keegi ei saada talle liiklust.
 
-✅ **Edasi saad minna, kui** karantiinis pod'i IP kadus Endpoints'ist, ReplicaSet lõi asenduse, karantiinis pod'il polnud omanikku ja ta on nüüd kustutatud.
+**Edasi saad minna, kui** karantiinis pod'i IP kadus Endpoints'ist, ReplicaSet lõi asenduse, karantiinis pod'il polnud omanikku ja ta on nüüd kustutatud.
 
 ## ConfigMap ja Secret testpodis
 
@@ -215,7 +219,7 @@ See vahe on sage intsidentide põhjus. Keegi muudab ConfigMap'i, näeb, et objek
     kubectl get secret katse -o jsonpath='{.data.PAROOL}' | base64 -d; echo
     ```
 
-4. Muuda nüüd mõlemat ja oota, kuni kubelet volume'i uuendab:
+4. **Ennusta:** kumb muutub töötavas pod'is, fail või keskkonnamuutuja? Muuda mõlemat ja oota, kuni kubelet volume'i uuendab:
 
     ```bash
     printf 'tase=2\n' > app.conf
@@ -236,9 +240,9 @@ See vahe on sage intsidentide põhjus. Keegi muudab ConfigMap'i, näeb, et objek
 
 Fail näitas pärast minutit `tase=2`, muutuja näitas ikka `lab-07`. Sama ConfigMap'i objekt, kaks eri tulemust, ja vahe on ainult selles, kuidas pod seda loeb. `describe secret` näitab ainult baitide arvu ja pod'i YAML-is parooli pole, aga `exec` näitab seda selgelt. Parooli kaitseb seega õigus `exec`-ile ja Secret'ite lugemisele, mitte base64.
 
-✅ **Edasi saad minna, kui** logis on kõik kolm muutujat, Secret dekodeeritult on `salajane`, failis on pärast muudatust `tase=2`, `printenv LAB` näitab ikka `lab-07` ja `grep -c salajane` pod'i YAML-is annab 0.
+**Edasi saad minna, kui** logis on kõik kolm muutujat, Secret dekodeeritult on `salajane`, failis on pärast muudatust `tase=2`, `printenv LAB` näitab ikka `lab-07` ja `grep -c salajane` pod'i YAML-is annab 0.
 
-📎 **Selle mooduli tõend:** issue `K7.2` kommentaaris `can-i` tabel viie tegevusega, `can-i --list` 20 rida, owner `ReplicaSet`, Endpoints = pod'ide IP-d, karantiini katse `get pods -L app` väljund, `kubectl logs test` kolm rida ja `printenv LAB` väljund.
+**Selle osa tõend:** issue `K7.2` kommentaaris `can-i` tabel viie tegevusega, `can-i --list` 20 rida, owner `ReplicaSet`, Endpoints = pod'ide IP-d, karantiini katse `get pods -L app` väljund, `kubectl logs test` kolm rida ja `printenv LAB` väljund.
 
 ## Miks see nii töötab
 

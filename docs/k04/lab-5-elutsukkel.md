@@ -6,7 +6,7 @@ tags:
 
 # 5. Elutsükkel ja kaitsed
 
-Praegu kustutab üks vale `apply` db01 koos andmetega sama kergelt kui iga teise VM-i. Paned db01-le kaitse Proxmoxis ja Tofus, proovid `lifecycle`-i kolme argumenti ja lisad koodile kaks tingimust: üks hoiatab, teine peatab. Proxmoxi kaitse kehtib kõigile, kes API-t kasutavad, Tofu oma ainult sinu koodi käivitamise ajal. Lõpuks on db01 kaitstud, `NOTES.md`-s on kirjas, milline kaitse millise vea vastu aitab, ja plaan on jälle "No changes".
+Praegu kustutab üks vale `apply` db01 koos andmetega sama kergelt kui iga teise VM-i. Paned db01-le kaitse Proxmoxis ja Tofus, proovid `lifecycle`-i kolme argumenti ja lisad koodile kaks tingimust: üks hoiatab, teine peatab. Proxmoxi kaitse kehtib kõigile, kes API-t kasutavad, Tofu oma ainult sinu koodi käivitamise ajal. Lõpuks on db01 kaitstud, tead, milline kaitse millise vea vastu aitab, ja plaan on jälle "No changes".
 
 **Kui teed seda tööl iga päev:** db01-l on `protection = true`, plaan on "No changes" ja sa oskad öelda, milline kaitse (Proxmoxi `protection`, `prevent_destroy`, `up.sh` keeld) peatab `tofu destroy`, `-replace` ja koodist kustutatud ressursiploki. Kui see on sul juba korras, mine otse etappi „[Lisa hoiatus ja keeld](#lisa-hoiatus-ja-keeld)“.
 
@@ -34,7 +34,7 @@ Nõuded:
 
 Plaan muutis ainult db01, sest `optional(bool, false)` andis teistele vaikeväärtuse, mis vastas niigi Proxmoxi tegelikule olekule. Uus väli objektis ei sunni sind igale reale midagi kirjutama.
 
-✅ **Edasi saad minna, kui** plaan oli `1 to change` (in-place), UI näitab db01-l `Protection: Yes` ja teistel `No`.
+**Edasi saad minna, kui** plaan oli `1 to change` (in-place), UI näitab db01-l `Protection: Yes` ja teistel `No`.
 
 ## Proovi, kes kaitset näeb
 
@@ -52,7 +52,7 @@ Kui plaan ütleb "5 to destroy" ja sa usud, et kaitse peatab, aga kaitse oli ain
 
 Tofu plaan lubab db01 kustutamist, sest Tofu ei küsi plaani ajal Proxmoxilt, kas kustutamine õnnestuks. Proxmoxi lipp töötab alles API kutsel, nii et `apply` alustaks kustutamist ja ebaõnnestuks db01 juures. UI keeldus kohe ja ütles põhjuseks kaitse.
 
-✅ **Edasi saad minna, kui** `plan -destroy` näitas db01 kustutamist, UI keeldus kaitse tõttu ja `NOTES.md`-s on kirjas, kumb pool kaitse jõustab.
+**Edasi saad minna, kui** `plan -destroy` näitas db01 kustutamist, UI keeldus kaitse tõttu ja oskad öelda, kumb pool kaitse jõustab.
 
 ## Proovi prevent_destroy ja selle piire
 
@@ -68,13 +68,13 @@ Teine kaitse on Tofu enda oma. [`prevent_destroy`](https://opentofu.org/docs/lan
     ```
 
 2. Proovi teha `prevent_destroy = var.protection`: mida ütleb `tofu validate`?
-3. Eemalda `prevent_destroy` ja kirjuta `NOTES.md`-sse kaks lauset: miks see moodulis kaitseb liiga palju ja millal see ei kaitse üldse (ressursiplokk kustutatakse koodist).
+3. Eemalda `prevent_destroy`. **Mõtle:** miks see moodulis kaitseb liiga palju ja millal see ei kaitse üldse (ressursiplokk kustutatakse koodist)?
 
 Erinevalt Proxmoxi lipust peatab `prevent_destroy` juba plaani, enne kui ükski API kutse läheb. Hind on see, et seda ei saa hostiti valida, sest meta-argument peab olema literaal. Kui keegi kustutab koodist kogu ressursiploki, kaob ka kaitse ja järgmine plaan kustutab vaikides.
 
 > Pärast `prevent_destroy`-d tuleb kogu stacki `destroy` jaoks koodi muuta. Proxmoxi `protection` tuleb samamoodi enne kursuse lõpu koristust maha võtta.
 
-✅ **Edasi saad minna, kui** mõlemad plaanid ebaõnnestusid `Instance cannot be destroyed`-iga, `validate` keeldus muutujast, `prevent_destroy` on koodist läinud ja plaan on "No changes".
+**Edasi saad minna, kui** mõlemad plaanid ebaõnnestusid `Instance cannot be destroyed`-iga, `validate` keeldus muutujast, `prevent_destroy` on koodist läinud ja plaan on "No changes".
 
 ## Ära kirjuta opsi märkmeid üle
 
@@ -86,11 +86,11 @@ Kui iga `apply` kustutab opsi märkme, lõpetab ops märkmete kirjutamise. Siis 
 2. UI-s web01 → **Summary → Notes**: lisa rida "kontrollitud, ops" ja salvesta. Käivita `tofu plan`.
 3. Lisa mooduli ressursile `lifecycle { ignore_changes = [description] }` ja käivita `tofu plan`.
 
-`NOTES.md`-sse: miks ei sobi `ignore_changes`-i `memory` ega `started`?
+**Mõtle:** miks ei sobi `ignore_changes`-i `memory` ega `started`?
 
 `ignore_changes` tähendab, et Tofu ei halda seda välja pärast loomist. Algväärtus tuleb ikka koodist, hilisemad muudatused jäävad sinna, kus need tehti. Sama kehtib vastupidi: kui muudad koodis `description`-i, ei jõua see enam olemasolevale VM-ile.
 
-✅ **Edasi saad minna, kui** sammu 2 plaan tahtis `description`-i tagasi panna ja pärast `ignore_changes`-i on plaan "No changes", kuigi UI-s on sinu märkus alles.
+**Edasi saad minna, kui** sammu 2 plaan tahtis `description`-i tagasi panna ja pärast `ignore_changes`-i on plaan "No changes", kuigi UI-s on sinu märkus alles.
 
 ## Vaata, mida teeb create_before_destroy
 
@@ -105,11 +105,11 @@ Pilves on see viis teha asendus ilma katkestuseta: uus masin tuleb üles, siis k
     tofu plan -replace='module.vm["web01"].proxmox_virtual_environment_vm.this' | grep -E 'web01|Plan:'
     ```
 
-3. Eemalda `create_before_destroy` ja kirjuta `NOTES.md`-sse, miks `apply` ebaõnnestuks: mis on uuel ja vanal VM-il sama?
+3. Eemalda `create_before_destroy`. **Mõtle:** miks `apply` ebaõnnestuks? Mis on uuel ja vanal VM-il sama?
 
 Sümbol `+/-` tähendab, et Tofu teeks uue VM-i enne vana kustutamist. Plaan ei kontrolli, kas see on võimalik. Proxmox keelduks, sest `vm_id` on juba kasutusel, ja isegi teise ID-ga oleks kahel masinal sama IP. Plaani sümbol ütleb järjekorra, mitte seda, et järjekord töötab.
 
-✅ **Edasi saad minna, kui** plaanis oli `+/- create replacement and then destroy`, `NOTES.md`-s on kirjas, et sama `vm_id`, nimi ja IP ei lase uut enne vana kustutamist luua, ja plaan on jälle "No changes".
+**Edasi saad minna, kui** plaanis oli `+/- create replacement and then destroy`, oskad selgitada, et sama `vm_id`, nimi ja IP ei lase uut enne vana kustutamist luua, ja plaan on jälle "No changes".
 
 ## Lisa hoiatus ja keeld
 
@@ -132,11 +132,11 @@ Nõuded:
     tofu test
     ```
 
-`NOTES.md`-sse: kumb tingimus lubaks `apply`-l edasi minna ja kumb mitte?
+**Ennusta:** kumb tingimus lubaks `apply`-l edasi minna ja kumb mitte?
 
 Esimene plaan lõppes plaaniga ja hoiatusega, nii et `apply` oleks lubatud. Teine plaan peatus sinu teatega ja nimetas VM-i, mitte ainult reeglit. `-var` käsureal võitis `terraform.tfvars`-i, nii et said proovida ilma faili muutmata (muutujate järjekord on lehe [Viis VM-i muutujatega](lab-2-viis-vmi.md#miks-see-nii-tootab) lõpus).
 
-✅ **Edasi saad minna, kui** esimene plaan andis hoiatuse, aga lõppes plaaniga, teine ebaõnnestus sinu `precondition`-i teatega ja `tofu test` on `Success!`.
+**Edasi saad minna, kui** esimene plaan andis hoiatuse, aga lõppes plaaniga, teine ebaõnnestus sinu `precondition`-i teatega ja `tofu test` on `Success!`.
 
 ## Commit
 
@@ -154,9 +154,8 @@ git push
 
 Kood `0` tähendab, et kood, state ja Proxmox on kooskõlas ja koodis on ainult püsivad muudatused. Kood `2` tähendaks, et mõni proov jäi pooleli või UI märkus läks `ignore_changes`-ist mööda.
 
-✅ **Edasi saad minna, kui** `plan -detailed-exitcode` annab `0` ja commit on GitHubis.
+**Edasi saad minna, kui** `plan -detailed-exitcode` annab `0` ja commit on GitHubis.
 
-📎 **Selle mooduli tõend:** commit `k04: db01 protection…`; `NOTES.md`-s kaitsete võrdlus, `prevent_destroy`, `ignore_changes`, `create_before_destroy` ning `check` vs `precondition` järeldused; issue `K4.5` kommentaaris `Protection: Yes` ekraanipilt ja `tofu test` väljund.
 
 ## Miks see nii töötab
 

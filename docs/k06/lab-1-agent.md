@@ -24,7 +24,7 @@ Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docke
     ls k06-jenkins/
     ```
 
-2. Kui `jenkins-agent.sh`, `trigger-jenkins.sh`, `intsident.sh` või `klass-jenkins.yaml` puudub, võta see avalikust rakenduse repost.
+2. Kui `jenkins-agent.sh`, `trigger-jenkins.sh`, `intsident.sh` või `klass-jenkins.yaml` puudub, võta see avalikust rakenduse repositooriumist.
 
     ```bash
     base=https://raw.githubusercontent.com/hkhk-tk/labori-seis/main/deploy/ci
@@ -45,7 +45,7 @@ Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docke
 
 `HTTP/1.1 200` tähendab, et sinu masin jõuab controllerini ja kõik edasised ühendused saavad alata sinu poolt. Kui `free -m` näitab vaba mälu alla 2 GB ka pärast stacki peatamist, otsi `docker ps` ja `ps aux --sort=-rss | head` abil, mis veel mälu hoiab.
 
-✅ **Edasi saad minna, kui** `git branch --show-current` on `k06-jenkins`, `curl` annab `HTTP/1.1 200` ja `docker ps` ei näita Labori seisu konteinereid.
+**Edasi saad minna, kui** `git branch --show-current` on `k06-jenkins`, `curl` annab `HTTP/1.1 200` ja `docker ps` ei näita Labori seisu konteinereid.
 
 ## Logi klassi Jenkinsisse
 
@@ -63,7 +63,7 @@ Sul on klassis tavakasutaja konto ja Role-based Authorization Strategy näitab s
 
 Kui avalehel on ainult sinu folder, töötab rolli regex nii, nagu loengu joonis 6.5 näitab. Kui näed rohkem, on muster liiga lai ja sellest tuleb koolitajale kohe öelda, sest naabri folderit proovides testid just seda piiri.
 
-✅ **Edasi saad minna, kui** näed ainult folderit `<gh>` ja selles jobi `labori-seis`.
+**Edasi saad minna, kui** näed ainult folderit `<gh>` ja selles jobi `labori-seis`.
 
 ## Ühenda oma agent
 
@@ -98,7 +98,7 @@ Saladus on node'i identiteet. Kes saladust teab, saab sinu nime all agendi ühen
 
 Logirida `Connected` ütleb, et WebSocketi ühendus on loodud ja controller tunneb sinu node'i ära. Roheline node ja kaks vaba executorit tähendavad, et Jenkins võib nüüd sinu masinasse korraga kaks buildi saata. Kui teenus on `active`, aga node punane, töötab protsess, aga ühendus ei õnnestu: vastus on siis journal'is, mitte Jenkinsi lehel.
 
-✅ **Edasi saad minna, kui** skript ütles `OK: agent <gh> ühendus controlleriga olemas`, Nodes all on agent roheline ja all on kaks vaba executorit.
+**Edasi saad minna, kui** skript ütles `OK: agent <gh> ühendus controlleriga olemas`, Nodes all on agent roheline ja all on kaks vaba executorit.
 
 ## Vaata, kes ja kus ehitab
 
@@ -113,7 +113,7 @@ Enne pipeline'i teed Freestyle jobi, mis ainult kirjeldab oma keskkonda: mis kas
     sleep 30
     ```
 
-4. Vajuta **Build Now** kolm korda järjest ja vaata vasakult *Build Executor Status*'t.
+4. **Ennusta:** agendil on kaks executorit. Mis juhtub kolmanda buildiga? Vajuta **Build Now** kolm korda järjest ja vaata vasakult *Build Executor Status*'t.
 5. Ava esimese buildi **Console Output** ja kirjuta PR-i neli vastust: kasutaja, kaust, vaba ruum, mitu buildi töötas korraga.
 
 <!-- EKRAANIPILT: folderi mari-tamm vaade, vasakul Build Executor Status ja Build Queue ajal, kui kes-olen kolm buildi on käivitatud (sleep 30): kaks töötamas, üks "Waiting for next available executor". Sammu 26.3 keskel.
@@ -125,11 +125,13 @@ Enne pipeline'i teed Freestyle jobi, mis ainult kirjeldab oma keskkonda: mis kas
 
 Konsool näitab, et build on lihtsalt protsess kasutaja `jenkins` all kaustas `/opt/jenkins/workspace/...`. Executorite arv on node'i mahupiir: kolmas build ei saa kohta ja ootab, isegi kui masinal oleks CPU-d üle. Executorite arvu seab koolitaja node'i seadistuses. Kui see oleks suurem, töötaksid kõik kolm korraga ja 5. moodulis, kui kõrval töötab sandbox-Jenkins, saaks 4 GB mälu kiiresti otsa.
 
-✅ **Edasi saad minna, kui** kaks buildi töötasid korraga ja kolmas ootas ("Waiting for next available executor"), konsoolis on kasutaja `jenkins`, kaust `/opt/jenkins/workspace/<gh>/kes-olen` ja `sudo` puudub.
+**Edasi saad minna, kui** kaks buildi töötasid korraga ja kolmas ootas ("Waiting for next available executor"), konsoolis on kasutaja `jenkins`, kaust `/opt/jenkins/workspace/<gh>/kes-olen` ja `sudo` puudub.
 
 ## Katkesta agent ja vaata, kuidas see taastub
 
 Nüüd katkestad agendi keset buildi, nagu teeks uuenduse järel taaskäivitus või OOM killer, ja vaatad, mis juhtub buildiga ja kas teenus tuleb ise tagasi.
+
+**Ennusta:** kas pooleli olev Freestyle build jätkub pärast agendi tagasitulekut ja kas systemd taaskäivitab agendi pärast `kill -9`?
 
 1. Vaata, millise käsuga agent töötab ja kas saladus paistab protsessiloendis.
 
@@ -154,21 +156,21 @@ Nüüd katkestad agendi keset buildi, nagu teeks uuenduse järel taaskäivitus v
 
 `ps` väljundis on `-secret @/opt/jenkins/secret`: Remoting loeb väärtuse failist. Freestyle'i samm on agendi protsessi alamprotsess ja katkeb koos sellega. Pipeline'i `sh` käivitub durable-task wrapperiga, mis kirjutab väljundi ja väljumiskoodi faili, ning pipeline ootab agendi tagasitulekut. Kas skript jätkab töötamist, sõltub sellest, kas systemd tapab peatamisel kogu cgroup'i (`KillMode`). `kill -9` järel tõi agendi tagasi `Restart=on-failure`.
 
-✅ **Edasi saad minna, kui** katkestatud build lõppes punasena (FAILURE või ABORTED) ja konsoolis on teade ühenduse kadumise kohta, pärast `pkill -9` oli agent 15 sekundi pärast uuesti `active` ja Nodes all roheline ning PR-i kirjelduses on kaks lauset: mis juhtus buildiga ja miks systemd agendi tagasi tõi.
+**Edasi saad minna, kui** katkestatud build lõppes punasena (FAILURE või ABORTED) ja konsoolis on teade ühenduse kadumise kohta, pärast `pkill -9` oli agent 15 sekundi pärast uuesti `active` ja Nodes all roheline ning PR-i kirjelduses on kaks lauset: mis juhtus buildiga ja miks systemd agendi tagasi tõi.
 
-## Anna Jenkinsile lugemisõigus repole
+## Anna Jenkinsile lugemisõigus repositooriumile
 
-Job `<gh>/labori-seis` loeb sinu repost faili `k06-jenkins/Jenkinsfile` harult `k06-jenkins` (*Pipeline script from SCM*). Repo on privaatne, nii et Jenkins vajab lugemisõigust.
+Job `<gh>/labori-seis` loeb sinu repositooriumist faili `k06-jenkins/Jenkinsfile` harult `k06-jenkins` (*Pipeline script from SCM*). Repositoorium on privaatne, nii et Jenkins vajab lugemisõigust.
 
-Klassikaline token annaks igale job'ile, mis folderis credential'it kasutab, kirjutusõiguse kõigisse sinu repodesse. Fine-grained token piirab selle ühe repo lugemisega.
+Klassikaline token annaks igale job'ile, mis folderis credential'it kasutab, kirjutusõiguse kõigisse sinu repositooriumidesse. Fine-grained token piirab selle ühe repositooriumi lugemisega.
 
-1. GitHubis **Settings → Developer settings → Fine-grained tokens → Generate**: ainult sinu kursuse repo, *Contents: Read-only*, aegumine kursuse lõpus (kuupäeva annab koolitaja).
+1. GitHubis **Settings → Developer settings → Fine-grained tokens → Generate**: ainult sinu kursuse repositoorium, *Contents: Read-only*, aegumine kursuse lõpus (kuupäeva annab koolitaja).
 2. Jenkinsis: folder `<gh>` → **Credentials → (folder) → Add Credentials**.
 3. *Username with password*, kasutaja `<gh>`, parool = token, **ID = `github`**. See ID on jobi seadistuses juba kirjas.
 
 Folderi tasemel credential on nähtav ainult selle folderi jobidele. Globaalne credential oleks kättesaadav igale jobile kogu Jenkinsis, ka naabri omale. Credentials leht näitab ID-d ja kirjeldust, aga mitte väärtust: kord sisestatud saladust ei saa veebiliidesest enam välja lugeda.
 
-✅ **Edasi saad minna, kui** credential `github` on folderi all, mitte globaalne, ja Credentials leht näitab ID-d, aga mitte saladust.
+**Edasi saad minna, kui** credential `github` on folderi all, mitte globaalne, ja Credentials leht näitab ID-d, aga mitte saladust.
 
 ## Kirjuta Jenkinsfile: Build
 
@@ -215,7 +217,7 @@ Kohtumise lõpuks on Jenkinsfile'is need etapid (joonis L6.4) ja Nexus ning Dock
 
 Rida `Unpacking .../apache-maven-3.9.16-bin.zip` näitab, et sinu agendil polnud Mavenit ja Jenkins paigaldas selle esimesel kasutusel kausta `/opt/jenkins/tools`. Teisel buildil seda rida enam pole. Kui build käivitus mõnes muus kaustas kui `/opt/jenkins/workspace/<gh>/labori-seis`, töötas see mõnel teisel node'il ja `agent` plokk on vale.
 
-✅ **Edasi saad minna, kui** etapp Build on roheline, logi alguses on esimesel korral `Unpacking https://.../apache-maven-3.9.16-bin.zip` ja build töötas kaustas `/opt/jenkins/workspace/<gh>/labori-seis`.
+**Edasi saad minna, kui** etapp Build on roheline, logi alguses on esimesel korral `Unpacking https://.../apache-maven-3.9.16-bin.zip` ja build töötas kaustas `/opt/jenkins/workspace/<gh>/labori-seis`.
 
 ## Lisa Test etapp ja testiraport
 
@@ -229,6 +231,8 @@ Teise etapi kirjutad ise. Nõuded:
 
 `verify` käivitab testid ja teeb JaCoCo raporti, mida Sonar hiljem koodi katvuse jaoks vajab. `junit` teeb Surefire'i XML-ist Jenkinsi testiraporti ja trendi. `post { always }` on etapi sees, sest raport peab tulema ka siis, kui testid ebaõnnestuvad.
 
+Kontrolli faili automaatse hindaja testidega ja salvesta Jenkinsfile repositooriumi:
+
 ```bash
 bash autograde/check.sh k06 stages
 bash autograde/check.sh k06 agent
@@ -239,9 +243,9 @@ git add k06-jenkins/Jenkinsfile && git commit -m "k06: Jenkinsfile build + test"
 
 Testitulemuste graafik ilmub alles teise buildi järel, sest trend vajab vähemalt kahte punkti. Kaks `OK`-i tähendavad, et automaatne hindaja näeb failis etappe, testiraportit, labeliga agenti ja tööriistu. Automaatne hindaja ei näe, kas build roheline oli: seda tõestab sinu ekraanipilt.
 
-✅ **Edasi saad minna, kui** Build ja Test on rohelised, jobi lehel on testitulemuste graafik ja mõlemad kontrollid annavad `OK`.
+**Edasi saad minna, kui** Build ja Test on rohelised, jobi lehel on testitulemuste graafik ja mõlemad kontrollid annavad `OK`.
 
-📎 **Selle mooduli tõend:** commit `k06: Jenkinsfile build + test`; PR-i kirjelduses avalehe ekraanipilt, agendi `systemctl` ja `journalctl` väljund, kolm vastust `jenkins-agent.sh` kohta, neli vastust `kes-olen` jobist, kaks lauset agendi katkestuse kohta, Credentials lehe ja Graph View ekraanipilt, `stages` ja `agent` `OK`.
+**Selle mooduli tõend:** commit `k06: Jenkinsfile build + test`; PR-i kirjelduses avalehe ekraanipilt, agendi `systemctl` ja `journalctl` väljund, kolm vastust `jenkins-agent.sh` kohta, neli vastust `kes-olen` jobist, kaks lauset agendi katkestuse kohta, Credentials lehe ja Graph View ekraanipilt, `stages` ja `agent` `OK`.
 
 ## Miks see nii töötab
 
@@ -253,6 +257,6 @@ Testitulemuste graafik ilmub alles teise buildi järel, sest trend vajab vähema
 
 **Viisard ja Jenkinsi URL.** Esimesel käivitusel küsib seadistusviisard algparooli failist `secrets/initialAdminPassword`, pakub pluginaid ja küsib Jenkinsi URL-i. URL läheb muutujasse `BUILD_URL`, e-kirjadesse, agentide ühenduslinkidesse ja GitHubi commit-staatuste linkidesse ning on salvestatud failis `jenkins.model.JenkinsLocationConfiguration.xml`.
 
-**Pipeline script job'is.** Pipeline'i skripti võib kirjutada ka otse job'i seadistusse (*Pipeline script*). Siis on see job'i `config.xml`-is, mitte repos, ja haru ehitab selle hetke skriptiga, mitte sellega, mis oli harul.
+**Pipeline script job'is.** Pipeline'i skripti võib kirjutada ka otse job'i seadistusse (*Pipeline script*). Siis on see job'i `config.xml`-is, mitte repositooriumis, ja haru ehitab selle hetke skriptiga, mitte sellega, mis oli harul.
 
 Lisaülesanne [4. Jenkinsfile'i kontroll enne push'i](lisa.md#4-jenkinsfilei-kontroll-enne-pushi): kontrollid Jenkinsfile'i süntaksit API kaudu.

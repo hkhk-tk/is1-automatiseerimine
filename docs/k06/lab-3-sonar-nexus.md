@@ -24,7 +24,7 @@ Kasutaja token kehtiks kõigile sinu õigustega projektidele. Kui see lekib buil
 
 Kui token aegub kursuse ajal, näed seda buildis veana `Not authorized` ja parandus on uus token sama ID alla.
 
-✅ **Edasi saad minna, kui** Jenkinsi folderis on credential `sonar` ja Sonaris on token aegumiskuupäevaga.
+**Edasi saad minna, kui** Jenkinsi folderis on credential `sonar` ja Sonaris on token aegumiskuupäevaga.
 
 ## Analüüsi koodi Sonaris
 
@@ -71,7 +71,7 @@ Katvus tuleb Test etapi JaCoCo XML-ist (`target/site/jacoco/jacoco.xml`), seega 
 
 `ANALYSIS SUCCESSFUL` tähendab ainult, et raport jõudis serverisse. Otsust selles veel pole: server töötleb raportit taustal ja hinnang tekib mõne sekundi või minuti pärast. Seepärast on järgmine etapp eraldi.
 
-✅ **Edasi saad minna, kui** logi lõpus on `ANALYSIS SUCCESSFUL, you can find the results at: http://sonar.lab.hkhk.ee:9000/dashboard?id=labori-seis-<gh>`, Sonaris on katvus üle 0 % ja Checkstyle'i leiud on välise raportina näha.
+**Edasi saad minna, kui** logi lõpus on `ANALYSIS SUCCESSFUL, you can find the results at: http://sonar.lab.hkhk.ee:9000/dashboard?id=labori-seis-<gh>`, Sonaris on katvus üle 0 % ja Checkstyle'i leiud on välise raportina näha.
 
 ## Lisa quality gate
 
@@ -96,7 +96,7 @@ bash autograde/check.sh k06 quality
 
 `Quality gate is OK` tuli Jenkinsi tänu Sonari webhookile, mitte sellele, et Jenkins pidevalt küsiks. Kui etapp läks roheliseks mõne sekundiga, töötavad analüüs, taustatöötlus, webhook ja ootav samm. Kui see võttis minuteid, oli Sonaris järjekord, sest naabrid analüüsisid samal ajal.
 
-✅ **Edasi saad minna, kui** etapp läks roheliseks, logis on `Quality gate is OK` ja kontroll annab `OK`.
+**Edasi saad minna, kui** etapp läks roheliseks, logis on `Quality gate is OK` ja kontroll annab `OK`.
 
 ## Lase quality gate'il halb kood peatada
 
@@ -108,18 +108,18 @@ Roheline quality gate tõestab ainult, et hea kood pääseb läbi. Tingimus või
     if (gitSha == gitSha) { gitSha = gitSha.trim(); }
     ```
 
-2. Push ja oota buildi. Vaata buildi logi ja Sonari projekti.
+2. **Ennusta:** kood kompileerub ja testid läbivad. Kas build jõuab Nexuse etapini? Push ja oota buildi. Vaata buildi logi ja Sonari projekti.
 3. Eemalda rida, push ja oota buildi.
 
 Halva koodiga build peatus etapis Quality Gate ja järgmised etapid jäid tegemata. See tähendab, et vigane versioon ei saanud kunagi numbrit Nexuses. Sonari leid näitab reeglit, faili ja rida: sama info, mille järgi otsid intsidendiülesandes riket.
 
-✅ **Edasi saad minna, kui** halva koodiga build oli FAILURE logireaga `Pipeline aborted due to quality gate failure: ERROR`, Sonaris oli uus reliability leid ja hinne polnud A ning pärast parandust on build jälle roheline.
+**Edasi saad minna, kui** halva koodiga build oli FAILURE logireaga `Pipeline aborted due to quality gate failure: ERROR`, Sonaris oli uus reliability leid ja hinne polnud A ning pärast parandust on build jälle roheline.
 
 ## Lae sõltuvused Nexusest
 
 Maven laeb igal puhtal buildil alla kümneid sõltuvusi. Kooli Nexus on cache: `maven-public` on group, mille taga on `maven-central` proxy. Esimene õppija laeb sõltuvused internetist, ülejäänud kohtvõrgust.
 
-Proxy-repo on ühtlasi nimekiri kõigist sõltuvustest, mida organisatsioon kasutab: kui tuleb teade haavatava teegi kohta, näitab Nexuse otsing, kas see on kunagi alla laaditud.
+Proxy-repositoorium on ühtlasi nimekiri kõigist sõltuvustest, mida organisatsioon kasutab: kui tuleb teade haavatava teegi kohta, näitab Nexuse otsing, kas see on kunagi alla laaditud.
 
 1. Kontrolli Nexust: `curl -s -o /dev/null -w '%{http_code}\n' http://nexus.lab.hkhk.ee:8081/service/rest/v1/status` peab andma `200`.
 2. Loo `k06-jenkins/settings.xml`, kus on üks `<mirror>`. Nõuded:
@@ -129,15 +129,15 @@ Proxy-repo on ühtlasi nimekiri kõigist sõltuvustest, mida organisatsioon kasu
 3. Lisa `environment` plokki `MVN = 'mvn -B -s k06-jenkins/settings.xml'` ja asenda kõigis etappides `mvn -B` → `$MVN`.
 4. Push ja oota kaks buildi. Võrdle Build etapi aega Pipeline Graph View's.
 
-`<mirrorOf>*</mirrorOf>` tähendab, et Maven ei küsi enam ühtegi teist repot otse, ka siis, kui mõni pom seda nõuaks. Teine build on lühem kahel põhjusel: sõltuvused tulevad kohtvõrgust ja osa neist on juba agendi `~/.m2` all. Kui logis on endiselt `Downloading from central`, on mõni `mvn` käsk jäänud ilma `-s`-ta.
+`<mirrorOf>*</mirrorOf>` tähendab, et Maven ei küsi enam ühtegi teist repositooriumi otse, ka siis, kui mõni pom seda nõuaks. Teine build on lühem kahel põhjusel: sõltuvused tulevad kohtvõrgust ja osa neist on juba agendi `~/.m2` all. Kui logis on endiselt `Downloading from central`, on mõni `mvn` käsk jäänud ilma `-s`-ta.
 
-✅ **Edasi saad minna, kui** logis on `Downloading from kooli-nexus: http://nexus.lab.hkhk.ee:8081/repository/maven-public/...` ja teine build on Build etapis lühem kui esimene.
+**Edasi saad minna, kui** logis on `Downloading from kooli-nexus: http://nexus.lab.hkhk.ee:8081/repository/maven-public/...` ja teine build on Build etapis lühem kui esimene.
 
 ## Lae WAR Nexusesse
 
-Nüüd teed pipeline'ist väljundi, mida saab hiljem täpselt üles leida. Igale buildile antakse versioon, mis on unikaalne ja ütleb, millisest commit'ist fail tehti. Selle versiooniga läheb WAR Nexuse hosted repo'sse.
+Nüüd teed pipeline'ist väljundi, mida saab hiljem täpselt üles leida. Igale buildile antakse versioon, mis on unikaalne ja ütleb, millisest commit'ist fail tehti. Selle versiooniga läheb WAR Nexuse hosted repositooriumisse.
 
-Release-repo ei luba sama versiooni üle kirjutada. Versioon `<pom.version>-<BUILD_NUMBER>-<commit'i 7 märki>` on unikaalne ka siis, kui job luuakse uuesti ja `BUILD_NUMBER` algab 1-st.
+Release-repositoorium ei luba sama versiooni üle kirjutada. Versioon `<pom.version>-<BUILD_NUMBER>-<commit'i 7 märki>` on unikaalne ka siis, kui job luuakse uuesti ja `BUILD_NUMBER` algab 1-st.
 
 1. Folder `<gh>` → Credentials → *Username with password*, kasutaja `<gh>`, Nexuse parool, **ID = `nexus`**.
 2. Lisa `environment` plokki:
@@ -162,9 +162,9 @@ bash autograde/check.sh k06 secrets
 
 > Vastus 400 tähendab, et sama versioon on juba olemas, 403, et groupId ei ole `ee.hkhk.<gh>` või credential on vale, ja 401, et parool on vale.
 
-Logirida `Uploaded:` näitab täielikku teed ja tee ise kirjeldab artefakti: repo, groupId kaustadena, artifactId ja versioon. Kui buildi nimi ajaloos ja versioon teel on samad, saad igast buildist ühe klikiga õige faili juurde. `secrets` `OK` tähendab, et parool on Jenkinsis ja failis on ainult ID.
+Logirida `Uploaded:` näitab täielikku teed ja tee ise kirjeldab artefakti: repositoorium, groupId kaustadena, artifactId ja versioon. Kui buildi nimi ajaloos ja versioon teel on samad, saad igast buildist ühe klikiga õige faili juurde. `secrets` `OK` tähendab, et parool on Jenkinsis ja failis on ainult ID.
 
-✅ **Edasi saad minna, kui** logis on `Uploaded: http://nexus.lab.hkhk.ee:8081/repository/labori-seis/ee/hkhk/<gh>/labori-seis/1.1.0-<n>-<sha>/...war`, buildi nimi näitab sama versiooni ja mõlemad kontrollid annavad `OK`.
+**Edasi saad minna, kui** logis on `Uploaded: http://nexus.lab.hkhk.ee:8081/repository/labori-seis/ee/hkhk/<gh>/labori-seis/1.1.0-<n>-<sha>/...war`, buildi nimi näitab sama versiooni ja mõlemad kontrollid annavad `OK`.
 
 ## Tõesta, et fail on sama
 
@@ -197,13 +197,15 @@ git add k06-jenkins/ && git commit -m "k06: sonar + quality gate + nexus" && git
 
 Kolm võrdset räsi tõestavad, et Nexuses on täpselt see WAR, mis läbis quality gate'i. Kui räsi erineb, võrdled tavaliselt eri buildi faile: vaata buildi numbrit ja versiooni. Kui need klapivad ja räsi ikka erineb, on fail teel muutunud ja seda ei tohi paigaldada.
 
-✅ **Edasi saad minna, kui** REST API näitab sinu versioone, kolm räsi on samad ja commit on GitHubis.
+**Edasi saad minna, kui** REST API näitab sinu versioone, kolm räsi on samad ja commit on GitHubis.
 
 ## Proovi sama versiooni üle kirjutada
 
 Viimaseks kontrollid ise reeglit, millele kogu versioonimine toetub: Nexus ei luba sama versiooni teist korda. Laed allalaaditud WAR-i käsitsi sama versiooni alla tagasi.
 
-Kui hosted repo lubaks redeploy'd, saaks iga credential'i omanik vaikselt asendada tootmises oleva faili ja konteineri räsi kontroll näitaks juba uut, võltsitud faili.
+Kui hosted repositoorium lubaks redeploy'd, saaks iga credential'i omanik vaikselt asendada tootmises oleva faili ja konteineri räsi kontroll näitaks juba uut, võltsitud faili.
+
+**Ennusta:** mis vastuse annab Nexus, kui sama versioon laaditakse üles teist korda?
 
 1. Võta versioon buildi nimest ja proovi sama faili sama teele üles laadida. Parool läheb `curl`-ile standardsisendist.
 
@@ -217,11 +219,11 @@ Kui hosted repo lubaks redeploy'd, saaks iga credential'i omanik vaikselt asenda
 
 2. Kirjuta PR-i kirjeldusse vastuse kood ja üks lause: mida see tähendab buildile, mis kogemata sama versiooni teist korda arvutab.
 
-Vastus `400` ilma ühegi muutuseta Nexuses tõestab, et repo poliitika on *Disable redeploy*. Sama koodi annab ka pipeline, kui versiooni arvutus kaotab `BUILD_NUMBER`-i või räsi: intsidendiülesandes tuleb see vastu.
+Vastus `400` ilma ühegi muutuseta Nexuses tõestab, et repositooriumi poliitika on *Disable redeploy*. Sama koodi annab ka pipeline, kui versiooni arvutus kaotab `BUILD_NUMBER`-i või räsi: intsidendiülesandes tuleb see vastu.
 
-✅ **Edasi saad minna, kui** käsk andis `400`, Nexuse Browse näitab sama faili muutmata kuupäevaga ja PR-i kirjelduses on lause vastuse tähenduse kohta.
+**Edasi saad minna, kui** käsk andis `400`, Nexuse Browse näitab sama faili muutmata kuupäevaga ja PR-i kirjelduses on lause vastuse tähenduse kohta.
 
-📎 **Selle mooduli tõend:** commit `k06: sonar + quality gate + nexus`; PR-i kirjelduses Credentials leht (`sonar`, `nexus`), Sonari projekti ekraanipilt, quality gate'i tingimused ja `Quality gate is OK`, ebaõnnestunud tingimus halva koodiga, Nexuse logirida ja kahe buildi Build etapi aeg, kolm `sha1sum` rida, Nexus Browse ekraanipilt, redeploy katse vastuse kood; `quality`, `nexus`, `secrets` `OK`.
+**Selle mooduli tõend:** commit `k06: sonar + quality gate + nexus`; PR-i kirjelduses Credentials leht (`sonar`, `nexus`), Sonari projekti ekraanipilt, quality gate'i tingimused ja `Quality gate is OK`, ebaõnnestunud tingimus halva koodiga, Nexuse logirida ja kahe buildi Build etapi aeg, kolm `sha1sum` rida, Nexus Browse ekraanipilt, redeploy katse vastuse kood; `quality`, `nexus`, `secrets` `OK`.
 
 ## Miks see nii töötab
 
@@ -239,12 +241,12 @@ Vastus `400` ilma ühegi muutuseta Nexuses tõestab, et repo poliitika on *Disab
 
 **Üleslaadimine HTTP PUT-iga.** `nexusArtifactUploader` saadab faili HTTP PUT-päringuga õigele teele. Sama tulemuse annab `curl -u kasutaja:parool --upload-file labori-seis.war <url>`.
 
-**Nexuse otsing.** REST API `search` tagastab vastuse lehekülgede kaupa (`continuationToken`), nii et skript, mis loeb ainult esimest lehte, näeb suures repos ainult osa versioonidest.
+**Nexuse otsing.** REST API `search` tagastab vastuse lehekülgede kaupa (`continuationToken`), nii et skript, mis loeb ainult esimest lehte, näeb suures repositooriumis ainult osa versioonidest.
 
 **Blob store.** Nexus hoiab faile blob store'is (`/nexus-data/blobs`) ja metaandmeid andmebaasis. Kustutamine märgib bloobi ainult kustutatuks: kettaruum vabaneb alles ülesandega „Compact blob store“.
 
 **Jenkinsi muutujad.** Jenkins annab igale buildile muutujad `BUILD_NUMBER`, `JOB_NAME`, `WORKSPACE` ning Git'i pluginast `GIT_COMMIT` ja `GIT_BRANCH`. Shellis loed neid kujul `$BUILD_NUMBER`, Groovys `env.BUILD_NUMBER`. `sh "...${SALADUS}"` topeltjutumärkides asendab Groovy väärtuse enne shelli ja see jõuab protsessiloendisse; Jenkins hoiatab siis logis `A secret was passed to "sh" using Groovy String interpolation`. Ühekordsed jutumärgid jätavad asendamise shellile. Täielik loend on job'i menüüs *Pipeline Syntax → Global Variables Reference*. Kellaaeg või käsitsi antud number teeb versiooni unikaalseks, aga ei ütle, mis kood pakis on. Commit'i räsi ütleb.
 
-**Disable redeploy.** Nexus CE 3.96.4-s annab hosted-repo poliitika *Disable redeploy* sama versiooni uuesti üleslaadimise katsel vastuse koodiga `400`.
+**Disable redeploy.** Nexus CE 3.96.4-s annab hosted-repositooriumi poliitika *Disable redeploy* sama versiooni uuesti üleslaadimise katsel vastuse koodiga `400`.
 
 Lisaülesanne [6. `mvn deploy` ilma pluginata](lisa.md#6-mvn-deploy-ilma-pluginata): laed WAR-i Nexusesse Maveni enda vahenditega, ilma Jenkinsi pluginata.

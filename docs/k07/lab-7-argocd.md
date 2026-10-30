@@ -11,7 +11,7 @@ tags:
 
 Argo CD loeb haru `main` ja `gitops.yml` kirjutab harusse `main`, seega töötad main'il. Väikesed manifestide muudatused lähevad otse main'i, `gitops.yml` tuleb PR-iga, sest just merge käivitab ahela.
 
-**Kui teed seda tööl iga päev:** Argo CD või Flux haldab sinu klastreid ja selfHeal, prune ning `ComparisonError` on sulle tuttavad. Kui see on sul juba korras, tee Application ja `gitops.yml` valmis, kontrolli drift'i, prune'i ja katkise YAML-i ✅ read ühe katsega ja mine otse etappi „[Halb kood main'is: rollback kahe commit'iga](#halb-kood-mainis-rollback-kahe-commitiga)“.
+**Kui teed seda tööl iga päev:** Argo CD või Flux haldab sinu klastreid ja selfHeal, prune ning `ComparisonError` on sulle tuttavad. Kui see on sul juba korras, tee Application ja `gitops.yml` valmis, kontrolli drift'i, prune'i ja katkise YAML-i read ühe katsega ja mine otse etappi „[Halb kood main'is: rollback kahe commit'iga](#halb-kood-mainis-rollback-kahe-commitiga)“.
 
 ## Application
 
@@ -44,7 +44,7 @@ Application on alamkaustas, et ta ei haldaks iseennast ja et `kubectl apply -f k
 
 `Synced Healthy` tuli mõne sekundiga, sest klastris oli juba täpselt see, mis Gitis: rikete parandamise lõpus tegid `kubectl diff` tühjaks. Argo ei loonud midagi uuesti, ta võttis olemasolevad objektid üle, sest nimed on samad. Tracking-id annotatsioon on märk, mille järgi Argo hiljem teab, mis on tema hallata. Kui olek on kohe `OutOfSync`, on mõni rike parandamata või parandus Giti viimata.
 
-✅ **Edasi saad minna, kui** olek on mõne sekundiga `Synced Healthy` ja app01 Deployment'il on tracking-id annotatsioon.
+**Edasi saad minna, kui** olek on mõne sekundiga `Synced Healthy` ja app01 Deployment'il on tracking-id annotatsioon.
 
 ## Argo CD UI ja CLI
 
@@ -82,7 +82,7 @@ UI ja `argocd` CLI räägivad argocd-server'i API-ga (CLI gRPC kaudu), mitte Kub
 
 `app resources` loetleb kõik objektid, mida Argo haldab. Secret'it `labori-seis` seal pole, sest seda pole Gitis, ja see on õige. `proj get` näitab piire, mille koolitaja sulle seadis: üks repo, üks namespace, klastritasandi objekte mitte. Isegi kui keegi kirjutaks sinu repo'sse ClusterRole'i, ei laseks Argo seda luua.
 
-✅ **Edasi saad minna, kui** `app get` näitab `Sync Status: Synced to main (<sha7>)` ja `Health Status: Healthy`, `history`-s on üks revisjon ja `proj get` lubab ainult sinu repot ja sinu namespace'i.
+**Edasi saad minna, kui** `app get` näitab `Sync Status: Synced to main (<sha7>)` ja `Health Status: Healthy`, `history`-s on üks revisjon ja `proj get` lubab ainult sinu repot ja sinu namespace'i.
 
 ## CI kirjutab tag'i, Argo viib klastrisse
 
@@ -146,13 +146,15 @@ Kompromiteeritud CI saab kirjutada ainult Giti, kus muudatus jääb ajalukku nin
 
 Kolm SHA-d tähendavad kolme eri asja. Boti commit'i sõnumis on rakenduse koodi commit, millest image ehitati. `/version` näitab, mis kood pod'is töötab. `status.sync.revision` on manifestide commit, mille Argo klastrisse viis, ehk boti commit ise. Kui `/version` ja boti sõnum klapivad ning Argo revisjon on `git rev-parse HEAD`, on ahel koodist klastrini katkematu. Kui `/version` näitaks vana SHA-d, oleks Argo sünkroonis, aga rollout jäänud pooleli.
 
-✅ **Edasi saad minna, kui** main'il on boti commit `k07: app01 → <sha7> [skip ci]`, selle peale uut `ci`-d ei käivitunud, `rollout history` viimases reas on `<sha7> (ci)` ning `/version` SHA ja `status.sync.revision` klapivad boti commit'iga.
+**Edasi saad minna, kui** main'il on boti commit `k07: app01 → <sha7> [skip ci]`, selle peale uut `ci`-d ei käivitunud, `rollout history` viimases reas on `<sha7> (ci)` ning `/version` SHA ja `status.sync.revision` klapivad boti commit'iga.
 
 ## Drift ja selfHeal
 
 Teed käsitsi muudatuse, nagu koolitaja rikete juures tegi, ja vaatad, mida Argo teeb. `selfHeal: true` viib klastri drift'i järel tagasi Gitis kirjeldatud olekusse. Tee see ajal, kui eelmise etapi `ci` töötab.
 
 selfHeal'i käivitab application-controller'i watch Kubernetese API-s, mitte Giti lugemine: objekti muutus paneb Application'i kohe uuesti võrdlusesse. Käsitsi `kubectl edit` elab seepärast paar sekundit ja intsidendi ajal tuleb kas parandus commit'ida või selfHeal teadlikult välja lülitada.
+
+**Ennusta:** kui kaua käsitsi tehtud muudatus klastris püsib?
 
 1. Muuda klastris käsitsi koopiate arvu ja ConfigMap'i ning vaata, mis juhtub:
 
@@ -173,7 +175,7 @@ selfHeal'i käivitab application-controller'i watch Kubernetese API-s, mitte Git
 
 Koopiaid oli hetkeks 3 ja siis jälle 1, ConfigMap'i väärtus tuli tagasi `mc01`-ks. Kogu muudatus kestis sekundeid. Operatsiooni sõnum ja Events näitavad, et rollback oli Argo tegu, mitte kokkusattumus.
 
-✅ **Edasi saad minna, kui** koopiaid oli hetkeks 3 ja siis jälle 1, `MEMCACHED_HOST` on jälle `mc01` ja issue'sse on kirjas, mitu sekundit kulus ja mida see "kiirele parandusele" tähendab.
+**Edasi saad minna, kui** koopiaid oli hetkeks 3 ja siis jälle 1, `MEMCACHED_HOST` on jälle `mc01` ja issue'sse on kirjas, mitu sekundit kulus ja mida see "kiirele parandusele" tähendab.
 
 ## Sync policy: drift ilma selfHeal'ita
 
@@ -202,7 +204,7 @@ Mõnes meeskonnas on selfHeal tootmises teadlikult väljas, et intsidendi ajal s
 
 `argocd app diff` näitas täpselt ühte erinevust, `replicas`, ja see on sama info, mille sa rikete juures `kubectl diff`-iga käsitsi leidsid. Sync rakendas Gitis kirjeldatud oleku klastris ja OutOfSync kadus. Kui oleksid tahtnud kahte koopiat alles jätta, oleks õige tee olnud muuta faili ja commit'ida, mitte jätta drift'i.
 
-✅ **Edasi saad minna, kui** `replicas: 2` püsis seni, kuni tegid sync'i, Application oli selle aja `OutOfSync`, pärast sync'i on 1 koopia ja `automated` näitab jälle `"prune":true,"selfHeal":true`.
+**Edasi saad minna, kui** `replicas: 2` püsis seni, kuni tegid sync'i, Application oli selle aja `OutOfSync`, pärast sync'i on 1 koopia ja `automated` näitab jälle `"prune":true,"selfHeal":true`.
 
 ## Prune: Gitist kadunud objekt
 
@@ -220,7 +222,7 @@ Prune kustutab samamoodi ka PVC, kui selle fail Gitist kaob, ja koos PVC-ga kaov
     kubectl get configmap proov -w
     ```
 
-2. Kustuta fail Gitist ja vaata, mis klastris juhtub:
+2. **Ennusta:** kas ConfigMap `proov` jääb klastrisse alles, kui fail Gitist kaob? Kustuta fail Gitist ja vaata:
 
     ```bash
     git rm k07-k8s/90-proov.yaml && git commit -m "proov: prune ära" && git push
@@ -232,7 +234,7 @@ Prune kustutab samamoodi ka PVC, kui selle fail Gitist kaob, ja koos PVC-ga kaov
 
 ConfigMap tekkis ilma, et sa oleksid `kubectl apply` käivitanud, ja kadus ilma `kubectl delete`-ta. Klastri muutmiseks piisas commit'ist. `NotFound` teisel korral tõestab, et Argo jälgib ka seda, mida Gitis enam pole, mitte ainult seda, mis seal on.
 
-✅ **Edasi saad minna, kui** ConfigMap `proov` tekkis pärast esimest push'i ise ja kadus pärast teist (`NotFound`).
+**Edasi saad minna, kui** ConfigMap `proov` tekkis pärast esimest push'i ise ja kadus pärast teist (`NotFound`).
 
 ## Katkine YAML Gitis
 
@@ -266,7 +268,7 @@ Süntaksiviga manifestis on tavaline ja ohutu küsimus on: kas GitOps'i töörii
 
 Sync status oli `Unknown` ja tingimuses oli `ComparisonError` koos YAML-i reanumbriga. `/health` vastas ikka `UP`: klastris ei muutunud midagi, sest Argo ei suutnud uut soovitud olekut üldse välja arvutada. Kui sel ajal oleks CI kirjutanud uue tag'i, poleks see klastrisse jõudnud. Seepärast käivitad `kubeconform`-i enne push'i, mitte pärast.
 
-✅ **Edasi saad minna, kui** katkise failiga oli olek `Unknown` ja `ComparisonError`, `/health` jäi `UP`-iks ja pärast faili eemaldamist on olek jälle `Synced Healthy`.
+**Edasi saad minna, kui** katkise failiga oli olek `Unknown` ja `ComparisonError`, `/health` jäi `UP`-iks ja pärast faili eemaldamist on olek jälle `Synced Healthy`.
 
 ## Halb commit ja git revert
 
@@ -284,7 +286,7 @@ Lükkad Giti korrektse YAML-i, mis on sisult vale: olematu image'i tag. Argo tee
     ```
 
 2. Vaata `gitops` jooksu logi: commit muutis ainult `k07-k8s/`, seega jätab CI image'i rahule ega "paranda" sinu viga ise.
-3. Proovi `kubectl rollout undo deploy/app01` ja vaata `kubectl get pods -l app=app01 -w`.
+3. **Ennusta:** kas `kubectl rollout undo` parandab olukorra? Proovi `kubectl rollout undo deploy/app01` ja vaata `kubectl get pods -l app=app01 -w`.
 4. Tühista halb commit:
 
     ```bash
@@ -302,7 +304,7 @@ Lükkad Giti korrektse YAML-i, mis on sisult vale: olematu image'i tag. Argo tee
 
 Halva tag'iga oli olek `Synced` ja `Degraded` korraga: Argo tegi oma töö õigesti, aga Gitis oli viga. Kasutaja seda ei märganud, sest `maxUnavailable: 0` hoidis vana pod'i teenindamas. `rollout undo` keerati sekunditega tagasi, sest Git ütles ikka `olematu`. Ainus püsiv parandus oli Gitis ja `git log` näitab nüüd nii viga kui ka revert'i.
 
-✅ **Edasi saad minna, kui** halva tag'iga oli olek Synced/Degraded ja uus pod `ImagePullBackOff`, `rollout undo` keerati tagasi, pärast revert'i on olek Synced/Healthy ja `git log` näitab halba commit'i ja selle revert'i.
+**Edasi saad minna, kui** halva tag'iga oli olek Synced/Degraded ja uus pod `ImagePullBackOff`, `rollout undo` keerati tagasi, pärast revert'i on olek Synced/Healthy ja `git log` näitab halba commit'i ja selle revert'i.
 
 ## Halb kood main'is: rollback kahe commit'iga
 
@@ -344,9 +346,9 @@ Piirangud on samad mis tööl. Kasutaja ei näe katkestust. Eelmine versioon pea
 
 Uus pod on `Running 0/1`: liveness kontrollib `/health/live`-i ja see vastab, readiness näeb `/health`-is `"db":"DOWN"`. Pod'i ei taaskäivitata, rollout jääb pooleli ja `maxUnavailable: 0` hoiab vana pod'i teenindamas, nii et logis on ainult `200`. Kiireim taastamine on boti commit'i revert: see muudab ainult `k07-k8s/40-app.yaml`-i, `gitops` jätab selle vahele ja Argo viib eelmise tag'i klastrisse järgmisel Giti lugemisel. Revert'i sõnumisse kopeeritakse ka `[skip ci]`, nii et `ci` ei käivitugi. Üksi sellest ei piisa: vigane kood on main'il alles ja järgmine koodimuudatus ehitab selle uuesti image'isse. Seepärast tuleb ka koodi revert, mis läbib `ci` ja mille SHA bot kirjutab manifesti. Kui push'id mõlemad revert'id korraga ja viimane neist on boti commit'i revert, võib `[skip ci]` jätta ka koodi revert'i ehitamata.
 
-✅ **Edasi saad minna, kui** logis pole ühtegi muud koodi kui `200`, issue's on kolm kellaaega ja põhjendus, kumb revert enne, `grep -c 'DB_PORT:3306'` annab 1 ning `/version` näitab koodi revert'i SHA-d.
+**Edasi saad minna, kui** logis pole ühtegi muud koodi kui `200`, issue's on kolm kellaaega ja põhjendus, kumb revert enne, `grep -c 'DB_PORT:3306'` annab 1 ning `/version` näitab koodi revert'i SHA-d.
 
-📎 **Selle mooduli tõend:** issue `K7.7` kommentaaris `Synced Healthy`, `argocd app get … | head -12`, kolm klappivat SHA-d, drift'i kestus sekundites, `OutOfSync` ilma selfHeal'ita, prune'i `NotFound`, katkise YAML-i `ComparisonError` rida, `git log --oneline -3` (halb commit + revert), halva koodi kolm kellaaega koos põhjendusega ja `grep -vc ' 200$'` tulemus 0.
+**Selle osa tõend:** issue `K7.7` kommentaaris `Synced Healthy`, `argocd app get … | head -12`, kolm klappivat SHA-d, drift'i kestus sekundites, `OutOfSync` ilma selfHeal'ita, prune'i `NotFound`, katkise YAML-i `ComparisonError` rida, `git log --oneline -3` (halb commit + revert), halva koodi kolm kellaaega koos põhjendusega ja `grep -vc ' 200$'` tulemus 0.
 
 ## Miks see nii töötab
 

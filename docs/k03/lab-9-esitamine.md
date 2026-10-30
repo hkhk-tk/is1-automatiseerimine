@@ -6,7 +6,7 @@ tags:
 
 # 9. Esitamine
 
-Image, mis ehitub ainult sinu töökaustas, ebaõnnestub esimesel pipeline'i jooksul: 5. kohtumisel võtab pipeline sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Seepärast käivitad enne samad kontrollid ise ja vaatad, et stack töötab nii, nagu pipeline seda ootab. Lõpus jõuab töö `main`-i, tag `k03` käivitab automaatse hindaja ja tulemus on GitHubi Releases all.
+Image, mis ehitub ainult sinu töökaustas, ebaõnnestub pipeline'i esimesel käivitusel: 5. kohtumisel võtab pipeline sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Seepärast käivitad enne samad kontrollid ise ja vaatad, et stack töötab nii, nagu pipeline seda ootab. Lõpus jõuab töö `main`-i, tag `k03` käivitab automaatse hindaja ja tulemus on GitHubi Releases all.
 
 **Kui teed seda tööl iga päev:** värske klooni build ja tag'iga esitus on sul tavaline release'i samm ja `bash autograde/check.sh k03 build` annab värskes kloonis `OK`. Kui see on sul juba korras, mine otse etappi „[Lõpukontroll](#lopukontroll)“.
 
@@ -34,7 +34,7 @@ git status --short
 
 `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või vale suurtähtedega `AS`) ilma ehitamata. Tühi `git ls-files | grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud. `up -d --wait` ilma uuesti loomiseta tõestab, et töötav stack vastab failile.
 
-✅ **Edasi saad minna, kui** `build --check` ei anna hoiatusi, seitse kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti.
+**Edasi saad minna, kui** `build --check` ei anna hoiatusi, seitse kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti.
 
 ## Värske klooni test
 
@@ -59,7 +59,7 @@ See on klassikaline "minu masinas töötab". Dockerfile kopeerib faili, mis on t
 
 Kloonis pole `.env`-i ega `secrets/`-i, ja see on õige: automaatne hindaja töötab `.env.example`-iga. Kui klooni build õnnestus, ei sõltu image ühestki failist, mis on ainult sinu töökaustas. Kui see ebaõnnestus, näitab veateade puuduvat faili: lisa see Giti või `.dockerignore` allowlist'i.
 
-✅ **Edasi saad minna, kui** kloonis puuduvad `.env` ja `secrets/`, `files` ja `build` annavad kloonis `OK` ja ajutine kaust on kustutatud.
+**Edasi saad minna, kui** kloonis puuduvad `.env` ja `secrets/`, `files` ja `build` annavad kloonis `OK` ja ajutine kaust on kustutatud.
 
 ## Lõpukontroll
 
@@ -75,7 +75,7 @@ docker run --rm --network labori-seis_default labseis-kontroll:test; echo
 
 Kui `/version` ja Gitea image'i tag on sama SHA, töötab see image, mille sa lükkasid. 503 ja siis 200 ilma app01 restardita kordab Compose'i rikketesti viimase koodiga: rakendus taastub ise, kui sõltuvus tagasi tuleb.
 
-✅ **Edasi saad minna, kui** viis teenust on `(healthy)` pärast `down` ja `up`-i, `/version` näitab sama SHA-d mis Gitea image'i tag, `/health` annab rmq01 peatamisel 503 ja pärast starti 200 ilma app01 taaskäivituseta ning kontroll-image annab `/health` JSON-i.
+**Edasi saad minna, kui** viis teenust on `(healthy)` pärast `down` ja `up`-i, `/version` näitab sama SHA-d mis Gitea image'i tag, `/health` annab rmq01 peatamisel 503 ja pärast starti 200 ilma app01 taaskäivituseta ning kontroll-image annab `/health` JSON-i.
 
 ## Vii see oma töökohale
 
@@ -88,7 +88,7 @@ sed -n '/^## Minu töökohal/,$p' k03-docker/NOTES.md
 git add k03-docker/NOTES.md && git commit -m "K3 NOTES: minu töökohal" && git push
 ```
 
-✅ **Edasi saad minna, kui** `sed` näitab jaotist 3–5 lausega, milles on nimetatud üks konkreetne käsitsi protsess ja üks esimene samm, ja commit on harus.
+**Edasi saad minna, kui** `sed` näitab jaotist 3–5 lausega, milles on nimetatud üks konkreetne käsitsi protsess ja üks esimene samm, ja commit on harus.
 
 ## PR, merge ja tag
 
@@ -113,7 +113,7 @@ git tag k03 && git push origin k03
 
 Tag `main`-i peal tähendab, et automaatne hindaja hindab sama koodi, mis on kursuse põhiharus. Tag haru peal hindaks koodi, mida `main` ei sisalda, ja 5. kohtumine algaks valest olekust.
 
-✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k03`.
+**Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k03`.
 
 ## Automaatse hindaja tulemus
 
@@ -121,25 +121,13 @@ Tag `k03` käivitab GitHubis automaatse hindaja: failid ja saladused, `compose.y
 
 Kui mõni kontroll ebaõnnestus, loe põhjust ja korda sama testi lokaalselt `bash autograde/check.sh k03 <test>` abil. Lokaalne ja GitHubi tulemus peavad klappima; kui ei klapi, on vahe peaaegu alati commit'imata failis.
 
-✅ **Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
+**Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
 
-## Tõendid moodulite kaupa
+## Mida koolitaja vaatab
 
-Viimane läbivaatus: iga mooduli tõend peab olema TOEND.md-s või Gitis. Nimekiri on sama, mida koolitaja PR-is vaatab.
+Registry, Trivy, prod-faili, Podmani ja intsidendi osa automaatne hindaja ei näe. Need vaatab koolitaja PR-ist: PR-i kirjeldus on sinu TOEND.md, lisaks Gitea registry. Kontrolli enne merge'i, et TOEND.md on viimases commit'is.
 
-- [ ] 1. Konteinerid käsitsi: `docker version` ja mirror, `docker info` ja `daemon.json`-i lause, `docker ps -a`, `lsns`, host-võrgu lause, OOM kood 137 ja `memory.max`, restart-poliitika lause, kaks `stop` aega ja `--mount`-i lause, sisemise võrgu lause, `Mounts` ja UID 999
-- [ ] 2. db ja web image: init-lõksu lause, envsubst'i selgitus, 502 ja `host not found` võrdlus, konteksti suurus enne ja pärast
-- [ ] 3. App image: image'ite suurused, lõppimage'i sisu lause, `kihtproov` ja saladuse lause, kaks `docker stop` aega, `uid=10001`, kontroll-image'i kolm käivitust
-- [ ] 4. Compose: `img/compose-ps.png`, `/health`, `inspect` väljundid ja `RestartCount`-i lause, POST, `list_queues`, `get_hits`, idempotentsuse katse, rikketest
-- [ ] 5. Tootmiskeskkonda sobiv stack: piirid, PID-piiri katse, `inspect` enne ja pärast saladusi, võrgutest, `read_only`, journald, varukoopia ja taastatud rida, `prune.sh`
-- [ ] 6. Registry, Trivy ja SBOM: `img/gitea-packages.png`, digest, `docker compose images`, kolm Trivy vastust, `config` otsus, SBOM-i lause
-- [ ] 7. Sama teenus Podmaniga: `k03-docker/quadlet/`, jaotis `## Podman` (digestid, reboot, AVC ja parandus, ridade arv, `memory.max`, Docker API), hostid algseisus
-- [ ] 8. Kolm riket: neli `fix(intsident)` commit'i (kolm riket ja restart-poliitika), `up-1.log`, jaotis `## Intsident`
-- [ ] 9. Esitamine: värske klooni test, `NOTES.md` jaotis „Minu töökohal“, tag `k03`, Releases tulemus
-
-✅ **Edasi saad minna, kui** kõik linnukesed on tehtud ja TOEND.md on viimases commit'is.
-
-📎 **Selle mooduli tõend:** `NOTES.md` jaotis „Minu töökohal“, tag `k03` `main`-i peal ja automaatse hindaja tulemus GitHubi Releases all.
+**Selle osa tõend:** `NOTES.md` jaotis „Minu töökohal“, tag `k03` `main`-i peal ja automaatse hindaja tulemus GitHubi Releases all.
 
 ## Pärast esitamist: mc01 ja db01 välja
 
@@ -147,7 +135,7 @@ Podmani moodul oli viimane, mis vajas mc01 ja db01. Enne 4. kohtumist kustutab k
 
 Kui Releases on roheline ja Podmani moodulis on hostid algseisus, lülita Proxmoxis välja mc01 ja db01: **VM → Shutdown**. Compose'i stack control node'is jääb tööle, sest 5. kohtumine eeldab, et see töötab.
 
-✅ **Edasi saad minna, kui** Proxmoxis on sinu pool'is web01…db01 kõik olekus *stopped* ja control node'is näitab `docker compose -f k03-docker/compose.yaml ps` viit teenust.
+**Edasi saad minna, kui** Proxmoxis on sinu pool'is web01…db01 kõik olekus *stopped* ja control node'is näitab `docker compose -f k03-docker/compose.yaml ps` viit teenust.
 
 ## Miks see nii töötab
 

@@ -9,9 +9,10 @@ tags:
 # 6. kohtumine · Praktikum: Jenkins, SonarQube ja Nexus
 
 !!! info "Selle korra töö"
-    - **Masin:** control node, repo `~/labori-seis`, töökaust `k06-jenkins/`, tõendid PR-i kirjeldusse
+    - **Masin:** control node, repositoorium `~/labori-seis`, töökaust `k06-jenkins/`, tõendid PR-i kirjeldusse
     - **Sihtmasinad:** `jenkins.lab.hkhk.ee:8080`, `sonar.lab.hkhk.ee:9000`, `nexus.lab.hkhk.ee:8081` (VPN); administraatori osas oma sandbox-Jenkins control node'il (`:8090`)
     - **Esitamine:** haru `k06-jenkins` → PR → merge → tag `k06`
+    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga)
     - **Vaja koolitajalt:** neli parooli (Jenkins, agendi saladus, Sonar, Nexus); kasutajanimi = GitHubi nimi väiketähtedega, allpool `<gh>`
     - **Eelmisest korrast:** `main` sellisena, nagu see oli GitHub Actionsi kohtumise lõpus (`pom.xml`, `src/`, `autograde/`), 3. kohtumisest `k03-docker/compose.yaml` ja `k03-docker/app/Dockerfile`, control node'il töötav VPN ja Docker
     - **Testitud:** Jenkins LTS 2.580.x, Java 21, Maven 3.9.16, SonarQube Community Build 26.9 (andmebaas PostgreSQL 17), SonarScanner for Maven 5.8.0.7211, Nexus CE 3.96.4, Tomcat 10.1 (`tomcat:10.1-jre21-temurin`), sandboxi image `jenkins/jenkins:lts-jdk21`, Docker 29, Ubuntu 24.04
@@ -19,15 +20,15 @@ tags:
 
 Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonari quality gate peatab halva koodi ja sama WAR läheb Nexusesse ja Docker image'isse. Avaldamine toimub ainult põhiharult ja testkeskkonda paigaldatakse ainult inimese kinnitusel. Oma sandbox-Jenkinsi seadistad koodist, uuendad selle pluginat ja taastad selle varukoopiast.
 
-Kui moodulil on GitHubis issue (milestone `K6`), lisa commit'i sõnumisse `closes #N`.
+Selle kohtumise ülesanded on issue'na sinu repositooriumis: igal moodulil on märkeruut, mille märgid tehtuks, kui moodul on valmis. Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi ja võrdle siis tulemusega.
 
 ## Mis on kohustuslik
 
 | Osa | Mis | Millal |
 |---|---|---|
-| Kohtumise ajal | [Agent ja esimene pipeline](lab-1-agent.md), [Triggerid, options ja post](lab-2-triggerid.md), [Quality gate ja Nexus](lab-3-sonar-nexus.md), [Image, paralleel ja deploy](lab-4-image-deploy.md) | laboris 11:30–15:00 |
+| Kohtumise ajal | [Agent ja esimene pipeline](lab-1-agent.md), [Triggerid, options ja post](lab-2-triggerid.md), [Quality gate ja Nexus](lab-3-sonar-nexus.md), [Image, paralleel ja deploy](lab-4-image-deploy.md) | kohtumisel |
 | Võib lõpetada pärast kohtumist | [Jenkins koodina](lab-5-jenkins-koodina.md), [Õigused, varundus ja taaste](lab-6-haldus.md), [Neli punast buildi](lab-7-neli-punast.md); tõendid PR-i kirjeldusse; [Esitamise](lab-8-esitamine.md) kontrollid uuesti pärast viimast commit'i | pärast kohtumist VPN-i kaudu, sest koolitaja Jenkins, Sonar ja Nexus on VPN-i taga |
-| Hindamise eeltingimus | tag `k06` `main`-i commit'il pärast merge'i ja GitHubis näha (`git ls-remote --tags origin`); automaatse hindaja kaheksa kontrolli on `OK` ja kohalik kaust klapib repoga ([Esitamine](lab-8-esitamine.md)) | esimene tag kohtumise lõpus; hilisem töö uue commit'iga ja `git tag -f k06` |
+| Hindamise eeltingimus | tag `k06` `main`-i commit'il pärast merge'i ja GitHubis näha (`git ls-remote --tags origin`); tulemus ilmub Classroom 50-s ([Esitamine](lab-8-esitamine.md)) | esimene tag kohtumise lõpus; hilisem töö uue commit'iga ja `git tag -f k06` |
 
 ## Moodulid
 
@@ -38,6 +39,6 @@ Kui moodulil on GitHubis issue (milestone `K6`), lisa commit'i sõnumisse `close
 5. [Jenkins koodina](lab-5-jenkins-koodina.md): sandboxi pluginad `plugins.txt`-is, seaded JCasC failist, vigane fail leitud logist.
 6. [Õigused, varundus ja taaste](lab-6-haldus.md): naabri folder on kinni, pluginauuendus varukoopiaga, taaste teise konteinerisse ja ilma võtmeta.
 7. [Neli punast buildi](lab-7-neli-punast.md): neli riket leitud väljast sisse liikudes, parandused commit'idena, kaks rohelist buildi järjest, intsidendi jäetud image'id ja versioonid leitud.
-8. [Esitamine](lab-8-esitamine.md): repo ja kaust klapivad, kontrollid, PR, tag `k06`, automaatse hindaja tulemus.
+8. [Esitamine](lab-8-esitamine.md): repositoorium ja kaust klapivad, kontrollid, PR, tag `k06`, automaatse hindaja tulemus.
 
 Veaotsing: [Abi](abi.md).

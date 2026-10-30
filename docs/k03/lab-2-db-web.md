@@ -39,7 +39,7 @@ docker run --rm --entrypoint ls nginx:1.30-alpine /docker-entrypoint.d
 
 Tühi `User` tähendab, et image käivitub root'ina ja entrypoint vahetab kasutaja ise, kui ettevalmistus on tehtud. `Volumes` väljal olev kataloog saab iga konteineriga anonüümse volume'i, kui sa ise nime ei anna. nginx'i kaust `/docker-entrypoint.d` on hook: iga sinna pandud skript käivitub enne nginx'it.
 
-✅ **Edasi saad minna, kui** tead, et MariaDB ENTRYPOINT on skript, mis initsialiseerib tühja `/var/lib/mysql` ja loeb kausta `/docker-entrypoint-initdb.d/`, ning et nginx'i entrypoint käivitab enne nginx'it skriptid kaustast `/docker-entrypoint.d/`, sh `20-envsubst-on-templates.sh`, mis teeb template'ist lõpliku konfiguratsiooni.
+**Edasi saad minna, kui** tead, et MariaDB ENTRYPOINT on skript, mis initsialiseerib tühja `/var/lib/mysql` ja loeb kausta `/docker-entrypoint-initdb.d/`, ning et nginx'i entrypoint käivitab enne nginx'it skriptid kaustast `/docker-entrypoint.d/`, sh `20-envsubst-on-templates.sh`, mis teeb template'ist lõpliku konfiguratsiooni.
 
 ## db/Dockerfile
 
@@ -63,7 +63,7 @@ sleep 20; docker exec dbt mariadb -uroot -px labseis -e "SHOW TABLES;"
 
 Neli tabelit tähendab, et mõlemad SQL-failid käivitusid ja õiges järjekorras: seed kirjutab tabelitesse, mille skeem lõi. Vale järjekorraga lõpetaks konteiner esimesel käivitusel veaga `Table doesn't exist`. Volume jääks siis pooleldi initsialiseerituks ja järgmine käivitus jätaks init-skriptid vahele.
 
-✅ **Edasi saad minna, kui** `SHOW TABLES` näitab nelja tabelit: course, lab, result, student.
+**Edasi saad minna, kui** `SHOW TABLES` näitab nelja tabelit: course, lab, result, student.
 
 ## Init-skripti lõks
 
@@ -82,6 +82,8 @@ Tootmises tähendab see, et skeemi muudatus ei saa tugineda init-skriptile. Olem
     ```
 
 3. Muuda lisatud rida (`'TEST2'`), ehita uuesti ja käivita `dbt` **sama volume'iga** `dbt`. Kontrolli sama päringuga.
+
+    **Ennusta:** kas `TEST2` jõuab baasi?
 4. Võta muudatus tagasi ja korista.
 
     ```bash
@@ -91,7 +93,7 @@ Tootmises tähendab see, et skeemi muudatus ei saa tugineda init-skriptile. Olem
 
 Teine käivitus leidis volume'ist valmis andmekataloogi ja jättis kogu `/docker-entrypoint-initdb.d/` vahele. Image oli uus, andmed vanad. Sama juhtub parooliga: muudetud `MARIADB_PASSWORD` ei muuda olemasoleva kasutaja parooli, ja see on Compose'i stacki juures kõige sagedasem `Access denied` põhjus.
 
-✅ **Edasi saad minna, kui** esimesel käivitusel oli `TEST` tabelis ja teisel `TEST2` ei olnud. Kirjuta TOEND.md-sse üks lause: millal init-skriptid käivituvad ja mida teed, kui skeem muutub.
+**Edasi saad minna, kui** esimesel käivitusel oli `TEST` tabelis ja teisel `TEST2` ei olnud. Kirjuta TOEND.md-sse üks lause: millal init-skriptid käivituvad ja mida teed, kui skeem muutub.
 
 ## web/Dockerfile ja nginx'i template
 
@@ -115,7 +117,7 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
 `nginx -T` näitab lõplikku konfiguratsiooni, mille entrypoint template'ist tegi. IP-aadress `resolver` real tähendab, et envsubst sai muutuja kätte. `proxy_pass $app_upstream` alles tähendab, et nginx lahendab nime iga päringu ajal resolver'i kaudu, mitte ainult käivitusel.
 
-✅ **Edasi saad minna, kui** `resolver` real on päris IP-aadress ja `proxy_pass $app_upstream;` on alles. Kirjuta TOEND.md-sse, miks `$host` ja `$app_upstream` jäid envsubst'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
+**Edasi saad minna, kui** `resolver` real on päris IP-aadress ja `proxy_pass $app_upstream;` on alles. Kirjuta TOEND.md-sse, miks `$host` ja `$app_upstream` jäid envsubst'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
 
 ## Mis juhtub, kui app01 puudub
 
@@ -142,7 +144,7 @@ Staatilise upstream'iga nginx keeldub käivitumast, kui nimi ei lahendu. Compose
 
 Sinu image käivitus ja vastas 502-ga: konfiguratsioon on korras, puudu on ainult backend, ja seda ütleb ka logi. Staatiline variant ei jõudnud kuulamiseni, `nginx -t` peatus juba nime peal. 502 tähendab "nginx töötab, upstream ei vasta", `Exited (1)` tähendab "konfiguratsioon ei läbi kontrolli".
 
-✅ **Edasi saad minna, kui** `webt` oli `Up` ja `wget` sai 502 (kood ≠ 0), logis oli `could not be resolved`, staatiline konfiguratsioon andis `host not found in upstream` ning testkonteiner ja võrk on kustutatud.
+**Edasi saad minna, kui** `webt` oli `Up` ja `wget` sai 502 (kood ≠ 0), logis oli `could not be resolved`, staatiline konfiguratsioon andis `host not found in upstream` ning testkonteiner ja võrk on kustutatud.
 
 ## .dockerignore
 
@@ -166,20 +168,20 @@ Saladus image'is jõuab igasse koopiasse: registry'sse, iga node'i kettale ja ig
 
 Väiksem kontekst tähendab kiiremat build'i, aga peamine võit on turvalisus. Allowlist'iga ei jõua uus fail image'isse enne, kui sa selle ise lubad. Denylist'i (`.env`, `.git`) tuleb iga uue saladusefailiga täiendada, ja see ununeb.
 
-✅ **Edasi saad minna, kui** kontekst langes MB-delt mõnesaja KB-ni, db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole.
+**Edasi saad minna, kui** kontekst langes MB-delt mõnesaja KB-ni, db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole.
 
 ## Commit
 
 ```bash
 git add .dockerignore k03-docker/db k03-docker/web k03-docker/TOEND.md
-git commit -m "K3.2 db ja web Dockerfile, .dockerignore (closes #N)" && git push -u origin k03-docker
+git commit -m "K3.2 db ja web Dockerfile, .dockerignore" && git push -u origin k03-docker
 ```
 
 `git ls-files` näitab, mida automaatne hindaja näeb. Fail, mis on töökaustas, aga mitte Gitis, puudub ka GitHubi build'is, ja see viga tuleb välja alles esitamisel.
 
-✅ **Edasi saad minna, kui** `git status` on puhas ja `git ls-files k03-docker` näitab kolme uut faili.
+**Edasi saad minna, kui** `git status` on puhas ja `git ls-files k03-docker` näitab kolme uut faili.
 
-📎 **Selle mooduli tõend:** commit `K3.2 …`; TOEND.md-s init-lõksu lause, envsubst'i selgitus, 502 ja `host not found` võrdlus ning konteksti suurus enne ja pärast.
+**Selle osa tõend:** commit `K3.2 …`; TOEND.md-s init-lõksu lause, envsubst'i selgitus, 502 ja `host not found` võrdlus ning konteksti suurus enne ja pärast.
 
 ## Miks see nii töötab
 

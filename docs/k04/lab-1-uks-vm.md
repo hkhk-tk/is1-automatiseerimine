@@ -48,7 +48,7 @@ Faili õigused peavad olema `-rw-------`.
 
 > Tokenit ei kirjutata `.tf`- ega `.tfvars`-faili ega ekraanipildile. Automaatne hindaja otsib tokeni mustrit kõigist `k04-tofu/` failidest. Kui token jõuab GitHubi, tühistab koolitaja selle ja annab uue.
 
-✅ **Edasi saad minna, kui** `tofu version` näitab 1.12.x, `echo $IS1_POOL` annab `is1-<github>` ja `git branch --show-current` annab `k04-tofu`.
+**Edasi saad minna, kui** `tofu version` näitab 1.12.x, `echo $IS1_POOL` annab `is1-<github>` ja `git branch --show-current` annab `k04-tofu`.
 
 ## Loe mall data source'iga
 
@@ -85,13 +85,13 @@ Esimene `validate` ebaõnnestub, sest provider on laadimata. Järjekord jääb k
 
 > Kui output on `vms = []`, ei näe token malli: kas `source` on tehtud ja tag'id õigesti kirjutatud? Kui ikka tühi, puudub tokenil mallile `VM.Audit`, ütle koolitajale.
 
-✅ **Edasi saad minna, kui** `apply` ütleb `0 added, 0 changed, 0 destroyed` ja output'is on `vm_id = 9000` ja `name = "tpl-ubuntu-2404"`.
+**Edasi saad minna, kui** `apply` ütleb `0 added, 0 changed, 0 destroyed` ja output'is on `vm_id = 9000` ja `name = "tpl-ubuntu-2404"`.
 
 ## Loo test01
 
 Nüüd lood esimese ressursi. Argumente on meelega vähe, kõik muu tuleb mallist. Nii näed, mida mall juba annab ja mida pead hiljem ise kirjutama.
 
-Ennustuse kirjutamine enne plaani on tootmises kasulik harjumus. Kui sa ei tea, mida ootad, ei märka sa ka plaani rida, mis sinna ei kuulu.
+Ennusta enne iga plaani, mida see näitab. Kui sa ei tea, mida ootad, ei märka sa plaani rida, mis sinna ei kuulu.
 
 Lisa ressurss [`proxmox_virtual_environment_vm`](https://search.opentofu.org/provider/bpg/proxmox/latest/docs/resources/virtual_environment_vm) nimega `test01`.
 
@@ -105,10 +105,11 @@ Lisa ressurss [`proxmox_virtual_environment_vm`](https://search.opentofu.org/pro
 
 *Tabel L4.1. `test01` esimese versiooni argumendid.*
 
-1. Kirjuta `NOTES.md`-sse ennustus: mitu ressurssi lisatakse, kas midagi muudetakse või kustutatakse.
-2. Käivita `tofu plan`, võrdle ennustusega, siis `tofu apply`.
-3. Vaata UI-s, et `test01` on sinu pool'is ja töötab.
-4. Käivita kohe uuesti `tofu plan`.
+**Ennusta:** mitu ressurssi lisatakse ja kas midagi muudetakse või kustutatakse?
+
+1. Käivita `tofu plan`, võrdle ennustusega, siis `tofu apply`.
+2. Vaata UI-s, et `test01` on sinu pool'is ja töötab.
+3. Käivita kohe uuesti `tofu plan`.
 
 <!-- EKRAANIPILT: Proxmoxi veebiliides (https://<aadress>:8006), vasakul Server View, õppija pool is1-<github> lahti; näha control node ja äsja loodud test01 (töötab, roheline ikoon), paremal test01 Summary. Pärast 1.2 esimest tofu apply'd. Token ja IP-d peale tegelikke väärtusi pole vaja varjata, tokenit pildil ei ole.
 <figure markdown="span">
@@ -123,7 +124,7 @@ Sama koodi saab käivitada ka Terraformiga: [lisaülesanne 7. Sama kood Terrafor
 
 > Kui teine `plan` näitab `tags`: lisasid tag'id, mis pole tähestiku järjekorras. Proxmox sorteerib need ise; kirjuta järjekorras või kasuta `sort([...])`.
 
-✅ **Edasi saad minna, kui** `apply` ütles `1 added`, `test01` töötab UI-s ja teine `plan` ütleb "No changes".
+**Edasi saad minna, kui** `apply` ütles `1 added`, `test01` töötab UI-s ja teine `plan` ütleb "No changes".
 
 ## Leia Tofu töö Proxmoxi logist
 
@@ -133,15 +134,15 @@ Kui VM kaob või muutub öösel, otsitakse süüdlast kõigepealt Proxmoxi task-
 
 1. UI-s: `test01` → **Task History**. Leia kloonimise ja käivitamise read ning vaata **User** veergu.
 2. Ava kloonimise rida topeltklõpsuga ja vaata, kui kaua kloonimine võttis.
-3. Kirjuta `NOTES.md`-sse kasutaja koos tokeni nimega ja mitu ülesannet üks `apply` tekitas.
+3. Vaata, milline kasutaja koos tokeni nimega on logis ja mitu ülesannet üks `apply` tekitas.
 
 Üks `apply` tekitab mitu ülesannet (kloon, seaded, käivitus), sest provider teeb API-s sama, mida sina teeksid UI-s mitme klõpsuga.
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on Task History kasutaja koos tokeni nimega ja kloonimise kestus.
+**Edasi saad minna, kui** Task History's on näha kasutaja koos tokeni nimega ja kloonimise kestus.
 
 ## Muuda kohapeal või asenda
 
-Plaani kõige ohtlikum osa ütleb, kas muudatus tehakse olemasolevale VM-ile või tehakse VM uuesti. Tee kolm muudatust ükshaaval. Iga kord kirjuta enne ennustus `NOTES.md`-sse ja loe plaanist kõigepealt `destroy` read.
+Plaani kõige ohtlikum osa ütleb, kas muudatus tehakse olemasolevale VM-ile või tehakse VM uuesti. Tee kolm muudatust ükshaaval. Iga kord ennusta enne, kas VM muudetakse (`~`) või asendatakse (`-/+`), ja loe plaanist kõigepealt `destroy` read.
 
 Tootmises tähendab `-/+` andmebaasi masinal kadunud andmeid. Plaan näitab seda ette, kuid ainult sellele, kes plaani loeb.
 
@@ -152,7 +153,7 @@ Tootmises tähendab `-/+` andmebaasi masinal kadunud andmeid. Plaan näitab seda
 
 Rida `# forces replacement` näitab täpselt, milline argument asenduse põhjustas. Kui plaanis on mitu muudatust ja üks neist asendab, otsi just seda rida. Mälu ja CPU muutus võib VM-i taaskäivitada, aga ketas jääb samaks. Asendus annab uue ketta ja kõik, mis vanal oli, kaob.
 
-✅ **Edasi saad minna, kui** muudatused 1 ja 2 olid `~ update in-place`, muudatus 3 oli `-/+ destroy and then create replacement` reaga `# forces replacement` ja pärast tagasivõtmist on plaan "No changes".
+**Edasi saad minna, kui** muudatused 1 ja 2 olid `~ update in-place`, muudatus 3 oli `-/+ destroy and then create replacement` reaga `# forces replacement` ja pärast tagasivõtmist on plaan "No changes".
 
 ## Anna test01-le võrk ja võti
 
@@ -178,11 +179,11 @@ Lisa `test01`-le `initialization` ja `network_device` plokk ([Proxmoxi cloud-ini
 </figure>
 -->
 
-`NOTES.md`-sse: miks ssh ei vasta? Vastus on lehe lõpus lõigus [Miks see nii töötab](#miks-see-nii-tootab).
+**Ennusta:** miks ssh ei vasta? Vastus on lehe lõpus lõigus [Miks see nii töötab](#miks-see-nii-tootab).
 
 Siin lähevad teade "Apply complete" ja masina tegelik olek esimest korda lahku. Tofu tegi oma töö õigesti: Proxmoxi seadistus muutus ja UI näitab seda. VM-i sees pole aga midagi juhtunud, sest keegi ei käivitanud cloud-init'i uuesti.
 
-✅ **Edasi saad minna, kui** plaan oli `~ update in-place`, Cloud-Init vahekaardil on IP ja kasutaja ning `NOTES.md`-s on põhjus, miks ssh ei vasta.
+**Edasi saad minna, kui** plaan oli `~ update in-place`, Cloud-Init vahekaardil on IP ja kasutaja ning tead, miks ssh ei vasta.
 
 ## Tee VM uuesti
 
@@ -214,7 +215,7 @@ Konsool tuleb Proxmoxi API kaudu, mitte VM-i võrgust. Sõrmejäljed väljastab 
 
 > Kui `apply` ootab "waiting for QEMU agent" kuni timeout'ini ja ebaõnnestub, ava UI-s VM-i konsool ja vaata, kas masin käivitub. AlmaLinux vajab `cpu.type = "x86-64-v2-AES"`.
 
-✅ **Edasi saad minna, kui** `ssh kasutaja@<IS1_NET>.19 hostname` vastab `test01` ilma parooli küsimata ja konsooli ED25519 sõrmejälg klapib `ssh-keygen -l -F` väljundiga.
+**Edasi saad minna, kui** `ssh kasutaja@<IS1_NET>.19 hostname` vastab `test01` ilma parooli küsimata ja konsooli ED25519 sõrmejälg klapib `ssh-keygen -l -F` väljundiga.
 
 ## Vaata VM-i seest
 
@@ -222,7 +223,7 @@ Tofu näeb VM-i ainult väljast, API kaudu. Kui Ansible ei saa hiljem uue masina
 
 Kui uus masin ei vasta, on küsimus alati sama: kas viga on draivis (Tofu pool) või masinas (cloud-init pool). Need failid annavad vastuse minutiga, ilma VM-i uuesti tegemata.
 
-Leia vastused ja kirjuta käsud koos vastustega `NOTES.md`-sse ([cloud-init dokumentatsioon](https://cloudinit.readthedocs.io/)).
+Leia vastused tabeli käskudega ([cloud-init dokumentatsioon](https://cloudinit.readthedocs.io/)).
 
 | Küsimus | Kust vaatad |
 |---|---|
@@ -244,7 +245,7 @@ Leia vastused ja kirjuta käsud koos vastustega `NOTES.md`-sse ([cloud-init doku
 
 `ip_config` aadress on see, mida sina soovisid. `ipv4_addresses` on see, mida agent VM-i seest teatas. Kui need klapivad, on ahel mall → draiv → cloud-init → netplan terve. Kui agent teatab teise aadressi või ei teata midagi, on viga masina sees, mitte koodis.
 
-✅ **Edasi saad minna, kui** `cloud-init status --long` näitab `status: done`, IP on netplan'is, hostinimi on `test01`, agent on `active` ja väljund on `NOTES.md`-s.
+**Edasi saad minna, kui** `cloud-init status --long` näitab `status: done`, IP on netplan'is, hostinimi on `test01` ja agent on `active`.
 
 ## Koristus ja commit
 
@@ -269,9 +270,8 @@ Unustatud test-VM kasutab pool'i RAM-i ja viie VM-i `apply` ebaõnnestub, sest k
 
 `state list` näitab pärast `destroy`-d ainult data source'i. Tofu ei halda enam ühtki objekti, aga teab endiselt, kust malli leida. Kood ja state on nüüd kooskõlas tühja pool'iga.
 
-✅ **Edasi saad minna, kui** `destroy` ütles `1 destroyed`, `tofu state list` näitab ainult `data.…` rida ja `git status --short` ei näita `.terraform/` ega `terraform.tfstate`-i.
+**Edasi saad minna, kui** `destroy` ütles `1 destroyed`, `tofu state list` näitab ainult `data.…` rida ja `git status --short` ei näita `.terraform/` ega `terraform.tfstate`-i.
 
-📎 **Selle mooduli tõend:** commit `k04: 01-alused…`; `NOTES.md`-s kolm ennustust koos tegeliku plaaniga, Task History kasutaja, põhjus, miks ssh pärast in-place muudatust ei vastanud, ja `cloud-init status --long` väljund (ka issue `K4.1` kommentaaris).
 
 ## Miks see nii töötab
 

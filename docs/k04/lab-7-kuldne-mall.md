@@ -41,7 +41,7 @@ Packer kasutab sama tokenit mis OpenTofu ja loeb ühenduse keskkonnast nagu Tofu
 
 > Packer on HashiCorpi tööriist sama BSL litsentsiga, mille muutus tõi kaasa OpenTofu tekke. Oma taristu mallide ehitamiseks see ei loe. Kui sinu firmas on litsentside kohta reegel, kontrolli see enne üle.
 
-✅ **Edasi saad minna, kui** `packer version` vastab, `echo "$PROXMOX_USERNAME"` näitab tokeni ID-d `…@pve!…` ja `env | grep -c '^PROXMOX_'` annab vähemalt 3.
+**Edasi saad minna, kui** `packer version` vastab, `echo "$PROXMOX_USERNAME"` näitab tokeni ID-d `…@pve!…` ja `env | grep -c '^PROXMOX_'` annab vähemalt 3.
 
 ## Kirjuta mall koodina
 
@@ -70,7 +70,7 @@ Järjekord on sama mis Tofus: `init` laeb pluginad, `fmt` vormindab, `validate` 
 
 > `validate` ütleb `Unset variable`: `labseis.auto.pkrvars.hcl` puudub või muutuja nimi ei klapi. `Failed to initialize plugin`: `packer init .` tegemata.
 
-✅ **Edasi saad minna, kui** `packer validate .` ütleb `The configuration is valid.`, `packer fmt -check .` vaikib ja `git status` ei näita `labseis.auto.pkrvars.hcl`-i.
+**Edasi saad minna, kui** `packer validate .` ütleb `The configuration is valid.`, `packer fmt -check .` vaikib ja `git status` ei näita `labseis.auto.pkrvars.hcl`-i.
 
 ## Ehita golden image
 
@@ -86,13 +86,13 @@ Ilma koristussammuta jäävad machine-id ja SSH host key'd malli ning igal kloon
     ```
 
 2. UI-s: vaata Task History'st, mis ülesanded Packer tegi ja millise kasutaja all. Ava uus mall ja vaata **Hardware**, **Cloud-Init** ja **Options**.
-3. Kirjuta `NOTES.md`-sse ehituse kestus, malli nimi ja `vm_id`.
+3. Leia väljundist ehituse kestus, malli nimi ja `vm_id`.
 
 Packer kustutab ebaõnnestunud ehituse VM-i ise, nii et pooleli jäänud mall ei jää pool'i. Õnnestunud ehituse lõpus on pool'is uus mall, aga mitte ühtegi uut töötavat VM-i. Cloud-Init vahekaardil on mallil tühi draiv: IP ja võtme kirjutab sinna OpenTofu iga klooni jaoks eraldi, täpselt nagu pilvemalli puhul.
 
 > Packer ootab `Waiting for SSH to become available` kuni timeout'ini: vaata UI-s ehitus-VM-i konsooli. Kui pilvemalli Cloud-Init vahekaardil on kasutaja, mis pole `ubuntu`, pane see `ssh_username`-iks.
 
-✅ **Edasi saad minna, kui** `packer build` lõpeb reaga `Build 'proxmox-clone.labseis_base' finished`, UI-s on mall `labseis-base-<kuupäev>` tag'idega `labseis-base` ja `ubuntu` ning `NOTES.md`-s on kestus.
+**Edasi saad minna, kui** `packer build` lõpeb reaga `Build 'proxmox-clone.labseis_base' finished`, UI-s on mall `labseis-base-<kuupäev>` tag'idega `labseis-base` ja `ubuntu`.
 
 ## Vali mall muutujaga
 
@@ -126,7 +126,7 @@ Nõuded:
 
 Plaan peab olema "No changes", sest `template_names` on tühi ja data source otsib endiselt tag'ide järgi. See tõestab, et uus kood ei muuda olemasolevat taristut enne, kui keegi seda teadlikult palub. `lookup` vaikeväärtusega ja `try` teevad sama tööd eri moel: esimene küsib mapist võtit ja annab puudumisel vaikeväärtuse, teine püüab kinni iga vea avaldises.
 
-✅ **Edasi saad minna, kui** `tofu test` näitab `kuldne_mall… pass`, `tofu plan` ütleb "No changes" ja `tofu output template_source` näitab mõlemale distrole `pilvemall (tagid)`.
+**Edasi saad minna, kui** `tofu test` näitab `kuldne_mall… pass`, `tofu plan` ütleb "No changes" ja `tofu output template_source` näitab mõlemale distrole `pilvemall (tagid)`.
 
 ## Proovi malli dev-is
 
@@ -159,7 +159,7 @@ Vigane mall, mis läheb otse Labori seisu, teeb vigaseks kõik masinad, mis sell
 
 motd ja grupp `labops` tõestavad, et roll `common` käivitus ehituse ajal ja tulemus jäi malli. Erinev machine-id dev01-l ja web01-l tõestab, et koristus töötas. `/etc/hosts`-is pole Labori seisu plokki, sest ehitus-VM-i aadress ei kuulu ühtegi teise masinasse. Selle ploki paneb `site.yml` õigete hostidega igal käivitusel. Kui machine-id oleks sama, peaksid malli uuesti ehitama, enne kui sellest ühtki VM-i teed.
 
-✅ **Edasi saad minna, kui** dev01 vastas `kasutaja`-na, motd ja `labops` olid olemas, machine-id erines web01 omast, dev01 on kustutatud ja `tofu workspace show` annab `default`.
+**Edasi saad minna, kui** dev01 vastas `kasutaja`-na, motd ja `labops` olid olemas, machine-id erines web01 omast, dev01 on kustutatud ja `tofu workspace show` annab `default`.
 
 ## Vii uus mall esmalt ühele hostile
 
@@ -191,11 +191,11 @@ Piirang: korraga on asendamisel üks host, teised töötavad edasi ja enne järg
     ./up.sh; echo "kood $?"
     ```
 
-4. Kirjuta `NOTES.md`-sse, mida tavaline plaan rmq01-ga teha tahab, miks `up.sh` keeldus ja mis juhtuks, kui keegi käivitaks selles aknas `ALLOW_DESTROY=1 ./up.sh`.
+4. **Mõtle:** mida tavaline plaan rmq01-ga teha tahab, miks `up.sh` keeldus ja mis juhtuks, kui keegi käivitaks selles aknas `ALLOW_DESTROY=1 ./up.sh`?
 
 `-target`-iga plaan näitas ühte asendust ja jättis web01, app01 ja inventory puutumata. Tavaline plaan tahab rmq01 pilvemallile tagasi viia, sest kood ütleb endiselt pilvemall. `up.sh` keeldus, sest plaanis on kustutamine: kaitse töötab ka siin, aga ainult seni, kuni keegi seda teadlikult üle ei kirjuta. Seepärast on `-target` canary tööriist, mitte lõppseis. Hostipõhine malli valik koodis on lisaülesandes 13.
 
-✅ **Edasi saad minna, kui** `-target`-iga plaan oli `1 to add, 0 to change, 1 to destroy` ainult rmq01-ga, pärast rmq01 asendust oli `/health` UP, tavaline plaan tahtis rmq01 asendada ja `up.sh` keeldus koodiga 1.
+**Edasi saad minna, kui** `-target`-iga plaan oli `1 to add, 0 to change, 1 to destroy` ainult rmq01-ga, pärast rmq01 asendust oli `/health` UP, tavaline plaan tahtis rmq01 asendada ja `up.sh` keeldus koodiga 1.
 
 ## Vii Labori seis golden image'ile
 
@@ -210,7 +210,7 @@ Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et
     tofu plan | grep -E 'forces replacement|Plan:'
     ```
 
-2. Kirjuta `NOTES.md`-sse, millised masinad asendatakse ja miks db01, mc01 ja rmq01 mitte.
+2. **Ennusta:** millised masinad asendatakse ja miks db01, mc01 ja rmq01 mitte?
 3. Luba asendus ja mõõda aega.
 
     ```bash
@@ -218,13 +218,13 @@ Golden image'i vahetus on alati masinate asendus. Kui see läheb käiku ilma, et
     curl -s http://<web01 IP>/health; echo
     ```
 
-4. Võrdle `NOTES.md`-s seda aega esimese `time ./up.sh` tulemusega ja Ansible'i `PLAY RECAP`-i `changed` arvu Ubuntu hostidel.
+4. Võrdle seda aega esimese `time ./up.sh` tulemusega ja Ansible'i `PLAY RECAP`-i `changed` arvu Ubuntu hostidel.
 
 Plaan asendas kaks Ubuntu masinat ja jättis rmq01 ning kaks AlmaLinuxi masinat rahule: rmq01 on juba uuel mallil ja `template_names`-is on ainult `ubuntu`. Pärast seda `apply`-d vastab kood jälle tegelikkusele ja canary aken on suletud. Ansible'i esimene play andis Ubuntu hostidel vähem `changed`-e kui esimesel `up.sh` käivitusel, sest kasutajad, motd ja paketid olid juba olemas. `/etc/hosts` plokk ja hosti roll tulevad endiselt Ansible'ist, sest need sõltuvad sellest, millised masinad Labori seisus on.
 
 > Rollback käib sama teed teistpidi: eemalda `template_names` või pane eelmise malli nimi ja `ALLOW_DESTROY=1 ./up.sh`. Seepärast ära kustuta eelmist malli enne, kui uus on vähemalt korra Labori seisus töötanud.
 
-✅ **Edasi saad minna, kui** `up.sh` keeldus esimesel korral, teisel korral lõppes koodiga 0, `/health` on UP, `tofu output template_source` näitab ubuntule sinu malli nime ja `NOTES.md`-s on kahe aja võrdlus.
+**Edasi saad minna, kui** `up.sh` keeldus esimesel korral, teisel korral lõppes koodiga 0, `/health` on UP, `tofu output template_source` näitab ubuntule sinu malli nime.
 
 ## Kaalu golden image'i ja cloud-init'i
 
@@ -240,7 +240,7 @@ Kirjuta `NOTES.md`-sse tabel kolme veeruga (Mall, cloud-init esimesel käivituse
 
 Hea tabel näitab, et mall sisaldab ainult asju, mis on igas masinas samad ja muutuvad harva. Masinapõhine (IP, võti, nimi) on cloud-init'i töö ja kõik, mis sõltub teistest masinatest (`/etc/hosts`, teenuste seaded), on Ansible'i töö. Kui mõni rida on kahes veerus, on see koht, kus source of truth on segane.
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on kolme veeruga tabel ja kolm lauset ning iga tabeli rida on ainult ühes veerus.
+**Edasi saad minna, kui** `NOTES.md`-s on kolme veeruga tabel ja kolm lauset ning iga tabeli rida on ainult ühes veerus.
 
 ## Commit
 
@@ -258,9 +258,8 @@ git push
 
 `git status` peab näitama ainult `.pkr.hcl` faile, `golden.yml`-i, `.gitignore`-i ja näidisfaili. `terraform.tfvars` koos malli nimega jääb samuti Gitist välja; Gitis on `terraform.tfvars.example`, kuhu võid lisada kommentaarina näite. Automaatse hindaja `secrets` kontroll vaatab ka `packer/` kausta, sest see on `k04-tofu/` all.
 
-✅ **Edasi saad minna, kui** `bash autograde/check.sh k04 secrets` ja `bash autograde/check.sh k04 fmt` annavad `OK` ja `git ls-files k04-tofu/packer` ei näita `*.auto.pkrvars.hcl`-i ega `manifest.json`-it.
+**Edasi saad minna, kui** `bash autograde/check.sh k04 secrets` ja `bash autograde/check.sh k04 fmt` annavad `OK` ja `git ls-files k04-tofu/packer` ei näita `*.auto.pkrvars.hcl`-i ega `manifest.json`-it.
 
-📎 **Selle mooduli tõend:** commit `k04: golden image…`; `NOTES.md`-s ehituse kestus, dev01 kontroll (motd, `labops`, kaks erinevat machine-id-d), rmq01 canary (`-target` plaan, `/health`, tavalise plaani ja `up.sh` keeldumise selgitus), `up.sh` keeldumise plaan, kahe `time` tulemuse võrdlus ja malli/cloud-init'i/Ansible'i tabel; issue `K4.7` kommentaaris `tofu output template_source` ja `/health` vastus.
 
 ## Miks see nii töötab
 

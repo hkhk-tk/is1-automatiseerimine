@@ -31,7 +31,7 @@ See intsident on hea näide, miks tag'i usaldamine on risk: sama nimi, mis eile 
     - `format: table`, `output: trivy.txt`, `exit-code: "0"`
     - kaks sammu `if: always()`: üks kirjutab `trivy.txt` sisu `$GITHUB_STEP_SUMMARY`-sse, teine laadib selle artefaktina üles
 3. Tee push ja ava käivituse *Summary*.
-4. Kirjuta märkmikku HIGH ja CRITICAL leidude arv, enim leide andnud teek ja kas see on otse pom'is või tuleb parent'ist (`mvn dependency:tree`).
+4. Leia HIGH ja CRITICAL leidude arv, enim leide andnud teek ja kas see on otse pom'is või tuleb parent'ist (`mvn dependency:tree`).
 
 <!-- EKRAANIPILT: Actions → käivitus → Summary leht, kerida security job'i kokkuvõtteni; näha Trivy tabel (Library, Vulnerability, Severity veerud) ja allosas Artifacts plokk. Pärast security job'i esimest käivitust.
 <figure markdown="span">
@@ -51,7 +51,7 @@ See intsident on hea näide, miks tag'i usaldamine on risk: sama nimi, mis eile 
 
 Kõrvuti töötavad job'id tähendavad, et skänn ei lisa käivitusele aega, kui ta pole build'ist aeglasem. `exit-code: "0"` jätab job'i roheliseks ka leidude korral: täna sa kogud infot, otsus "kas leid peatab pipeline'i" on lisaülesandes [10. Trivy poliitika](lisa.md#10-trivy-poliitika). `if: always()` on vajalik, sest muidu kaoks raport just siis, kui Trivy ise ebaõnnestub. Kui leide on null, kontrolli, kas `scan-ref` osutab repo juurele, kus on `pom.xml`.
 
-✅ **Edasi saad minna, kui** graafis on `build` ja `security` kõrvuti, kokkuvõttes on Trivy tabel ja *Artifacts* all on WAR ja Trivy raport.
+**Edasi saad minna, kui** graafis on `build` ja `security` kõrvuti, kokkuvõttes on Trivy tabel ja *Artifacts* all on WAR ja Trivy raport.
 
 ## Ühe leiu jälg: kust see teek tuleb
 
@@ -72,11 +72,11 @@ Ilma selle sammuta näeb turvaraport välja nagu nimekiri, mida keegi ei oska k�
     mvn -B -q dependency:tree -Dincludes=groupId:artifactId
     ```
 
-3. Kirjuta märkmikku: teek, praegune ja parandatud versioon, otsene või transitiivne sõltuvus ning kes selle versiooni määrab (sinu pom, `spring-boot-starter-parent` või mõni muu teek).
+3. Leia ühe leiu kohta: teek, praegune ja parandatud versioon, otsene või transitiivne sõltuvus ning kes selle versiooni määrab (sinu pom, `spring-boot-starter-parent` või mõni muu teek).
 
 Kui teek on puus otse sinu projekti all, on parandus sinu pom'is. Kui see tuleb parent'i kaudu, saad versiooni üle kirjutada `<properties>`-is, aga siis võtad vastutuse, et uus versioon sobib ülejäänud komplektiga. Sageli on parem oodata parent'i patch-versiooni, mida Dependabot pakub. Kui `dependency:tree` ei näita teeki üldse, tuleb leid failist, mis pole Maveni sõltuvus, näiteks `k03-docker/` all olevast konfiguratsioonifailist.
 
-✅ **Edasi saad minna, kui** märkmikus on ühe leiu kohta neli nimetatud asja ja `dependency:tree` väljund näitab teed sinu projektini.
+**Edasi saad minna, kui** tead ühe leiu kohta neid nelja asja ja `dependency:tree` väljund näitab teed sinu projektini.
 
 ## Compat-matrix: kas build töötab Java 25-ga
 
@@ -88,7 +88,7 @@ JDK uuendus tuleb tavaliselt väljastpoolt: runner'i image vahetub, baas-image s
     - `strategy.matrix.java: ["21", "25"]` ja `fail-fast: false`
     - setup-java `java-version: ${{ matrix.java }}` ja `cache: maven`
     - job `build` jääb muutmata: see teeb WAR-i ja selle `java-version` on `"21"`
-2. Kirjuta märkmikku ennustus: kas Java 25-ga läheb `mvn -B verify` läbi?
+2. **Ennusta:** kas Java 25-ga läheb `mvn -B verify` läbi?
 3. Tee push ja vaata graafi.
 
     ```bash
@@ -101,7 +101,7 @@ JDK uuendus tuleb tavaliselt väljastpoolt: runner'i image vahetub, baas-image s
 
 `compat` on teadlikult eraldi job: tema tulemus on info, mitte quality gate. Kui `compat (25)` ebaõnnestub, ei peatu image ega deploy, aga sa tead, mis tuleb parandada enne JDK tõstmist. Kui mõlemad on rohelised, on sinu ennustus kas õige või oli sinu pilt pluginatest liiga pessimistlik. Kui ebaõnnestub ka `compat (21)`, ei ole viga JDK-s, vaid samas kohas mis `build`-is.
 
-✅ **Edasi saad minna, kui** graafis on `compat (21)` ja `compat (25)` eraldi job'idena, mõlema tulemus on märkmikus ennustuse kõrval ja `bash autograde/check.sh k05 build` annab endiselt `OK`.
+**Edasi saad minna, kui** graafis on `compat (21)` ja `compat (25)` eraldi job'idena, oled tulemust oma ennustusega võrrelnud ja `bash autograde/check.sh k05 build` annab endiselt `OK`.
 
 ## Vahemälu tööle
 
@@ -122,11 +122,11 @@ Vahemälu, mis ei tööta, ei anna veateadet. Build on lihtsalt aeglasem ja Mave
     gh cache list
     ```
 
-3. Kirjuta märkmikku, mitu vahemälu kirjet on ja miks `compat (25)` ja `build` võivad kasutada sama kirjet.
+3. Vaata, mitu vahemälu kirjet on. Miks võivad `compat (25)` ja `build` kasutada sama kirjet?
 
 `Cache restored from key` ütleb, et runner sai `~/.m2` kätte ega pidanud kõike alla laadima. Võtmes on pom'i räsi, seega iga pom'i muutus teeb uue kirje ja vana jääb aeguma. Kui logis on igal käivitusel `Cache not found`, muutub pom igas commit'is või on `cache:` rida puudu. Võrdle sammude kestusi nendega, mille esimese workflow juures üles kirjutasid: vahemäluga peaks Maveni samm olema märgatavalt lühem.
 
-✅ **Edasi saad minna, kui** teises käivituses on build'i logis `Cache restored from key`, `gh cache list` näitab vähemalt ühte `setup-java-…-maven-…` kirjet ja vastus on märkmikus.
+**Edasi saad minna, kui** teises käivituses on build'i logis `Cache restored from key`, `gh cache list` näitab vähemalt ühte `setup-java-…-maven-…` kirjet.
 
 ## Iga job oma õigustega
 
@@ -153,7 +153,7 @@ Trivy intsidendi pahatahtlik kood kasutas just seda tokenit. Kui tokenil on kirj
 
 Plokita `compat` sai workflow tasemelt `{}` ehk mitte midagi ja privaatse repo checkout ebaõnnestus. See tõestab, et piirang kehtib. `Metadata: read` on alati olemas ja seda ei saa ära võtta. Kui pärast muudatust näed plokis endiselt `Contents: write`, on `permissions:` vales taandes ja GitHub ei loe seda job'i omaks.
 
-✅ **Edasi saad minna, kui** enne muudatust oli plokis mitu õigust ja pärast ainult `Contents: read` ja `Metadata: read`, plokita `compat` ebaõnnestus checkout'is ning mõlemad kontrollid annavad `OK`.
+**Edasi saad minna, kui** enne muudatust oli plokis mitu õigust ja pärast ainult `Contents: read` ja `Metadata: read`, plokita `compat` ebaõnnestus checkout'is ning mõlemad kontrollid annavad `OK`.
 
 ## Action'id täis-SHA-ga
 
@@ -180,7 +180,7 @@ Ametlike action'ite kompromiteerimine on harvem, aga mõju oleks suurem, sest ne
 
 Tühi `grep` tähendab, et iga väline action on kinnitatud ja kommentaar ütleb inimesele, mis versioon see on. Kommentaar ei ole ainult inimesele: Dependabot loeb sealt versiooni ja uuendab SHA-d ja kommentaari koos. Kui kommentaar ja SHA lähevad lahku, usu SHA-d, sest just see töötab.
 
-✅ **Edasi saad minna, kui** `grep` on tühi, actionlint vaikib ja `hygiene` annab `OK`.
+**Edasi saad minna, kui** `grep` on tühi, actionlint vaikib ja `hygiene` annab `OK`.
 
 ## Dependabot hoiab need värsked
 
@@ -204,7 +204,7 @@ Kinnitatud versioon, mida keegi ei uuenda, muutub ise turvaauguks. Dependabot te
 
 Kolm ökosüsteemi jälgivad kolme kohta, kust vana kood sinu pipeline'i jõuab: action'id, Java teegid ja konteineri baas. Grupp action'itele hoiab PR-ide arvu väiksena, sest neid uuendatakse sageli koos. Kui `python3` trükib vähem kui kolm nime, on mõni plokk vale taandega ja Dependabot ignoreerib seda vaikselt.
 
-✅ **Edasi saad minna, kui** `python3` trükib `['github-actions', 'maven', 'docker']` ja fail on push'itud.
+**Edasi saad minna, kui** `python3` trükib `['github-actions', 'maven', 'docker']` ja fail on push'itud.
 
 ## Baas-image'id ja Compose'i teenused
 
@@ -229,22 +229,22 @@ bash autograde/check.sh k03 tags
 
 Dependaboti viide ([`ignore`](https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--), [`docker-compose`](https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-)) ütleb võtmete täpse kuju. Kui `python3` ei näita `docker-compose`-i, on plokk vale taandega ja Dependabot jätab selle vaikselt vahele. `compose.yaml`-i read, kus `image:` sisaldab muutujat (`${REGISTRY}`), on sinu oma image'id ja need uuendab pipeline, mitte Dependabot. Digest'iga rida tähendab, et db01 image muutub ainult PR-iga, mille diff näitab vana ja uut digest'i. Kui `ignore` puudub, tuleb esimene MariaDB PR uue seeriaga ja roheline CI ei ütle midagi andmekataloogi uuenduse kohta, sest testid ei käivita andmebaasi.
 
-✅ **Edasi saad minna, kui** `python3` trükib `['github-actions', 'maven', 'docker', 'docker-compose']`, `FROM` real on `mariadb:11.4@sha256:` ja sama digest, mida näitab `imagetools`, `k03 tags` annab `OK` ning commit on push'itud. Pärast main'i jõudmist näitab *Insights → Dependency graph → Dependabot* ka faili `k03-docker/compose.yaml`.
-
-📎 **Selle mooduli tõend:** märkmikus Trivy leidude arv ja teek, ühe leiu jälg pom'ini, matrix'i ennustus ja tulemus, vahemälu kirjed; graafis `build`, `security` ja `compat` paralleelselt; `.github/dependabot.yml` nelja ökosüsteemiga repos ja db01 `FROM` digest'iga; `check.sh k05 hygiene`, `k05 actionlint` ja `k03 tags` → `OK`.
+**Edasi saad minna, kui** `python3` trükib `['github-actions', 'maven', 'docker', 'docker-compose']`, `FROM` real on `mariadb:11.4@sha256:` ja sama digest, mida näitab `imagetools`, `k03 tags` annab `OK` ning commit on push'itud. Pärast main'i jõudmist näitab *Insights → Dependency graph → Dependabot* ka faili `k03-docker/compose.yaml`.
 
 ## Miks see nii töötab
 
-**Matrix'i job'i nimi.** Matrix'i job'i nimele lisatakse sulgudesse kombinatsioon (`compat (25)`). Seetõttu saab ruleset'is nõuda ka ainult osa kombinatsioonidest. Üks matrix genereerib käivituses kuni 256 job'i ja `max-parallel` piirab, mitu neist töötab korraga.
+??? info "Ava selgitused"
 
-**`setup-java` vahemälu.** `actions/setup-java` v5 vahemälu võti sisaldab platvormi ja pom'i räsi, kuid mitte Java versiooni. Seetõttu võivad matrix'i harud kasutada sama vahemälukirjet. Üldine põhimõte: kõik, mida vahemälu võti ei sisalda, on käivituste vahel jagatud. Võtme koostis tasub kasutatava versiooni README-st järele vaadata, mitte eeldada. GitHub hoiab repo kohta kuni 10 GB vahemälu ja kustutab kirjed, mida 7 päeva ei loeta. Käivitus loeb ainult oma haru ja vaikeharu kirjeid, nii et PR-i haru ei saa main'i vahemälu üle kirjutada.
+    **Matrix'i job'i nimi.** Matrix'i job'i nimele lisatakse sulgudesse kombinatsioon (`compat (25)`). Seetõttu saab ruleset'is nõuda ka ainult osa kombinatsioonidest. Üks matrix genereerib käivituses kuni 256 job'i ja `max-parallel` piirab, mitu neist töötab korraga.
 
-**Job'i `permissions:`.** Job'i `permissions:`-plokk asendab workflow tasemel määratud õigused täielikult. Kui job'i plokist jääb välja `contents: read`, ei saa checkout privaatset repot lugeda. `GITHUB_TOKEN` kehtib job'i lõpuni, kuid mitte üle 24 tunni. Repo vaikeõigus (*Settings → Actions → Workflow permissions*) on 2023. aasta veebruarist alates uutes repodes lugemine, vanemates sageli kirjutamine.
+    **`setup-java` vahemälu.** `actions/setup-java` v5 vahemälu võti sisaldab platvormi ja pom'i räsi, kuid mitte Java versiooni. Seetõttu võivad matrix'i harud kasutada sama vahemälukirjet. Üldine põhimõte: kõik, mida vahemälu võti ei sisalda, on käivituste vahel jagatud. Võtme koostis tasub kasutatava versiooni README-st järele vaadata, mitte eeldada. GitHub hoiab repo kohta kuni 10 GB vahemälu ja kustutab kirjed, mida 7 päeva ei loeta. Käivitus loeb ainult oma haru ja vaikeharu kirjeid, nii et PR-i haru ei saa main'i vahemälu üle kirjutada.
 
-**Trivy failisüsteemi skännimine.** Failisüsteemi skännimisel loeb Trivy faili `pom.xml` ja lahendab sõltuvuspuu. Seetõttu leiab Trivy ka transitiivsed sõltuvused, mida pom'is otse kirjas ei ole. Sõltuvuspuu lahendamiseks vajab Trivy võrguühendust Maven Centralisse. Kui kaustas on juba ehitatud WAR või JAR, skännib Trivy ka neid.
+    **Job'i `permissions:`.** Job'i `permissions:`-plokk asendab workflow tasemel määratud õigused täielikult. Kui job'i plokist jääb välja `contents: read`, ei saa checkout privaatset repot lugeda. `GITHUB_TOKEN` kehtib job'i lõpuni, kuid mitte üle 24 tunni. Repo vaikeõigus (*Settings → Actions → Workflow permissions*) on 2023. aasta veebruarist alates uutes repodes lugemine, vanemates sageli kirjutamine.
 
-**Haavatavuste andmebaas.** Trivy haavatavuste andmebaasi uuendatakse mitu korda päevas ja Trivy laadib uue versiooni, kui kohalik koopia on aegunud. Seetõttu võib sama kood anda homme teise tulemuse kui täna. Sel põhjusel on ajastatud skännimine vajalik ja turvaraporteid saab võrrelda ainult koos kuupäeva ja andmebaasi versiooniga. JSON-väljundis on leiu ID, teek ja parandatud versioon eraldi väljadena; neid on vaja, kui tahad iga leiu kohta automaatselt pileti avada.
+    **Trivy failisüsteemi skännimine.** Failisüsteemi skännimisel loeb Trivy faili `pom.xml` ja lahendab sõltuvuspuu. Seetõttu leiab Trivy ka transitiivsed sõltuvused, mida pom'is otse kirjas ei ole. Sõltuvuspuu lahendamiseks vajab Trivy võrguühendust Maven Centralisse. Kui kaustas on juba ehitatud WAR või JAR, skännib Trivy ka neid.
 
-**Avaldis ja shell.** Avaldis `${{ }}` asendatakse enne, kui shell skripti saab. Shell saab valmis teksti ega tea, et osa sellest tuli kasutajalt, nii et haru nimi `x$(curl …)` otse `run:`-ploki sees oleks käsk. `env:` kaudu jõuab väärtus shelli muutujana ja jutumärkides muutuja sisu shell käsuna ei käivita, kui sa ise seda `eval`-i ega `sh -c` kaudu ei käivita. Põhimõte: kõik, mida saab kirjutada keegi peale sinu (haru nimi, PR-i pealkiri, commit'i sõnum), antakse edasi `env:` kaudu.
+    **Haavatavuste andmebaas.** Trivy haavatavuste andmebaasi uuendatakse mitu korda päevas ja Trivy laadib uue versiooni, kui kohalik koopia on aegunud. Seetõttu võib sama kood anda homme teise tulemuse kui täna. Sel põhjusel on ajastatud skännimine vajalik ja turvaraporteid saab võrrelda ainult koos kuupäeva ja andmebaasi versiooniga. JSON-väljundis on leiu ID, teek ja parandatud versioon eraldi väljadena; neid on vaja, kui tahad iga leiu kohta automaatselt pileti avada.
+
+    **Avaldis ja shell.** Avaldis `${{ }}` asendatakse enne, kui shell skripti saab. Shell saab valmis teksti ega tea, et osa sellest tuli kasutajalt, nii et haru nimi `x$(curl …)` otse `run:`-ploki sees oleks käsk. `env:` kaudu jõuab väärtus shelli muutujana ja jutumärkides muutuja sisu shell käsuna ei käivita, kui sa ise seda `eval`-i ega `sh -c` kaudu ei käivita. Põhimõte: kõik, mida saab kirjutada keegi peale sinu (haru nimi, PR-i pealkiri, commit'i sõnum), antakse edasi `env:` kaudu.
 
 Kui jõudsid kiiremini: [Lisaülesanded → 8. Matrix kahes mõõtmes](lisa.md#8-matrix-kahes-mootmes), lisad `compat` job'ile teise mõõtme, ennustad ebaõnnestuva kombinatsiooni ja kontrollid ennustust.

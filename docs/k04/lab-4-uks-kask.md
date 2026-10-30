@@ -7,7 +7,7 @@ tags:
 
 # 4. Üks käsk
 
-Tofu teab, millised masinad on olemas, Ansible teab, mis on nende sees, ja nende vahel oled praegu sina: kopeerid IP-d, ootad, kuni masin käivitub, sisestad Vault'i parooli. Nüüd ühendab need fail: Tofu kirjutab Ansible'i inventory oma väljundist. Lõpuks tõstab skript `up.sh` Labori seisu tühjast pool'ist üles nii, et vahepeal ei pea midagi käsitsi tegema, ja kogu Labori seis on koodis.
+Tofu teab, millised masinad on olemas, Ansible teab, mis on nende sees, ja nende vahel oled praegu sina: kopeerid IP-d, ootad, kuni masin käivitub, sisestad Vault'i parooli. Nüüd ühendab need fail: Tofu kirjutab Ansible'i inventory oma väljundist. Lõpuks loob skript `up.sh` Labori seisu tühjast pool'ist ilma ühegi käsitsi sammuta ja kogu Labori seis on koodis.
 
 Enne alustamist peab `jq -r .backend.type .terraform/terraform.tfstate` andma `s3`.
 
@@ -52,7 +52,7 @@ Kuna `local.groups` tuleb mooduli väljunditest, sõltub `local_file` kõigist v
 
 > `Host key verification failed`: uued masinad, uued võtmed. `k02-ansible/ansible.cfg`-is peab olema `host_key_checking = False`.
 
-✅ **Edasi saad minna, kui** `inventory.ini` esimene rida ütleb, et fail on genereeritud, puus on seitse gruppi ja viis hosti vastavad `SUCCESS`.
+**Edasi saad minna, kui** `inventory.ini` esimene rida ütleb, et fail on genereeritud, puus on seitse gruppi ja viis hosti vastavad `SUCCESS`.
 
 ## Muuda inventory't käsitsi ja vaata, mis juhtub
 
@@ -66,11 +66,11 @@ Käsitsi parandus genereeritud failis püsib ainult järgmise `apply`-ni. Kui ke
     tofu plan | grep -E '^\s+#|Plan:'
     ```
 
-2. Kirjuta `NOTES.md`-sse, mida plaan tahab teha, siis `tofu apply` ja `tail -3 ../k02-ansible/inventory.ini`.
+2. Vaata, mida plaan tahab teha, siis käivita `tofu apply` ja `tail -3 ../k02-ansible/inventory.ini`.
 
 Provider võrdleb faili sisu state'is oleva kontrollsummaga. Kui need ei klapi, peab ta faili kadunuks ja plaanib selle uuesti luua. Pärast `apply`-d on sinu rida läinud. See on õige käitumine: source of truth on `terraform.tfvars`, mitte fail.
 
-✅ **Edasi saad minna, kui** plaan tahtis `local_file.inventory` uuesti luua, pärast `apply`-d pole failis `proov01` rida ja `NOTES.md`-s on selgitus.
+**Edasi saad minna, kui** plaan tahtis `local_file.inventory` uuesti luua, pärast `apply`-d pole failis `proov01` rida.
 
 ## Lisa testi inventory kontroll
 
@@ -90,7 +90,7 @@ tofu test
 
 Test kontrollib täpset teksti koos reavahetusega, mitte ainult seda, et kuskil on sõna `db01`. Nii ebaõnnestub test ka siis, kui host on vale grupi all. `command = plan` tähendab, et `local_file` ei kirjutanud midagi kettale: sisu arvutati, aga faili ei tekkinud.
 
-✅ **Edasi saad minna, kui** `tofu test` näitab ka `inventory_grupid… pass`.
+**Edasi saad minna, kui** `tofu test` näitab ka `inventory_grupid… pass`.
 
 ## Valmista Ansible ette käivitamiseks ilma inimeseta
 
@@ -112,7 +112,7 @@ Värske VM, kus cloud-init veel paigaldab pakette, hoiab apt-i lukku. Ansible'i 
 
 > Kui `site.yml`-is pole `wait_for_connection`-i, lisa esimesele play'le `gather_facts: false`, `pre_tasks`-i `ansible.builtin.wait_for_connection` ja siis `ansible.builtin.setup`.
 
-✅ **Edasi saad minna, kui** mõlemad `grep`-id leiavad rea ja `ansible-vault view` ei küsi parooli.
+**Edasi saad minna, kui** mõlemad `grep`-id leiavad rea ja `ansible-vault view` ei küsi parooli.
 
 ## Kirjuta up.sh
 
@@ -137,7 +137,7 @@ Teine käivitus peab ütlema, et taristu klapib, ja Ansible peab andma `changed=
 
 Teine käivitus kontrollib kahel tasemel korraga, kas kõik on idempotentne. Tofu ütleb, et masinad klapivad koodiga, Ansible ütleb, et masinate sisu klapib rollidega. Kui üks neist annab muudatuse, on kuskil samm, mis teeb midagi iga kord, ja see tuleb leida enne, kui skript läheb pipeline'i.
 
-✅ **Edasi saad minna, kui** ShellCheck vaikib, `./up.sh` lõpeb koodiga 0 ja väljastab `/health` JSON-i.
+**Edasi saad minna, kui** ShellCheck vaikib, `./up.sh` lõpeb koodiga 0 ja väljastab `/health` JSON-i.
 
 ## Proovi up.sh kaitset
 
@@ -156,7 +156,7 @@ Kõige tavalisem põhjus ootamatuks asenduseks on muudatus, mis näeb välja sü
 
 Skript väljastas, et plaanis on üks kustutamine, ja lõpetas koodiga 1, enne kui `apply` või Ansible käivitus. Teine käsk näitab põhjust: mall on `clone` plokis ja selle muutus nõuab asendust. Proxmoxis ei muutunud midagi, plaanifail kustutati `trap`-iga.
 
-✅ **Edasi saad minna, kui** `up.sh` lõpetas koodiga 1 ja teatega kustutamisest, Proxmoxis jäi mc01 samaks ja pärast tagasivõtmist lõpeb `./up.sh` koodiga 0.
+**Edasi saad minna, kui** `up.sh` lõpetas koodiga 1 ja teatega kustutamisest, Proxmoxis jäi mc01 samaks ja pärast tagasivõtmist lõpeb `./up.sh` koodiga 0.
 
 ## Loo stack nullist uuesti
 
@@ -179,7 +179,7 @@ Siin mõõdad ka aega: see on selle stacki taastamisaja alampiir, andmete taasta
 
 `/health` UP tähendab, et kõik kolm sammu töötasid järjest: Tofu lõi masinad, cloud-init andis võrgu ja võtme, Ansible seadistas teenused. `time` tulemusest näed, kui suur osa ajast läks kloonimisele ja käivitumisele ning kui suur Ansible'ile. See jaotus ütleb, kust taastamist kiirendada.
 
-✅ **Edasi saad minna, kui** `/health` vastab `"status":"UP"` ja `NOTES.md`-s on `time` tulemus.
+**Edasi saad minna, kui** `/health` vastab `"status":"UP"`.
 
 ## Commit
 
@@ -196,9 +196,8 @@ git push
 
 `resources` kontroll otsib muu hulgas `local_file`-i, `templatefile()`-i ja teed `k02-ansible/inventory.ini`. `files` kontroll vaatab, et `inventory.tftpl` ja lukufail on olemas ning state ja `tfvars` on Gitist väljas.
 
-✅ **Edasi saad minna, kui** `bash autograde/check.sh k04 resources` ja `bash autograde/check.sh k04 files` annavad `OK`.
+**Edasi saad minna, kui** `bash autograde/check.sh k04 resources` ja `bash autograde/check.sh k04 files` annavad `OK`.
 
-📎 **Selle mooduli tõend:** commit `k04: inventory…` koos `inventory.tftpl`, `inventory.tf`, `up.sh` ja genereeritud `inventory.ini`-ga; `NOTES.md`-s käsitsi muudetud inventory plaan ja `up.sh` keeldumise väljund; issue `K4.4` kommentaaris `time ./up.sh` ja `/health` vastus.
 
 ## Miks see nii töötab
 

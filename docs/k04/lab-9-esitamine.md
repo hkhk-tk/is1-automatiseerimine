@@ -44,7 +44,7 @@ Kaks esimest sammu kontrollivad seda, mida automaatne hindaja ei saa näha.
 
 > `validate` vajab provider'i allalaadimist registry'st. Kui control node registry't ei näe, ebaõnnestub ainult see kontroll; automaatne hindaja GitHubis seda ei mõjuta.
 
-✅ **Edasi saad minna, kui** `fmt` vaikib, `validate` ja `tofu test` on `Success!`, plaani kood on `0`, `git ls-files | grep` näitab ainult `env/dev.tfvars`-i või ei midagi, viis hosti vastavad `SUCCESS` ja kõik kuus kontrolli annavad `OK`.
+**Edasi saad minna, kui** `fmt` vaikib, `validate` ja `tofu test` on `Success!`, plaani kood on `0`, `git ls-files | grep` näitab ainult `env/dev.tfvars`-i või ei midagi, viis hosti vastavad `SUCCESS` ja kõik kuus kontrolli annavad `OK`.
 
 ## Proovi värskest kloonist
 
@@ -62,7 +62,7 @@ Sinu töökaustas on faile, mida Gitis pole: `terraform.tfvars`, `.terraform/`, 
 
 `-lockfile=readonly` keelab `init`-il lukufaili muuta. Kui kood vajab provider'it, mida lukufailis pole, ebaõnnestub `init` siin, mitte automaatses hindajas. `tofu test` värskes kloonis tõestab, et testid kasutavad ainult Gitis olevaid faile, näiteks `tests/id_test.pub`, mitte sinu `~/.ssh` võtit.
 
-✅ **Edasi saad minna, kui** värskes kloonis annavad `init`, `validate` ja `tofu test` `Success!` ja ajutine kaust on kustutatud.
+**Edasi saad minna, kui** värskes kloonis annavad `init`, `validate` ja `tofu test` `Success!` ja ajutine kaust on kustutatud.
 
 ## Seo oma töökohaga
 
@@ -76,7 +76,7 @@ sed -n '/^## Minu töökohal/,$p' k04-tofu/NOTES.md
 git add k04-tofu/NOTES.md && git commit -m "k04: NOTES, minu töökohal" && git push
 ```
 
-✅ **Edasi saad minna, kui** `sed` näitab jaotist 3–5 lausega, milles on nimetatud üks konkreetne käsitsi protsess ja üks esimene samm, ja commit on harus.
+**Edasi saad minna, kui** `sed` näitab jaotist 3–5 lausega, milles on nimetatud üks konkreetne käsitsi protsess ja üks esimene samm, ja commit on harus.
 
 ## PR, merge ja tag
 
@@ -101,7 +101,7 @@ PR on ülevaatuse koht ka siis, kui sa ise selle kohe merge'id. Selle diff näit
 </figure>
 -->
 
-✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k04`.
+**Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k04`.
 
 ## Automaatse hindaja tulemus
 
@@ -109,27 +109,7 @@ Tag `k04` käivitab GitHubis automaatse hindaja. Loed tulemust ja seod iga mitte
 
 Automaatne hindaja kontrollib, kas failid on olemas, kas kood läbib `fmt`-i ja `validate`-i, kas VM-id on kirjeldatud data source'i, `for_each`-i ja mooduliga ning kas token, state ja `terraform.tfvars` on Gitist väljas. Kui mõni kontroll ebaõnnestus GitHubis, aga mitte sinu terminalis, on erinevus keskkonnas: tavaliselt fail, mis on sinu kaustas, aga mitte commit'is.
 
-✅ **Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
-
-## Tõendid moodulite kaupa
-
-Käi nimekiri läbi, et `NOTES.md` ja issue'd oleksid koodiga kooskõlas.
-
-- [ ] 1. Üks VM koodist: commit `01-alused`, ennustused ja plaanid, Task History kasutaja, `cloud-init status --long`
-- [ ] 2. Viis VM-i: commit koos lukufailiga, ümbernimetamise plaan, token-output'i proov, `tofu state list`, `tofu test` pass
-- [ ] 3. Moodul ja state: `moved.tf`, plaan `0 to destroy`, backend `s3`, lukuviga teises terminalis, `force-unlock`
-- [ ] 4. Üks käsk: genereeritud `inventory.ini`, käsitsi muudatuse plaan, `up.sh` ShellCheck'iga puhas ja keeldus asendusest, `time ./up.sh` ja `/health` UP
-- [ ] 5. Elutsükkel: db01 `Protection: Yes`, kaitsete võrdlus, järeldused `prevent_destroy`, `ignore_changes`, `create_before_destroy` kohta, `check` vs `precondition`
-- [ ] 6. Import ja drift: `1 to import`, ops01 kustutatud koodiga, kolm drift'i otsust, dev-workspace ja kaks `lineage`-i
-- [ ] 7. Golden image: `packer validate`, mall `labseis-base-<kuupäev>`, dev01 kontroll, `up.sh` keeldus ja `ALLOW_DESTROY=1` aeg, malli/cloud-init'i/Ansible'i tabel
-- [ ] 8. Intsident: nullpunkt, sümptomite tabel, kolm otsust, kokkuvõte, plaani kood `0`, `/health` UP
-- [ ] 9. Esitamine: värske kloon, `NOTES.md` jaotis „Minu töökohal“, tag `k04`, Releases tulemus
-
-Puuduva linnukese kohta küsib koolitaja "miks". `NOTES.md` on sinu vastus sellele küsimusele.
-
-✅ **Edasi saad minna, kui** kõik linnukesed on tehtud ja `NOTES.md` on viimases commit'is.
-
-📎 **Selle mooduli tõend:** `NOTES.md` jaotis „Minu töökohal“, tag `k04` `main`-i peal ja automaatse hindaja tulemus GitHubi Releases all.
+**Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
 
 ## Pärast esitamist: VM-id välja
 
@@ -140,7 +120,7 @@ Puuduva linnukese kohta küsib koolitaja "miks". `NOTES.md` on sinu vastus selle
 
 > 5. kohtumise eelõhtul token aegub ja `tofu plan` annab siis `401`. Kood ja state jäävad alles. VM-e saad käivitada Proxmoxi veebiliidesest.
 
-✅ **Edasi saad minna, kui** Proxmoxis on sinu pool'is töötamas ainult control node.
+**Edasi saad minna, kui** Proxmoxis on sinu pool'is töötamas ainult control node.
 
 ## Miks see nii töötab
 

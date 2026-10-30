@@ -48,11 +48,11 @@ Klass on ühe NAT-aadressi taga. Ilma peeglita jõuab Docker Hubi anonüümne t�
     sudo usermod -aG docker "$USER"
     ```
 
-> ⚠️ [Grupi `docker`](https://docs.docker.com/engine/install/linux-postinstall/) liige saab käivitada konteineri, mis mount'ib hosti `/`. Näiteks `docker run -v /:/host alpine chroot /host` annab root-shelli hostis ilma paroolita ja `sudo` logisse sellest midagi ei jää. Klassi VM-il on see teadlik valik, jagatud serveris mitte.
+> **Turvarisk:** [Grupi `docker`](https://docs.docker.com/engine/install/linux-postinstall/) liige saab käivitada konteineri, mis mount'ib hosti `/`. Näiteks `docker run -v /:/host alpine chroot /host` annab root-shelli hostis ilma paroolita ja `sudo` logisse sellest midagi ei jää. Klassi VM-il on see teadlik valik, jagatud serveris mitte.
 
-Kui `docker info` näitab cgroup'i versiooni 2, töötavad mooduli piirangukatsed nii, nagu siin kirjas. Tühi mirrors-nimekiri pärast restarti tähendab, et `daemon.json` on vigane või vales kohas; siis vaata `journalctl -u docker`. `git check-ignore` vastus näitab, et `.env` jääb Gitist välja juba enne, kui sa selle lood.
+Kui `docker info` näitab cgroup'i versiooni 2, töötavad selle osa piirangukatsed nii, nagu siin kirjas. Tühi mirrors-nimekiri pärast restarti tähendab, et `daemon.json` on vigane või vales kohas; siis vaata `journalctl -u docker`. `git check-ignore` vastus näitab, et `.env` jääb Gitist välja juba enne, kui sa selle lood.
 
-✅ **Edasi saad minna, kui** haru on `k03-docker`, server on 28 või uuem, `docker compose` vastab, mirrors-nimekirjas on kooli peegel, cgroup'i versioon on 2 ja `docker ps` töötab ilma `sudo`-ta.
+**Edasi saad minna, kui** haru on `k03-docker`, server on 28 või uuem, `docker compose` vastab, mirrors-nimekirjas on kooli peegel, cgroup'i versioon on 2 ja `docker ps` töötab ilma `sudo`-ta.
 
 ## Engine hostis: teenus, kataloog ja konfiguratsioonifail
 
@@ -94,7 +94,7 @@ Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daem
 
 `docker.socket` kuulab socket'it ka siis, kui `dockerd` seisab: esimene `docker` käsk käivitab daemoni. `containerd` on eraldi teenus, kes konteinereid tegelikult käitab, ja `dockerd` räägib temaga. `DockerRootDir` on kataloog, mida jälgid kettaruumi monitooringus, sest seal on konteinerite logid, volume'id ja build cache. `--validate` leidis vea ilma teenust peatamata, nagu `nginx -t` või `sshd -t`.
 
-✅ **Edasi saad minna, kui** kolm üksust on `active`, tead oma `Driver` ja `DockerRootDir` väärtust, kehtiv konfiguratsioon annab `configuration OK`, vigane koopia annab veateate ja koodi ≠ 0 ning journal'is on daemoni viimane start. Kirjuta TOEND.md-sse `docker info` rida ja üks lause: kuidas muudaksid `daemon.json`-i tootmisserveris.
+**Edasi saad minna, kui** kolm üksust on `active`, tead oma `Driver` ja `DockerRootDir` väärtust, kehtiv konfiguratsioon annab `configuration OK`, vigane koopia annab veateate ja koodi ≠ 0 ning journal'is on daemoni viimane start. Kirjuta TOEND.md-sse `docker info` rida ja üks lause: kuidas muudaksid `daemon.json`-i tootmisserveris.
 
 ## Elutsükkel ja PID 1
 
@@ -132,7 +132,7 @@ Kui sa ei tea, et konteiner lõpeb koos PID 1-ga, otsid valest kohast. Teenus "e
 
 `lsns` näitas, et konteiner on hulk namespace'e ühe hostiprotsessi ümber, mitte eraldi masin. `rmi` viga tõestab, et konteiner kasutab image'i kihte otse ka peatatuna. Ubuntu ilma `-it`-ita lõpetas, sest bash ilma terminalita sai stdin'ist kohe faililõpu ja väljus koodiga 0.
 
-✅ **Edasi saad minna, kui** `fg` on pärast Ctrl+C `Exited`, `w` tuli `start`-iga tagasi sama ID-ga, hostis on nginx'il tavaline PID ja konteineris PID 1, `rmi` andis vea `conflict` konteineri ID-ga ja Ubuntu ilma `-it`-ita lõpetas kohe koodiga 0. Kirjuta TOEND.md-sse `docker ps -a` väljund ja `lsns` read.
+**Edasi saad minna, kui** `fg` on pärast Ctrl+C `Exited`, `w` tuli `start`-iga tagasi sama ID-ga, hostis on nginx'il tavaline PID ja konteineris PID 1, `rmi` andis vea `conflict` konteineri ID-ga ja Ubuntu ilma `-it`-ita lõpetas kohe koodiga 0. Kirjuta TOEND.md-sse `docker ps -a` väljund ja `lsns` read.
 
 ## Pordid ja konteineri IP
 
@@ -161,7 +161,7 @@ Joonis L3.1 näitab kahte teed. Hostist jõuad konteinerini otse silla kaudu. S�
 
 Kui konteineri IP vastaks sülearvutist, oleks su võrgus marsruut hosti sisemisse silda ja see oleks võrgu seadistuse viga, mitte Dockeri omadus. `-P` valis juhusliku kõrge pordi. See sobib testiks, aga mitte teenusele, sest port muutub iga uue konteineriga ja keegi ei tea, kuhu ühendada.
 
-✅ **Edasi saad minna, kui** konteineri IP (`172.17.x.x`) vastab control node'ist, aga mitte sülearvutist, hostiport vastab mõlemast ja nft-reeglites on DNAT pordile 80.
+**Edasi saad minna, kui** konteineri IP (`172.17.x.x`) vastab control node'ist, aga mitte sülearvutist, hostiport vastab mõlemast ja nft-reeglites on DNAT pordile 80.
 
 ## Võrgudraiverid: bridge, host ja none
 
@@ -198,7 +198,7 @@ Tootmisserveris küsib `--network host`-i tavaliselt monitooringuagent või VPN-
 
 `bridge` võrgu lüüs on sama aadress, mis `docker0` liidesel: sild on hosti liides ja konteinerid on selle taga. Host-võrgus kuulas pordil 80 `nginx` ise, mitte `docker-proxy`, `docker port` oli tühi ja CLI hoiatas, et `-p` jäetakse kõrvale. Konteiner nägi hosti liideseid nimepidi. Kuna DNAT-i pole, kehtib siin hosti tulemüür tavapäraselt. `none` jättis ainult `lo` ja sobib tööle, mis ei tohi kunagi võrku puutuda, näiteks võtmete genereerimine või failide teisendus.
 
-✅ **Edasi saad minna, kui** `bridge` alamvõrk on `172.17.0.0/16` ja lüüs sama mis `docker0` aadress, host-võrgus kuulab pordil 80 `nginx` (või logis on `Address in use`), `docker port` on tühi ja pordil 9999 ei kuula keegi, `none` konteineris on ainult `lo` ja `wget` ebaõnnestub. Kirjuta TOEND.md-sse üks lause: millise teenuse paneksid host-võrku ja mis selle hind on.
+**Edasi saad minna, kui** `bridge` alamvõrk on `172.17.0.0/16` ja lüüs sama mis `docker0` aadress, host-võrgus kuulab pordil 80 `nginx` (või logis on `Address in use`), `docker port` on tühi ja pordil 9999 ei kuula keegi, `none` konteineris on ainult `lo` ja `wget` ebaõnnestub. Kirjuta TOEND.md-sse üks lause: millise teenuse paneksid host-võrku ja mis selle hind on.
 
 ## Mälu, CPU ja protsessid
 
@@ -235,7 +235,7 @@ Piiranguid vaikimisi pole. Konteiner ilma piiranguta näeb kogu hosti mälu ja C
 
 Kood 137 on 128 + 9: protsess sai SIGKILL-i. `OOMKilled: true` ütleb, et tappis tuum mälupiiri tõttu, mitte keegi `docker kill`-iga. `docker update` muutis faili töötaval konteineril protsessi taaskäivitamata: piir on lihtsalt cgroup'i fail.
 
-✅ **Edasi saad minna, kui** `oom` lõpetas koodiga 137 ja `OOMKilled` on `true`, `docker stats` näitab `cpu` konteineril umbes 50% CPU-d, `cpu.max` on `50000 100000` ja `memory.max` pärast `update`-i `134217728`. Kirjuta TOEND.md-sse kolm väärtust ja üks lause: mis juhtuks samas olukorras ilma `-m`-ita.
+**Edasi saad minna, kui** `oom` lõpetas koodiga 137 ja `OOMKilled` on `true`, `docker stats` näitab `cpu` konteineril umbes 50% CPU-d, `cpu.max` on `50000 100000` ja `memory.max` pärast `update`-i `134217728`. Kirjuta TOEND.md-sse kolm väärtust ja üks lause: mis juhtuks samas olukorras ilma `-m`-ita.
 
 ## Restart-poliitika: kes konteineri uuesti käivitab
 
@@ -252,6 +252,8 @@ Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hoolduse
     ```
 
 2. Käivita teine konteiner poliitikaga `always`, peata mõlemad käsitsi ja taaskäivita daemon.
+
+    **Ennusta:** kumb konteiner on pärast daemoni restarti `Up`, `rs` või `ra`?
 
     ```bash
     docker run -d --name ra --restart always nginx:1.30-alpine
@@ -270,7 +272,7 @@ Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hoolduse
 
 `RestartCount` 1 ja olek `running` näitavad, et daemon märkas PID 1 lõppemist ja käivitas sama konteineri uuesti, sama ID ja kirjutatava kihiga. Pärast daemoni restarti on `ra` üleval ja `rs` `Exited`: `always` ei arvesta sinu käsitsi peatamist, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` `unless-stopped`-i. `on-failure:3` proovis kolm korda ja jättis siis konteineri seisma. Nii ei taaskäivitu katkine konteiner lõputult ning logi ja väljumiskood jäävad sulle uurimiseks alles.
 
-✅ **Edasi saad minna, kui** `rs` käivitus pärast `kill -9`-i ise uuesti, pärast daemoni restarti on `ra` `Up` ja `rs` `Exited`, `rf` näitab `3 exited 1` ning kõik kolm on kustutatud. Kirjuta TOEND.md-sse üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
+**Edasi saad minna, kui** `rs` käivitus pärast `kill -9`-i ise uuesti, pärast daemoni restarti on `ra` `Up` ja `rs` `Exited`, `rf` näitab `3 exited 1` ning kõik kolm on kustutatud. Kirjuta TOEND.md-sse üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
 
 ## Käivitusvõtmed, mida admin vajab
 
@@ -326,7 +328,7 @@ Samad võtmed on Compose'i failis teiste nimedega: `env_file`, `user`, `init`, `
 
 `B` sai väärtuseks `"kaks"` koos jutumärkidega: `--env-file` ei tõlgenda jutumärke, Compose'i `.env` tõlgendab. `-e D` ilma väärtuseta võttis väärtuse sinu shellist. `root.txt` kuulub UID 0-le ja `mina.txt` sulle, seepärast käivitad tööriista-konteineri, mis kirjutab sinu kausta, alati `--user`-iga. `noinit` peatus umbes 10 sekundiga, sest `sleep` PID 1-na ei käsitle SIGTERM-i ja tuum ei rakenda PID 1-le vaikekäitumist. `--init` pani PID 1-ks väikese init'i, kes andis signaali edasi ja korjab ka zombie-protsessid. `-v` lõi puuduva kausta vaikselt root'i omanikuna, `--mount` keeldus: vale tee jääb nii kohe silma, mitte siis, kui teenus käivitub tühja konfiguratsiooniga. Ebaõnnestunud konteinerisse `exec` ei pääse, aga sama image sama mount'iga ja teise ENTRYPOINT-iga näitab viga otse.
 
-✅ **Edasi saad minna, kui** `env` näitab `A=yks`, `B="kaks"`, `D=neli`, `E=viis` ja alles jäänud konteinereid on 0, `root.txt` omanik on 0 ja `mina.txt` sinu UID, `docker top init` näitab kaht protsessi, `docker-init` ja tema all `sleep`, `noinit` peatus umbes 10 s ja `init` alla sekundi, `-v` lõi kausta omanikuga root, `--mount` andis `bind source path does not exist`, `docker exec ngx` ütles `is not running` ja `nginx -t` näitas vigast rida. Kirjuta TOEND.md-sse kaks `stop` aega ja üks lause: millal kasutad `--mount`-i `-v` asemel.
+**Edasi saad minna, kui** `env` näitab `A=yks`, `B="kaks"`, `D=neli`, `E=viis` ja alles jäänud konteinereid on 0, `root.txt` omanik on 0 ja `mina.txt` sinu UID, `docker top init` näitab kaht protsessi, `docker-init` ja tema all `sleep`, `noinit` peatus umbes 10 s ja `init` alla sekundi, `-v` lõi kausta omanikuga root, `--mount` andis `bind source path does not exist`, `docker exec ngx` ütles `is not running` ja `nginx -t` näitas vigast rida. Kirjuta TOEND.md-sse kaks `stop` aega ja üks lause: millal kasutad `--mount`-i `-v` asemel.
 
 ## Oma võrk ja kolm backend'i teenust
 
@@ -360,7 +362,7 @@ Teenuste IP-d muutuvad iga uue konteineriga. Rakendus, mis viitab IP-le, läheb 
 
 Vastus serverilt `127.0.0.11` tähendab, et nime lahendas Dockeri sisseehitatud DNS, mitte hosti resolver. Vaikevõrgus seda DNS-i pole ja nimi ei lahendu. Seepärast töötab Labori seisu rakendus Compose'is muutmata: Compose loob igale projektile oma võrgu.
 
-✅ **Edasi saad minna, kui** esimene db01 oli `Exited (1)` ja logis oli puuduva muutuja nimi, nüüd on kolm konteinerit `Up` võrgus `labnet`, `nslookup` vastab `labnet`-is serveriga `127.0.0.11` ja vaikevõrgus ei vasta.
+**Edasi saad minna, kui** esimene db01 oli `Exited (1)` ja logis oli puuduva muutuja nimi, nüüd on kolm konteinerit `Up` võrgus `labnet`, `nslookup` vastab `labnet`-is serveriga `127.0.0.11` ja vaikevõrgus ei vasta.
 
 ## Sisemine võrk
 
@@ -386,7 +388,7 @@ Kui andmebaasi konteineris on haavatavus, ei saa ründaja sisemisest võrgust is
 
 Kaks võrku ühel konteineril tähendab kaht liidest ja kaht IP-d. Nii on prod-failis web01: üks liides välimises võrgus, teine sisemises. `wget` ebaõnnestus, sest sisemises võrgus pole vaikemarsruuti, mitte sellepärast, et DNS oleks katki.
 
-✅ **Edasi saad minna, kui** `wget` internetti ebaõnnestub, `mc01` vastab sisemises võrgus `STAT pid`-iga ja `mc01`-l on kaks võrku. Kirjuta TOEND.md-sse üks lause: millisesse võrku paneksid andmebaasi ja miks.
+**Edasi saad minna, kui** `wget` internetti ebaõnnestub, `mc01` vastab sisemises võrgus `STAT pid`-iga ja `mc01`-l on kaks võrku. Kirjuta TOEND.md-sse üks lause: millisesse võrku paneksid andmebaasi ja miks.
 
 ## Andmed volume'is ja bind mount'is
 
@@ -417,7 +419,7 @@ Andmebaas kirjutatavas kihis kaotab kõik andmed esimesel image'i uuendusel, ses
     docker rm -f dbbind; rm -rf "$HOME/k03-bind"
     ```
 
-4. Koristus enne järgmist moodulit.
+4. Koristus enne järgmist osa.
 
     ```bash
     docker rm -f db01 mc01 rmq01 && docker volume rm dbtest
@@ -434,9 +436,9 @@ Joonis L3.2 näitab kolme kohta, kuhu `/var/lib/mysql` võib sattuda. Loe seda k
 
 UID 999 on konteineri `mysql` kasutaja. Hostis ei pruugi sellel numbril nime olla, aga tuum kontrollib õigusi numbri järgi. Seepärast ei saanud sinu tavakasutaja faile kustutada.
 
-✅ **Edasi saad minna, kui** rida `42` jäi pärast `docker rm -f`-i alles, `Mounts` näitab `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`, bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
+**Edasi saad minna, kui** rida `42` jäi pärast `docker rm -f`-i alles, `Mounts` näitab `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`, bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
 
-📎 **Selle mooduli tõend:** TOEND.md-s `docker version` ja mirrors-rida, `docker info` rida ja `daemon.json`-i lause, `docker ps -a`, `lsns`, host-võrgu lause, OOM-i kood ja `memory.max`, restart-poliitika lause, kaks `stop` aega ja `--mount`-i lause, sisemise võrgu lause, `Mounts` ja bind mount'i UID; commit `K3.1 konteinerid käsitsi`.
+**Selle osa tõend:** TOEND.md-s `docker version` ja mirrors-rida, `docker info` rida ja `daemon.json`-i lause, `docker ps -a`, `lsns`, host-võrgu lause, OOM-i kood ja `memory.max`, restart-poliitika lause, kaks `stop` aega ja `--mount`-i lause, sisemise võrgu lause, `Mounts` ja bind mount'i UID; commit `K3.1 konteinerid käsitsi`.
 
 ## Miks see nii töötab
 

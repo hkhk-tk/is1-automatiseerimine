@@ -29,10 +29,10 @@ Veaotsingu tabel kitsendab otsingu ühe kohani, vastust see ei anna.
 
 ## Käivita intsident
 
-Skript muudab sinu repot ja agendi masinat nii, nagu kolleeg ja administraator oleksid teinud. Enne käivitamist peab viimane build olema roheline ja töökaust puhas, sest muidu ei tea sa hiljem, milline viga oli sinu oma ja milline tuli intsidendiga.
+Skript muudab sinu repositooriumi ja agendi masinat nii, nagu kolleeg ja administraator oleksid teinud. Enne käivitamist peab viimane build olema roheline ja töökaust puhas, sest muidu ei tea sa hiljem, milline viga oli sinu oma ja milline tuli intsidendiga.
 
 1. Veendu, et viimane build on roheline ja töökaust puhas: `git status --short` on tühi.
-2. Käivita skript repo juurest. See küsib kinnitust.
+2. Käivita skript repositoorium juurest. See küsib kinnitust.
 
     ```bash
     k06-jenkins/intsident.sh
@@ -42,7 +42,7 @@ Skript muudab sinu repot ja agendi masinat nii, nagu kolleeg ja administraator o
 
 Uus commit GitHubis on nüüd sinu "viimane muudatus". Pane tähele selle räsi: iga järgmise buildi juures kontrollid, kas build ehitas just seda või sinu parandust.
 
-✅ **Edasi saad minna, kui** skript ütles `Intsident käivitatud` ja GitHubis on harul `k06-jenkins` uus commit `chore: koristus enne puhkust`.
+**Edasi saad minna, kui** skript ütles `Intsident käivitatud` ja GitHubis on harul `k06-jenkins` uus commit `chore: koristus enne puhkust`.
 
 ## Too build järjekorrast välja
 
@@ -55,7 +55,7 @@ Alustad kõige välimisest kohast. Kui build ei jõua isegi agendile, pole mõte
 
 Kui ootav build algas kohe pärast agendi ühendumist, oli agent ainus takistus. Kui build algas ja ebaõnnestus kohe, oled järgmise vea juures.
 
-✅ **Edasi saad minna, kui** agent on Nodes all roheline ja ootav build algas.
+**Edasi saad minna, kui** agent on Nodes all roheline ja ootav build algas.
 
 ## Veendu, et agent püsib
 
@@ -73,7 +73,7 @@ Kontrollid, et agent ühendub ka pärast teenuse ja masina taaskäivitust, ilma 
 
 `Connected` pärast restart'i ja `enabled` tähendavad, et parandus on teenuse püsivas seadistuses ja kehtib ka pärast masina taaskäivitust. Kui restart viis agendi uuesti punaseks, oli sinu parandus ajutine: vaata, mida teenus käivitamisel loeb.
 
-✅ **Edasi saad minna, kui** pärast restart'i on `grep -c` vähemalt `1`, `is-enabled` annab `enabled` ja agent on Nodes all roheline.
+**Edasi saad minna, kui** pärast restart'i on `grep -c` vähemalt `1`, `is-enabled` annab `enabled` ja agent on Nodes all roheline.
 
 ## Pane quality gate roheliseks
 
@@ -88,7 +88,7 @@ Quality gate'i "kiire parandus" oleks tingimuse leevendamine või etapi väljako
 
 Kui quality gate on roheline ja Sonaris pole uut leidu, parandasid põhjuse, mitte sümptomi. Kui hinne paranes, aga leid on ikka olemas, oli muudatus kuskil mujal ja reegel lihtsalt ei loe seda enam uueks koodiks.
 
-✅ **Edasi saad minna, kui** etapp Quality Gate on roheline ja logis on `Quality gate is OK`.
+**Edasi saad minna, kui** etapp Quality Gate on roheline ja logis on `Quality gate is OK`.
 
 ## Lase Nexusel WAR vastu võtta
 
@@ -103,7 +103,7 @@ Paralleelse buildi viimane rida ütleb tavaliselt ainult, et "üks haru ebaõnne
 
 Kaks parandusviisi annavad sama rohelise tulemuse, aga erinevad selle poolest, kus on tõe allikas (source of truth). Üks muudab koodi ja jääb Giti ajalukku, teine muudab Jenkinsi olekut, mida Git ei näe. Sinu põhjendus PR-is näitab, kumba sa järgmisel korral eelistad ja miks.
 
-✅ **Edasi saad minna, kui** mõlemad `Avaldamine` harud on rohelised ja Nexuse haru logis on `Uploaded:`.
+**Edasi saad minna, kui** mõlemad `Avaldamine` harud on rohelised ja Nexuse haru logis on `Uploaded:`.
 
 ## Tee kaks rohelist buildi järjest
 
@@ -120,7 +120,7 @@ Kaks parandusviisi annavad sama rohelise tulemuse, aga erinevad selle poolest, k
 
 Kaks erinevat versiooni Nexuses ja samad nimed buildi ajaloos tõestavad, et iga build saab unikaalse versiooni.
 
-✅ **Edasi saad minna, kui** kaks järjestikust buildi on rohelised, Nexuses on nende kaks eri versiooni kujul `<pom>-<build>-<sha>` ja buildide nimed näitavad samu versioone.
+**Edasi saad minna, kui** kaks järjestikust buildi on rohelised, Nexuses on nende kaks eri versiooni kujul `<pom>-<build>-<sha>` ja buildide nimed näitavad samu versioone.
 
 ## Leia, mida intsident maha jättis
 
@@ -144,9 +144,9 @@ curl -s "http://nexus.lab.hkhk.ee:8081/service/rest/v1/search?repository=labori-
 
 > `failFast true` ei aita, kui Docker image'i haru lõpetab enne, kui Nexuse haru ebaõnnestub: katkestatakse ainult harud, mis veel töötavad.
 
-Tag on nimi, räsi on sisu. Versiooniga `1.1.0` ehitatud image ja Nexusesse jõudnud `1.1.0` võivad tulla eri buildidest ja eri commit'idest. Plokk `cleanup` jätab alles kolm uusimat image'it, mitte kolm kontrollitut, nii et vana image võib jääda alles ka pärast rohelisi buildeid. Nexuse release-repo ei luba versiooni üle kirjutada. Intsidendi ajal sinna jõudnud versioon jääb alles, kuni administraator selle kustutab. Kuni seda pole tehtud, peab iga deploy versiooni kuju kontrollima.
+Tag on nimi, räsi on sisu. Versiooniga `1.1.0` ehitatud image ja Nexusesse jõudnud `1.1.0` võivad tulla eri buildidest ja eri commit'idest. Plokk `cleanup` jätab alles kolm uusimat image'it, mitte kolm kontrollitut, nii et vana image võib jääda alles ka pärast rohelisi buildeid. Nexuse release-repositoorium ei luba versiooni üle kirjutada. Intsidendi ajal sinna jõudnud versioon jääb alles, kuni administraator selle kustutab. Kuni seda pole tehtud, peab iga deploy versiooni kuju kontrollima.
 
-✅ **Edasi saad minna, kui** kontrolli väljundis on iga image'i juures `OK`, `docker image ls labori-seis` ei näita tag'i ilma buildi numbri ja räsita ning PR-i kirjelduses on Nexuse ebatavalised versioonid ja otsus osalise rikke kohta koos põhjendusega.
+**Edasi saad minna, kui** kontrolli väljundis on iga image'i juures `OK`, `docker image ls labori-seis` ei näita tag'i ilma buildi numbri ja räsita ning PR-i kirjelduses on Nexuse ebatavalised versioonid ja otsus osalise rikke kohta koos põhjendusega.
 
 ## Kirjuta intsidendi kokkuvõte
 
@@ -163,9 +163,9 @@ Kokkuvõte on blameless postmortem'i lühike kuju. Sümptomi ja paranduse leiab 
 
 Kui sinu põhjus erineb skripti omast, kirjuta erinevus tabelisse. Sageli leiab diagnoos sümptomist õige koha, aga vale mehhanismi. Kaheksa `OK`-i tähendavad, et parandused ei lõhkunud midagi, mida automaatne hindaja kontrollib.
 
-✅ **Edasi saad minna, kui** tabelis on neli rida ennetusega, kõik kaheksa kontrolli annavad `OK` ja `git log` näitab pärast `chore` commit'i vähemalt kolme `fix(...)` commit'i.
+**Edasi saad minna, kui** tabelis on neli rida ennetusega, kõik kaheksa kontrolli annavad `OK` ja `git log` näitab pärast `chore` commit'i vähemalt kolme `fix(...)` commit'i.
 
-📎 **Selle mooduli tõend:** `fix(...)` commit'id põhjusega sõnumis; PR-i kirjelduses iga rikke sümptomi ja põhjuse logirida, agendi restart'i järel `Connected` ja `enabled`, credentiali parandusviisi põhjendus, Nexuse kaks versiooni, image'ite ja Nexuse räside võrdluse väljund, Nexuse ebatavalised versioonid, otsus osalise rikke kohta ja nelja reaga intsidendi tabel.
+**Selle mooduli tõend:** `fix(...)` commit'id põhjusega sõnumis; PR-i kirjelduses iga rikke sümptomi ja põhjuse logirida, agendi restart'i järel `Connected` ja `enabled`, credentiali parandusviisi põhjendus, Nexuse kaks versiooni, image'ite ja Nexuse räside võrdluse väljund, Nexuse ebatavalised versioonid, otsus osalise rikke kohta ja nelja reaga intsidendi tabel.
 
 ## Miks see nii töötab
 

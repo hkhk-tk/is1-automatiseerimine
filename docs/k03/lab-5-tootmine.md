@@ -52,7 +52,7 @@ Ilma piiranguteta võib üks teenus teised nälga jätta. Java võtab mälu, mid
 
 JVM luges cgroup'i piiri ja arvutas heap'i selle järgi. Vaikimisi veerand 768 MB-st on alla 200 MB, ja raske päring võib anda `OutOfMemoryError`, kuigi konteiner pole piirile lähedalgi. `MaxRAMPercentage=75` annab heap'ile kolm neljandikku ja jätab ülejäänu metaspace'ile ja lõimedele.
 
-✅ **Edasi saad minna, kui** `docker stats` näitab igal teenusel LIMIT-veerus tabeli väärtust, app01 `memory.max` on `805306368`, vaikimisi `MaxHeapSize` on umbes veerand sellest ja Tomcati käsureal on `-XX:MaxRAMPercentage=75`.
+**Edasi saad minna, kui** `docker stats` näitab igal teenusel LIMIT-veerus tabeli väärtust, app01 `memory.max` on `805306368`, vaikimisi `MaxHeapSize` on umbes veerand sellest ja Tomcati käsureal on `-XX:MaxRAMPercentage=75`.
 
 ## Piir peab vastu: protsesside arv
 
@@ -61,6 +61,8 @@ Mälupiiri nägid juba `docker run -m`-iga. Protsesside piir kaitseb teise vea e
 Ilma `pids`-piiranguta täidab üks konteiner hosti protsessitabeli. Siis ei saa ka `sshd` uut sessiooni avada ja masinat saad parandada ainult konsoolist.
 
 1. Käivita web01-s 150 taustaprotsessi ja vaata, mis juhtub konteineris, `docker stats`-is ja teenusega.
+
+    **Ennusta:** mitu protsessi käivitub ja kas `/health` vastab sel ajal?
 
     ```bash
     docker compose exec web01 sh -c 'for i in $(seq 150); do sleep 30 & done' 2>&1 | sort | uniq -c
@@ -72,7 +74,7 @@ Ilma `pids`-piiranguta täidab üks konteiner hosti protsessitabeli. Siis ei saa
 
 Kui piir täis sai, keeldus tuum uut protsessi loomast ja sh andis `can't fork`. Ülejäänud host seda ei tundnud. nginx teenindas päringuid edasi, sest olemasolevad workerid ei vaja uusi protsesse. Pärast `sleep`-ide lõppu langes PID-ide arv tagasi ja konteinerit polnud vaja taaskäivitada.
 
-✅ **Edasi saad minna, kui** osa `sleep`-e andis `can't fork`, PIDs jõudis 100-ni, `/health` andis 200 ja pärast ootamist on PIDs jälle tavalisel tasemel. Kirjuta TOEND.md-sse üks lause: mis oleks juhtunud sama katsega ilma `pids`-piiranguta.
+**Edasi saad minna, kui** osa `sleep`-e andis `can't fork`, PIDs jõudis 100-ni, `/health` andis 200 ja pärast ootamist on PIDs jälle tavalisel tasemel. Kirjuta TOEND.md-sse üks lause: mis oleks juhtunud sama katsega ilma `pids`-piiranguta.
 
 ## Saladused failidest
 
@@ -115,7 +117,7 @@ Keskkonnamuutuja lekib mitmest kohast: `docker inspect`, `/proc/<pid>/environ`, 
 
 Pärast `!override`-i on keskkonnas ainult failide teed ja configtree import. `/health` UP tõestab, et rakendus luges paroolid failidest ja need klappisid volume'i omadega. Kui parool oleks failis reavahetusega, oleks `db` DOWN: `printf '%s'` on seepärast `echo` asemel.
 
-✅ **Edasi saad minna, kui** `git status` ei näita `secrets/`-i, `config` ei näita ühtegi `MARIADB_PASSWORD:` ega `DB_PASSWORD:` rida db01 ja app01 all, `inspect` ei leia app01 keskkonnast parooli ja `/health` on `UP`. Kirjuta TOEND.md-sse, milline teenus hoiab parooli veel keskkonnas ja miks (vt [lehe lõpus](#miks-see-nii-tootab) lõiku "RabbitMQ parool").
+**Edasi saad minna, kui** `git status` ei näita `secrets/`-i, `config` ei näita ühtegi `MARIADB_PASSWORD:` ega `DB_PASSWORD:` rida db01 ja app01 all, `inspect` ei leia app01 keskkonnast parooli ja `/health` on `UP`. Kirjuta TOEND.md-sse, milline teenus hoiab parooli veel keskkonnas ja miks (vt [lehe lõpus](#miks-see-nii-tootab) lõiku "RabbitMQ parool").
 
 ## Sisemine võrk ja haldus-UI loopback'il
 
@@ -145,7 +147,7 @@ Kui app01 on kompromiteeritud, ei saa ründaja sealt otse internetti ühendust v
 
 app01 kood ≠ 0 ja web01 kood 0 tähendavad, et segmenteerimine töötab mõlemas suunas õigesti. `ss` näitab, et 15672 kuulab ainult loopback'il: VPN-is olev kolleeg ei näe halduse UI-d enam. Kontroll-image `back`-võrgust tõestab, et teenuste vaheline DNS töötab ka sisemises võrgus.
 
-✅ **Edasi saad minna, kui** `back` on `true`, app01 ei jõua internetti (kood ≠ 0), web01 jõuab, 15672 kuulab ainult `127.0.0.1`-l, UI avaneb tunneli kaudu ja kontroll-image annab `back`-võrgust `/health` JSON-i.
+**Edasi saad minna, kui** `back` on `true`, app01 ei jõua internetti (kood ≠ 0), web01 jõuab, 15672 kuulab ainult `127.0.0.1`-l, UI avaneb tunneli kaudu ja kontroll-image annab `back`-võrgust `/health` JSON-i.
 
 ## Kirjutuskaitstud konteinerid
 
@@ -167,7 +169,7 @@ Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisa
 
 `Read-only file system` tuli tuumalt, mitte nginx'ilt. Ilma `conf.d` tmpfs'ita ei saanud entrypoint template'ist konfiguratsiooni kirjutada; see on tüüpiline viga, kui `read_only` lisatakse ilma teenuse kirjutuskohti uurimata.
 
-✅ **Edasi saad minna, kui** `touch` veebijuurde annab `Read-only file system`, `/tmp` on kirjutatav, `ReadonlyRootfs` on `true` ja `/health` on `UP`. Kirjuta TOEND.md-sse, mis juhtus ilma `conf.d` tmpfs'ita ja miks.
+**Edasi saad minna, kui** `touch` veebijuurde annab `Read-only file system`, `/tmp` on kirjutatav, `ReadonlyRootfs` on `true` ja `/health` on `UP`. Kirjuta TOEND.md-sse, mis juhtus ilma `conf.d` tmpfs'ita ja miks.
 
 ## Logid: rotatsioon ja journald
 
@@ -199,7 +201,7 @@ Logidega on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks j�
 
 `logtest` sai rotatsiooniseaded daemonilt, mitte käsurealt. Nüüd on kaitstud ka konteinerid, mida keegi Compose'iga ei käivita. app01 read on journal'is koos hosti teiste logidega ja filtreeritavad konteineri nime või tag'i järgi; logikoguja, mis juba journal'it loeb, saab need kaasa ilma lisaseadistuseta.
 
-✅ **Edasi saad minna, kui** `logtest`-i `LogConfig` näitab `max-size` ja `max-file`, ilma et oleksid neid käsureal andnud, `journalctl` leiab app01 read mõlemal viisil ja `docker compose logs` töötab edasi. Kirjuta TOEND.md-sse, miks `logging` vajab `!override`-i.
+**Edasi saad minna, kui** `logtest`-i `LogConfig` näitab `max-size` ja `max-file`, ilma et oleksid neid käsureal andnud, `journalctl` leiab app01 read mõlemal viisil ja `docker compose logs` töötab edasi. Kirjuta TOEND.md-sse, miks `logging` vajab `!override`-i.
 
 ## Volume'i varundus ja taastamine
 
@@ -238,7 +240,7 @@ Volume ilma varukoopiata on ühe `docker compose down -v` kaugusel andmete kaotu
 
 Taastatud baas näitas sinu tulemust, seega on koopia kasutatav, mitte ainult olemas. Taastamine ei vajanud root-parooli ega init-skripte: andmekataloog oli juba valmis ja entrypoint jättis initsialiseerimise vahele. Seisak kestis `stop`-ist `start`-ini; suurema baasi puhul kasvab see ja siis on õige valik `mariadb-dump`.
 
-✅ **Edasi saad minna, kui** `backup/` all on arhiiv, taastatud failide omanik on `999`, taastatud baas näitab rida `lab-03 compose OK` ja stack on jälle `healthy`. Kirjuta TOEND.md-sse arhiivi suurus ja seisaku pikkus.
+**Edasi saad minna, kui** `backup/` all on arhiiv, taastatud failide omanik on `999`, taastatud baas näitab rida `lab-03 compose OK` ja stack on jälle `healthy`. Kirjuta TOEND.md-sse arhiivi suurus ja seisaku pikkus.
 
 ## Kettaruum ja koristuspoliitika
 
@@ -272,7 +274,7 @@ Täis ketas on konteinerihostis üks levinumaid öiseid rikkeid. Vale koristus o
 
 `-n` näitas plaani, mitte tegevust: nii testid koristust tootmises enne tegelikku käivitust. Volume'id jäid alles, kuigi mõni neist pole parasjagu kasutusel. Journal'i rida on jälg, mida saad hiljem vaadata, kui keegi küsib, kuhu image kadus.
 
-✅ **Edasi saad minna, kui** ShellCheck vaikib, `-n` ei muutnud midagi, `RECLAIMABLE` vähenes, `labori-seis_dbdata` ja `labori-seis_rmqdata` on alles ja journal'is on `labseis-prune` rida.
+**Edasi saad minna, kui** ShellCheck vaikib, `-n` ei muutnud midagi, `RECLAIMABLE` vähenes, `labori-seis_dbdata` ja `labori-seis_rmqdata` on alles ja journal'is on `labseis-prune` rida.
 
 ## Tagasi põhistacki peale ja commit
 
@@ -283,14 +285,14 @@ docker compose config -q && echo "prod OK"
 unset COMPOSE_FILE && docker compose up -d --wait && docker compose ps
 cd .. && bash autograde/check.sh k03 compose && bash autograde/check.sh k03 deps
 git add k03-docker/compose.prod.yaml k03-docker/.gitignore k03-docker/prune.sh k03-docker/TOEND.md
-git commit -m "K3.5 tootmiskiht: piirangud, saladused, võrgud, read_only, logid, prune (closes #N)" && git push
+git commit -m "K3.5 tootmiskiht: piirangud, saladused, võrgud, read_only, logid, prune" && git push
 ```
 
 Prod-fail on Gitis ja valideerub, aga töötab ainult siis, kui keegi selle teadlikult peale paneb. Nii jääb `compose.yaml` kõigile ühiseks aluseks ja tootmise erisused on ühes failis üle vaadatavad.
 
-✅ **Edasi saad minna, kui** viis teenust on põhistackiga `healthy`, `compose` ja `deps` annavad `OK` ja `git ls-files k03-docker | grep -E 'secrets|backup'` on tühi.
+**Edasi saad minna, kui** viis teenust on põhistackiga `healthy`, `compose` ja `deps` annavad `OK` ja `git ls-files k03-docker | grep -E 'secrets|backup'` on tühi.
 
-📎 **Selle mooduli tõend:** commit `K3.5 …`; TOEND.md-s `docker stats` piirid, PID-piiri katse, `inspect` enne ja pärast saladusi, võrgutesti koodid, `read_only` katse, journald'i rida, varukoopia suurus ja taastatud rida ning `prune.sh` kokkuvõte.
+**Selle osa tõend:** commit `K3.5 …`; TOEND.md-s `docker stats` piirid, PID-piiri katse, `inspect` enne ja pärast saladusi, võrgutesti koodid, `read_only` katse, journald'i rida, varukoopia suurus ja taastatud rida ning `prune.sh` kokkuvõte.
 
 ## Miks see nii töötab
 

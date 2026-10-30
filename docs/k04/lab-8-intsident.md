@@ -44,7 +44,7 @@ Enne kui midagi katki läheb, paned kirja, milline on terve süsteemi olek. Ilma
 
 Kood `0` ja `/health` UP on sinu nullpunkt. Kõik, mis pärast "valmis" on teisiti, on intsidendi osa.
 
-✅ **Edasi saad minna, kui** enne intsidenti oli plaani kood `0`, `/health` oli UP, nullpunkt on `NOTES.md`-s ja koolitaja ütles "valmis".
+**Edasi saad minna, kui** enne intsidenti oli plaani kood `0`, `/health` oli UP, nullpunkt on `NOTES.md`-s ja koolitaja ütles "valmis".
 
 ## Kirjelda sümptomid enne parandamist
 
@@ -66,7 +66,7 @@ Kui teed kohe `./up.sh`, kaob osa lahknevusi vaikides ja sa ei saa kunagi teada,
 
 Kui mõni lahknevus on näha ainult ühes vaates, on see kõige tähtsam rida tabelis. See ütleb, milline kontroll sul tootmises puudub.
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on kolm lahknevust ja iga juures on kirjas, milline käsk selle näitas ja milline mitte.
+**Edasi saad minna, kui** `NOTES.md`-s on kolm lahknevust ja iga juures on kirjas, milline käsk selle näitas ja milline mitte.
 
 ## Lahenda puuduv VM
 
@@ -83,7 +83,7 @@ Esimene lahknevus mõjutab kasutajat, nii et see tuleb esimesena. Enne parandami
 
 Arvesse läheb ainult kontroll, mis läbib sama tee nagu kasutaja. Tofu "Apply complete" ütleb, et VM on olemas, Ansible'i `ok` ütleb, et teenus on paigaldatud. Alles `/health` ütleb, et rakendus jõuab taastatud teenuseni. Kui `systemctl status` on taastatud VM-i peal roheline, aga rakendus ei saa sellega ühendust, on teenus kasutaja jaoks ikka maas.
 
-✅ **Edasi saad minna, kui** `/health` näitab kõiki sõltuvusi UP ja `NOTES.md`-s on selgitus, miks Tofu VM-i uuesti lõi.
+**Edasi saad minna, kui** `/health` näitab kõiki sõltuvusi UP ja `NOTES.md`-s on selgitus, miks Tofu VM-i uuesti lõi.
 
 ## Lahenda muudetud atribuut
 
@@ -97,7 +97,7 @@ Käsitsi muudatusel on tihti põhjus, mida koodis pole. Kui võtad selle tagasi 
 
 Mõlemad otsused on õiged, kui põhjus on kirjas. Vale on ainult otsus, mida keegi ei teinud.
 
-✅ **Edasi saad minna, kui** plaanis pole enam `~` rida, `NOTES.md`-s on otsus koos põhjusega ja kui otsus oli "koodi", on muudatus commit'is.
+**Edasi saad minna, kui** plaanis pole enam `~` rida, `NOTES.md`-s on otsus koos põhjusega ja kui otsus oli "koodi", on muudatus commit'is.
 
 ## Lahenda tundmatu VM
 
@@ -109,7 +109,7 @@ Kolmas lahknevus on nähtamatu nii kasutajale kui Tofu tavalisele plaanile. Tofu
 
 Kui pool ja `state list` klapivad, on Tofu vaade jälle terviklik. Edaspidi tähendab "No changes", et pool'is pole midagi, mida kood ei tea.
 
-✅ **Edasi saad minna, kui** UI pool'is on täpselt need VM-id, mis `tofu state list`-is (pluss control node), ja `NOTES.md`-s on otsus koos põhjusega.
+**Edasi saad minna, kui** UI pool'is on täpselt need VM-id, mis `tofu state list`-is (pluss control node), ja `NOTES.md`-s on otsus koos põhjusega.
 
 ## Kood, masinad, Ansible ja rakendus
 
@@ -131,9 +131,8 @@ Lisa `NOTES.md`-sse kaks lauset: milline neist kolmest oleks tootmises leitud k�
 
 Kõik neli koodi `0` ja `/health` UP tähendavad, et kood, state, Proxmox ja masinate sisu on jälle üks tervik. Kokkuvõte on see osa, mida loeb ka inimene, kes intsidendi ajal kohal polnud.
 
-✅ **Edasi saad minna, kui** plaani kood on `0`, `./up.sh` lõpeb koodiga 0, viis hosti vastavad `SUCCESS`, `/health` on UP, `-refresh-only` annab `0` ja kokkuvõte on `NOTES.md`-s.
+**Edasi saad minna, kui** plaani kood on `0`, `./up.sh` lõpeb koodiga 0, viis hosti vastavad `SUCCESS`, `/health` on UP, `-refresh-only` annab `0` ja kokkuvõte on `NOTES.md`-s.
 
-📎 **Selle mooduli tõend:** `NOTES.md`-s nullpunkt, sümptomite tabel, kolm otsust põhjustega ja intsidendi kokkuvõte; commit `fix(k04): …`, kui mõni otsus muutis koodi; issue `K4.8` kommentaaris viimase etapi väljund.
 
 ## Miks see nii töötab
 

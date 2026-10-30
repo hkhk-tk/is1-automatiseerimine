@@ -25,7 +25,7 @@ Webhook vajab, et GitHubi server jõuaks Jenkinsi aadressile `/github-webhook/`.
 
 Päring vastab sinu masinast, sest sina oled VPN-i sees ja `getent` annab sisevõrgu aadressi. GitHubi serveritel seda nime ega aadressi pole.
 
-✅ **Edasi saad minna, kui** päring vastab sinu masinast ja PR-i kirjelduses on lause selle kohta, miks GitHub VPN-i taha ei näe.
+**Edasi saad minna, kui** päring vastab sinu masinast ja PR-i kirjelduses on lause selle kohta, miks GitHub VPN-i taha ei näe.
 
 ## Lase commit'il buildi käivitada
 
@@ -58,9 +58,9 @@ bash autograde/check.sh k06 triggers
 
 > Kui build ei käivitu ise, ei ole `triggers` veel jõustunud: see jõustub alles pärast esimest käsitsi käivitatud buildi.
 
-Polling logis on viimane räsi, mida Jenkins nägi, ja otsus "Changes found" või "No changes". Kui logis on vale räsi, vaatab job teist haru või teist repot.
+Polling logis on viimane räsi, mida Jenkins nägi, ja otsus "Changes found" või "No changes". Kui logis on vale räsi, vaatab job teist haru või teist repositooriumi.
 
-✅ **Edasi saad minna, kui** uus build algas ise, buildi lehel on "Started by an SCM change", polling logis on sinu commit ja kontroll annab `OK`.
+**Edasi saad minna, kui** uus build algas ise, buildi lehel on "Started by an SCM change", polling logis on sinu commit ja kontroll annab `OK`.
 
 ## Käivita build väljast
 
@@ -80,7 +80,7 @@ Kolmas viis buildi alustada on `POST` Jenkinsi API-le, näiteks GitHub Actionsi 
 
 Skript sai vastuseks `201` ja järjekorra aadressi, ootas, kuni järjekorrast tuli build, ja seejärel buildi tulemust.
 
-✅ **Edasi saad minna, kui** väljund on `OK: build järjekorras`, buildi URL ja `Tulemus: SUCCESS` ning buildi lehel on "Started by user `<gh>`".
+**Edasi saad minna, kui** väljund on `OK: build järjekorras`, buildi URL ja `Tulemus: SUCCESS` ning buildi lehel on "Started by user `<gh>`".
 
 ## Loe buildi põhjust API-st
 
@@ -103,7 +103,7 @@ Tingimus "ainult inimese käivitatud build" kirjutatakse nende klassinimede jär
 
 Väljundis on kaks erinevat klassi: `hudson.model.Cause$UserIdCause` sinu skripti buildil ja `hudson.triggers.SCMTrigger$SCMTriggerCause` pollimise buildil. Need on nimed, mida Deploy etapi `triggeredBy` tingimus kasutab. Kui mõlemal on `UserIdCause`, käivitasid mõlemad ise ja pollimine pole veel tööle läinud.
 
-✅ **Edasi saad minna, kui** väljundis on kaks rida eri põhjusega ja PR-i kirjelduses on need kaks klassinime.
+**Edasi saad minna, kui** väljundis on kaks rida eri põhjusega ja PR-i kirjelduses on need kaks klassinime.
 
 ## Pane buildile piirid
 
@@ -114,19 +114,23 @@ Vaikimisi pole Jenkinsis job'il ajapiiri ega ajaloo piiri ja samaaegsete buildid
 - sama jobi kaks buildi ei tööta korraga (`disableConcurrentBuilds`)
 - konsooli igal real on kellaaeg (`timestamps`)
 
+Salvesta muudatus ja saada see GitHubi:
+
 ```bash
 git commit -am "k06: options" && git push
 ```
 
-Vajuta pärast buildi algust kohe uuesti **Build Now** ja vaata järjekorda.
+**Ennusta:** agendil on teine executor vaba. Kas teine build käivitub kohe? Vajuta pärast buildi algust kohe uuesti **Build Now** ja vaata järjekorda.
 
 Teine build seisis järjekorras, kuigi agendil oli teine executor vaba. See tähendab, et piirang on jobi tasemel, mitte node'i tasemel: teised jobid saavad vaba executorit kasutada. Kellaajad konsoolis lubavad hiljem öelda, kas aeglane oli Maven, võrk või Sonari ootamine.
 
-✅ **Edasi saad minna, kui** teine build ootab, kuni esimene lõpetab (järjekorras on teade, et build on juba käimas), ja konsooli read algavad kellaajaga.
+**Edasi saad minna, kui** teine build ootab, kuni esimene lõpetab (järjekorras on teade, et build on juba käimas), ja konsooli read algavad kellaajaga.
 
 ## Arhiveeri WAR ja korista õiges järjekorras
 
 WAR tuleb arhiveerida buildi juurde enne, kui workspace tühjendatakse. `post` tingimustel on kindel järjekord ja see etapp näitab, miks koristus ei kuulu plokki `always`. Arhiveeritud fail kopeeritakse controllerisse `jobs/<job>/builds/<n>/archive/` alla, nii et artefaktide arvu piir `buildDiscarder`-is kaitseb controlleri ketast.
+
+**Ennusta:** kas WAR jõuab arhiivi, kui `cleanWs()` on plokis `always`?
 
 1. Lisa `pipeline {}` lõppu ajutiselt see plokk, push ja oota buildi.
 
@@ -150,9 +154,9 @@ WAR tuleb arhiveerida buildi juurde enne, kui workspace tühjendatakse. `post` t
 
 Ajutine variant ebaõnnestus, sest `always` käivitub enne `success`-i ja WAR oli selleks ajaks kustutatud. Parandatud variant näitab vahet: workspace on tühi, aga WAR on buildi juures alles ja selle fingerprint seob faili konkreetse buildiga. `tools` jääb alles, sest see pole workspace'i osa: Maven laaditakse üks kord node'i kohta, mitte iga buildi jaoks.
 
-✅ **Edasi saad minna, kui** ajutine variant ebaõnnestus arhiveerimisel, parandatud build on roheline, buildi lehel on *Build Artifacts* all `labori-seis.war` ja `labori-seis` workspace on pärast buildi tühi, `tools` (Maven) jääb alles.
+**Edasi saad minna, kui** ajutine variant ebaõnnestus arhiveerimisel, parandatud build on roheline, buildi lehel on *Build Artifacts* all `labori-seis.war` ja `labori-seis` workspace on pärast buildi tühi, `tools` (Maven) jääb alles.
 
-📎 **Selle mooduli tõend:** commit'id `k06: options` ja `post`-i parandus; PR-i kirjelduses lause webhooki kohta, polling logi ekraanipilt, `trigger-jenkins.sh` väljund ilma tokenita, kahe buildi põhjuse klassid API-st, `archiveArtifacts` veateade, mõlemad `du` väljundid, `triggers` `OK`.
+**Selle mooduli tõend:** commit'id `k06: options` ja `post`-i parandus; PR-i kirjelduses lause webhooki kohta, polling logi ekraanipilt, `trigger-jenkins.sh` väljund ilma tokenita, kahe buildi põhjuse klassid API-st, `archiveArtifacts` veateade, mõlemad `du` väljundid, `triggers` `OK`.
 
 ## Miks see nii töötab
 

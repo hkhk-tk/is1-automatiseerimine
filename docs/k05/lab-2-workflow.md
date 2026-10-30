@@ -23,6 +23,21 @@ Kirjutad esimese workflow: üks job, mis võtab koodi, paneb paika Java ja käiv
 
 Kui eeldad, et runner'il on "midagi juba olemas", töötab pipeline ühel päeval ja järgmisel mitte, sest GitHub uuendab runner'i image'it regulaarselt. Iga eeldus tuleb workflow's välja kirjutada.
 
+Workflow'i osad, mida selles failis kasutad:
+
+| Osa | Mida tähendab | Selles failis |
+|---|---|---|
+| workflow | YAML-fail kaustas `.github/workflows/`, mille GitHub käivitab sündmuse peale | `ci.yml` |
+| `on` | sündmused, mis workflow'i käivitavad | `push` harudele `main` ja `k05-actions` |
+| job | sammude jada, mis töötab ühes runner'is | `build` |
+| `runs-on` | runner: masin, kus job töötab | `ubuntu-latest`, GitHubi hallatud VM |
+| step | job'i samm: kas action (`uses:`) või shelli käsk (`run:`) | checkout, setup-java, Maven |
+| action | korduvkasutatav samm teisest repositooriumist, sisendid antakse `with:` all | `actions/checkout`, `actions/setup-java` |
+
+*Tabel L5.1. Workflow'i osad.*
+
+Iga osa kirjeldus on [workflow'i süntaksi juhendis](https://docs.github.com/actions/reference/workflows-and-actions/workflow-syntax), action'i sisendid on selle README-s. Faili süntaksit kontrollib käsurealt `actionlint` (selle osa kolmas samm).
+
 1. Loo `.github/workflows/ci.yml` ([workflow süntaks](https://docs.github.com/actions/reference/workflows-and-actions/workflow-syntax)). Alusta sellest:
 
     ```yaml
@@ -46,7 +61,7 @@ Kui eeldad, et runner'il on "midagi juba olemas", töötab pipeline ühel päeva
     gh run watch
     ```
 
-4. Kirjuta märkmikku runner'i image ja Java versioon (*Set up job* ja setup-java samm). Kas see on sama mis control node'il?
+4. Vaata logist runner'i image'it ja Java versiooni (*Set up job* ja setup-java samm). Kas need on samad mis control node'il?
 
 <!-- EKRAANIPILT: GitHub repo → Actions → esimene roheline käivitus "ci" → job build avatud; näha sammud Set up job, Run actions/checkout@v5, Run actions/setup-java@v5, Maveni samm ja Post sammud. Pärast esimest rohelist käivitust.
 <figure markdown="span">
@@ -59,20 +74,22 @@ Kui eeldad, et runner'il on "midagi juba olemas", töötab pipeline ühel päeva
 
 Roheline käivitus tõestab, et build ei sõltu sinu masinast: täiesti uus VM sai sama tulemuse. *Post* sammud on action'ite koristus ja vahemälu salvestamine, sina neid ei kirjutanud. Kui Java versioon erineb control node'i omast patch-versiooni võrra, pole see probleem. Kui erineb major, on `java-version` valesti.
 
-✅ **Edasi saad minna, kui** käivitus `ci` on roheline ja logis on sammud *Set up job*, checkout, setup-java, sinu Maveni samm ja *Post* sammud.
+**Edasi saad minna, kui** käivitus `ci` on roheline ja logis on sammud *Set up job*, checkout, setup-java, sinu Maveni samm ja *Post* sammud.
 
 ## Tee see teadlikult katki
 
 Teed kaks viga, mis nurjavad käivituse eri kohas. AI või vana blogipostitus soovitab versiooni, mida pole, ja käsk, mis sinu masinas on aliasega olemas, puudub runner'il. Kui tunned vea koha järgi ära, ei loe sa logi otsast lõpuni.
 
+**Ennusta:** kumb viga peatab käivituse enne, kui ükski sinu käsk käivitub?
+
 1. Muuda `actions/checkout@v5` → `actions/checkout@v99`, tee push ja oota punast käivitust.
 2. Paranda tagasi. Muuda Maveni sammus `mvn` → `maven`, tee push ja oota punast käivitust.
 3. Paranda tagasi ja tee push.
-4. Kirjuta märkmikku kahe punase käivituse lingid ja mõlema esimene punane samm.
+4. Leia mõlema punase käivituse esimene punane samm.
 
 Esimene viga tuli enne, kui ükski sinu käsk käivitus. GitHub laadib *Set up job* sammus kõik action'id alla ja olematu versioon katkestab job'i kohe. Teine viga tuli sinu sammus koodiga 127: Maven ei käivitunud üldse. Kood 1 oleks tähendanud, et Maven käivitus ja ebaõnnestus ise.
 
-✅ **Edasi saad minna, kui** esimene käivitus ebaõnnestus juba *Set up job* sammus (`Unable to resolve action actions/checkout@v99`), teine Maveni sammus (`maven: command not found`, `exit code 127`) ja viimane käivitus on jälle roheline.
+**Edasi saad minna, kui** esimene käivitus ebaõnnestus juba *Set up job* sammus (`Unable to resolve action actions/checkout@v99`), teine Maveni sammus (`maven: command not found`, `exit code 127`) ja viimane käivitus on jälle roheline.
 
 ## YAML-viga: actionlint ja GitHub
 
@@ -99,7 +116,7 @@ Linter enne push'i hoiab kokku ühe ringi: push, ootamine, punane, parandus. Mee
 
 actionlint andis rea ja veeru, GitHub ainult teate, et fail on vigane. Sellest järeldad: YAML-vea korral ei aita GitHubi logi, aitab ainult lokaalne kontroll. actionlint kontrollib ka seda, mida YAML-i parser ei näe, näiteks olematuid sisendeid ja vigaseid `${{ }}` avaldisi. Kui actionlint annab `0`, aga GitHub ütleb ikka `Invalid workflow file`, on actionlint'i versioon vanem kui süntaks, mida kasutad.
 
-✅ **Edasi saad minna, kui** taandeveaga failil näitas actionlint rea ja veeru, GitHubis oli punane käivitus ilma job'ita teatega `Invalid workflow file` ja nüüd annab `check.sh k05 actionlint` `OK`.
+**Edasi saad minna, kui** taandeveaga failil näitas actionlint rea ja veeru, GitHubis oli punane käivitus ilma job'ita teatega `Invalid workflow file` ja nüüd annab `check.sh k05 actionlint` `OK`.
 
 ## Ka PR-il
 
@@ -119,7 +136,7 @@ Kui kontroll käivitub alles pärast merge'i, on katkine kood juba kõigi teiste
 
 PR-i kontroll vastab küsimusele "kas main jääb pärast seda merge'i roheliseks". Seepärast võib PR olla punane ka siis, kui sinu haru push'i käivitus on roheline: keegi muutis vahepeal main'i. Kui näed PR-il kahte kontrolli (push ja pull_request), on see normaalne, sest mõlemad sündmused käivitasid sama workflow.
 
-✅ **Edasi saad minna, kui** PR-il on kontroll `ci / build` roheline ja `bash autograde/check.sh k05 build` annab `OK`.
+**Edasi saad minna, kui** PR-il on kontroll `ci / build` roheline ja `bash autograde/check.sh k05 build` annab `OK`.
 
 ## WAR artefaktina
 
@@ -143,7 +160,7 @@ Ilma artefaktita ei saa sa hiljem tõestada, mis fail täpselt testid läbis. Ku
 
 Brauser andis ZIP-i, mille sees on WAR, sest GitHub pakib artefakti alati. `gh` pakkis selle sinu eest lahti. `if-no-files-found: error` on oluline: vaikimisi oleks puuduv fail ainult hoiatus ja käivitus jääks roheliseks ilma artefaktita. Vaikimisi säilib artefakt 90 päeva ja läheb repo salvestusmahu arvesse. `retention-days: 7` piirab seda, sest iga push teeb uue mitmekümne megabaidise faili.
 
-✅ **Edasi saad minna, kui** käivituse kokkuvõttes on *Artifacts* all `labori-seis-war`, brauserist tuli ZIP, mille sees on WAR, ja `gh run download` andis otse WAR-i.
+**Edasi saad minna, kui** käivituse kokkuvõttes on *Artifacts* all `labori-seis-war`, brauserist tuli ZIP, mille sees on WAR, ja `gh run download` andis otse WAR-i.
 
 ## Teavitus, kui midagi ebaõnnestub
 
@@ -162,7 +179,7 @@ Punane rist ilma selgituseta tähendab, et iga kord peab keegi logi avama. Lühi
 
 Teavitus käivitus, kuigi Maveni samm ebaõnnestus, sest `failure()` tühistas vaikimisi tingimuse. Upload-samm jäi vahele, sest selle tingimus on endiselt `success()`. `::error::` rida tõusis käivituse lehe ülaossa annotatsiooniks: nii näeb viga ka see, kes logi ei ava. `--log-failed` näitab ainult ebaõnnestunud sammu logi, mis on pika käivituse puhul kiireim tee põhjuseni.
 
-✅ **Edasi saad minna, kui** punase käivituse kokkuvõttes on sinu teade, käivituse lehe ülaosas on annotatsioon ja pärast taastamist on käivitus jälle roheline.
+**Edasi saad minna, kui** punase käivituse kokkuvõttes on sinu teade, käivituse lehe ülaosas on annotatsioon ja pärast taastamist on käivitus jälle roheline.
 
 ## Käivitus numbritena: kus aeg kulub
 
@@ -179,11 +196,10 @@ Kui pipeline muutub aeglaseks, peab otsus "mida kiirendada" tuginema numbritele,
     ```
 
 2. Võrdle Maveni sammu aega control node'iga: `time mvn -B -q verify`
-3. Kirjuta märkmikku kolm kõige aeglasemat sammu ja nende kestus ning control node'i aeg.
+3. Leia kolm kõige aeglasemat sammu ja võrdle nende kestust control node'i ajaga.
 4. Pane build job'ile ajapiir mõõtmise, mitte arvamise järgi:
     - loe samamoodi kuni kümne viimase rohelise käivituse build job'i kogukestus (`gh run list -L 10`, siis `gh run view --json jobs`, job'i `startedAt` ja `completedAt`)
     - `timeout-minutes` on umbes kolm korda pikim kestus, täisminutiteks üles ümardatud, aga vähemalt 5
-    - väärtus ja selle arvutus on märkmikus
 5. Proovi, et piir töötab: pane ajutiselt `timeout-minutes: 1` ja build job'i lõppu samm `run: sleep 120`, tee push ja vaata, kuidas job lõpeb. Siis taasta oma arvutatud väärtus ja eemalda samm.
 
     ```bash
@@ -192,28 +208,28 @@ Kui pipeline muutub aeglaseks, peab otsus "mida kiirendada" tuginema numbritele,
 
 Tavaliselt on Maveni samm kõige pikem ja setup-java teine, sest see taastab vahemälu. Kui Maveni samm on runner'il palju aeglasem kui sinu masinas, laadib Maven tõenäoliselt teeke alla: vahemälu ei tööta, ja seda kontrollid, kui lisad matrix'i. Kui *Set up job* võtab kaua, ootad GitHubi runner'it, ja seda sina parandada ei saa. Ajapiiri ületanud job katkestatakse samamoodi nagu käsitsi tühistamine: töötavale sammule saadetakse signaal ja tulemus on `cancelled`, mitte `failure`. Seepärast ei käivitu pärast seda ka `if: failure()` samm, ja see on oluline, kui hiljem kirjutad rollback'i. Kolmekordne varu arvestab Maven Centrali aeglast päeva ja tühja vahemälu, aga rippuv test ei hoia runner'it kauem kui mõni minut.
 
-✅ **Edasi saad minna, kui** märkmikus on kolm sammu sekunditega, control node'i aeg ja `timeout-minutes` väärtus koos arvutusega, proovikäivituse logis on rida `maximum execution time` ja viimane käivitus on jälle roheline arvutatud piiriga.
-
-📎 **Selle mooduli tõend:** märkmikus runner'i image ja Java versioon, kahe teadliku vea ja katkise YAML-i käivituse lingid, `unzip -l` väljund, punase käivituse link, sammude kestused, `timeout-minutes` arvutus ja ajapiiri proovikäivituse link; PR-il kontroll roheline; `check.sh k05 actionlint` ja `k05 build` → `OK`.
+**Edasi saad minna, kui** `timeout-minutes` põhineb mõõdetud kestusel, proovikäivituse logis on rida `maximum execution time` ja viimane käivitus on jälle roheline arvutatud piiriga.
 
 ## Miks see nii töötab
 
-**Samm *Set up job*.** Enne ühegi sinu käsu käivitamist laadib see samm alla kõik `uses:` action'id, mida job kasutab. Seetõttu ebaõnnestub olematu versiooniga action juba selles sammus ja logis ei ole veel ühtegi sinu sammu.
+??? info "Ava selgitused"
 
-**`run:` ja `bash -e`.** Ilma `shell:` võtmeta käivitab runner `run:` ploki kujul `bash -e {0}`. Esimene ebaõnnestunud käsk lõpetab sammu, aga `pipefail` pole sees: `mvn -B verify | tee build.log` on roheline ka siis, kui Maven ebaõnnestub. Selgesõnaline `shell: bash` annab `bash --noprofile --norc -eo pipefail {0}`.
+    **Samm *Set up job*.** Enne ühegi sinu käsu käivitamist laadib see samm alla kõik `uses:` action'id, mida job kasutab. Seetõttu ebaõnnestub olematu versiooniga action juba selles sammus ja logis ei ole veel ühtegi sinu sammu.
 
-**Action'i versioon.** GitHub eemaldas runner'itelt Node 20 ja selle peal töötavad vanad major-versioonid (näiteks `checkout@v4`) enam ei käivitu ([GitHub Changelog](https://github.blog/changelog/)). AI pakub nii olematuid kui ka vanu versioone, seega kontrolli versiooni action'i *Releases* lehelt.
+    **`run:` ja `bash -e`.** Ilma `shell:` võtmeta käivitab runner `run:` ploki kujul `bash -e {0}`. Esimene ebaõnnestunud käsk lõpetab sammu, aga `pipefail` pole sees: `mvn -B verify | tee build.log` on roheline ka siis, kui Maven ebaõnnestub. Selgesõnaline `shell: bash` annab `bash --noprofile --norc -eo pipefail {0}`.
 
-**Deklaratiivne workflow.** Workflow fail kirjeldab, mida runner'il teha, runner'i loob GitHub. GitHub loeb faili iga sündmuse korral sellest commit'ist, mille juures sündmus tekkis.
+    **Action'i versioon.** GitHub eemaldas runner'itelt Node 20 ja selle peal töötavad vanad major-versioonid (näiteks `checkout@v4`) enam ei käivitu ([GitHub Changelog](https://github.blog/changelog/)). AI pakub nii olematuid kui ka vanu versioone, seega kontrolli versiooni action'i *Releases* lehelt.
 
-**Workflow harus.** Seetõttu saab harus workflow'd muuta ilma main'i puudutamata. Samal põhjusel on see ka turvaküsimus: `push`- ja `pull_request`-sündmuse korral loeb GitHub faili haru enda commit'ist, nii et inimene, kes saab haru luua, saab muuta ka seda, mida runner käivitab. `pull_request_target` loeb faili sihtharust ja käitub selles mõttes teisiti.
+    **Deklaratiivne workflow.** Workflow fail kirjeldab, mida runner'il teha, runner'i loob GitHub. GitHub loeb faili iga sündmuse korral sellest commit'ist, mille juures sündmus tekkis.
 
-**Sammude kestus.** Sammude kestus, mille esimese workflow juures API-st lugesid, on samasugune näitaja, mida monitooringus vaataksid teenuse kohta. Kui keskmine kestus hakkab kasvama, viitab see sageli vahemälu- või sõltuvusprobleemile juba enne, kui keegi aeglust märkab.
+    **Workflow harus.** Seetõttu saab harus workflow'd muuta ilma main'i puudutamata. Samal põhjusel on see ka turvaküsimus: `push`- ja `pull_request`-sündmuse korral loeb GitHub faili haru enda commit'ist, nii et inimene, kes saab haru luua, saab muuta ka seda, mida runner käivitab. `pull_request_target` loeb faili sihtharust ja käitub selles mõttes teisiti.
 
-**Annotated tag ja SHA.** Annotated tag on Gitis eraldi objekt, millel on oma SHA. Rida `^{}` näitab commit'i, millele tag viitab, ja `uses:` vajab just commit'i SHA-d.
+    **Sammude kestus.** Sammude kestus, mille esimese workflow juures API-st lugesid, on samasugune näitaja, mida monitooringus vaataksid teenuse kohta. Kui keskmine kestus hakkab kasvama, viitab see sageli vahemälu- või sõltuvusprobleemile juba enne, kui keegi aeglust märkab.
 
-**Madal kloon.** `actions/checkout` laadib vaikimisi (`fetch-depth: 1`) ainult ühe commit'i, sest suure repo kogu ajalugu võib olla sadu megabaite. Kui mõni tööriist (versiooni arvutamine tag'idest, muudatuste logi, muudetud failide kontroll) annab CI-s teise tulemuse kui sinu masinas, kontrolli kõigepealt, kas põhjus on madalas kloonis. Sama põhimõte kehtib iga action'i kohta: enne kui kopeerid kellegi `with:`-ploki, loe README-st, mis on vaikeväärtus ja miks.
+    **Annotated tag ja SHA.** Annotated tag on Gitis eraldi objekt, millel on oma SHA. Rida `^{}` näitab commit'i, millele tag viitab, ja `uses:` vajab just commit'i SHA-d.
 
-**Nõutud kontrolli nimi.** Ruleset'i nõutud kontrolli nimi peab täpselt vastama job'i nimele. Kui nimetad job'i hiljem ümber, jääb PR ootama kontrolli, mida enam ei tule, kuni ruleset'i parandad.
+    **Madal kloon.** `actions/checkout` laadib vaikimisi (`fetch-depth: 1`) ainult ühe commit'i, sest suure repo kogu ajalugu võib olla sadu megabaite. Kui mõni tööriist (versiooni arvutamine tag'idest, muudatuste logi, muudetud failide kontroll) annab CI-s teise tulemuse kui sinu masinas, kontrolli kõigepealt, kas põhjus on madalas kloonis. Sama põhimõte kehtib iga action'i kohta: enne kui kopeerid kellegi `with:`-ploki, loe README-st, mis on vaikeväärtus ja miks.
+
+    **Nõutud kontrolli nimi.** Ruleset'i nõutud kontrolli nimi peab täpselt vastama job'i nimele. Kui nimetad job'i hiljem ümber, jääb PR ootama kontrolli, mida enam ei tule, kuni ruleset'i parandad.
 
 Kui jõudsid kiiremini: [Lisaülesanded → 5. Ruleset](lisa.md#5-ruleset), muudad build'i ja security kontrolli kohustuslikuks, nii et main'i ei saa enam ilma rohelise workflow'ta muuta.

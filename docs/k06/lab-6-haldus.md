@@ -23,7 +23,7 @@ Kui ainult esimene tase töötaks, saaks sinu Jenkinsfile panna buildi töötama
 
 403 või "not found" tähendab, et rolli regex ei kata naabri folderit. Ootav build tähendab, et Job Restrictions agendil lubab ainult sinu folderi jobe. Kui naabri agent oleks su buildi võtnud, oleks see turvaviga ja koolitaja peab sellest kohe teadma.
 
-✅ **Edasi saad minna, kui** naabri folder annab 403 või "not found", võõra labeliga build jäi ootama (naabri agent ei võta võõraid jobe, job-restrictions) ja sinu label on taastatud.
+**Edasi saad minna, kui** naabri folder annab 403 või "not found", võõra labeliga build jäi ootama (naabri agent ei võta võõraid jobe, job-restrictions) ja sinu label on taastatud.
 
 ## Anna kasutajale ainult lugemisõigus
 
@@ -49,7 +49,7 @@ Kõige levinum viga on enda väljalukustamine: salvestad tabeli, kus admin puudu
 
 `vaatleja` näeb ainult jobi, millele andsid *Job/Read*, ja tal pole ühtegi nuppu, mis midagi muudaks. *Overall/Read* üksi lubab ainult sisse logida ja avalehte näha. *Overall/Read* on eeldus kõigele muule: ilma selleta ei näe kasutaja ka job'i, millele tal on *Job/Read*.
 
-✅ **Edasi saad minna, kui** `vaatleja` näeb ainult jobi `ehitus`, nupud Build Now ja Configure puuduvad ja ekraanipilt on PR-i kirjelduses.
+**Edasi saad minna, kui** `vaatleja` näeb ainult jobi `ehitus`, nupud Build Now ja Configure puuduvad ja ekraanipilt on PR-i kirjelduses.
 
 ## Tee varukoopia
 
@@ -80,7 +80,7 @@ Arhiivis on koos `secrets/master.key` ja `secrets/hudson.util.Secret` ning `cred
 
 `du` näitab tavaliselt, et suurimad osad on `plugins/`, `tools/` ja `jobs/`. Esimest kahte saaks uuesti paigaldada, aga `jobs/` ja `secrets/` on asendamatud.
 
-✅ **Edasi saad minna, kui** `ehitus` logis on `credential loetav`, arhiiv on kodukaustas õigustega `-rw-------`, `grep -c` annab `1` ja PR-i kirjelduses on kirjas, mis on arhiivi suurimad osad.
+**Edasi saad minna, kui** `ehitus` logis on `credential loetav`, arhiiv on kodukaustas õigustega `-rw-------`, `grep -c` annab `1` ja PR-i kirjelduses on kirjas, mis on arhiivi suurimad osad.
 
 ## Uuenda pluginat
 
@@ -97,7 +97,7 @@ Uuendus tehakse alles pärast varukoopiat. Pluginauuendus on Jenkinsi tavaline r
 
 `git diff` näitab täpselt, mis muutus: üks rida või mitu, kui uuendus tõi kaasa sõltuvusi. See diff on sinu muudatuse kirje ja kui midagi läheb hiljem katki, tead, mida rollback'iga tagasi võtta. Roheline `ehitus` tõestab, et vähemalt see job uuendust talub.
 
-✅ **Edasi saad minna, kui** `ehitus` on pärast uuendust roheline ja `git diff` näitab ühe (või mõne sõltuva) plugina versiooni muutust.
+**Edasi saad minna, kui** `ehitus` on pärast uuendust roheline ja `git diff` näitab ühe (või mõne sõltuva) plugina versiooni muutust.
 
 ## Taasta varukoopia teise konteinerisse
 
@@ -125,13 +125,15 @@ Taastad varukoopia uude volume'isse ja käivitad kõrvale teise Jenkinsi. Origin
 
 Rida `credential loetav` tõendab, et `master.key` ja krüpteeritud credential'id tulid kaasa ning sobivad kokku. Plugin on taastatud Jenkinsis vana versiooniga, sest varukoopia tehti enne uuendust.
 
-✅ **Edasi saad minna, kui** taastatud Jenkinsis on jobid, ajalugu ja õigused alles, `ehitus` logis on `credential loetav` ja PR-i kirjelduses on kirjas, kumb plugina versioon taastatud Jenkinsis on ja miks.
+**Edasi saad minna, kui** taastatud Jenkinsis on jobid, ajalugu ja õigused alles, `ehitus` logis on `credential loetav` ja PR-i kirjelduses on kirjas, kumb plugina versioon taastatud Jenkinsis on ja miks.
 
 ## Taasta ilma võtmeta
 
 Nüüd teed sama taaste, aga jätad välja ühe faili: `secrets/master.key`. Nii näed, mis juhtub, kui keegi varundab "ainult konfiguratsiooni" või kui võti on varundusest turvakaalutlustel välja jäetud ja teist koopiat pole.
 
 Ilma võtmeta varukoopiast käivitub Jenkins ja näeb esmapilgul korras välja. Viga ilmneb alles siis, kui mõni job vajab credential'it.
+
+**Ennusta:** kas taastatud Jenkins saab credential'it lugeda, kui `secrets/master.key` puudub?
 
 1. Peata eelmine taaste ja taasta kolmandasse volume'isse ilma võtmeta.
 
@@ -155,7 +157,7 @@ Ilma võtmeta varukoopiast käivitub Jenkins ja näeb esmapilgul korras välja. 
 
 Sisselogimine töötas, sest kasutajate paroolid on räsina `users/` all ja ei vaja `master.key`-d. Credential'i väärtus aga ei dekrüpteeru ja `ehitus` ei jõua reani `credential loetav`. `master.key` on kaustas olemas, aga räsi erineb arhiivi omast: Jenkins lõi käivitusel uue võtme, mis vanu saladusi ei ava. Järeldus: varukoopia ilma `secrets/`-ita taastab jobid, aga mitte ühtegi credential'it.
 
-✅ **Edasi saad minna, kui** `ehitus` logis pole rida `credential loetav`, kaks `master.key` räsi erinevad ja PR-i kirjelduses on lause selle kohta, mida taaste ilma võtmeta tootmises tähendaks.
+**Edasi saad minna, kui** `ehitus` logis pole rida `credential loetav`, kaks `master.key` räsi erinevad ja PR-i kirjelduses on lause selle kohta, mida taaste ilma võtmeta tootmises tähendaks.
 
 ## Koristus
 
@@ -173,9 +175,9 @@ Sandboxid ja arhiiv olid ajutised. Arhiivis on krüptovõti ja credential'id, ni
 
 Sandboxide kustutamine vabastab umbes gigabaidi, mida Maven ja Sonar intsidendiülesandes vajavad.
 
-✅ **Edasi saad minna, kui** `docker ps -a` ja `docker volume ls` ei näita sandboxi, arhiivi pole ja `git status` ei näita ühtki `.tgz` faili.
+**Edasi saad minna, kui** `docker ps -a` ja `docker volume ls` ei näita sandboxi, arhiivi pole ja `git status` ei näita ühtki `.tgz` faili.
 
-📎 **Selle mooduli tõend:** PR-i kirjelduses naabri folderi 403 ekraanipilt, `vaatleja` vaate ekraanipilt, `du` ja `ls -l` väljund enne ja pärast `chmod`-i, `plugins.txt` `git diff`, taastatud Jenkinsi `credential loetav` logirida, lause plugina versiooni kohta ja võtmeta taaste tulemus; commit uuendatud `plugins.txt`-iga.
+**Selle mooduli tõend:** PR-i kirjelduses naabri folderi 403 ekraanipilt, `vaatleja` vaate ekraanipilt, `du` ja `ls -l` väljund enne ja pärast `chmod`-i, `plugins.txt` `git diff`, taastatud Jenkinsi `credential loetav` logirida, lause plugina versiooni kohta ja võtmeta taaste tulemus; commit uuendatud `plugins.txt`-iga.
 
 ## Miks see nii töötab
 

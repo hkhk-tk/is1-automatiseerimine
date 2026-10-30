@@ -42,7 +42,7 @@ GitHubi hallatud runner on iga job'i alguses tühi masin, kohalikku Maveni hoidl
 - mõõda kohaliku hoidla suurus enne ja pärast `mvn -B clean`
 - ehita projekt nii, nagu hoidla oleks tühi, ilma et sinu `~/.m2` muutuks
 - ehita uuesti täis hoidlaga ja võrdle kestust
-- kirjuta märkmikku kaks `du` ja kaks `time` tulemust
+- võrdle kaht `du` ja kaht `time` tulemust
 
 **Kontroll:**
 
@@ -58,7 +58,7 @@ rm -rf /tmp/m2-tuhi
 **Valmis, kui:**
 
 - kaks `du -sh ~/.m2/repository` tulemust on samad
-- märkmikus on tühja ja täis hoidlaga `time` tulemus ning nende vahe
+- tead tühja ja täis hoidlaga `time` tulemuste vahet
 - `ls /tmp/m2-tuhi` annab pärast katset vea
 
 ??? success "Lahendus"
@@ -188,9 +188,9 @@ gh run view <id> --log | grep -A3 'git describe'
 
 **Valmis, kui:**
 
-- märkmikus on `fetch-depth` vaikeväärtus
-- märkmikus on mõlema push'i `wc -l` ja `describe` tulemus
-- märkmikus on üks lause selle kohta, millal kogu ajalugu on vaja
+- tead `fetch-depth` vaikeväärtust
+- oled võrrelnud mõlema push'i `wc -l` ja `describe` tulemust
+- oskad öelda, millal on kogu ajalugu vaja
 - ajutist sammu ja `fetch-depth`-i workflow'is enam pole
 
 ??? success "Lahendus"
@@ -364,7 +364,7 @@ docker start "$(docker ps -aq -f label=com.docker.compose.service=rmq01)"
 Sinu `compat` job proovib kahte JDK-d. Kui JDK ja JaCoCo töötavad kumbki eraldi uuendatuna, ei tähenda see veel, et nende kombinatsioon töötab.
 
 - lisa matrix'ile teine mõõde `jacoco: ["0.8.15", "0.8.12"]` ja anna see Mavenile võtmega `-Djacoco.version=${{ matrix.jacoco }}`
-- kirjuta enne push'i märkmikku, milline neljast kombinatsioonist ebaõnnestub ja miks
+- **Ennusta** enne push'i, milline neljast kombinatsioonist ebaõnnestub ja miks
 - ühe kombinatsiooni ebaõnnestumine ei katkesta teisi
 - lisa `exclude:` kombinatsioonile, mida sa ei toeta, ja `include:` ühele lisakombinatsioonile (nt Java 21 + JaCoCo 0.8.14)
 
@@ -377,8 +377,8 @@ gh run view <id> --json jobs --jq '.jobs[] | select(.name | startswith("compat")
 
 **Valmis, kui:**
 
-- enne `exclude`-i on käivituses 4 `compat` job'i ja märkmikus on ennustus tegeliku tulemuse kõrval
-- ebaõnnestunud job'i logist on veateate rida märkmikus
+- enne `exclude`-i on käivituses 4 `compat` job'i ja oled tulemust ennustusega võrrelnud
+- tead ebaõnnestunud job'i veateadet
 - pärast `exclude`-i ja `include`-i on 4 `compat` job'i ja kõik on rohelised
 
 ??? success "Lahendus"
@@ -412,7 +412,7 @@ gh run view <id> --json jobs --jq '.jobs[] | select(.name | startswith("compat")
 Image'i ja deploy job'i `if:`-tingimused loevad [kontekstide](https://docs.github.com/actions/reference/workflows-and-actions/contexts) väärtusi. Osa väärtusi tuleb PR-i autorilt ja jõuab sinu runner'il shelli.
 
 - lisa build job'ile kaks allolevat ajutist sammu ja käivita workflow nii push'il kui PR-il
-- kirjuta märkmikku mõlema sündmuse `ref` ja sammu „PR info“ olek
+- võrdle mõlema sündmuse `ref`-i ja sammu „PR info“ olekut
 - kirjuta ühe sammu `run:`-ploki sisse otse `${{ github.head_ref }}` ja käivita `actionlint`
 - eemalda ajutised sammud
 
@@ -439,9 +439,9 @@ gh run list -w ci -L 2 --json event,headBranch,url
 
 **Valmis, kui:**
 
-- märkmikus on push'i ja PR-i `ref` väärtus käivituste kokkuvõttest
-- märkmikus on sammu „PR info“ olek push'i korral
-- märkmikus on actionlint'i hoiatus otse kirjutatud `${{ github.head_ref }}` kohta ja lause, miks see on ohtlik
+- tead push'i ja PR-i `ref` väärtust käivituste kokkuvõttest
+- tead sammu „PR info“ olekut push'i korral
+- oled näinud actionlint'i hoiatust otse kirjutatud `${{ github.head_ref }}` kohta ja oskad öelda, miks see on ohtlik
 - `ci.yml`-is ajutisi samme pole
 
 ??? success "Lahendus"
@@ -528,7 +528,7 @@ GitHub asendab logis secret'i väärtuse tärnidega. Sa ei tea veel, millistel j
 
 - lisa repo tasemele võltssecret ja loo haru `lisa-mask` (esimene plokk allpool)
 - fail `.github/workflows/mask.yml` käivitub push'il harusse `lisa-mask`; selle ainsal sammul on `env: S: ${{ secrets.K05_MASK_TEST }}` ja kolm rida: `echo "$S"`, `echo "$S" | base64` ja `echo "${S:0:4}"`
-- tee push ja kirjuta märkmikku, mida iga rida logis näitas
+- tee push ja vaata, mida iga rida logis näitas
 - koristus: käivitused, secret ja haru kustutatakse (teine plokk)
 
 ```bash
@@ -552,7 +552,7 @@ git ls-remote origin lisa-mask
 
 **Valmis, kui:**
 
-- märkmikus on kolme rea logiväljund ja iga rea juures, kas maskeerimine toimis
+- tead iga kolme rea kohta, kas maskeerimine toimis
 - `gh secret list | grep -c K05_MASK_TEST` annab `0`
 - `git ls-remote origin lisa-mask` on tühi
 
@@ -792,7 +792,7 @@ find ~/actions-runner/_work -name 'vault_pass*'
 
     **Mehhanism ja tööriistad.** WAR tuleb sama käivituse artefaktist: `gh run download "$GITHUB_RUN_ID"` (job'il `actions: read`) või `actions/download-artifact` SHA-ga. Playbook on `site.yml --limit app01` koos `-e labseis_version=<sha7>`, `labseis_war_local` ja `labseis_git_sha`. Vaulti fail on `$RUNNER_TEMP`-is `umask 077`-ga ja `ANSIBLE_VAULT_PASSWORD_FILE` näitab sellele. Koristussamm on `if: always()`, mis käivitub ka tühistamisel.
 
-    **Otsus.** `deploy.yml` on mõeldud just deploy'ks (`serial`, kontroll web01 kaudu), aga see ei kirjuta env-faili uuesti, nii et `GIT_SHA` ja `/version` jäävad vanaks. `site.yml` kirjutab env-faili, aga käib läbi terve rolli. Vali ja põhjenda märkmikus.
+    **Otsus.** `deploy.yml` on mõeldud just deploy'ks (`serial`, kontroll web01 kaudu), aga see ei kirjuta env-faili uuesti, nii et `GIT_SHA` ja `/version` jäävad vanaks. `site.yml` kirjutab env-faili, aga käib läbi terve rolli. Vali ja põhjenda valikut PR-i kirjelduses.
 
     **Kontroll.** Kokkuvõttes on `/version` commit ja `deploy.fact` sisu. VM-il on WAR-id sha7 nimedega. Tühistatud käivituse logis on koristussamm roheline.
 
@@ -842,7 +842,7 @@ gh api 'repos/{owner}/{repo}/actions/runners' --jq '[.runners[] | select(.status
 
     **Kontroll.** Kahe deploy job'i `runner_name`, `/proc/<pid>/cmdline`, offline-runner'ite arv pärast `pkill -9`, `.runner` räsi.
 
-    **Tüüpilised lõksud.** `run.sh --jitconfig` püsiva runner'i kaustas kirjutab üle selle `.runner` ja `.credentials` faili ning `svc.sh start` ei too seda runner'it enam tagasi. Käsurea argument on `ps`-is kõigile kohalikele kasutajatele näha. Tapetud runner jätab registreeringu `offline`-olekusse. Koristus peab piirduma oma nimeprefiksiga ja käima enne uue konfiguratsiooni küsimist, muidu kustutad runner'i, mis alles käivitub. `gh auth login` vaikimisi keyring ei tööta systemd teenuses: kasuta fine-grained PAT-i ainult selle repo peale (*Administration: read and write*). Kirjuta märkmikku, miks see eraldus on laboris osaline: job töötab `docker` grupis.
+    **Tüüpilised lõksud.** `run.sh --jitconfig` püsiva runner'i kaustas kirjutab üle selle `.runner` ja `.credentials` faili ning `svc.sh start` ei too seda runner'it enam tagasi. Käsurea argument on `ps`-is kõigile kohalikele kasutajatele näha. Tapetud runner jätab registreeringu `offline`-olekusse. Koristus peab piirduma oma nimeprefiksiga ja käima enne uue konfiguratsiooni küsimist, muidu kustutad runner'i, mis alles käivitub. `gh auth login` vaikimisi keyring ei tööta systemd teenuses: kasuta fine-grained PAT-i ainult selle repo peale (*Administration: read and write*). Selgita, miks see eraldus on laboris osaline: job töötab `docker` grupis.
 
 ### 16. Andmebaasi parooli rotatsioon ilma katkestuseta
 
@@ -1065,7 +1065,6 @@ gh pr create --fill && sleep 60 && gh pr checks
     end
     """
 
-
     class FakeConnection:
         """Netmiko ühenduse võlts: send_command tagastab FRR-i väljundi kujul teksti."""
 
@@ -1090,7 +1089,6 @@ gh pr create --fill && sleep 60 && gh pr checks
                 return RUNNING.format(host=self.name)
             return f"{command} väljund {self.name}\n"
 
-
     INVENTORY = """
     defaults: {device_type: linux}
     commands: [show version, show interface brief, show running-config]
@@ -1101,18 +1099,15 @@ gh pr create --fill && sleep 60 && gh pr checks
 
     ENV = {"VORK_USER": "kasutaja", "VORK_KEY_FILE": "/dev/null"}
 
-
     @pytest.fixture
     def workdir(tmp_path):
         (tmp_path / "inventory.yaml").write_text(INVENTORY)
         (tmp_path / "known_hosts").write_text("")
         return tmp_path
 
-
     def run(workdir, *extra, env=ENV):
         argv = ["--inventory", str(workdir / "inventory.yaml"), "--out", str(workdir / "out"), *extra]
         return vorgukogu.main(argv, env=env, connect=FakeConnection)
-
 
     def test_mask_keeps_command_hides_value():
         text = " key-string TegelikSaladus123\n password abc\n neighbor 10.0.0.1 password x y\n"
@@ -1122,27 +1117,22 @@ gh pr create --fill && sleep 60 && gh pr checks
         assert " password ***" in masked
         assert " neighbor 10.0.0.1 password ***" in masked
 
-
     def test_mask_leaves_other_lines():
         text = "hostname rtr01\nip route 10.0.0.0/8 blackhole\n"
         assert vorgukogu.mask_secrets(text) == text
-
 
     def test_command_for_frr_and_cisco():
         assert vorgukogu.command_for("linux", "show version") == "vtysh -c 'show version'"
         assert vorgukogu.command_for("cisco_ios", "show version") == "show version"
 
-
     def test_filename_for():
         assert vorgukogu.filename_for("show running-config") == "show-running-config.txt"
         assert vorgukogu.filename_for("show interface brief") == "show-interface-brief.txt"
-
 
     def test_strip_header():
         out = vorgukogu.strip_header(RUNNING.format(host="rtr01"))
         assert out.startswith("frr version")
         assert "Building configuration" not in out
-
 
     @pytest.mark.parametrize(
         "text",
@@ -1152,19 +1142,16 @@ gh pr create --fill && sleep 60 && gh pr checks
         with pytest.raises(ValueError):
             vorgukogu.check_running_config(text, "rtr01")
 
-
     def test_credentials_from_env_only():
         with pytest.raises(vorgukogu.ConfigError):
             vorgukogu.credentials({})
         creds = vorgukogu.credentials({"VORK_USER": "kasutaja", "VORK_PASSWORD": "x"})
         assert creds == {"username": "kasutaja", "password": "x"}
 
-
     def test_connect_params_strict_host_keys(tmp_path):
         p = vorgukogu.connect_params({"name": "r", "host": "h"}, {"username": "u"}, tmp_path / "kh")
         assert p["ssh_strict"] is True
         assert p["alt_key_file"].endswith("kh")
-
 
     def test_collects_all_devices(workdir):
         assert run(workdir) == 0
@@ -1182,7 +1169,6 @@ gh pr create --fill && sleep 60 && gh pr checks
         assert conf.startswith("frr version") and conf.rstrip().endswith("end")
         assert "vtysh -c 'show running-config'" in FakeConnection.calls
 
-
     def test_unreachable_device_exit_2_others_collected(workdir, capsys):
         inv = workdir / "inventory.yaml"
         inv.write_text(INVENTORY + "  - {name: rtr09, host: 10.0.0.99}\n")
@@ -1191,14 +1177,12 @@ gh pr create --fill && sleep 60 && gh pr checks
         assert not (workdir / "out/rtr09").exists()
         assert "FAIL rtr09" in capsys.readouterr().err
 
-
     def test_bad_output_keeps_old_file(workdir, monkeypatch):
         assert run(workdir) == 0
         old = (workdir / "out/rtr01/show-running-config.txt").read_text()
         monkeypatch.setattr(FakeConnection, "send_command", lambda self, c, read_timeout=None: "")
         assert run(workdir, "--only", "rtr01") == 2
         assert (workdir / "out/rtr01/show-running-config.txt").read_text() == old
-
 
     def test_config_error_exit_1(workdir):
         assert run(workdir, env={}) == 1
@@ -1248,7 +1232,6 @@ gh pr create --fill && sleep 60 && gh pr checks
     end
     """
 
-
     def test_render_contains_intent():
         conf = render.render(RTR01, "s3cret")
         assert "hostname rtr01\n" in conf
@@ -1256,18 +1239,15 @@ gh pr create --fill && sleep 60 && gh pr checks
         assert "interface lo\n ip address 10.255.255.1/32\nexit\n" in conf
         assert "  key-string s3cret\n" in conf
 
-
     def test_render_both_routers_differ_only_where_intent_differs():
         a = render.render(RTR01, "x").splitlines()
         b = render.render(render.load_intent(ROOT / "intent/rtr02.yaml"), "x").splitlines()
         assert len(a) == len(b)
         assert sum(1 for x, y in zip(a, b, strict=True) if x != y) == 3  # hostname, marsruut, lo
 
-
     def test_render_missing_variable_is_error():
         with pytest.raises(Exception, match="hostname"):
             render.render({"interfaces": []}, "x")
-
 
     def test_bad_address_rejected(tmp_path):
         f = tmp_path / "r.yaml"
@@ -1280,10 +1260,8 @@ gh pr create --fill && sleep 60 && gh pr checks
         with pytest.raises(ValueError):
             render.load_intent(f)
 
-
     def test_no_diff_when_router_matches_intent():
         assert render.config_diff(RUNNING_SAME, render.render(RTR01, "teine-saladus"), "rtr01") == []
-
 
     def test_diff_shows_only_new_route_and_no_secret():
         intent = {
@@ -1295,7 +1273,6 @@ gh pr create --fill && sleep 60 && gh pr checks
         assert changes == ["+ip route 10.255.98.0/24 blackhole"]
         assert not any("TegelikSaladus123" in line for line in diff)
 
-
     def test_render_only_writes_masked_build(tmp_path, monkeypatch):
         monkeypatch.chdir(ROOT)
         out = tmp_path / "build"
@@ -1304,13 +1281,11 @@ gh pr create --fill && sleep 60 && gh pr checks
         text = (out / "rtr01/frr.conf").read_text()
         assert "s3cret" not in text and f"key-string {vorgukogu.MASK}" in text
 
-
     def test_apply_requires_diff_and_secret(monkeypatch):
         monkeypatch.chdir(ROOT)
         with pytest.raises(SystemExit):
             render.main(["--apply"], env={})
         assert render.main(["--diff", "--apply"], env={"VORK_USER": "u", "VORK_PASSWORD": "p"}) == 1
-
 
     class FakeRouter:
         """Võlts-ruuter: hoiab jooksvat konfi ja 'rakendab' faili, mis base64-tükkidena saadeti."""
@@ -1337,7 +1312,6 @@ gh pr create --fill && sleep 60 && gh pr checks
             if "frr-reload.py --reload" in command:
                 FakeRouter.state = base64.b64decode(self.b64).decode() + "end\n"
             return "VORK_42" if "VORK_" in command else ""
-
 
     def test_diff_apply_flow(monkeypatch, tmp_path):
         monkeypatch.chdir(ROOT)

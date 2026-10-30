@@ -31,7 +31,7 @@ Jenkinsi kogu olek on kaustas `JENKINS_HOME`, mis läheb volume'isse. JVM loeb `
 
 `ls` väljund on Jenkinsi andmemudel failidena: `config.xml` on süsteemi seadistus, `jobs/` jobid koos ajalooga, `plugins/` pluginad, `users/` kasutajad ja `secrets/` krüptovõtmed. Varukoopia teed hiljem just sellest kaustast. Kõik on XML-failid, mida Jenkins loeb käivitusel mällu: failide käsitsi muutmine töötava Jenkinsi all jõustub alles pärast *Reload Configuration from Disk*'i või taaskäivitust.
 
-✅ **Edasi saad minna, kui** näed Jenkinsi avalehte ja vasakul **Manage Jenkins** kõigi jaotistega ning `ls` väljund on PR-i kirjelduses.
+**Edasi saad minna, kui** näed Jenkinsi avalehte ja vasakul **Manage Jenkins** kõigi jaotistega ning `ls` väljund on PR-i kirjelduses.
 
 ## Leia, kust tööriist tuleb
 
@@ -51,7 +51,7 @@ Ilma nimelise tööriistata sõltub build sellest, mis juhtub olema node'i `PATH
 
 Esimene build ebaõnnestus enne, kui ükski rida koodi kompileeriti: viga oli keskkonnas, mitte koodis. Teise buildi logi näitab tööriista teed `tools/hudson.tasks.Maven_MavenInstallation/maven3`, mis on node'i kohalik cache. Klassi agendil on sama kaust `/opt/jenkins/tools` all.
 
-✅ **Edasi saad minna, kui** esimene build oli FAILURE logireaga `Cannot run program "mvn"` ja teine SUCCESS, logis on `Unpacking ... to /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/maven3` ja `Downloading from kooli-nexus`.
+**Edasi saad minna, kui** esimene build oli FAILURE logireaga `Cannot run program "mvn"` ja teine SUCCESS, logis on `Unpacking ... to /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/maven3` ja `Downloading from kooli-nexus`.
 
 ## Vaata pluginate sõltuvusi
 
@@ -64,7 +64,7 @@ Sõltuvuste tõttu ei saa pluginat ohutult eemaldada ega uuendada üksi. Kui uue
 
 Lüliti on hall, sest `Git` ja mitu Pipeline'i pluginat vajavad `Git client`-i. Jenkins ei lase sul sõltuvust eemaldada ja see kaitseb jobe, mis muidu laadimisel ebaõnnestuksid. Sama sõltuvuste puu on põhjus, miks pluginat uuendatakse alles pärast varukoopiat.
 
-✅ **Edasi saad minna, kui** Build Timestamp on paigaldatud, `Git client`-i ei saa välja lülitada ja sõltuvuste teate ekraanipilt on PR-i kirjelduses.
+**Edasi saad minna, kui** Build Timestamp on paigaldatud, `Git client`-i ei saa välja lülitada ja sõltuvuste teate ekraanipilt on PR-i kirjelduses.
 
 ## Kirjuta pluginad faili
 
@@ -102,11 +102,11 @@ Ilma versioonideta nimekirjast paigaldab `jenkins-plugin-cli` iga plugina uusima
 
 `wc -l` näitab mitukümmend rida, kuigi valisid viisardis "soovitatud" ja ühe lisa. See on pluginate tegelik arv koos sõltuvustega. `--available-updates` nimekiri on sinu järgmise hoolduse töönimekiri ja turvateated ütlevad, mis tuleb uuendada esimesena.
 
-✅ **Edasi saad minna, kui** `plugins.txt`-is on kõik pluginad versioonidega, **Manage Jenkins** all on **Configuration as Code** ja PR-i kirjelduses on uuendatavate pluginate nimekiri.
+**Edasi saad minna, kui** `plugins.txt`-is on kõik pluginad versioonidega, **Manage Jenkins** all on **Configuration as Code** ja PR-i kirjelduses on uuendatavate pluginate nimekiri.
 
 ## Loe klassi Jenkinsi seadistust
 
-Enne oma JCasC faili kirjutamist loed klassi Jenkinsi oma. Klassi Jenkins ei näita viisardit: seadistus tuleb failist, mille tee annab keskkonnamuutuja `CASC_JENKINS_CONFIG`. Loetav koopia on sinu repos `k06-jenkins/klass-jenkins.yaml`.
+Enne oma JCasC faili kirjutamist loed klassi Jenkinsi oma. Klassi Jenkins ei näita viisardit: seadistus tuleb failist, mille tee annab keskkonnamuutuja `CASC_JENKINS_CONFIG`. Loetav koopia on sinu repositooriumis `k06-jenkins/klass-jenkins.yaml`.
 
 Konfiguratsioonifail on ka turvadokument: sellest näed, kes mida tohib, ja õiguste muudatus on diff, mida saab auditis näidata.
 
@@ -125,7 +125,7 @@ Konfiguratsioonifail on ka turvadokument: sellest näed, kes mida tohib, ja õig
 
 Sinu Jenkinsfile kasutab nimesid, mille administraator on failis kokku leppinud. Saladus on failis ainult viitena `${...}`, nii et faili võib Gitis hoida. Asjad, mida fail ei loo, tulevad skriptist: JCasC kirjeldab süsteemi, mitte iga jobi.
 
-✅ **Edasi saad minna, kui** PR-i kirjelduses on viis vastust, igaühe juures faili rea number.
+**Edasi saad minna, kui** PR-i kirjelduses on viis vastust, igaühe juures faili rea number.
 
 ## Muuda sandboxi seadet koodiga
 
@@ -149,13 +149,13 @@ Kirjuta `k06-jenkins/casc/jenkins.yaml`. Nõuded:
 
 2. **Manage Jenkins → Configuration as Code → Reload existing configuration**.
 3. Vaata, mis jõudis `config.xml`-i: `docker exec jenkins-liivakast grep -E 'systemMessage|numExecutors' /var/jenkins_home/config.xml`
-4. Muuda **Manage Jenkins → System** all *System Message* käsitsi ja salvesta. Tee uuesti **Reload existing configuration** ja vaata avalehte.
+4. **Ennusta:** mis saab käsitsi muudetud süsteemiteatest pärast JCasC reload'i? Muuda **Manage Jenkins → System** all *System Message* käsitsi ja salvesta. Tee uuesti **Reload existing configuration** ja vaata avalehte.
 
 > Kui reload annab vea `unknown attribute` või `No configurator for`, on võti valel tasemel või vastav plugin puudub. Võrdle View Configuration väljundiga.
 
 YAML-ist sai `config.xml`: JCasC kirjutab Jenkinsi oma failidesse. Käsitsi muudetud teade kadus reload'iga, sest fail on tõe allikas (source of truth) ja veebiliides ainult vaade. Tootmises tähendab see, et parandus "kiiresti veebis" kaob järgmisel taaskäivitusel, kui keegi seda faili ei kanna.
 
-✅ **Edasi saad minna, kui** avalehel on sinu süsteemiteade, `config.xml` näitab `numExecutors` väärtust 1, käsitsi muudetud teade kadus pärast reload'i ja PR-i kirjelduses on lause selle kohta, mis juhtub käsitsi muudatusega koodist seadistatud Jenkinsis.
+**Edasi saad minna, kui** avalehel on sinu süsteemiteade, `config.xml` näitab `numExecutors` väärtust 1, käsitsi muudetud teade kadus pärast reload'i ja PR-i kirjelduses on lause selle kohta, mis juhtub käsitsi muudatusega koodist seadistatud Jenkinsis.
 
 ## Tekita vigane seadistus ja leia see logist
 
@@ -194,9 +194,9 @@ Kõige ohtlikum hetk on taaskäivitus öösel pärast uuendust: Jenkins ei tõus
 
 Reload keeldus vigast faili laadimast ja töötav seadistus jäi alles: see on turvaline rike. Taaskäivitusel pole vana seadistust, millele toetuda, ja Jenkins ei käivitu lõpuni või näitab vealehte. Logi nimetab vale võtme ja loetleb lubatud võtmed: see on kiireim tee parandusele. Järeldus adminile: JCasC faili muudatus vajab enne taaskäivitust reload-proovi või CI kontrolli.
 
-✅ **Edasi saad minna, kui** PR-i kirjelduses on reload'i veateade ja logirida, mis nimetab `numExecutor`, pärast õige faili tagasipanekut on avaleht ja süsteemiteade jälle olemas ning sandbox on peatatud.
+**Edasi saad minna, kui** PR-i kirjelduses on reload'i veateade ja logirida, mis nimetab `numExecutor`, pärast õige faili tagasipanekut on avaleht ja süsteemiteade jälle olemas ning sandbox on peatatud.
 
-📎 **Selle mooduli tõend:** commit `k06: liivakast koodina …` failidega `k06-jenkins/casc/plugins.txt` ja `k06-jenkins/casc/jenkins.yaml`; PR-i kirjelduses `ls /var/jenkins_home`, `Cannot run program "mvn"` ja kaks Maveni logirida, `Git client` sõltuvuste ekraanipilt, uuendatavate pluginate nimekiri, viis vastust `klass-jenkins.yaml` kohta, `grep config.xml` väljund, lause triivi kohta, vigase faili reload'i viga ja logirida.
+**Selle mooduli tõend:** commit `k06: liivakast koodina …` failidega `k06-jenkins/casc/plugins.txt` ja `k06-jenkins/casc/jenkins.yaml`; PR-i kirjelduses `ls /var/jenkins_home`, `Cannot run program "mvn"` ja kaks Maveni logirida, `Git client` sõltuvuste ekraanipilt, uuendatavate pluginate nimekiri, viis vastust `klass-jenkins.yaml` kohta, `grep config.xml` väljund, lause triivi kohta, vigase faili reload'i viga ja logirida.
 
 ## Miks see nii töötab
 

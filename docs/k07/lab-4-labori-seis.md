@@ -11,7 +11,7 @@ Kui stack viiakse klastrisse ühe suure `apply`-ga ja midagi ei tööta, ei tea 
 
 Töötad repos kaustas `k07-k8s/`. Vaja on faili `k03-docker/.env` (Compose'i paroolid) ja GitHub Actionsi ehitatud app01 image'it GHCR-is.
 
-**Kui teed seda tööl iga päev:** kirjutad Deployment'i probe'ide, PVC ja NetworkPolicy'ga ilma näiteta. Kui see on sul juba korras, ehita neli teenust etappide ✅ ridade järgi ilma selgitusi lugemata ja mine otse etappi „[Rolling update ja rollback](#rolling-update-ja-rollback)“.
+**Kui teed seda tööl iga päev:** kirjutad Deployment'i probe'ide, PVC ja NetworkPolicy'ga ilma näiteta. Kui see on sul juba korras, ehita neli teenust etappide ridade järgi ilma selgitusi lugemata ja mine otse etappi „[Rolling update ja rollback](#rolling-update-ja-rollback)“.
 
 Joonis näitab lõpptulemust. Loe seda väljast sisse: kasutaja päring tuleb Ingress'i kaudu app01 Service'ile, app01 räägib kolme taustateenusega nende Service'i nimede kaudu, db01 hoiab andmeid PVC-l. ConfigMap ja Secret on kõrval, sest need ei ole liikluse teel, vaid annavad pod'idele seadistuse.
 
@@ -47,7 +47,7 @@ Argo CD, kellele selle oleku haldamise hiljem üle annad, loob ainult seda, mis 
 
 Secret'i võtmete nimekiri ilma väärtusteta on hea tõend: näed, et kõik neli on olemas, aga ükski parool ei satu issue'sse. Root-parool on juhuslik ja kuskile kirja ei lähe, sest Labori seis seda ei vaja. Kui tahad seda kunagi teada, loed selle Secret'ist.
 
-✅ **Edasi saad minna, kui** Secret'is on neli võtit ning `05-db-init.yaml` on ConfigMap `labori-seis-db` võtmetega `01-schema.sql` ja `02-seed.sql`.
+**Edasi saad minna, kui** Secret'is on neli võtit ning `05-db-init.yaml` on ConfigMap `labori-seis-db` võtmetega `01-schema.sql` ja `02-seed.sql`.
 
 ## db01
 
@@ -75,13 +75,15 @@ local-path loob kausta alles siis, kui teab, millisele node'ile pod läks (WaitF
 
 Read `lab-01` … `lab-07` tõestavad kolme asja: init ConfigMap jõudis pod'i, MariaDB käivitas skriptid esimesel käivitusel ja kasutaja `labseis` sai parooli Secret'ist. Kui ridu poleks, aga ühendus töötaks, oleks andmekaust juba varasemast katsest täis ja init jäeti vahele.
 
-✅ **Edasi saad minna, kui** PVC läks `Pending` → `Bound`, pod on `Running 1/1` ja päring näitab ridu `lab-01` … `lab-07`.
+**Edasi saad minna, kui** PVC läks `Pending` → `Bound`, pod on `Running 1/1` ja päring näitab ridu `lab-01` … `lab-07`.
 
 ## Andmed püsivad üle pod'i
 
 Kontrollid, et andmed on PVC-l, mitte konteineris. Lisad tabelisse ühe rea, kustutad db01 pod'i ja vaatad, kas rida on uues pod'is alles.
 
 Kui `mountPath` ei ole MariaDB andmekataloog `/var/lib/mysql`, kirjutab server konteineri kirjutatavasse kihti. Kõik töötab kuni esimese pod'i vahetuseni ja siis on andmebaas tühi. Seda on parem näha praegu kui pärast esimest node'i hooldust.
+
+**Ennusta:** kas lisatud rida on alles, kui db01 pod asendatakse uuega?
 
 1. Lisa rida ja kustuta pod:
 
@@ -101,7 +103,7 @@ Kui `mountPath` ei ole MariaDB andmekataloog `/var/lib/mysql`, kirjutab server k
 
 Uus pod luges sama kausta ja rida `lab-99` oli alles. PV veerg NODE näitab node'i, millega local-path ketta sidus: db01 saab käivituda ainult seal. Kui see node kaob, jääb db01 `Pending`-uks, sest teist koopiat andmetest pole. Pilves lahendab selle võrguketas, mis liigub node'ide vahel.
 
-✅ **Edasi saad minna, kui** rida `lab-99` oli pärast pod'i vahetust alles, see on nüüd kustutatud ja tead, millise node'iga sinu PV on seotud.
+**Edasi saad minna, kui** rida `lab-99` oli pärast pod'i vahetust alles, see on nüüd kustutatud ja tead, millise node'iga sinu PV on seotud.
 
 ## mc01 ja rmq01
 
@@ -132,7 +134,7 @@ Ilma readiness probe'ita loetakse pod Ready'ks kohe, kui konteiner käivitus, ja
 
 Endpoints'is on kummalgi üks IP õige pordiga. See tähendab, et pod on Ready ja Service'i `targetPort` leidis nimega pordi. `nc` vastus `open` tuleb teisest pod'ist, nii et ka DNS ja klastri võrk töötavad. `list_users` näitab kasutajat `labseis`, mille RabbitMQ lõi esimesel käivitusel. Kui seal oleks ainult `guest`, puudub failis `RABBITMQ_DEFAULT_USER` ja app01 ei saaks järjekorraga ühendust.
 
-✅ **Edasi saad minna, kui** mõlemad pod'id on 1/1, Endpoints näitab kummalgi üht IP-d pordiga 11211 / 5672, `nc -zv rmq01 5672` annab `open` ja `list_users` näitab `labseis`.
+**Edasi saad minna, kui** mõlemad pod'id on 1/1, Endpoints näitab kummalgi üht IP-d pordiga 11211 / 5672, `nc -zv rmq01 5672` annab `open` ja `list_users` näitab `labseis`.
 
 ## app01
 
@@ -166,7 +168,7 @@ Kolm probe'i vastavad kolmele eri küsimusele. Kui need segi ajada, taaskäivita
 
 `wait-deps` logi näitab, mida pod ootas ja millal oote lõppes. `/health` vastus, kus kõik neli on `UP`, tõestab, et app01 jõudis kõigi kolme teenuseni nende nimede kaudu ja paroolid klapivad. `/version` SHA seob töötava pod'i kindla commit'iga. Seda seost kasutad, kui CI hakkab tag'i Argo CD jaoks ise kirjutama.
 
-✅ **Edasi saad minna, kui** `rollout status` lõpeb reaga `successfully rolled out`, `wait-deps` logis on `db01:3306 vastab` ja `rmq01:5672 vastab`, `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja `/version` näitab sinu commit'i SHA-d.
+**Edasi saad minna, kui** `rollout status` lõpeb reaga `successfully rolled out`, `wait-deps` logis on `db01:3306 vastab` ja `rmq01:5672 vastab`, `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja `/version` näitab sinu commit'i SHA-d.
 
 ## Ingress
 
@@ -204,13 +206,15 @@ Ingress on koht, kus mitu rakendust jagavad üht IP-d ja porti. Kui kaks õppija
 
 Õige hostiga tuli `UP`, vale hostiga ja ilma hostita `404`. See tähendab, et Traefik töötab ja sinu reegel on ainus, mis sinu hostile vastab. Rikkeotsingul aitab see vahe: `404` on Ingress'i probleem, `503` Service'i või pod'i oma.
 
-✅ **Edasi saad minna, kui** Ingress'i ADDRESS veerus on node'ide IP-d, curl annab `UP`, vale hostiga tuleb `404` ja brauseris avaneb `http://labori-seis-<github>.lab.hkhk.ee/` Labori seisu leht.
+**Edasi saad minna, kui** Ingress'i ADDRESS veerus on node'ide IP-d, curl annab `UP`, vale hostiga tuleb `404` ja brauseris avaneb `http://labori-seis-<github>.lab.hkhk.ee/` Labori seisu leht.
 
 ## Andmebaas kaob
 
 Peatad db01 ja vaatad, kuidas app01 käitub. Readiness `/health` eemaldab töötava pod'i liiklusest, liveness `/health/live` ei sõltu andmebaasist. Uus pod ei jõua init-konteinerist kaugemale.
 
 Kui liveness sõltuks andmebaasist, taaskäivitaks kubelet vaikeväärtustega (`periodSeconds: 10`, `failureThreshold: 3`) iga app01 konteineri umbes 30 sekundiga ja CrashLoopBackOff'i ooteaeg kasvaks 10 sekundist 5 minutini. Andmebaasi naastes ootaksid pod'id veel backoff'i lõppu ja kõik JVM-id käivituksid korraga.
+
+**Ennusta:** kas app01 pod taaskäivitub või jääb ellu, ja mida saab kasutaja?
 
 1. Peata db01 ja vaata, mis juhtub app01-ga:
 
@@ -238,7 +242,7 @@ Kui liveness sõltuks andmebaasist, taaskäivitaks kubelet vaikeväärtustega (`
 
 Töötav app01 läks `0/1`, aga RESTARTS ei kasvanud: readiness võttis ta liiklusest välja, liveness jättis ta ellu. Endpoints jäi tühjaks ja Traefik vastas `503`. `nslookup db01` andis ClusterIP ka ajal, kui db01-l polnud ühtegi pod'i. Seepärast ei saa init-konteiner oodata nime, vaid peab ootama avatud porti.
 
-✅ **Edasi saad minna, kui** db01 puudumisel oli app01 `0/1` ilma restartideta, Endpoints tühi ja curl `503`, `nslookup db01` andis ClusterIP, uus pod kordas `ootan db01:3306` ja pärast db01 tagasitulekut on app01 1/1.
+**Edasi saad minna, kui** db01 puudumisel oli app01 `0/1` ilma restartideta, Endpoints tühi ja curl `503`, `nslookup db01` andis ClusterIP, uus pod kordas `ootan db01:3306` ja pärast db01 tagasitulekut on app01 1/1.
 
 ## Ainult app01 tohib andmebaasi
 
@@ -257,7 +261,7 @@ Klastri võrk on vaikimisi lame: iga pod jõuab iga pod'ini, ka teisest namespac
     - `policyTypes: [Ingress]`
     - lubatud ainult pod'id label'iga `app: app01`, port 3306/TCP
     - `namespace:` rida puudub
-3. Tee `kubectl apply` ja proovi uuesti ajutisest pod'ist ning app01 seest:
+3. **Ennusta:** kumb jõuab pärast poliitikat andmebaasini, ajutine pod või app01? Tee `kubectl apply` ja proovi mõlemast:
 
     ```bash
     kubectl apply -f k07-k8s/15-db-netpol.yaml
@@ -276,7 +280,7 @@ Klastri võrk on vaikimisi lame: iga pod jõuab iga pod'ini, ka teisest namespac
 
 Ajutine pod sai `timed out`, mitte `connection refused`: poliitika hülgab paketi vaikselt. app01 sai ühenduse ja `/health` jäi `UP`-iks. Pod label'iga `app=app01` sai samuti `open`. See tähendab, et iga kasutaja, kes tohib sinu namespace'is pod'e luua, saab poliitikast mööda. Label on piir ainult koos õigustega, kes pod'e luua tohib.
 
-✅ **Edasi saad minna, kui** ajutine pod saab pärast poliitikat `timed out`, app01 seest tuleb `avatud`, `/health` näitab `"db":"UP"` ja issue'sse on kirjas, mida näitas `nc2` katse.
+**Edasi saad minna, kui** ajutine pod saab pärast poliitikat `timed out`, app01 seest tuleb `avatud`, `/health` näitab `"db":"UP"` ja issue'sse on kirjas, mida näitas `nc2` katse.
 
 ## Rolling update ja rollback
 
@@ -299,7 +303,7 @@ Joonis näitab kahte ReplicaSet'i ajas. Uus kasvab ühe pod'i kaupa, vana kahane
     while sleep 1; do echo "$(date +%T) $(curl -s -o /dev/null -m 3 -w '%{http_code}' -H "$H" http://k3s.lab.hkhk.ee/health)"; done | tee ~/k07-katse/rolling.log
     ```
 
-3. Tee `kubectl apply` ja jälgi kolmandas aknas ReplicaSet'e:
+3. **Ennusta:** kas kasutaja logisse tuleb uuenduse ajal vigu? Tee `kubectl apply` ja jälgi kolmandas aknas ReplicaSet'e:
 
     ```bash
     kubectl apply -f k07-k8s/40-app.yaml
@@ -331,7 +335,7 @@ Joonis näitab kahte ReplicaSet'i ajas. Uus kasvab ühe pod'i kaupa, vana kahane
 
 `rollout history` revisjonide numbrid ainult kasvavad. Pärast `undo`-d ei läinud number tagasi, vaid tekkis uus, mille template on sama mis vanal. `kubectl diff` näitas, et klaster ja fail lahknesid kohe pärast `undo`-d. Kui keegi teine oleks samal ajal faili `apply`-ga saatnud, oleks sinu rollback kadunud ilma, et keegi märkaks.
 
-✅ **Edasi saad minna, kui** uus ReplicaSet kasvas 0 → 2 ja vana kahanes 2 → 0, `grep -vc ' 200$' ~/k07-katse/rolling.log` annab 0 (või issue's on põhjus ja parandus), `rollout history` näitab vähemalt kolme revisjoni koos CHANGE-CAUSE'iga ja pärast `undo`-d tekkis uus revisjoni number.
+**Edasi saad minna, kui** uus ReplicaSet kasvas 0 → 2 ja vana kahanes 2 → 0, `grep -vc ' 200$' ~/k07-katse/rolling.log` annab 0 (või issue's on põhjus ja parandus), `rollout history` näitab vähemalt kolme revisjoni koos CHANGE-CAUSE'iga ja pärast `undo`-d tekkis uus revisjoni number.
 
 ## Commit
 
@@ -347,9 +351,9 @@ git add k07-k8s && git commit -m "K7.4 Labori seis klastris (closes #<nr>)" && g
 
 Neli `OK`-d tähendavad, et failid on olemas, skeemi järgi korrektsed, igal Deployment'il on probe ja ressursid ning saladusi ega namespace'i ridu pole. Tühi `grep` kinnitab sama käsitsi.
 
-✅ **Edasi saad minna, kui** kõik neli testi annavad `OK`, `grep` on tühi ja haru on GitHubis.
+**Edasi saad minna, kui** kõik neli testi annavad `OK`, `grep` on tühi ja haru on GitHubis.
 
-📎 **Selle mooduli tõend:** issue `K7.4` kommentaaris Secret'i neli võtit, `lab-01` … `lab-07`, `lab-99` pärast pod'i vahetust, `/version`, `curl` + `kubectl get ingress`, üks lause "Compose vs klaster" andmebaasi kadumise kohta, `nc` enne ja pärast NetworkPolicy't koos `nc2` katsega, `rollout history` ning `grep -vc ' 200$' ~/k07-katse/rolling.log` tulemus.
+**Selle osa tõend:** issue `K7.4` kommentaaris Secret'i neli võtit, `lab-01` … `lab-07`, `lab-99` pärast pod'i vahetust, `/version`, `curl` + `kubectl get ingress`, üks lause "Compose vs klaster" andmebaasi kadumise kohta, `nc` enne ja pärast NetworkPolicy't koos `nc2` katsega, `rollout history` ning `grep -vc ' 200$' ~/k07-katse/rolling.log` tulemus.
 
 ## Miks see nii töötab
 

@@ -6,13 +6,13 @@ tags:
 
 # 8. Esitamine
 
-Väljalase, mille sisu keegi enne ei vaadanud, toob kaasa unustatud faile, saladusi repos ja tag'i, mis ei viita sellele, mida testiti. Töö jõuab `main`-i, tag `k06` käivitab automaatse hindaja ja tulemus on GitHubi Releases all. Enne seda käivitad samad kontrollid ise ja vaatad, et ükski saladus ega varukoopia pole Gitis. Järjekord on sama nagu igas väljalaskes: kontrolli ise, vaata, mis täpselt välja läheb, ühenda põhiharuga ja märgi see versioon tag'iga, millele saab hiljem viidata.
+Väljalase, mille sisu keegi enne ei vaadanud, toob kaasa unustatud faile, saladusi repositooriumis ja tag'i, mis ei viita sellele, mida testiti. Töö jõuab `main`-i, tag `k06` käivitab automaatse hindaja ja tulemus on GitHubi Releases all. Enne seda käivitad samad kontrollid ise ja vaatad, et ükski saladus ega varukoopia pole Gitis. Järjekord on sama nagu igas väljalaskes: kontrolli ise, vaata, mis täpselt välja läheb, ühenda põhiharuga ja märgi see versioon tag'iga, millele saab hiljem viidata.
 
 **Kui teed seda tööl iga päev:** `gh pr create`, merge ja tag'i push on sul igapäevane töö. Kui see on sul juba korras, mine otse etappi [„Enne esitamist“](#enne-esitamist).
 
 ## Vaata, mida automaatne hindaja näeb
 
-Automaatne hindaja ei näe sinu masinat, Jenkinsit ega Nexust. See näeb ainult seda, mis on Gitis commit'itud. Enne kontrollide käivitamist veendud, et kohalik kaust ja repo on samad.
+Automaatne hindaja ei näe sinu masinat, Jenkinsit ega Nexust. See näeb ainult seda, mis on Gitis commit'itud. Enne kontrollide käivitamist veendud, et kohalik kaust ja repositoorium on samad.
 
 Fail, mis on kettal, aga mitte Gitis, annab kohalikult `OK` ja automaatses hindajas `FAIL`. Vastupidi juhtub siis, kui fail on Gitis vana kujuga ja parandus on ainult töökaustas.
 
@@ -28,47 +28,30 @@ Fail, mis on kettal, aga mitte Gitis, annab kohalikult `OK` ja automaatses hinda
 
 Tühi `diff` ja tühi `git status` tähendavad, et automaatne hindaja näeb täpselt sama, mida sina. Kui `diff` näitab näiteks `k06-jenkins/casc/plugins.txt` ainult paremal pool, siis see fail on olemas, aga commit'imata, ja sandbox-Jenkinsi pluginate nimekiri jääks hindamisel nägemata.
 
-✅ **Edasi saad minna, kui** `diff` ja `git status --short k06-jenkins` on mõlemad tühjad.
+**Edasi saad minna, kui** `diff` ja `git status --short k06-jenkins` on mõlemad tühjad.
 
 ## Enne esitamist
 
-Nüüd käivitad kõik kontrollid viimase commit'i peal ja vaatad üle failide sisu. Pipeline'i tulemust (roheline build, quality gate, WAR Nexuses) automaatne hindaja VPN-i tõttu ei näe, selle kontrollib koolitaja klastris ja PR-i tõenditest.
+Automaatne hindaja kontrollib tag'i peal failid, Jenkinsfile'i etapid ja saladused ise. Pipeline'i tulemust (roheline build, quality gate, WAR Nexuses) ta VPN-i tõttu ei näe, seepärast tõestad selle enne esitamist viimase commit'i peal.
 
-1. Võrdle Jenkinsfile'i etappide järjekorda: Build → Test → Checkstyle → SonarQube → Quality Gate → Avaldamine (Nexus ‖ Docker image) → Deploy. Failis on ainult credential ID-d, mitte saladused.
-2. Käivita automaatse hindaja kontrollid viimase commit'i peal. Täpne nimekiri on failis `autograde/TESTS.md`.
+**Ennusta:** kas teine järjestikune build õnnestub, kui versioon arvutatakse buildi numbrist ja commit'ist?
 
-    ```bash
-    for t in files agent stages triggers quality nexus secrets docker; do
-        bash autograde/check.sh k06 "$t"
-    done
-    ```
+Vajuta **Build Now** ja kinnita deploy. Kui build on roheline, käivita veel üks build. Teine build peab samuti olema roheline: sellel on uus versioon ja Nexus ei vasta `400`.
 
-3. Kontrolli failide sisu.
+Etappide järjekord Jenkinsfile'is on Build → Test → Checkstyle → SonarQube → Quality Gate → Avaldamine (Nexus ‖ Docker image) → Deploy ja failis on ainult credential'ite ID-d, mitte saladused.
 
-    ```bash
-    grep -c "stage('" k06-jenkins/Jenkinsfile
-    grep -c mvn k06-jenkins/Dockerfile
-    git ls-files | grep -E '\.tgz$|\.key$|initialAdminPassword|\.env$'
-    python3 -c 'import yaml; yaml.safe_load(open("k06-jenkins/casc/jenkins.yaml"))' && echo yaml ok
-    ```
-
-4. Kontrolli image'eid ja töökausta: `docker image ls labori-seis` ja `git status`.
-5. Vajuta **Build Now** ja kinnita deploy. Teine järjestikune build peab samuti olema roheline: uus versioon, Nexus ei anna 400.
-
-Üheksa tuleb nii: seitse järjestikust etappi koos `Avaldamine`-ga ja selle kaks paralleelset haru. Tühi `git ls-files | grep` tõestab, et varukoopia ja võtmed jäid repost välja. Teine roheline build järjest kinnitab, et versioonimine ei sõltu juhusest.
-
-✅ **Edasi saad minna, kui** kõik kaheksa kontrolli annavad `OK`, etappe on `9`, Dockerfile'is `0` korda `mvn`, `git ls-files | grep` on tühi, agendil on kuni 3 `labori-seis` image'it ja uusim on sama mis Nexuses ning `git status` on puhas.
+**Edasi saad minna, kui** kaks järjestikust buildi on rohelised, agendil on kuni 3 `labori-seis` image'it ja uusim on sama mis Nexuses ning `git status` on puhas.
 
 ## Vii see oma töökohale
 
-Kirjuta faili `k06-jenkins/NOTES.md` 3–5 lauset vastuseks küsimusele: kus sinu töökohal käib build, kvaliteedikontroll, artefakti avaldamine või CI-serveri haldus täna käsitsi ja mis oleks esimene samm seda automatiseerida? Nimeta konkreetne süsteem ja samm, mitte üldine soov. Näiteks: "WAR-i kopeerib Tomcatisse `scp`-ga see, kes parasjagu valves on; esimene samm on Nexuse hosted repo ja versioon kujul `<pom>-<build>-<sha>`".
+Kirjuta faili `k06-jenkins/NOTES.md` 3–5 lauset vastuseks küsimusele: kus sinu töökohal käib build, kvaliteedikontroll, artefakti avaldamine või CI-serveri haldus täna käsitsi ja mis oleks esimene samm seda automatiseerida? Nimeta konkreetne süsteem ja samm, mitte üldine soov. Näiteks: "WAR-i kopeerib Tomcatisse `scp`-ga see, kes parasjagu valves on; esimene samm on Nexuse hosted repositoorium ja versioon kujul `<pom>-<build>-<sha>`".
 
 ```bash
 wc -w k06-jenkins/NOTES.md
 git add k06-jenkins/NOTES.md && git commit -m "k06: ülekanne töökohale" && git push
 ```
 
-✅ **Edasi saad minna, kui** `k06-jenkins/NOTES.md`-s on 3–5 lauset, neis on üks sinu töökoha süsteem ja üks konkreetne esimene samm ning fail on commit'itud.
+**Edasi saad minna, kui** `k06-jenkins/NOTES.md`-s on 3–5 lauset, neis on üks sinu töökoha süsteem ja üks konkreetne esimene samm ning fail on commit'itud.
 
 ## PR, merge ja tag
 
@@ -82,21 +65,21 @@ git switch main && git pull
 git tag k06 && git push origin k06
 ```
 
-`~/pr-k06.md` on sinu PR-i kirjeldus moodulite tõenditega (vastused, logiread, `du` ja `sha1sum` väljund, sandboxi read, intsidendi tabel). See on repost väljas, ekraanipildid lisad PR-i GitHubis.
+`~/pr-k06.md` on sinu PR-i kirjeldus moodulite tõenditega (vastused, logiread, `du` ja `sha1sum` väljund, sandboxi read, intsidendi tabel). See on repositooriumist väljas, ekraanipildid lisad PR-i GitHubis.
 
 > Job ehitab ainult haru `k06-jenkins`. Kui tahad pärast merge'i ehitada ka `main`-i, muuda jobi *Branch Specifier*: sul on folderis Job/Configure õigus ja `when` tingimused lasevad `main`-il avaldada.
 
 Automaatne hindaja käivitub tag'i push'i peale, nii et ainult kohalik tag ei käivita midagi.
 
-✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k06`.
+**Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k06`.
 
 ## Automaatse hindaja tulemus
 
-Tag `k06` käivitab GitHubis automaatse hindaja. Tulemus on paari minuti pärast: repo → **Releases** → viimane `submit/…`, iga mitteläbinud kontrolli juures on põhjus. Kontrollitakse, kas failid on olemas, kas Jenkinsfile'is on õiged etapid ja quality gate, kas Nexus ja triggerid on seadistatud ja kas saladused on Gitist väljas.
+Tag `k06` käivitab GitHubis automaatse hindaja. Tulemus ilmub paari minuti pärast Classroom 50-s. Üksikasjad on repositooriumi lehel **Releases** → viimane `submit/…`: iga mitteläbinud kontrolli juures on põhjus. Kontrollitakse, kas failid on olemas, kas Jenkinsfile'is on õiged etapid ja quality gate, kas Nexus ja triggerid on seadistatud ja kas saladused on Gitist väljas.
 
 Kui tulemus erineb sinu kohalikust kontrollist, on põhjus peaaegu alati see, et tag viitab teisele commit'ile kui sinu töökaust. Vaata `git log --oneline -1 k06` ja võrdle `main`-iga.
 
-✅ **Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
+**Edasi saad minna, kui** Classroom 50 näitab tulemust 100 lähedal.
 
 ## Tõendid moodulite kaupa
 
@@ -111,9 +94,9 @@ Märgi iga rida alles siis, kui tõend on PR-i kirjelduses, mitte siis, kui tö�
 - [ ] 7. Neli punast buildi: `fix(...)` commit'id, logiread, agendi restart'i kontroll, kaks Nexuse versiooni, intsidendi tabel
 - [ ] 8. Esitamine: tühi `diff`, `NOTES.md` ülekande lausetega, tag `k06`, Releases tulemus
 
-✅ **Edasi saad minna, kui** kõik linnukesed on tehtud ja PR-i kirjelduses on iga mooduli tõend.
+**Edasi saad minna, kui** kõik linnukesed on tehtud ja PR-i kirjelduses on iga mooduli tõend.
 
-📎 **Selle mooduli tõend:** commit `k06: ülekanne töökohale`, tag `k06` `main`-i peal, PR tõenditega ja automaatse hindaja tulemus GitHubi Releases all.
+**Selle mooduli tõend:** commit `k06: ülekanne töökohale`, tag `k06` `main`-i peal, PR tõenditega ja automaatse hindaja tulemus GitHubi Releases all.
 
 ## Pärast esitamist: agent ja testkonteiner maha
 
@@ -127,11 +110,11 @@ sudo systemctl disable --now jenkins-agent
 docker ps --format '{{.Names}}'
 ```
 
-✅ **Edasi saad minna, kui** `docker ps` on tühi ja `systemctl is-active jenkins-agent` vastab `inactive`.
+**Edasi saad minna, kui** `docker ps` on tühi ja `systemctl is-active jenkins-agent` vastab `inactive`.
 
 ## Miks see nii töötab
 
-**Automaatse hindaja piir.** Automaatne hindaja töötab GitHubis ja näeb ainult repot, sest Jenkins, Sonar ja Nexus on VPN-i taga. See piir on teadlik: automaatne hindaja kontrollib, kas fail on õige kujuga, koolitaja kontrollib PR-i tõendite põhjal, kas lahendus ka töötas.
+**Automaatse hindaja piir.** Automaatne hindaja töötab GitHubis ja näeb ainult repositooriumi, sest Jenkins, Sonar ja Nexus on VPN-i taga. See piir on teadlik: automaatne hindaja kontrollib, kas fail on õige kujuga, koolitaja kontrollib PR-i tõendite põhjal, kas lahendus ka töötas.
 
 **Staatiline ja käitumise kontroll.** Staatiline kontroll (lint, saladuste otsing) käivitatakse igal PR-il, käitumise kontroll (integratsioonitest, smoke test) eraldi keskkonnas.
 

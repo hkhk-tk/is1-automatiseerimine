@@ -853,7 +853,7 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"        # 0
     - **Test.** `override_data` hosti malli data source'ile (sihtmärk on ressurss, mitte instants: ilma `["mc01"]`-ta) ja `assert`, et mc01 `template_id` on uue malli ID ja db01 oma pilvemalli ID.
     - **Lõks.** `template_names = { alma = … }` tundub lihtsam, aga asendaks db01 ja `apply` jääks pooleli: mc01 on asendatud, db01 juures Proxmox keeldub.
 
-    **Miks nii.** AlmaLinuxi mall erineb Ubuntu omast kolmes kohas: pilvemalli vaikekasutaja on `alma`, pakette haldab `dnf` ja rollis `common` on AlmaLinuxil tulemüür `firewalld` sees ning SELinux peab olema `Enforcing`. Ühe kausta kaks allikat ehitab Packer paralleelselt, `-only` ehitab ühe. AlmaLinuxi mallis on db01, millel on `protection`: kui paned `template_names`-isse `alma`, tahab plaan asendada ka db01 ja Proxmox keeldub poole `apply` pealt. Seepärast valitakse mall hosti, mitte distro kaupa.
+    **Miks nii.** AlmaLinuxi mall erineb Ubuntu omast kolmes kohas: pilvemalli vaikekasutaja on `almalinux`, pakette haldab `dnf` ja rollis `common` on AlmaLinuxil tulemüür `firewalld` sees ning SELinux peab olema `Enforcing`. Ühe kausta kaks allikat ehitab Packer paralleelselt, `-only` ehitab ühe. AlmaLinuxi mallis on db01, millel on `protection`: kui paned `template_names`-isse `alma`, tahab plaan asendada ka db01 ja Proxmox keeldub poole `apply` pealt. Seepärast valitakse mall hosti, mitte distro kaupa.
 
 ### 14. mc01 ja rmq01 LXC-na
 
@@ -897,7 +897,7 @@ tofu plan -detailed-exitcode > /dev/null; echo "kood $?"           # 0
 
 **Tase:** raske · **Eeldus:** [Intsident](lab-8-intsident.md) · **Esita:** `k04-tofu/rebuild.sh`
 
-`up.sh` tõstab kogu stacki, aga intsidendis on tavaliselt katki üks masin ja kõiki teisi ei taha sa puutuda. Näidis `extras/rebuild.sh` teeb `tofu apply -replace` ühe hosti peal, käivitab `ansible-playbook site.yml --limit <host>` ja kontrollib `/health`, aga tootmises ei pea see vastu kolmele olukorrale.
+`up.sh` loob kogu stacki, aga intsidendis on tavaliselt katki üks masin ja kõiki teisi ei taha sa puutuda. Näidis `extras/rebuild.sh` teeb `tofu apply -replace` ühe hosti peal, käivitab `ansible-playbook site.yml --limit <host>` ja kontrollib `/health`, aga tootmises ei pea see vastu kolmele olukorrale.
 
 - `rebuild.sh <host>` keeldub, kui plaanis on peale selle hosti asenduse midagi muud.
 - Korraga töötab üks `rebuild.sh`, ka Ansible'i sammu ajal.
@@ -1079,7 +1079,7 @@ Tööriist `vorgukogu` (1. kohtumise lisaülesanne 21) seni ainult luges ruuteri
 
 **Tase:** keskmine · **Eeldus:** [Import, drift ja keskkonnad](lab-6-import-drift.md), 1. kohtumise lisaülesanne 21 tehtud, koolitaja `rtr01`, `rtr02` ja `key chain lab` saladus · **Esita:** `vorgukogu/render.py`, `intent/`, `templates/frr.conf.j2`
 
-Ruuteri konfi muudetakse `vtysh`-is käsitsi ja keegi ei tea, kas kahe ruuteri konf on sama loogikaga. Proovimuudatus on rtr01 marsruut `10.255.98.0/24 blackhole`.
+Ruuteri konfiguratsiooni muudetakse `vtysh`-is käsitsi ja keegi ei tea, kas kahe ruuteri konfiguratsioon on sama loogikaga. Proovimuudatus on rtr01 marsruut `10.255.98.0/24 blackhole`.
 
 - `requirements.txt`: `jinja2==3.1.*`.
 - `intent/<ruuter>.yaml`: `hostname`, `interfaces` (nimi, `description`, `addresses`), `static_routes` (`prefix`, `nexthop`); alguses täpselt ruuteri praegune olek. `eth0`-l on ainult kirjeldus.

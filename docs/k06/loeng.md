@@ -12,15 +12,17 @@ tags:
 
 GitHub Actionsis andis runner'i keegi teine: GitHub hoidis saladusi ja kustutas masina pärast tööd. Jenkins on CI server, mille paigaldad ja haldad ise. Kõik, mida Actions peitis, on nüüd sinu otsus: kus kood töötab, kes näeb saladusi, kes kinnitab ja kuidas server pärast riket taastatakse. CI server on tootmisteenus nagu andmebaas või Nginx ja tal on samad nõuded: turve, varukoopia, uuendused ja korratav seadistus.
 
-## 🎯 Õpiväljundid
+## Õpiväljundid
 
-- Selgitad controlleri, agendi ja executori rolli ning põhjendad, miks controller ise koodi ei ehita.
-- Põhjendad, miks pipeline'i kirjeldus peab olema repos koodi kõrval, ja kirjeldad, milliseid piiranguid see lisaks sammudele sisaldab.
-- Eristad testi ja staatilist analüüsi ning selgitad, kuidas quality gate muudab mõõtmistulemuse otsuseks.
-- Selgitad põhimõtet *build once, deploy many* ja põhjendad, miks release-versioon peab olema muutumatu ja commit'ini jälgitav.
-- Hindad CI serveri turvariske: saladused, käivitatav kood, pluginad ja Dockeri socket.
-- Kirjeldad, mis teeb Jenkinsi taastatavaks, ja võrdled Jenkinsit GitHub Actionsiga admini vaatest.
-- Kavandad deploy kinnituse ja auditi jälje: change ticket, nelja silma kontroll, õiguste piir ja logi väljaspool Jenkinsit, ning põhjendad, miks RPA ei ole infra automatiseerimise vahend.
+Pärast kohtumist oskad:
+
+- selgitada controlleri, agendi ja executori rolli ning põhjendada, miks controller ise koodi ei ehita;
+- põhjendada, miks pipeline'i kirjeldus peab olema repositooriumis koodi kõrval, ja kirjeldada, milliseid piiranguid see lisaks sammudele sisaldab;
+- eristada testi ja staatilist analüüsi ning selgitada, kuidas quality gate muudab mõõtmistulemuse otsuseks;
+- selgitada põhimõtet *build once, deploy many* ja põhjendada, miks release-versioon peab olema muutumatu ja commit'ini jälgitav;
+- hinnata CI serveri turvariske: saladused, käivitatav kood, pluginad ja Dockeri socket;
+- kirjeldada, mis teeb Jenkinsi taastatavaks, ja võrrelda Jenkinsit GitHub Actionsiga admini vaatest;
+- kavandada deploy kinnituse ja auditi jälje: change ticket, nelja silma kontroll, õiguste piir ja logi väljaspool Jenkinsit, ning põhjendada, miks RPA ei ole infra automatiseerimise vahend.
 
 [DevOps automation ja deployment automation](../teemad/devops-automaatika.md) · [RBAC ja ligipääsu kontroll](../teemad/rbac.md) · [IT-teenuste haldus (ITSM)](../teemad/itsm.md) · [RPA, äriprotsessid ja IT-automatiseerimine](../teemad/rpa-ja-aeriprotsessid.md)
 
@@ -61,7 +63,7 @@ Sama võrguküsimus otsustab, kuidas build käivitub. **Webhook** on kiireim, ag
 
 Püsiv agent on VM, mis töötab kuude kaupa. Selle kettale kogunevad workspace'id, Maveni `~/.m2` cache ja Dockeri image'id ning iga build pärib eelmise jäägid. Kui test läheb roheliseks ainult sellepärast, et eelmise buildi fail jäi workspace'i, ei õnnestu sama build puhtal masinal. See on sama triiv (drift), mida tunned käsitsi hallatud serveritest: masina tegelik olek ja selle kirjeldus lähevad lahku.
 
-Ajutine agent tekib buildi jaoks ja kaob pärast seda. [Kubernetese plugin](https://plugins.jenkins.io/kubernetes/) loob iga agendi jaoks pod'i, mille konteineris `jnlp` töötab agendi protsess, ja peatab pod'i pärast buildi. Teised konteinerid samas pod'is, näiteks Maven ja Docker CLI, jagavad sama workspace'i. Nii saab iga build puhta keskkonna nagu GitHubi hostitud runner'il, aga sinu klastris. Hind on aeg ja cache: pod'i käivitus ja sõltuvuste allalaadimine lisavad igale buildile sekundeid kuni minuteid, kui Nexuse proxy-repo ei ole lähedal. Valik `idleMinutes` hoiab pod'i korduvkasutuseks alles, aga toob tagasi osa püsiva agendi probleemist.
+Ajutine agent tekib buildi jaoks ja kaob pärast seda. [Kubernetese plugin](https://plugins.jenkins.io/kubernetes/) loob iga agendi jaoks pod'i, mille konteineris `jnlp` töötab agendi protsess, ja peatab pod'i pärast buildi. Teised konteinerid samas pod'is, näiteks Maven ja Docker CLI, jagavad sama workspace'i. Nii saab iga build puhta keskkonna nagu GitHubi hostitud runner'il, aga sinu klastris. Hind on aeg ja cache: pod'i käivitus ja sõltuvuste allalaadimine lisavad igale buildile sekundeid kuni minuteid, kui Nexuse proxy-repositoorium ei ole lähedal. Valik `idleMinutes` hoiab pod'i korduvkasutuseks alles, aga toob tagasi osa püsiva agendi probleemist.
 
 Suures mahus muutub kitsaskohaks controller. Iga agent hoiab Remoting-kanalit, iga töötav pipeline hoiab controlleris oma CPS-olekut ja iga build kirjutab logi kausta `$JENKINS_HOME`. Kui sajad buildid töötavad korraga, ei aita agentide lisamine, sest kitsaskoht on ühe controlleri JVM ja ketas. Siis jagatakse töö meeskondade või toodete kaupa mitme controlleri vahel, mitte ei ehitata üht suuremat.
 
@@ -69,7 +71,7 @@ Suures mahus muutub kitsaskohaks controller. Iga agent hoiab Remoting-kanalit, i
 
 Freestyle job'i seadistus on veebivormis muudetav `$JENKINS_HOME/jobs/<nimi>/config.xml`. Ajalugu on ainult Job Config History pluginaga ja koos serveriga kaob teadmine, kuidas tarkvara ehitati.
 
-**Pipeline** job loeb kirjelduse repos olevast failist `Jenkinsfile` (*pipeline as code*). Muudatus pipeline'is läbib sama PR-i nagu muudatus koodis ja vana haru ehitatakse sama pipeline'iga, millega see kunagi ehitati. [Deklaratiivse süntaksi](https://www.jenkins.io/doc/book/pipeline/syntax/) parsib Jenkins enne käivitamist mudeliks ja kontrollib selle üle. Skriptitud süntaks on vaba Groovy. Mõlemad töötavad aeglases CPS-interpretaatoris. Seepärast juhib Jenkinsfile ainult tööde järjekorda ja töö ise tehakse shelli ja Maveni käskudega.
+**Pipeline** job loeb kirjelduse repositooriumis olevast failist `Jenkinsfile` (*pipeline as code*). Muudatus pipeline'is läbib sama PR-i nagu muudatus koodis ja vana haru ehitatakse sama pipeline'iga, millega see kunagi ehitati. [Deklaratiivse süntaksi](https://www.jenkins.io/doc/book/pipeline/syntax/) parsib Jenkins enne käivitamist mudeliks ja kontrollib selle üle. Skriptitud süntaks on vaba Groovy. Mõlemad töötavad aeglases CPS-interpretaatoris. Seepärast juhib Jenkinsfile ainult tööde järjekorda ja töö ise tehakse shelli ja Maveni käskudega.
 
 Jenkinsfile kirjeldab sammude kõrval ka buildi piiranguid.
 
@@ -83,11 +85,15 @@ options {
 
 Jenkinsi vaikeväärtused on siin ohtlikud: job'il pole ajapiiri ja buildide ajalugu hoitakse igavesti. Rippuv build hoiab executorit tunde kinni ja `jobs/*/builds/` kasvab, kuni controlleri ketas on täis. Samaaegne teine build saab küll eraldi kausta `workspace@2`, aga mitte eraldi testkeskkonda: kaks deploy'd kirjutavad sama konteineri üle. Bashis lahendasid sama probleemi `flock`-iga. Samasse rühma kuulub `post`, mis käivitub buildi lõpus ka siis, kui build ebaõnnestus. `post` tingimustel on kindel järjekord ja koristus käib viimasesse plokki `cleanup`, et see ei kustutaks faile enne arhiveerimist.
 
-Etappide tingimused kirjeldavad, millal etapp on ohutu. `when` laseb näiteks avaldamise käivituda ainult põhiharul. `input` peatab pipeline'i inimese kinnituseni ja hoiab seni executorit kinni, seepärast käib see alati koos ajapiiriga. Korduv loogika viiakse **shared library**'sse: Giti repo, mille `vars/*.groovy` failid muutuvad pipeline'i sammudeks. Globaalne teek töötab väljaspool Groovy sandboxi, nii et selle repo kirjutusõigus võrdub controlleri administraatori õigusega, ja `@main` muudab ühe commit'iga kõigi meeskondade pipeline'e. Tootmises kinnitatakse teek tag'iga.
+Build käivitub kolmel viisil: Giti serveri webhooki peale, pollimisega või API kaudu. Webhook vajab, et Giti server jõuaks Jenkinsini. Laboris on Jenkins VPN-i taga ja GitHub ei jõua selleni, seepärast kasutab praktikum pollimist: `triggers { pollSCM('H/2 * * * *') }` küsib iga kahe minuti järel, kas harul on uus commit. `H` valib minuti jobi nime järgi, nii et sada jobi ei küsi Giti serverilt samal sekundil. Iga buildi põhjus (`UserIdCause`, `SCMTriggerCause`) on API-s näha ja etapi tingimus `triggeredBy` kasutab seda.
+
+Etapid käivituvad järjest. Plokk `parallel` käivitab mitu etappi korraga samas workspace'is ja samal executoril. See on ohutu ainult siis, kui harud workspace'i ei kirjuta, näiteks kui üks laadib WAR-i Nexusesse ja teine ehitab samast WAR-ist image'i.
+
+Etappide tingimused kirjeldavad, millal etapp on ohutu. `when` laseb näiteks avaldamise käivituda ainult põhiharul. `input` peatab pipeline'i inimese kinnituseni ja hoiab seni executorit kinni, seepärast käib see alati koos ajapiiriga. Korduv loogika viiakse **shared library**'sse: Giti repositoorium, mille `vars/*.groovy` failid muutuvad pipeline'i sammudeks. Globaalne teek töötab väljaspool Groovy sandboxi, nii et selle repositooriumi kirjutusõigus võrdub controlleri administraatori õigusega, ja `@main` muudab ühe commit'iga kõigi meeskondade pipeline'e. Tootmises kinnitatakse teek tag'iga.
 
 ### Multibranch ja haru avastamine
 
-Ühe haru job ei sobi PR-idega tööks. **Multibranch pipeline** skannib repot, loob igale harule ja PR-ile, milles on Jenkinsfile, oma alamjob'i ja kustutab selle, kui haru kaob. Organization folder teeb sama tervele GitHubi organisatsioonile. Skannimine käib GitHubi REST API kaudu ja sellel on piir: kasutaja token saab [5000 päringut tunnis](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) sõltumata repode arvust. Kui sadu repoid ja tuhandeid harusid skannitakse sama tokeniga, jõuab Jenkins piirini, jääb ootama limiidi taastumist ja webhooki järel algav build hilineb. GitHub App'i limiit kasvab organisatsiooni suurusega kuni 12 500 päringuni tunnis, seepärast [soovitab Jenkins](https://jenkins.io/blog/2020/04/16/github-app-authentication/) multibranch'i jaoks GitHub App'i. Teine eelis on see, et App ei ole seotud inimese kontoga, mis suletakse, kui inimene lahkub.
+Ühe haru job ei sobi PR-idega tööks. **Multibranch pipeline** skannib repositooriumi, loob igale harule ja PR-ile, milles on Jenkinsfile, oma alamjob'i ja kustutab selle, kui haru kaob. Organization folder teeb sama tervele GitHubi organisatsioonile. Skannimine käib GitHubi REST API kaudu ja sellel on piir: kasutaja token saab [5000 päringut tunnis](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) sõltumata repositooriumide arvust. Kui sadu repositooriume ja tuhandeid harusid skannitakse sama tokeniga, jõuab Jenkins piirini, jääb ootama limiidi taastumist ja webhooki järel algav build hilineb. GitHub App'i limiit kasvab organisatsiooni suurusega kuni 12 500 päringuni tunnis, seepärast [soovitab Jenkins](https://jenkins.io/blog/2020/04/16/github-app-authentication/) multibranch'i jaoks GitHub App'i. Teine eelis on see, et App ei ole seotud inimese kontoga, mis suletakse, kui inimene lahkub.
 
 Multibranch muudab ka turvapiiri. PR-i Jenkinsfile on kood, mida keegi pole veel üle vaadanud. Kui forkist tulnud PR-i *Trust* seade on *From users with Admin or Write permission* ja PR-i autoril kirjutusõigust pole, laadib Jenkins Jenkinsfile'i sihtharust, mitte PR-ist. Nii ei saa võõras PR muuta seda, mida pipeline teeb ja milliseid credential'e see loeb. Sama küsimus oli eelmisel korral Actionsis `pull_request_target`-i juures.
 
@@ -99,7 +105,7 @@ Testid on rohelised, aga koodis on tühi `catch`-plokk, mis neelab andmebaasivea
 
 [**Quality gate**](https://docs.sonarsource.com/sonarqube-community-build/quality-standards-administration/managing-quality-gates/introduction-to-quality-gates) teeb mõõtmistest otsuse OK või ERROR. Sonari vaikimisi gate *Sonar way* kehtib ainult **uuele koodile**: uue koodi katvus vähemalt 80 %, dubleeritud ridu kuni 3 %, kõik security hotspot'id üle vaadatud ja lisaks tingimus uute leidude kohta. Uus kood tähendab vaikimisi kõike, mis on muutunud pärast eelmist versiooni. Tingimus "null viga kogu koodis" peataks vana koodiga projektis iga buildi, uue koodi reegel keelab ainult halvenemise.
 
-Analüüs ja otsus toimuvad eri ajal. Skanner kirjutab taski ID faili `target/sonar/report-task.txt`, saadab raporti serverile ja lõpetab. Serveri Compute Engine töötleb raporteid järjekorras. Community Build'il on üks töötaja, nii et viisteist samaaegset analüüsi läbivad selle ükshaaval. Tulemuse saadab server webhookiga Jenkinsile, kus `waitForQualityGate` ootab sama taski ID-ga teadet.
+Analüüs ja otsus toimuvad eri ajal. Skanner kirjutab taski ID faili `target/sonar/report-task.txt`, saadab raporti serverile ja lõpetab. Serveri Compute Engine töötleb raporteid järjekorras. Community Buildil on üks töötaja, nii et viisteist samaaegset analüüsi läbivad selle ükshaaval. Tulemuse saadab server webhookiga Jenkinsile, kus `waitForQualityGate` ootab sama taski ID-ga teadet.
 
 <figure markdown="span">
   ![Jenkins saadab raporti SonarQube'ile, Compute Engine analüüsib ja saadab webhookiga tulemuse tagasi Jenkinsile](assets/k06_kvaliteedivarav.svg)
@@ -114,9 +120,9 @@ Sonari väljaanne otsustab, mida gate näeb. [Haruanalüüs](https://docs.sonars
 
 Tootmises on viga: millisest commit'ist see pakk tuli ja kas sama pakk läbis testid? Kui Eesti pank peab pärast intsidenti Finantsinspektsioonile selgitama, mis versioon tootmises töötas, peab see vastus tulema süsteemist, mitte kellegi mälust.
 
-**Artefakt** on buildi tulemus, mis jääb alles: WAR, jar või image. `archiveArtifacts` kopeerib selle controlleri kettale buildi kausta, kus see kustub koos buildiga ja võtab ruumi samalt kettalt, kus on `$JENKINS_HOME`. **Artifact repository** (meil Nexus) hoiab pakke kindlatel aadressidel, kust teised süsteemid neid nime ja versiooni järgi küsivad. Nexuses on [kolme tüüpi reposid](https://help.sonatype.com/en/repository-types.html). **Hosted** hoiab sinu enda pakke. **Proxy** on cache välise repo ees, nii et Maven Centralist laaditakse iga jar ainult esimesel korral. **Group** koondab mitu repot ühe aadressi taha. Proxy jätab meelde ka vastuse 404 (negative cache, aeg on proxy-repo seadetes): äsja avaldatud sõltuvus võib Nexuse kaudu puududa, kuni see aeg möödub või keegi cache'i tühjendab.
+**Artefakt** on buildi tulemus, mis jääb alles: WAR, jar või image. `archiveArtifacts` kopeerib selle controlleri kettale buildi kausta, kus see kustub koos buildiga ja võtab ruumi samalt kettalt, kus on `$JENKINS_HOME`. **Artifact repository** (meil Nexus) hoiab pakke kindlatel aadressidel, kust teised süsteemid neid nime ja versiooni järgi küsivad. Nexuses on [kolme tüüpi reposid](https://help.sonatype.com/en/repository-types.html). **Hosted** hoiab sinu enda pakke. **Proxy** on cache välise repositooriumi ees, nii et Maven Centralist laaditakse iga jar ainult esimesel korral. **Group** koondab mitu repositooriumi ühe aadressi taha. Proxy jätab meelde ka vastuse 404 (negative cache, aeg on proxy-repositooriumi seadetes): äsja avaldatud sõltuvus võib Nexuse kaudu puududa, kuni see aeg möödub või keegi cache'i tühjendab.
 
-Release-repo reegel on **muutumatus**: sama versiooni ei saa teist korda üles laadida. Muidu võiks eilne `1.1.0` olla täna teine fail. Seepärast peab versioon olema unikaalne ja ütlema, kust pakk tuli. Pelgalt buildi numbrist ei piisa, sest uuesti loodud job alustab jälle 1-st. Hea skeem seob kokku kolm asja: rakenduse versiooni, buildi numbri ja commit'i lühikese räsi, näiteks `1.1.0-42-a3f9c1e`.
+Release-repositoorium reegel on **muutumatus**: sama versiooni ei saa teist korda üles laadida. Muidu võiks eilne `1.1.0` olla täna teine fail. Seepärast peab versioon olema unikaalne ja ütlema, kust pakk tuli. Pelgalt buildi numbrist ei piisa, sest uuesti loodud job alustab jälle 1-st. Hea skeem seob kokku kolm asja: rakenduse versiooni, buildi numbri ja commit'i lühikese räsi, näiteks `1.1.0-42-a3f9c1e`.
 
 Teine põhimõte on **build once, deploy many**. Pakk ehitatakse üks kord ja edasi liigub sama fail: Nexusesse, image'isse ja serverisse. Kui Dockerfile kompileeriks koodi uuesti, võiks image'isse tulla uuem sõltuvus samast versioonivahemikust ja roheline pipeline ei tõendaks enam midagi selle kohta, mis töötab.
 
@@ -179,7 +185,7 @@ Muudatuse kirje on ITSM-süsteemis (ServiceNow, Jira Service Management): change
 
 Jenkinsis teeb kinnituse samm [`input`](https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/). `submitter` piirab kinnitajad kasutajate või gruppidega ja `submitterParameter` salvestab kinnitaja ID muutujasse. Kaks asja jäävad sinu teha. *Overall/Administer* õigusega kasutaja saab kinnitada sõltumata `submitter`-ist, ja Jenkins ei kontrolli, kas kinnitaja on sama inimene, kes buildi käivitas. Nelja silma põhimõte tuleb seega kirjutada pipeline'i: kinnitaja ID-d võrreldakse buildi põhjuse `UserIdCause` kasutajaga ja kokkulangevuse korral build peatub.
 
-Õiguste piir on CI serveris laiem kui Jenkinsi maatriks. *Job/Build* ja *Job/Configure* on eri õigused, aga pipeline job'i tegelik seadistus on repos olev Jenkinsfile. Kes saab haru push'ida, see muudab ka seda, mida job teeb ja milliseid credential'e see loeb. Tootmise deploy piir koosneb seega kolmest osast: tootmise folder koos oma credential'itega, job, mis ehitab ainult kaitstud harust, ja haru kaitse, mis nõuab teise inimese review'd.
+Õiguste piir on CI serveris laiem kui Jenkinsi maatriks. *Job/Build* ja *Job/Configure* on eri õigused, aga pipeline job'i tegelik seadistus on repositooriumis olev Jenkinsfile. Kes saab haru push'ida, see muudab ka seda, mida job teeb ja milliseid credential'e see loeb. Tootmise deploy piir koosneb seega kolmest osast: tootmise folder koos oma credential'itega, job, mis ehitab ainult kaitstud harust, ja haru kaitse, mis nõuab teise inimese review'd.
 
 Buildi logi ei ole auditilogi. See asub controlleri kettal, kustub koos buildiga ja administraator saab seda muuta. Jenkinsi enda sündmused (sisselogimine, seadistuse muudatus, job'i loomine ja kustutamine) kirjutab [Audit Trail](https://plugins.jenkins.io/audit-trail/) plugin faili või syslogi ja Job Config History hoiab `config.xml` versioone. Auditi jaoks saadetakse need Jenkinsist välja, näiteks SIEM-i, kus Jenkinsi administraator neid kustutada ei saa. Finantssektoris nõuab [DORA](https://eur-lex.europa.eu/eli/reg/2022/2554/oj) alates 2025. aasta jaanuarist dokumenteeritud IKT muudatuste halduse protseduuri ja kontrolle. Audiitor küsib seal tõendit, et kontrolli ei saanud vahele jätta.
 
@@ -197,14 +203,14 @@ Eelmisel korral kirjutasid sama pipeline'i GitHub Actionsis. Mõisted on samad, 
 | kus kirjeldus on | `.github/workflows/*.yml` | `Jenkinsfile` |
 | server ja uuendused | haldab GitHub | haldad ise |
 | võrk | GitHub-hosted runner ei jõua sisevõrku, self-hosted runner jõuab | võib olla täielikult sisevõrgus |
-| laiendused | action'id repo kaupa, SHA-ga kinnitatud | pluginad kogu serverile |
-| saladused | repo, environment'i ja organisatsiooni tasemel | credential'id folderi ja süsteemi tasemel |
+| laiendused | action'id repositooriumi kaupa, SHA-ga kinnitatud | pluginad kogu serverile |
+| saladused | repositoorium, environment'i ja organisatsiooni tasemel | credential'id folderi ja süsteemi tasemel |
 
 *Tabel 6.1. Samad mõisted, erinev vastutus.*
 
 Actions sobib, kui kood on GitHubis ja pipeline ei pea jõudma sisevõrku: serverit pole vaja hallata ja iga build saab puhta masina. Jenkins sobib, kui build peab töötama sisevõrgus, kood ei tohi asutusest välja minna või sama server peab teenindama mitut Giti teenust. Admini töös asendab Jenkins tavaliselt cron'i build-skripte ja käsitsi runbook'e, mitte Ansible'it: playbook jääb paigaldajaks ja Jenkins otsustab, millal ja millise artefaktiga see käivitub.
 
-Self-hosted runner tundub kompromiss: GitHub haldab serverit, sina masinat sisevõrgus. Siis tulevad sisevõrku ka riskid, mida Jenkinsis piirasid folderi ja agendi label'iga. GitHub [soovitab](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners) self-hosted runner'it kasutada ainult privaatsete repodega, sest avaliku repo forkist tulnud PR võib käivitada runner'il suvalist koodi. Püsiv runner jätab töö jäägid ka järgmisele job'ile, nii et püsiva ja ajutise masina valik tuleb tagasi ka Actionsis.
+Self-hosted runner tundub kompromiss: GitHub haldab serverit, sina masinat sisevõrgus. Siis tulevad sisevõrku ka riskid, mida Jenkinsis piirasid folderi ja agendi label'iga. GitHub [soovitab](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners) self-hosted runner'it kasutada ainult privaatsete repositooriumidega, sest avaliku repositooriumi forkist tulnud PR võib käivitada runner'il suvalist koodi. Püsiv runner jätab töö jäägid ka järgmisele job'ile, nii et püsiva ja ajutise masina valik tuleb tagasi ka Actionsis.
 
 Valik pole püsiv: mida rohkem loogikat on shelli ja Maveni käskudes ning mida vähem plugina sammudes, seda lihtsam on hiljem kolida.
 
@@ -260,7 +266,7 @@ Iseseisvaks lugemiseks: [RPA, äriprotsessid ja IT-automatiseerimine](../teemad/
     Jenkinsfile on suvaline kood, mis töötab kasutajana `jenkins`. Controlleris saaks see lugeda kausta `$JENKINS_HOME` koos kõigi projektide credential'itega. Hõivatud agentide vastu aitab agentide või executorite lisamine, mitte controlleri avamine.
 
 ??? question "Etapp Nexus ebaõnnestub HTTP 400-ga, kuigi eelmine build oli roheline ja kood ei muutunud. Mida see ütleb versioonimise kohta?"
-    Sama versioon on juba repos ja release-repo ei luba seda üle kirjutada. Versioon ei sõltu buildist: tõenäoliselt on sellest kadunud buildi number või commit'i räsi. Parandus on versiooni skeemis, mitte Nexuses.
+    Sama versioon on juba repositooriumis ja release-repositoorium ei luba seda üle kirjutada. Versioon ei sõltu buildist: tõenäoliselt on sellest kadunud buildi number või commit'i räsi. Parandus on versiooni skeemis, mitte Nexuses.
 
 ??? question "Controller taaskäivitati öösel uuenduse pärast. Pipeline'i build jätkus, Freestyle'i build mitte. Miks?"
     Pipeline'i Groovy olek salvestatakse pärast iga sammu buildi kausta ja agendil töötav `sh` ei sõltu controlleri protsessist. Freestyle'i samm on ühe protsessi osa ja sellel pole salvestatud olekut, millest jätkata.

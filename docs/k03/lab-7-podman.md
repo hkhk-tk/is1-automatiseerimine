@@ -43,7 +43,7 @@ Enne muudatust teed mõlemast VM-ist snapshot'i ja vaatad, millise Podmaniga sul
 
 Rootless tähendab, et kõik konteinerid töötavad kasutaja `kasutaja` user namespace'is: konteineri UID 0 on hostis `kasutaja`, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. 11211 ja 3306 on üle `ip_unprivileged_port_start` piiri, nii et kumbki port ei vaja sysctl'i muutmist.
 
-✅ **Edasi saad minna, kui** mõlemal VM-il on snapshot `enne-podman`, Podman on 5.x, väljund ütleb `rootless=true cgroup=v2 net=netavark store=overlay`, `subuid` rida on olemas ja `getenforce` annab `Enforcing`. Kirjuta TOEND.md-sse jaotis `## Podman` ja sinna `podman info` rida.
+**Edasi saad minna, kui** mõlemal VM-il on snapshot `enne-podman`, Podman on 5.x, väljund ütleb `rootless=true cgroup=v2 net=netavark store=overlay`, `subuid` rida on olemas ja `getenforce` annab `Enforcing`. Kirjuta TOEND.md-sse jaotis `## Podman` ja sinna `podman info` rida.
 
 ## Image registry'st
 
@@ -66,7 +66,7 @@ AlmaLinuxi host tõmbab samad image'id samast registry'st kui control node, aga 
 
 Sama digest kahes eri tööriistas tõestab, et OCI image ei sõltu runtime'ist: kihid ja manifest on samad baidid. Vaikimisi kirjutab `podman login` faili `$XDG_RUNTIME_DIR/containers/auth.json`, mis on tmpfs'is ja kaob reboot'iga. Kasutaja teenus, mis peab image'i hiljem uuesti tõmbama, ei leiaks siis volitusi.
 
-✅ **Edasi saad minna, kui** db01-s on `labori-seis-db` sama tag'iga, Dockeri `RepoDigests` väärtus on Podmani `RepoDigests` nimekirjas, mc01 tõmbas memcached'i peegli kaudu ja `~/.config/containers/auth.json` on db01-s olemas. Kirjuta TOEND.md-sse kaks digesti kõrvuti.
+**Edasi saad minna, kui** db01-s on `labori-seis-db` sama tag'iga, Dockeri `RepoDigests` väärtus on Podmani `RepoDigests` nimekirjas, mc01 tõmbas memcached'i peegli kaudu ja `~/.config/containers/auth.json` on db01-s olemas. Kirjuta TOEND.md-sse kaks digesti kõrvuti.
 
 ## mc01: teenus konteineriks
 
@@ -82,7 +82,7 @@ ssh mc01 'podman rm -f mc-proov'
 
 `ps` näitas kolme protsessi. `memcached` töötab UID-ga `subuid` vahemikust, mitte root'ina ega `kasutaja`-na. Tema vanem on `conmon`, mis hoiab konteineri stdio't ja väljumiskoodi. Porti hoiab `pasta`, mis kuulab hostis kasutaja õigustega ja suunab ühendused konteineri võrgu namespace'i. `podman` protsessi ennast enam pole: käsk lõpetas töö pärast käivitamist ja ühtegi daemonit, mille restart konteineri peataks, ei ole. Seepärast ei käivita seda konteinerit pärast taaskäivitust ka keegi uuesti.
 
-✅ **Edasi saad minna, kui** `/health` näitas `"cache":"UP"` ilma app01 restardita, `ps` näitab `memcached`-i numbrilise UID-ga ja `conmon`-i tema vanemana ning `mc-proov` on kustutatud. Kirjuta `/health` ja `ps` väljund TOEND.md-sse.
+**Edasi saad minna, kui** `/health` näitas `"cache":"UP"` ilma app01 restardita, `ps` näitab `memcached`-i numbrilise UID-ga ja `conmon`-i tema vanemana ning `mc-proov` on kustutatud. Kirjuta `/health` ja `ps` väljund TOEND.md-sse.
 
 ## Quadlet: konteiner systemd teenusena
 
@@ -111,7 +111,7 @@ Quadlet on systemd generaator: `systemctl --user daemon-reload` loeb kaustast `~
 
 `systemctl --user enable labseis-mc` annab vea, sest genereeritud unit'i ei saa lubada: käivituse reboot'il annab `[Install]` jaotis Quadleti failis, mille generaator muudab `default.target.wants` lingiks. `-dryrun` väljund näitab, et `MemoryMax` ja `Restart` on tavalised systemd võtmed ja `podman run` on ainult `ExecStart` rida.
 
-✅ **Edasi saad minna, kui** `-dryrun` näitas `ExecStart=/usr/bin/podman run … --name labseis-mc …`, teenus on `active` ja `healthy`, pärast reboot'i andis `/health` enne sisselogimist `"cache":"UP"` ja `Linger=yes`. Kirjuta TOEND.md-sse `is-active` väljund pärast reboot'i ja üks lause, miks `enable` ei tööta.
+**Edasi saad minna, kui** `-dryrun` näitas `ExecStart=/usr/bin/podman run … --name labseis-mc …`, teenus on `active` ja `healthy`, pärast reboot'i andis `/health` enne sisselogimist `"cache":"UP"` ja `Linger=yes`. Kirjuta TOEND.md-sse `is-active` väljund pärast reboot'i ja üks lause, miks `enable` ei tööta.
 
 ## db01 SELinuxiga
 
@@ -154,7 +154,7 @@ Muudatus käib tootmise reeglitega: andmebaas kolib native teenusest konteineris
 
 Ilma sildita on dump'il `user_home_t` ja konteineri protsess töötab domeenis `container_t`: poliitika keelab lugemise, kuigi failiõigused (`644`) lubavad. Ubuntu control node'il Docker seda ei näita, sest seal SELinuxit pole. `:Z` annab failile sildi `container_file_t` koos selle konteineri MCS kategooriatega, nii et teine konteiner sama faili lugeda ei saa; `:z` jagatud sildiga lubaks. Teine katse oli `active`, sest MariaDB entrypoint initsialiseerib ainult tühja andmekataloogi: esimene katse jõudis luua kataloogi, skeemi ja algandmed, enne kui dump'i lugemine ebaõnnestus. Teenus oli terve, andmed mitte, ja seda näitas ainult ridade arv.
 
-✅ **Edasi saad minna, kui** journal'is ja `ausearch` väljundis on `03-dump.sql` keeld (`denied { read }`, `scontext=…container_t`), pärast parandust on failil `container_file_t`, ridade arv konteineris võrdub algseisuga, `podman inspect` ei näita ühtegi parooli väärtust, `systemctl --user cat` näitab ainult `Secret=` ja `_FILE` ridu, `getenforce` on endiselt `Enforcing` ja `/health` annab `"db":"UP"`. Kirjuta TOEND.md-sse AVC rida, parandus ja kaks ridade arvu.
+**Edasi saad minna, kui** journal'is ja `ausearch` väljundis on `03-dump.sql` keeld (`denied { read }`, `scontext=…container_t`), pärast parandust on failil `container_file_t`, ridade arv konteineris võrdub algseisuga, `podman inspect` ei näita ühtegi parooli väärtust, `systemctl --user cat` näitab ainult `Secret=` ja `_FILE` ridu, `getenforce` on endiselt `Enforcing` ja `/health` annab `"db":"UP"`. Kirjuta TOEND.md-sse AVC rida, parandus ja kaks ridade arvu.
 
 ## Piirangud cgroup'is
 
@@ -171,7 +171,7 @@ ssh mc01 'cg=$(systemctl --user show -p ControlGroup --value labseis-mc)
 
 `systemd-cgls` näitas, et `conmon` ja konteineri protsess on mõlemad unit'i `labseis-mc.service` cgroup'is: Quadlet käivitab konteineri `--cgroups=split`-iga, nii et unit'i `MemoryMax` piirab kogu teenust koos `conmon`-iga. `--memory` ja `--cpus` töötavad ainult siis, kui `cgroup.controllers` loetelus on `memory` ja `cpu`.
 
-✅ **Edasi saad minna, kui** `memory.max` on `134217728`, `--memory 64m` konteiner näitas `67108864` ja tead `--cpus` katse tulemust. Kirjuta TOEND.md-sse `memory.max` väärtus, `cgroup.controllers` rida ja üks lause: mis juhtus `--cpus`-iga ja miks.
+**Edasi saad minna, kui** `memory.max` on `134217728`, `--memory 64m` konteiner näitas `67108864` ja tead `--cpus` katse tulemust. Kirjuta TOEND.md-sse `memory.max` väärtus, `cgroup.controllers` rida ja üks lause: mis juhtus `--cpus`-iga ja miks.
 
 ## Docker API ja Kubernetese YAML
 
@@ -200,7 +200,7 @@ Osa tööriistu (Trivy, Testcontainers, CI agendid) eeldab Dockeri socket'it. Po
 
 `docker` CLI ei tea, et teisel pool on Podman: ta räägib sama HTTP API-ga ja leppis kokku vanema API versiooni, mida server toetab. Mis ei tööta, on peaaegu alati Dockeri-spetsiifiline lisa (Swarm, BuildKit'i võtmed, plugin'id). `kube generate` andis `Pod` objekti, mille sees on sama image ja port; healthcheck ja `MemoryMax` sinna ei jõua, sest need on systemd poolel.
 
-✅ **Edasi saad minna, kui** `/version` näitas Podmani komponenti ja API versiooni, tead, kas `docker ps` ja `docker inspect` töötasid tunneli kaudu, ning pod pordil 11212 vastas `VERSION 1.6…` ja on maha võetud. Kirjuta TOEND.md-sse kaks rida: mis töötas ja mis mitte.
+**Edasi saad minna, kui** `/version` näitas Podmani komponenti ja API versiooni, tead, kas `docker ps` ja `docker inspect` töötasid tunneli kaudu, ning pod pordil 11212 vastas `VERSION 1.6…` ja on maha võetud. Kirjuta TOEND.md-sse kaks rida: mis töötas ja mis mitte.
 
 ## Tagasi algseisu ja commit
 
@@ -226,12 +226,12 @@ Quadleti failid lähevad Giti ja hostid lähevad tagasi native teenustele: 4. ko
 
     ```bash
     git add k03-docker/quadlet k03-docker/TOEND.md && git status --short
-    git commit -m "K3.7 sama teenus Podmaniga (closes #N)" && git push
+    git commit -m "K3.7 sama teenus Podmaniga" && git push
     ```
 
-✅ **Edasi saad minna, kui** `check.sh k03 quadlet` annab `OK`, kummaski hostis pole `labseis-*` unit'eid, 3306 ja 11211 kuulavad native teenused, `ansible-playbook` andis `changed=0`, `/health` on `UP` ja commit on GitHubis.
+**Edasi saad minna, kui** `check.sh k03 quadlet` annab `OK`, kummaski hostis pole `labseis-*` unit'eid, 3306 ja 11211 kuulavad native teenused, `ansible-playbook` andis `changed=0`, `/health` on `UP` ja commit on GitHubis.
 
-📎 **Selle mooduli tõend:** commit `K3.7 …` kaustaga `k03-docker/quadlet/`; TOEND.md jaotises `## Podman` `podman info` rida, kaks digesti, `/health` ja `ps`, `is-active` pärast reboot'i ja `enable` lause, AVC rida koos parandusega ja kaks ridade arvu, `memory.max` ja `cgroup.controllers`, Docker API kaks rida.
+**Selle osa tõend:** commit `K3.7 …` kaustaga `k03-docker/quadlet/`; TOEND.md jaotises `## Podman` `podman info` rida, kaks digesti, `/health` ja `ps`, `is-active` pärast reboot'i ja `enable` lause, AVC rida koos parandusega ja kaks ridade arvu, `memory.max` ja `cgroup.controllers`, Docker API kaks rida.
 
 ## Miks see nii töötab
 

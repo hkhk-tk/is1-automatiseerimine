@@ -27,7 +27,7 @@ Teed seda, mida enne IaC-d tehti aastaid: kloonid UI-s VM-i.
 
 "No changes" kõrval pool'is oleva uue VM-iga on oluline tulemus. Tofu võrdleb ainult seda, mis on state'is või koodis. Kõik muu on tema jaoks olematu, isegi kui see on samas pool'is ja kasutab sinu kvooti.
 
-✅ **Edasi saad minna, kui** ops01 töötab UI-s, plaan ütleb "No changes" ja `grep -c` annab `0`: Tofu ei tea VM-ist midagi.
+**Edasi saad minna, kui** ops01 töötab UI-s, plaan ütleb "No changes" ja `grep -c` annab `0`: Tofu ei tea VM-ist midagi.
 
 ## Too ops01 koodi alla
 
@@ -63,7 +63,7 @@ Genereeritud mustand on pikk, sest provider kirjutas kõik, mida ta luges, ka va
 
 > Mustandis pole `clone` plokki, sest seda ei saa olemasolevast VM-ist lugeda. Seepärast ei sobi imporditud VM otse mooduli `vm` alla, mis eeldab kloonimist.
 
-✅ **Edasi saad minna, kui** `apply` ütles `1 imported`, `tofu state list` näitab `proxmox_virtual_environment_vm.ops01` ja pärast `import.tf` eemaldamist on plaan "No changes" või ainult `~` read, mille põhjus on `NOTES.md`-s.
+**Edasi saad minna, kui** `apply` ütles `1 imported`, `tofu state list` näitab `proxmox_virtual_environment_vm.ops01` ja pärast `import.tf` eemaldamist on plaan "No changes" või ainult `~` read, mille põhjus on `NOTES.md`-s.
 
 ## Otsusta, kas ops01 jääb
 
@@ -79,15 +79,15 @@ UI-s kustutatud masinast jääb järele ainult task-logi rida. Koodiga kustutatu
     tofu apply
     ```
 
-2. Kirjuta `NOTES.md`-sse, miks import-plokk tuli eemaldada enne, kui VM kadus.
+2. **Mõtle:** miks tuli import-plokk eemaldada enne, kui VM kadus?
 
 Plaan näitas ainult ops01 kustutamist, sest teised viis on endiselt koodis. Ressursiploki kustutamine koodist on Tofu jaoks sama mis "seda objekti pole enam vaja". Seepärast kaob ka iga kaitse, mis oli ploki sees: `prevent_destroy` ei aita, kui plokki enam pole.
 
-✅ **Edasi saad minna, kui** plaan oli `0 to add, 0 to change, 1 to destroy`, ops01 on UI-st läinud ja plaan on "No changes".
+**Edasi saad minna, kui** plaan oli `0 to add, 0 to change, 1 to destroy`, ops01 on UI-st läinud ja plaan on "No changes".
 
 ## Leia drift ja otsusta
 
-Teed kolm käsitsi muudatust: kaks Proxmoxis ja ühe VM-i sees. Siis vaatad, millised neist Tofu leiab ja millised mitte. Enne igat plaani kirjuta ennustus `NOTES.md`-sse.
+Teed kolm käsitsi muudatust: kaks Proxmoxis ja ühe VM-i sees. Siis vaatad, millised neist Tofu leiab ja millised mitte. Enne iga plaani ennusta, mida see näitab.
 
 Drift on muudatus, mille kohta pole otsust. Kui seda ei leia, võtab järgmine `apply` selle vaikides tagasi. Kui leiad, aga ei otsusta, võtab see muudatuse tagasi ikka.
 
@@ -118,7 +118,7 @@ Drift on muudatus, mille kohta pole otsust. Kui seda ei leia, võtab järgmine `
 
 > `tofu apply -refresh-only` kirjutaks tegelikkuse state'i, Proxmoxis midagi muutmata. See värskendab ainult state'i: kood nõuab järgmisel plaanil ikka koodis kirjeldatud olekut.
 
-✅ **Edasi saad minna, kui** `-refresh-only` näitas `started` ja `memory` muutust, aga mitte `htop`-i, `NOTES.md`-s on kolm otsust ja `tofu plan` ütleb "No changes".
+**Edasi saad minna, kui** `-refresh-only` näitas `started` ja `memory` muutust, aga mitte `htop`-i, `NOTES.md`-s on kolm otsust ja `tofu plan` ütleb "No changes".
 
 ## Tee dev-keskkond workspace'iga
 
@@ -160,7 +160,7 @@ Precondition peatas plaani ilma `-var-file`-ita. Unustatud lipp on täpselt see 
 
 > `AccessDenied` workspace'i loomisel: `workspace_key_prefix` puudub ja state läheb prefiksi `env:/` alla, mida sinu võti ei näe. Pärast `backend.hcl` muutmist: `tofu init -backend-config=backend.hcl -reconfigure`.
 
-✅ **Edasi saad minna, kui** plaan ilma `-var-file`-ita ebaõnnestus sinu `precondition`-i teatega, dev-plaan oli `2 to add` (dev01 ja tema inventory), kahe workspace'i `lineage` on erinev, dev01 on kustutatud, `workspace show` annab `default` ja seal on plaan "No changes".
+**Edasi saad minna, kui** plaan ilma `-var-file`-ita ebaõnnestus sinu `precondition`-i teatega, dev-plaan oli `2 to add` (dev01 ja tema inventory), kahe workspace'i `lineage` on erinev, dev01 on kustutatud, `workspace show` annab `default` ja seal on plaan "No changes".
 
 ## Commit
 
@@ -177,9 +177,8 @@ git push
 
 `git ls-files` on lõplik vastus küsimusele, mis on koodis. `env/dev.tfvars` on seal, sest see kirjeldab teist keskkonda ja ei sisalda saladusi. Import-failid puuduvad, sest ops01 lugu on lõppenud ja jälg sellest on commit'i ajaloos.
 
-✅ **Edasi saad minna, kui** `git ls-files k04-tofu` näitab `env/dev.tfvars`, aga mitte `import.tf`-i ega `ops01.tf`-i.
+**Edasi saad minna, kui** `git ls-files k04-tofu` näitab `env/dev.tfvars`, aga mitte `import.tf`-i ega `ops01.tf`-i.
 
-📎 **Selle mooduli tõend:** commit `k04: import…`; `NOTES.md`-s impordi plaan (`1 to import`), kolm drift'i otsust põhjustega, dev-workspace'i `state list` ja kaks `lineage`-i; issue `K4.6` kommentaaris `tofu plan -refresh-only` väljund.
 
 ## Miks see nii töötab
 

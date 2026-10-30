@@ -49,7 +49,7 @@ Kahe stacki samaaegne käivitamine 4 GB masinas annab OOM-kille, mis näevad vä
 
 `dependency failed to start` ütleb ainult, et keegi ahelas ei jõudnud `healthy` olekusse. Kaskaad peidab algpõhjuse: teenused, kes ootavad, ei käivitunudki ja nende logid on tühjad. Alusta sellest, kes on `Exited` või `unhealthy`, mitte sellest, kes on ahela lõpus.
 
-✅ **Edasi saad minna, kui** `up` lõppes veaga `dependency failed to start`, `up-1.log` on salvestatud ja tead, millised teenused on `Exited` ja millised `unhealthy`.
+**Edasi saad minna, kui** `up` lõppes veaga `dependency failed to start`, `up-1.log` on salvestatud ja tead, millised teenused on `Exited` ja millised `unhealthy`.
 
 ## Andmebaas ei käivitu
 
@@ -69,7 +69,7 @@ db01 lõpetab kohe pärast starti. Alusta temast, sest kõik teised ootavad teda
 
 Hea parandus töötab ka uuel masinal, kus keegi pole midagi käsitsi ette valmistanud. Kui sinu parandus vajab enne `up`-i mõnda käsku, mida failis pole, on see ajutine lahendus, mitte parandus.
 
-✅ **Edasi saad minna, kui** db01 on `(healthy)` ja `dci exec db01 id` näitab `uid=999`. Esita see commit'ina `fix(intsident): db01 …`, sõnumis põhjus.
+**Edasi saad minna, kui** db01 on `(healthy)` ja `dci exec db01 id` näitab `uid=999`. Esita see commit'ina `fix(intsident): db01 …`, sõnumis põhjus.
 
 ## Vahemälu on unhealthy
 
@@ -87,7 +87,7 @@ Teine viga on mujal. mc01 protsess töötab, aga Docker peab teda haigeks ja app
 
 Healthcheck on kood nagu iga teine. Kui see kontrollib vale asja, annab ta vale vastuse, ja iga `depends_on` sõltuvus usaldab seda vastust. Teenuse enda logis pole siin midagi: viga on selles, kuidas teda väljast vaadatakse.
 
-✅ **Edasi saad minna, kui** mc01 on `(healthy)` ja `dci up -d --wait app01` jõuab app01 `(healthy)` olekusse. Esita see commit'ina `fix(intsident): mc01 …`.
+**Edasi saad minna, kui** mc01 on `(healthy)` ja `dci up -d --wait app01` jõuab app01 `(healthy)` olekusse. Esita see commit'ina `fix(intsident): mc01 …`.
 
 ## web01 annab 502
 
@@ -107,7 +107,7 @@ Kolmas viga ei ole üheski konteineris eraldi. app01 on `healthy`, web01 tööta
 
 Parandus peab hoidma `front`- ja `back`-võrgu jaotuse. Lahendus, mis paneb kõik teenused ühte võrku, töötab samuti, aga avab app01 ja andmebaasi väljapääsu ning see oleks uus viga vana asemel.
 
-✅ **Edasi saad minna, kui** web01 on `(healthy)` ja `curl -s localhost:8090/health` annab `"status":"UP"`. Esita see commit'ina `fix(intsident): web01 …`.
+**Edasi saad minna, kui** web01 on `(healthy)` ja `curl -s localhost:8090/health` annab `"status":"UP"`. Esita see commit'ina `fix(intsident): web01 …`.
 
 ## Hoolduse järgne taaskäivitus: stack käivitub ise
 
@@ -132,7 +132,7 @@ Kolm riket on parandatud, aga stack töötab ainult seni, kuni keegi daemonit ei
 
 Kui stack ei käivitunud, vaata enne faili muutmist iga konteineri poliitikat: `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)`. Kui mc01 käivitus koos teistega, on poliitika vale. Kui app01 oli `Up`, aga `unhealthy` ka siis, kui db01 oli juba `healthy`, on viga rakenduses: see ei talu sõltuvuse puudumist.
 
-✅ **Edasi saad minna, kui** teine restart andis 120 s pärast neli `healthy` teenust ja mc01 olekuga `Exited`, `/health` pordil 8090 andis HTTP 200 ja `"cache":"DOWN"` ning pärast `dci start mc01` `"cache":"UP"`. Esita see commit'ina `fix(intsident): restart-poliitika …` ja kirjuta sõnumisse, miks valisid just selle poliitika.
+**Edasi saad minna, kui** teine restart andis 120 s pärast neli `healthy` teenust ja mc01 olekuga `Exited`, `/health` pordil 8090 andis HTTP 200 ja `"cache":"DOWN"` ning pärast `dci start mc01` `"cache":"UP"`. Esita see commit'ina `fix(intsident): restart-poliitika …` ja kirjuta sõnumisse, miks valisid just selle poliitika.
 
 ## Stack nullist
 
@@ -154,7 +154,7 @@ docker compose up -d --wait && curl -s localhost:8080/health; echo
 
 Neli commit'i nelja põhjusega on intsidendi ajalugu, mida järgmine admin saab lugeda ilma sinult küsimata. `down -v` ja uus `up` tõestasid, et ükski parandus ei sõltunud varem loodud volume'ist ega kaustast.
 
-✅ **Edasi saad minna, kui** pärast `down` ja `up` on viis teenust `healthy` ilma käsitsi sekkumiseta, `/health` pordil 8090 on `UP`, Gitis on neli `fix(intsident)` commit'i ja põhistack on jälle üleval.
+**Edasi saad minna, kui** pärast `down` ja `up` on viis teenust `healthy` ilma käsitsi sekkumiseta, `/health` pordil 8090 on `UP`, Gitis on neli `fix(intsident)` commit'i ja põhistack on jälle üleval.
 
 ## Intsidendi kokkuvõte
 
@@ -173,9 +173,9 @@ grep -A25 '^## Intsident' TOEND.md | head -30
 
 Kui iga rikke juures on kontroll, mis oleks selle varem leidnud, on sul GitHub Actionsi pipeline'i jaoks kolm testi ideed.
 
-✅ **Edasi saad minna, kui** jaotises `## Intsident` on tabel, rikete kohad ja järjekord, kaskaadi lõik ning iga rikke kohta üks ennetav kontroll.
+**Edasi saad minna, kui** jaotises `## Intsident` on tabel, rikete kohad ja järjekord, kaskaadi lõik ning iga rikke kohta üks ennetav kontroll.
 
-📎 **Selle mooduli tõend:** neli commit'i `fix(intsident): …` põhjusega sõnumis (kolm riket ja restart-poliitika); `intsident/up-1.log`; TOEND.md-s jaotis `## Intsident` tabeli, kaskaadi lõigu ja kolme ennetava kontrolliga.
+**Selle osa tõend:** neli commit'i `fix(intsident): …` põhjusega sõnumis (kolm riket ja restart-poliitika); `intsident/up-1.log`; TOEND.md-s jaotis `## Intsident` tabeli, kaskaadi lõigu ja kolme ennetava kontrolliga.
 
 ## Miks see nii töötab
 

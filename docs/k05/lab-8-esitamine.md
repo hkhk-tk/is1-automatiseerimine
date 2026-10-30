@@ -37,7 +37,7 @@ git status --short
 
 Tühi `git ls-files | grep` tähendab, et ükski tuntud saladusfail pole Gitis. See ei tõesta, et saladusi pole üldse, aga `hygiene` kontroll otsib lisaks tokenite ja paroolide mustreid workflow failidest. `k03.env kustutatud` kinnitab, et control node'il on paroolid ainult seal, kus stack neid vajab. Kui mõni kontroll annab siin `FAIL`, annab sama ka automaatne hindaja, seega paranda kohe.
 
-✅ **Edasi saad minna, kui** `mvn` ja `actionlint` annavad `0`, `git ls-files | grep` on tühi, `k03.env kustutatud`, kõik kuus kontrolli annavad `OK`, `gh secret list` näitab nelja nime, runner on `online` ja `git status` on tühi.
+**Edasi saad minna, kui** `mvn` ja `actionlint` annavad `0`, `git ls-files | grep` on tühi, `k03.env kustutatud`, kõik kuus kontrolli annavad `OK`, `gh secret list` näitab nelja nime, runner on `online` ja `git status` on tühi.
 
 ## Esimene Dependaboti PR
 
@@ -58,12 +58,12 @@ Automaatne uuendus, mida keegi ei vaata, on sama risk kui uuendus, mida ei tehta
     gh pr checks <nr>
     ```
 
-3. Kirjuta märkmikku: mis versioon mis versiooniks muutus, kas see on patch, minor või major, kas kõik kontrollid on rohelised ja sinu otsus (merge või mitte) ühe lausega.
+3. Vaata, mis versioon mis versiooniks muutus, kas see on patch, minor või major ja kas kõik kontrollid on rohelised. Kirjuta oma otsus (merge või mitte) ühe lausega PR-i kommentaariks.
 4. Kui otsustasid merge'ida, tee seda ja kontrolli deploy'd: `/version` peab võrduma uue `origin/main`-iga.
 
 Action'i PR-is muutub SHA ja kommentaar koos, Maveni PR-is versiooninumber pom'is. Deploy PR-il ei käivitunud, sest `if:` lubab ainult push'i main'i, seega ei saanud Dependaboti kood sinu serverisse ilma sinu merge'ita. Major-versiooni hüpe on koht, kus loed muudatuste logi, isegi kui CI on roheline, sest testid ei kata kogu käitumist. Kui ükski PR ei tulnud ka pärast käsitsi kontrolli, on kõik juba uusimad või on `dependabot.yml` vigane: sama lehe viga ütleb, kumb.
 
-✅ **Edasi saad minna, kui** märkmikus on ühe Dependaboti PR-i muudatus, kontrollide tulemus ja sinu otsus, või kirje, et Dependabot kontrollis ja uuendusi polnud.
+**Edasi saad minna, kui** ühel Dependaboti PR-il on sinu kommentaar otsusega või Dependabot kontrollis ja uuendusi polnud.
 
 ## Sinu töökohal
 
@@ -76,7 +76,7 @@ awk '/^## K5: sinu töökohal/{f=1;next} /^## /{f=0} f' NOTES.md | grep -o '[.?!
 git add NOTES.md && git commit -m "notes: K5 sinu töökohal" && git push
 ```
 
-✅ **Edasi saad minna, kui** `wc -l` annab 3–5 ja commit on harus `k05-actions`.
+**Edasi saad minna, kui** `wc -l` annab 3–5 ja commit on harus `k05-actions`.
 
 ## PR, merge ja tag
 
@@ -96,7 +96,7 @@ git tag k05 && git push origin k05
 
 `git ls-remote --tags origin` näitab, millised tag'id on GitHubis. Viimane merge käivitas veel ühe deploy, seega tootmises töötab täpselt see commit, millele tag osutab. Kui deploy pärast viimast merge'i ebaõnnestus, paranda see enne automaatse hindaja tulemuse vaatamist, sest koolitaja vaatab ka Actions vaadet.
 
-✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k05` ja main'i viimane deploy on roheline.
+**Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k05` ja main'i viimane deploy on roheline.
 
 ## Automaatse hindaja tulemus
 
@@ -104,24 +104,7 @@ Tag `k05` käivitab GitHubis automaatse hindaja. See kontrollib, kas vajalikud f
 
 Kui tulemus erineb sellest, mida said lokaalselt, on peaaegu alati põhjus selles, et tag on teise commit'i peal kui sinu töökaust. Võrdle `git rev-parse k05` ja `git rev-parse origin/main`: need peavad olema samad.
 
-✅ **Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
-
-## Tõendid moodulite kaupa
-
-Viimane kontroll on sinu enda märkmik. Iga rida allpool on üks moodul ja selle tõendid samas järjekorras, nagu need moodulite lõpus olid. Kui mõni puudub, leiad enamiku *Actions* vahekaardilt, sest tõendid on käivituste lingid ja need jäävad alles.
-
-- [ ] Maven: versioonid, testide arv ja katvus, `spring-core` versioon, WAR-i suurus, major version'i viga, mäluviga ja AI hinnang, JDK 17 viga, värske kloon ja offline-build
-- [ ] Esimene workflow: runner'i image ja Java, kahe punase käivituse ja katkise YAML-i lingid, roheline PR, `unzip -l`, `failure()` käivituse link, sammude kestused, `timeout-minutes` arvutus ja prooviks käivitatud workflow
-- [ ] Trivy, matrix ja õigused: Trivy leiud, ühe leiu jälg pom'ini, matrix'i ennustus ja tulemus, vahemälu kirjed, *GITHUB_TOKEN Permissions*, SHA-d, `dependabot.yml` nelja ökosüsteemiga, db01 `FROM` digest'iga
-- [ ] Image ja deploy: sama SHA, ghcr.io tag = sha7, `CACHED`, runner `online`, `docker inspect`, `/version` = commit, runner'i töökaust, muudatus haru kaudu
-- [ ] Triggerid, saladused ja environment: nupu ja kinnituse käivitused, haru piirangu keeldumine, neli secret'it, `~/k03.env` kustutatud, kolme deploy olekud ja ajad
-- [ ] Health check ja rollback: `verify-deploy` action, punane deploy rollback'iga, revert ja roheline deploy, katkestuse ajajoon
-- [ ] Katkine pipeline: `fix(ci)` commit'id, nelja vea tabel, roheline deploy, `runner-valve.sh`
-- [ ] Esitamine: Dependaboti PR-i otsus, `NOTES.md` jaotis `## K5: sinu töökohal`, tag `k05`, Releases tulemus
-
-✅ **Edasi saad minna, kui** kõik linnukesed on tehtud.
-
-📎 **Selle mooduli tõend:** Dependaboti PR-i otsus märkmikus, `NOTES.md` jaotis `## K5: sinu töökohal` 3–5 lausega, tag `k05` `main`-i peal ja automaatse hindaja tulemus GitHubi Releases all.
+**Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
 
 ## Pärast esitamist: stack maha
 
@@ -135,4 +118,4 @@ docker compose -p <projekti nimi> down
 docker ps --format '{{.Names}}'
 ```
 
-✅ **Edasi saad minna, kui** `docker compose ls` stacki enam ei näita ja `docker ps` ei näita ühtegi stacki teenust.
+**Edasi saad minna, kui** `docker compose ls` stacki enam ei näita ja `docker ps` ei näita ühtegi stacki teenust.

@@ -30,7 +30,7 @@ docker image ls labseis-app
 
 Build'i aeg tuli peamiselt sõltuvuste allalaadimisest, suurus ehitustööriistadest.
 
-✅ **Edasi saad minna, kui** image on suurusjärgus 800 MB või rohkem ja esimene build oli aeglane (Maven laeb sõltuvusi).
+**Edasi saad minna, kui** image on suurusjärgus 800 MB või rohkem ja esimene build oli aeglane (Maven laeb sõltuvusi).
 
 ## Mitmeastmeline Dockerfile
 
@@ -58,7 +58,7 @@ Tabel L3.2 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehit
 
 Suuruse vahe on JDK, Maven ja `~/.m2`. `history` ülemised read on WAR ja metaandmed; kui näed seal Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
-✅ **Edasi saad minna, kui** `multi` on mitusada MB väiksem kui `naive`, `history` ülemistes ridades on WAR (~50–60 MB) ja curl'i kiht, Maveni kihte pole, ja label'is on sinu SHA. Kirjuta mõlema suurus TOEND.md-sse.
+**Edasi saad minna, kui** `multi` on mitusada MB väiksem kui `naive`, `history` ülemistes ridades on WAR (~50–60 MB) ja curl'i kiht, Maveni kihte pole, ja label'is on sinu SHA. Kirjuta mõlema suurus TOEND.md-sse.
 
 ## Mis lõppimage'isse jõudis
 
@@ -82,7 +82,7 @@ Kompilaator ja ehitustööriistad tootmise image'is on ründajale tööriistakas
 
 `naive` image'is on `mvn` ja `javac`, `multi`-s ainult `java` (JRE). `webapps` all on üks WAR, Tomcati näiterakendusi pole. Lähtekoodi lõppimage'is pole: see jäi build-astmesse, mida registry'sse ei lükata.
 
-✅ **Edasi saad minna, kui** `naive` näitab kolme teed, `multi` ainult `java` teed, `webapps` all on ainult `ROOT.war` ja `/src` puudub. Kirjuta TOEND.md-sse üks lause: mida ründaja `naive` image'is teha saaks, mida `multi`-s ei saa.
+**Edasi saad minna, kui** `naive` näitab kolme teed, `multi` ainult `java` teed, `webapps` all on ainult `ROOT.war` ja `/src` puudub. Kirjuta TOEND.md-sse üks lause: mida ründaja `naive` image'is teha saaks, mida `multi`-s ei saa.
 
 ## Cache töötab ja läheb katki
 
@@ -93,6 +93,8 @@ GitHub Actionsi CI-s tähendab purunenud cache iga commit'iga minuteid lisaaega 
 1. Muuda üht rida mõnes Java-failis (näiteks kommentaar `VersionController.java`-s) ja ehita uuesti sama käsuga.
 2. Tõsta ajutiselt `ARG GIT_SHA` ja `ENV GIT_SHA` käitusastme algusesse (kohe `FROM tomcat…` järele) ja ehita kaks korda erineva väärtusega.
 
+    **Ennusta:** kas `apt-get` kiht ehitatakse teisel korral uuesti?
+
     ```bash
     docker build -f k03-docker/app/Dockerfile --build-arg GIT_SHA=aaa -t labseis-app:multi . 2>&1 | grep -E 'CACHED|apt-get' | head -5
     docker build -f k03-docker/app/Dockerfile --build-arg GIT_SHA=bbb -t labseis-app:multi . 2>&1 | grep -E 'CACHED|apt-get' | head -5
@@ -102,7 +104,7 @@ GitHub Actionsi CI-s tähendab purunenud cache iga commit'iga minuteid lisaaega 
 
 Esimene katse näitas, et `pom.xml`-i eraldi kopeerimine töötab: koodi muudatus ei laadinud sõltuvusi uuesti. Teine näitas, et ka üks `ARG` vales kohas ehitab kõik järgnevad kihid uuesti, sest muutuja väärtus on kihi sisendi osa. Reegel on lihtne: mida sagedamini muutub, seda lõpus.
 
-✅ **Edasi saad minna, kui** esimesel korral oli `dependency:go-offline` samm `CACHED` ja uuesti käivitusid ainult `COPY src` ja järgmised, teisel katsel töötas `apt-get` iga SHA-ga uuesti, kuigi midagi ei muutunud.
+**Edasi saad minna, kui** esimesel korral oli `dependency:go-offline` samm `CACHED` ja uuesti käivitusid ainult `COPY src` ja järgmised, teisel katsel töötas `apt-get` iga SHA-ga uuesti, kuigi midagi ei muutunud.
 
 ## Kihid kettal: history, GraphDriver ja kirjutatav kiht
 
@@ -138,7 +140,7 @@ Kui saladus või suur fail satub ühte kihti ja järgmine `RUN rm` selle "eemald
 
 `history` näitas, et suured on ainult apt'i ja WAR-i kihid; `ENV`, `LABEL` ja `CMD` on 0 B, sest need muudavad ainult metaandmeid. `kihtproov` on üle 50 MB, kuigi alpine ise on alla 10 MB ja `/suur` on kustutatud: 50 MB kiht on alles ja `rm` lisas paari KB suuruse kihi, mis ainult peidab faili. `docker diff` näitas `A` (lisatud) ja `C` (muudetud) ridu, sh Tomcati `work` ja `logs` muudatusi. Sama fail paistis hostis kirjutatava kihi kaustas. Konteineri kirjutatav kiht on lihtsalt kataloog hosti kettal ja kaob `docker rm`-iga.
 
-✅ **Edasi saad minna, kui** tead app-image'i kihtide arvu ja draiverit, `kihtproov` on üle 50 MB ja tema `history`-s on 50 MB kiht, `docker diff` näitab `A /tmp/minu.txt` ja hostis on `minu.txt` kirjutatava kihi `tmp` all. Kirjuta TOEND.md-sse `kihtproov` suurus ja üks lause: kuidas saladuse image'ist tegelikult välja saad.
+**Edasi saad minna, kui** tead app-image'i kihtide arvu ja draiverit, `kihtproov` on üle 50 MB ja tema `history`-s on 50 MB kiht, `docker diff` näitab `A /tmp/minu.txt` ja hostis on `minu.txt` kirjutatava kihi `tmp` all. Kirjuta TOEND.md-sse `kihtproov` suurus ja üks lause: kuidas saladuse image'ist tegelikult välja saad.
 
 ## Kes on PID 1
 
@@ -161,7 +163,7 @@ Tomcat, kes ei saa SIGTERM-i, ei lõpeta pooleli päringuid ega sulge andmebaasi
 
 Shell-vormis on PID 1 `sh`, kes signaali edasi ei anna; 10 sekundi pärast tuli SIGKILL. Exec-vormis sai Java signaali ja lõpetas paari sekundiga. Kui `docker logs appt` näitab pärast stoppi `Stopping service [Catalina]`, jõudis signaal kohale.
 
-✅ **Edasi saad minna, kui** exec-vormiga on PID 1 `java` ja `stop` võtab paar sekundit, shell-vormiga on PID 1 `/bin/sh -c …` ja `stop` umbes 10 s. Kirjuta mõlemad ajad TOEND.md-sse.
+**Edasi saad minna, kui** exec-vormiga on PID 1 `java` ja `stop` võtab paar sekundit, shell-vormiga on PID 1 `/bin/sh -c …` ja `stop` umbes 10 s. Kirjuta mõlemad ajad TOEND.md-sse.
 
 ## Mitte-root kasutaja
 
@@ -189,7 +191,7 @@ docker image inspect -f '{{.Config.User}}' labseis-app:multi
 
 `touch` `conf/` alla ebaõnnestus: konfiguratsioon on kirjutuskaitstud ka töötavale rakendusele. `/health/live` vastas, seega said kõik kirjutatavad kaustad õige omaniku. Numbriline `User` on see, mida kontrollivad Trivy `config` registry lehel ja hiljem Kubernetes.
 
-✅ **Edasi saad minna, kui** `id` näitab `uid=10001`, `/health/live` vastab `{"status":"UP"}`, `touch` annab `Permission denied` ja image'i `User` on `10001`.
+**Edasi saad minna, kui** `id` näitab `uid=10001`, `/health/live` vastab `{"status":"UP"}`, `touch` annab `Permission denied` ja image'i `User` on `10001`.
 
 ## ENTRYPOINT ja CMD: kontroll-image
 
@@ -224,7 +226,7 @@ Kirjuta `k03-docker/kontroll/Dockerfile` (kontekst on see kaust):
 
 Vaikimisi käivitus ENTRYPOINT koos CMD-ga, argument asendas ainult CMD-i, `--entrypoint` asendas programmi. Kood 6 on curl'i kood "nime ei lahendatud", nii et skript saab eristada nimeviga ühendusveast (7) või HTTP veast (22).
 
-✅ **Edasi saad minna, kui** esimene annab `Could not resolve host: web01` ja `exit=6` (töötas vaike-CMD), teine `{"status":"UP"}` (argument asendas CMD-i) ja kolmas `uid=65534(nobody)` (asendati programm ise). Kirjuta kolm väljundit TOEND.md-sse.
+**Edasi saad minna, kui** esimene annab `Could not resolve host: web01` ja `exit=6` (töötas vaike-CMD), teine `{"status":"UP"}` (argument asendas CMD-i) ja kolmas `uid=65534(nobody)` (asendati programm ise). Kirjuta kolm väljundit TOEND.md-sse.
 
 ## Commit
 
@@ -234,14 +236,14 @@ Enne commit'i käivitad automaatse hindaja testi, mis vaatab app-Dockerfile'i ku
 rm -f k03-docker/app/Dockerfile.naive
 bash autograde/check.sh k03 multistage
 git add k03-docker/app k03-docker/kontroll k03-docker/TOEND.md
-git commit -m "K3.3 mitmeastmeline app, mitte-root, kontroll-image (closes #N)" && git push
+git commit -m "K3.3 mitmeastmeline app, mitte-root, kontroll-image" && git push
 ```
 
 `multistage` vaatab ainult faili kuju: kaks `FROM`-i ja `COPY --from`. Kas image töötab, nägid sa ise; automaatse hindaja `build` ehitab selle esitamisel värskest kloonist.
 
-✅ **Edasi saad minna, kui** `multistage` annab `OK` ja `Dockerfile.naive` pole Gitis. `tags` vajab ka `compose.yaml`-i ja läheb läbi alles siis, kui stack on Compose'is kirjas.
+**Edasi saad minna, kui** `multistage` annab `OK` ja `Dockerfile.naive` pole Gitis. `tags` vajab ka `compose.yaml`-i ja läheb läbi alles siis, kui stack on Compose'is kirjas.
 
-📎 **Selle mooduli tõend:** commit `K3.3 …`; TOEND.md-s image'ite suurused, lõppimage'i sisu lause, `kihtproov` suurus ja saladuse lause, kaks `docker stop` aega, `id` väljund ja kontroll-image'i kolm käivitust.
+**Selle osa tõend:** commit `K3.3 …`; TOEND.md-s image'ite suurused, lõppimage'i sisu lause, `kihtproov` suurus ja saladuse lause, kaks `docker stop` aega, `id` väljund ja kontroll-image'i kolm käivitust.
 
 ## Miks see nii töötab
 

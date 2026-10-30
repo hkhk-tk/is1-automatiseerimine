@@ -44,7 +44,7 @@ Plaan tahab kustutada viis ja luua viis, kuigi VM-id, sisendid ja tulemus on sam
 
 > Ära `apply`-i: see plaan kustutaks kõik viis VM-i ja teeks need uuesti.
 
-✅ **Edasi saad minna, kui** plaan näitab `5 to add, 5 to destroy` ja sa ei teinud `apply`-d.
+**Edasi saad minna, kui** plaan näitab `5 to add, 5 to destroy` ja sa ei teinud `apply`-d.
 
 ## Ütle moved'iga, et see on sama VM
 
@@ -74,7 +74,7 @@ Plaan ütles `has moved to` ja `0 to add, 0 to change, 0 to destroy`. `apply` mu
 
 > Kui plaan näitab ikka destroy't, ei klapi `from` vana state'iga täpselt. Tüüpiline viga: `lab["web01"]` vs `lab.web01`.
 
-✅ **Edasi saad minna, kui** plaan näitas `has moved to` ja `0 to destroy`, `state list` näitab viit `module.vm[...]` aadressi ja `tofu plan` ütleb "No changes".
+**Edasi saad minna, kui** plaan näitas `has moved to` ja `0 to destroy`, `state list` näitab viit `module.vm[...]` aadressi ja `tofu plan` ütleb "No changes".
 
 ## Vii state bucketisse
 
@@ -113,7 +113,7 @@ Sama `serial` enne ja pärast tähendab, et kolimine kopeeris state'i muutmata. 
 
 > `InvalidAccessKeyId` või `NoSuchBucket`: `s3.env` on laadimata või `key`-s on vale prefiks. `connection refused`: VPN või Garage on maas, ütle koolitajale ja jätka inventory ja `up.sh`-iga kohaliku state'iga (`backend.tf` ajutiselt ära).
 
-✅ **Edasi saad minna, kui** plaan on "No changes", `serial` on sama mis enne, kohalik `terraform.tfstate` on tühi või puudub ja `.terraform/terraform.tfstate` näitab `"s3"` ning sinu võtit.
+**Edasi saad minna, kui** plaan on "No changes", `serial` on sama mis enne, kohalik `terraform.tfstate` on tühi või puudub ja `.terraform/terraform.tfstate` näitab `"s3"` ning sinu võtit.
 
 ## Lülita lukk sisse ja proovi
 
@@ -134,13 +134,13 @@ Ilma lukuta jääb state'i see, kes kirjutas viimasena. Teise käivituse loodud 
     tofu plan -lock-timeout=0s
     ```
 
-4. Kirjuta `NOTES.md`-sse luku ID, omanik ja aeg veateatest, siis välju esimeses konsoolist (`exit`) ja korda sammu 3.
+4. Leia veateatest luku ID, omanik ja aeg, siis välju esimeses konsoolist (`exit`) ja korda sammu 3.
 
 Veateates on kirjas, kes lukku hoiab (kasutaja ja host) ja millest alates. See on info, millega meeskonnas küsitakse "kas sa ikka käivitad midagi?", mitte murtakse lukk lahti. Pärast konsoolist väljumist läks plaan läbi, sest korrektselt lõppenud protsess kustutab oma `.tflock` objekti.
 
 > Kui teine `plan` läheb lukuveata läbi, ei toeta salvestus tingimuslikku kirjutust. Ütle koolitajale; seni tee sama proov kaustas `01-alused`, kus kohalik backend lukustab alati.
 
-✅ **Edasi saad minna, kui** teine terminal sai `Error acquiring the state lock` luku ID-ga ja pärast konsoolist väljumist läks plaan läbi.
+**Edasi saad minna, kui** teine terminal sai `Error acquiring the state lock` luku ID-ga ja pärast konsoolist väljumist läks plaan läbi.
 
 ## Vabasta mahajäänud lukk
 
@@ -164,7 +164,7 @@ Eelmises etapis vabastas lukk end ise. Siin tapad lukku hoidva protsessi nii, et
 
 `kill -9` ei anna protsessile võimalust koristada, nii et `.tflock` objekt jäi bucketisse. Tofu ei saa teada, kas lukuhoidja on surnud või lihtsalt aeglane; seda otsustab inimene. `pgrep` enne `force-unlock`-i on see otsus: sama kontroll tootmises tähendab kolleegile kirjutamist või pipeline'i vaatamist.
 
-✅ **Edasi saad minna, kui** pärast `kill -9`-i andis plaan lukuvea, `force-unlock` õnnestus ja järgmine plaan ütleb "No changes". `NOTES.md`-s on kirjas, mida kontrollisid enne `force-unlock`-i.
+**Edasi saad minna, kui** pärast `kill -9`-i andis plaan lukuvea, `force-unlock` õnnestus ja järgmine plaan ütleb "No changes". Oskad öelda, mida kontrollisid enne `force-unlock`-i.
 
 ## Commit
 
@@ -182,9 +182,8 @@ git push
 
 Tühi `grep` väljund tähendab, et Giti ei läinud ei backendi aadress ega state. `module` kontroll `OK` tähendab, et automaatne hindaja leidis mooduli ja juurmooduli, mis kasutab selle väljundit.
 
-✅ **Edasi saad minna, kui** `git ls-files … | grep` on tühi ja `bash autograde/check.sh k04 module` annab `OK`.
+**Edasi saad minna, kui** `git ls-files … | grep` on tühi ja `bash autograde/check.sh k04 module` annab `OK`.
 
-📎 **Selle mooduli tõend:** commit `k04: moodul vm…` koos `moved.tf` ja `backend.tf`-iga; issue `K4.3` kommentaaris plaan `0 to destroy`, `jq .backend.type` väljund, lukuvea read ja `force-unlock` käik.
 
 ## Miks see nii töötab
 

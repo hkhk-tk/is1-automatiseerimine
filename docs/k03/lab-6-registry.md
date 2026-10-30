@@ -54,7 +54,7 @@ Tag `latest` või `dev` ei ütle, mis kood image'is on. Kui midagi läheb katki,
 
 `Layer already exists` teisel push'il tähendab, et registry hoiab kihte, mitte terveid image'eid: sama sisuga kiht salvestatakse üks kord. Uus tag on ainult uus nimi sama manifesti juurde, seepärast on IMAGE ID mõlemal real sama.
 
-✅ **Edasi saad minna, kui** Gitea **Packages** all on kolm image'it tag'iga `<lühike SHA>`, web-image'i kahel real on sama IMAGE ID ja teine push ütles iga kihi kohta `Layer already exists`. Salvesta Packages vaade faili `img/gitea-packages.png`.
+**Edasi saad minna, kui** Gitea **Packages** all on kolm image'it tag'iga `<lühike SHA>`, web-image'i kahel real on sama IMAGE ID ja teine push ütles iga kihi kohta `Layer already exists`. Salvesta Packages vaade faili `img/gitea-packages.png`.
 
 ## Tag ja digest
 
@@ -74,7 +74,7 @@ Kui keegi lükkab sama tag'i alla uue image'i, saab järgmine `pull` teise sisu,
 
 Mõlemal tag'il on sama digest: nimi on erinev, sisu sama. `pull` digesti järgi ei laadinud midagi alla, sest kõik kihid olid olemas. Compose'is ja Kubernetes'es saab image'i kirjutada kujul `nimi@sha256:…`, ja siis ei muuda ükski uus push seda, mis töötab.
 
-✅ **Edasi saad minna, kui** `RepoDigests` näitab mõlemal tag'il sama `sha256:` väärtust, `pull "$D"` ütles `Image is up to date` ja `image ls --digests` näitab kaht rida sama digestiga. Kirjuta TOEND.md-sse digest ja üks lause: millal kasutaksid tootmises digesti, millal tag'i.
+**Edasi saad minna, kui** `RepoDigests` näitab mõlemal tag'il sama `sha256:` väärtust, `pull "$D"` ütles `Image is up to date` ja `image ls --digests` näitab kaht rida sama digestiga. Kirjuta TOEND.md-sse digest ja üks lause: millal kasutaksid tootmises digesti, millal tag'i.
 
 ## Stack registry'st
 
@@ -92,7 +92,7 @@ curl -s http://localhost:8080/version; echo
 
 `/version` ja image'i tag on sama SHA: töötav kood on tõendatavalt see, mis on Gitis. Andmed jäid alles, sest `down` ilma `-v`-ta ei puuduta volume'eid. `Already exists` kihid tulid kohalikust cache'ist, sest baasimage'id (`tomcat`, `mariadb`, `nginx`) jäid alles.
 
-✅ **Edasi saad minna, kui** `pull` tõmbas app-, db- ja web-image'i Gitea'st (olemasolevad kihid `Already exists`), `docker compose images` näitab Gitea nimesid SHA-tag'iga, `/version` sama SHA-d ja Compose'i stacki kaudu lisatud tulemus on andmebaasis alles. Kirjuta `docker compose images` TOEND.md-sse.
+**Edasi saad minna, kui** `pull` tõmbas app-, db- ja web-image'i Gitea'st (olemasolevad kihid `Already exists`), `docker compose images` näitab Gitea nimesid SHA-tag'iga, `/version` sama SHA-d ja Compose'i stacki kaudu lisatud tulemus on andmebaasis alles. Kirjuta `docker compose images` TOEND.md-sse.
 
 ## Trivy image'itele
 
@@ -125,7 +125,7 @@ Trivy tuvastab OS-paketid paketihalduri andmebaasist (`/var/lib/dpkg/status`, `/
 
 Leidude jaotus ütleb, kus tööd teha. OS-paketi leid kaob baasimage'i uuendusega, Java teegi leid vajab `pom.xml`-i muudatust ja uut build'i. `--ignore-unfixed` vahe näitab, kui paljudega sa praegu midagi teha ei saa; need on aktsepteerimise või komponendi vahetamise küsimused.
 
-✅ **Edasi saad minna, kui** `trivy.txt` sisaldab kolme image'i tabelit, tead `--ignore-unfixed` vahet ja TOEND.md-s on kolm vastust.
+**Edasi saad minna, kui** `trivy.txt` sisaldab kolme image'i tabelit, tead `--ignore-unfixed` vahet ja TOEND.md-s on kolm vastust.
 
 ## Trivy lähtekoodile ja konfiguratsioonile
 
@@ -153,7 +153,7 @@ Root'ina töötav image või liiga laialt avatud port on seadistusviga, mida CVE
 
 `fs` nägi ainult `pom.xml`-i sõltuvusi, sest lähtekoodis pole OS-pakette; image'i skänn näeb mõlemat. Konteineris töötav Trivy näitas sama ENTRYPOINT-i mustrit mis sinu kontroll-image: programm on juba ENTRYPOINT ja teine `trivy` sai argumendiks. GitHub Actionsi pipeline kasutab Trivy't just konteinerina.
 
-✅ **Edasi saad minna, kui** `fs` leidis `pom.xml`-ist Java teegid ilma OS-pakettideta, `config` ei märgi app-Dockerfile'i root-kasutaja pärast (db ja web võivad olla märgitud) ja konteinerist töötas esimene ja kolmas käsk, teine andis `unknown command "trivy"`. Kirjuta TOEND.md-sse üks lause `fs` ja `image` vahe kohta ja üks `config` leid koos otsusega.
+**Edasi saad minna, kui** `fs` leidis `pom.xml`-ist Java teegid ilma OS-pakettideta, `config` ei märgi app-Dockerfile'i root-kasutaja pärast (db ja web võivad olla märgitud) ja konteinerist töötas esimene ja kolmas käsk, teine andis `unknown command "trivy"`. Kirjuta TOEND.md-sse üks lause `fs` ja `image` vahe kohta ja üks `config` leid koos otsusega.
 
 ## SBOM
 
@@ -178,7 +178,7 @@ Kui avaldatakse uus kriitiline CVE laialt kasutatud teegis (nagu Log4Shell), on 
 
 Sama suurusjärk SBOM-ist ja image'ist tõestab, et SBOM sisaldab kõike, mida Trivy image'ist leiab. Homme saad sama faili uuesti skännida uuema andmebaasiga. `jq` päring näitas, et konkreetse teegi versiooni leidmiseks ei pea image'it üldse käivitama.
 
-✅ **Edasi saad minna, kui** `bomFormat` on `CycloneDX`, komponente on sadu, Spring'i ja Tomcati versioonid on nähtavad ja `trivy sbom` annab leide samas suurusjärgus kui image'i skänn. Kirjuta TOEND.md-sse, kuidas kasutaksid SBOM-i, kui homme avaldatakse uus CVE.
+**Edasi saad minna, kui** `bomFormat` on `CycloneDX`, komponente on sadu, Spring'i ja Tomcati versioonid on nähtavad ja `trivy sbom` annab leide samas suurusjärgus kui image'i skänn. Kirjuta TOEND.md-sse, kuidas kasutaksid SBOM-i, kui homme avaldatakse uus CVE.
 
 ## Commit
 
@@ -186,14 +186,14 @@ Sama suurusjärk SBOM-ist ja image'ist tõestab, et SBOM sisaldab kõike, mida T
 
 ```bash
 git add k03-docker/img k03-docker/TOEND.md && git status --short
-git commit -m "K3.6 registry, Trivy ja SBOM (closes #N)" && git push
+git commit -m "K3.6 registry, Trivy ja SBOM" && git push
 ```
 
 Raport ja SBOM on ajahetke tulemused ja vananevad kiiresti. GitHub Actionsi pipeline'is tehakse need iga build'iga uuesti ja hoitakse koos image'iga artefaktina, mitte Giti ajaloos.
 
-✅ **Edasi saad minna, kui** commit on GitHubis ja `git status` ei näita `.env`-i ega `secrets/`-i.
+**Edasi saad minna, kui** commit on GitHubis ja `git status` ei näita `.env`-i ega `secrets/`-i.
 
-📎 **Selle mooduli tõend:** commit `K3.6 …`; `img/gitea-packages.png`; TOEND.md-s digest ja selle lause, `docker compose images`, Trivy kolm vastust, `fs`/`image` lause, `config` otsus ja SBOM-i kasutuse lause.
+**Selle osa tõend:** commit `K3.6 …`; `img/gitea-packages.png`; TOEND.md-s digest ja selle lause, `docker compose images`, Trivy kolm vastust, `fs`/`image` lause, `config` otsus ja SBOM-i kasutuse lause.
 
 ## Miks see nii töötab
 

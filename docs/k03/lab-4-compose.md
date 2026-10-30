@@ -52,7 +52,7 @@ Alustad saladustest ja andmebaasist, sest kõik teised sõltuvad neist. `.env` h
 
 `(healthy)` tähendab rohkem kui `Up`. MariaDB healthcheck kontrollis, et InnoDB on initsialiseeritud ja ühendusi võetakse vastu. Ainult seda olekut saavad teised teenused `depends_on`-iga oodata.
 
-✅ **Edasi saad minna, kui** db01 on `Up (healthy)`.
+**Edasi saad minna, kui** db01 on `Up (healthy)`.
 
 ## mc01 ja rmq01
 
@@ -81,7 +81,7 @@ sleep 30; docker compose ps
 
 Node'i nimi `rabbit@rmq01` tuleb `hostname`-ist. Ilma selleta oleks nimi konteineri juhuslik ID ja iga uus konteiner leiaks volume'ist võõra node'i andmed: järjekorrad oleksid tühjad, kuigi andmed on kettal alles.
 
-✅ **Edasi saad minna, kui** kolm teenust on `(healthy)` ja brauseris `http://<control node IP>:15672` laseb sisse kasutajaga `labseis`, node'i nimi on `rabbit@rmq01`.
+**Edasi saad minna, kui** kolm teenust on `(healthy)` ja brauseris `http://<control node IP>:15672` laseb sisse kasutajaga `labseis`, node'i nimi on `rabbit@rmq01`.
 
 ## app01
 
@@ -107,7 +107,7 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
 Neli `UP`-i tähendavad, et app01 jõudis iga backend'i teenuseni nime ja parooliga. `Server startup` logis ütleb, kui kaua Tomcat käivitus. See aeg on põhjus, miks healthcheck'il on `start-period`: enne seda ei loeta ebaõnnestunud kontrolle.
 
-✅ **Edasi saad minna, kui** `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja app01 on `(healthy)`.
+**Edasi saad minna, kui** `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja app01 on `(healthy)`.
 
 ## web01 ja ühised seaded
 
@@ -141,7 +141,7 @@ Ilma logide rotatsioonita täidab üks jutukas konteiner `/var/lib/docker` parti
 
 `top` näitas hosti PID-i: Compose'i teenus on endiselt hostiprotsess, nagu `docker run`-iga käivitatud konteiner. Ühised seaded ühes kohas tähendavad, et kuues teenus saab need ühe reaga ja automaatse hindaja `deps` leiab restart-poliitika igalt teenuselt.
 
-✅ **Edasi saad minna, kui** viis teenust on `(healthy)`, `/version` näitab sinu `TAG`-i, `top` näitab app01 `java` protsessi hosti PID-iga ja `http://<control node IP>:8080` avab Labori seisu. Salvesta `docker compose ps` ekraanipilt faili `k03-docker/img/compose-ps.png`.
+**Edasi saad minna, kui** viis teenust on `(healthy)`, `/version` näitab sinu `TAG`-i, `top` näitab app01 `java` protsessi hosti PID-iga ja `http://<control node IP>:8080` avab Labori seisu. Salvesta `docker compose ps` ekraanipilt faili `k03-docker/img/compose-ps.png`.
 
 ## Töötava teenuse uurimine
 
@@ -185,7 +185,7 @@ Stacki uurid samamoodi kui iga töötavat teenust, kui kasutaja ütleb "läks ae
 
 Logis tekkisid read samal hetkel, kui tegid päringu, ja `/olematu` andis 404 rea, mida saad otsida ilma kogu logi kerimata. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud, üks number vahel näitab ajutist tõrget. `stats` näitab, et suurima mäluga on app01 ja db01. `top` näitab java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` näitas ainult `resolver` rida: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
 
-✅ **Edasi saad minna, kui** nägid logis oma päringuid ja 404 rida, inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP ning nullidest koosneva healthcheck'i ajaloo, `top` näitab kasutajat `10001` ja `diff` erineb ainult `resolver` real. Kirjuta TOEND.md-sse `inspect` väljundid ja üks lause: mida vaataksid esimesena, kui app01 `RestartCount` kasvab.
+**Edasi saad minna, kui** nägid logis oma päringuid ja 404 rida, inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP ning nullidest koosneva healthcheck'i ajaloo, `top` näitab kasutajat `10001` ja `diff` erineb ainult `resolver` real. Kirjuta TOEND.md-sse `inspect` väljundid ja üks lause: mida vaataksid esimesena, kui app01 `RestartCount` kasvab.
 
 ## Muudatus ja idempotentsus
 
@@ -195,11 +195,15 @@ Kui sa ei tea, mida `up -d` puudutab, kardad seda tootmises käivitada ja hakkad
 
 1. Käivita `up -d` muutmata failiga ja loe väljundit.
 
+    **Ennusta:** kas muutmata failiga `up -d` loob mõne konteineri uuesti?
+
     ```bash
     docker compose up -d
     ```
 
 2. Muuda `.env`-is `WEB_PORT` väärtuseks `8088`, uuenda stacki ja vaata, mis loodi uuesti.
+
+    **Ennusta:** millised teenused pordi muutus uuesti loob?
 
     ```bash
     sed -i 's/^WEB_PORT=.*/WEB_PORT=8088/' .env && docker compose up -d
@@ -211,7 +215,7 @@ Kui sa ei tea, mida `up -d` puudutab, kardad seda tootmises käivitada ja hakkad
 
 Esimene `up -d` ütles kõigi kohta `Running`: midagi ei muutunud ja midagi ei loodud. Pordi muutus puudutas ainult web01-t, sest ainult tema seadistus erines; `RunningFor` näitab, et teised jäid alles. Kui `up -d` loob ilma muudatuseta midagi uuesti, on failis väärtus, mis muutub iga käivitusega.
 
-✅ **Edasi saad minna, kui** muutmata `up -d` ei loonud midagi, pordi muutus lõi uuesti ainult web01, `/health` vastas pordil 8088 ja `WEB_PORT` on tagasi endine.
+**Edasi saad minna, kui** muutmata `up -d` ei loonud midagi, pordi muutus lõi uuesti ainult web01, `/health` vastas pordil 8088 ja `WEB_PORT` on tagasi endine.
 
 ## Tulemus web01-st db01-ni
 
@@ -251,7 +255,7 @@ Joonis L3.5 näitab, et POST ja GET käivad eri teid. Kirjutamine on asünkroonn
 
 0 sõnumit ja 1 consumer tähendab, et sõnum läbis järjekorra: consumer võttis selle ja kirjutas baasi. Kui sõnumeid oleks 1 ja consumer'eid 0, töötaks API, aga andmed oleksid järjekorras kinni. `get_hits` üle nulli näitab, et korduv GET tuli vahemälust ega koormanud andmebaasi.
 
-✅ **Edasi saad minna, kui** kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. Kirjuta kolm väljundit TOEND.md-sse.
+**Edasi saad minna, kui** kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. Kirjuta kolm väljundit TOEND.md-sse.
 
 ## Riku ja vaata
 
@@ -277,7 +281,7 @@ Peatad ühe sõltuvuse, lood rakenduse uuesti ja taaskäivitad terve masina. Nee
 
 Healthcheck märkis app01 `unhealthy`, aga keegi teda ei taaskäivitanud. Kui rmq01 tagasi tuli, taastas rakendus ühenduse ise. Recreate ilma 502-ta tõestab `nginx.conf`-i resolver'it: web01 leidis app01 uue IP 10 sekundi jooksul. Pärast taaskäivitust käivitas stacki `restart: unless-stopped`, mitte sina.
 
-✅ **Edasi saad minna, kui** `/health` andis 503 ja app01 läks `unhealthy`, pärast `start`-i läks kõik `healthy` ilma app01 taaskäivituseta, recreate'i järel vastas web01 ilma 502-ta ja pärast reboot'i oli stack üleval ilma käsuta.
+**Edasi saad minna, kui** `/health` andis 503 ja app01 läks `unhealthy`, pärast `start`-i läks kõik `healthy` ilma app01 taaskäivituseta, recreate'i järel vastas web01 ilma 502-ta ja pärast reboot'i oli stack üleval ilma käsuta.
 
 ## Commit
 
@@ -287,14 +291,14 @@ Enne commit'i käivitad kolm automaatse hindaja testi, mis loevad sama `compose.
 cd .. && for t in compose deps tags; do bash autograde/check.sh k03 "$t"; done
 git status --short
 git add k03-docker/compose.yaml k03-docker/.env.example k03-docker/img k03-docker/TOEND.md
-git commit -m "K3.4 compose: kogu stack healthcheck'idega (closes #N)" && git push
+git commit -m "K3.4 compose: kogu stack healthcheck'idega" && git push
 ```
 
 Testid kasutavad `.env.example` väärtusi, mitte sinu `.env`-i. Seepärast peab näidisfail sisaldama kõiki muutujaid, mida `${VAR:?}` nõuab; muidu ebaõnnestub `compose` GitHubis, kuigi sinu masinas töötab.
 
-✅ **Edasi saad minna, kui** `compose`, `deps` ja `tags` annavad `OK` ja `git status` ei näita `.env`-i.
+**Edasi saad minna, kui** `compose`, `deps` ja `tags` annavad `OK` ja `git status` ei näita `.env`-i.
 
-📎 **Selle mooduli tõend:** commit `K3.4 …`; `img/compose-ps.png`; TOEND.md-s `/health`, `inspect` väljundid ja `RestartCount`-i lause, POST, `list_queues`, `get_hits`, idempotentsuse katse ja rikketesti tulemus.
+**Selle osa tõend:** commit `K3.4 …`; `img/compose-ps.png`; TOEND.md-s `/health`, `inspect` väljundid ja `RestartCount`-i lause, POST, `list_queues`, `get_hits`, idempotentsuse katse ja rikketesti tulemus.
 
 ## Miks see nii töötab
 

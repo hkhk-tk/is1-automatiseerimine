@@ -28,7 +28,7 @@ bash autograde/check.sh k06 files
 
 `diff` näitab, et 3. kohtumise failist kadus Maveni etapp ja `COPY --from=...` asendus tavalise `COPY`-ga. `ARG GIT_SHA` on viimane, sest `ARG`-i väärtuse muutus tühistab cache'i alates esimesest reast, mis seda kasutab, ja iga `RUN` kasutab seda kaudselt. Faili alguses ehitaks see iga commit'iga ka `apt-get` kihi uuesti.
 
-✅ **Edasi saad minna, kui** Dockerfile'is pole Maveni etappi (`grep -c mvn` annab `0`) ja kontroll annab `OK`.
+**Edasi saad minna, kui** Dockerfile'is pole Maveni etappi (`grep -c mvn` annab `0`) ja kontroll annab `OK`.
 
 ## Ehita image pipeline'is
 
@@ -58,7 +58,7 @@ bash autograde/check.sh k06 docker
 
 Image'i tag ja Nexuse versioon on sama string, nii et ühest leiad alati teise. `GIT_SHA` image'i keskkonnas on kolmas sõltumatu viide samale commit'ile. Iga build lisab ühe WAR-i suuruse kihi, nii et koristus `cleanup` plokis hoiab agendi ketta stabiilsena.
 
-✅ **Edasi saad minna, kui** `docker image ls labori-seis` näitab uusimat tag'i, mis on sama mis Nexuses, `GIT_SHA` on sama commit ja kontroll annab `OK`.
+**Edasi saad minna, kui** `docker image ls labori-seis` näitab uusimat tag'i, mis on sama mis Nexuses, `GIT_SHA` on sama commit ja kontroll annab `OK`.
 
 ## Avalda Nexusesse ja image'isse korraga
 
@@ -78,13 +78,13 @@ Ilma etapipõhise `agent`-ita töötavad paralleelsed harud sama executori ja sa
             }
     ```
 
-3. Push ja oota buildi. Vaata Graph View's, kas harud töötasid kõrvuti, ja võrdle aega.
+3. **Ennusta:** kui kaua kestab `Avaldamine` võrreldes kahe etapi ajaga eraldi? Push ja oota buildi. Vaata Graph View's, kas harud töötasid kõrvuti, ja võrdle aega.
 
 > Test ja Checkstyle kirjutavad mõlemad `target/`-i. Neid paralleelseks panna ei ole ohutu (vt [Lisaülesanded → 7. Paralleelsed testid ja jagatud workspace](lisa.md#7-paralleelsed-testid-ja-jagatud-workspace)).
 
 `Avaldamine` kestab nüüd umbes nii kaua kui pikem kahest harust, mitte nende summa. Kui aeg peaaegu ei muutunud, oli üks haru teisest palju pikem või piiras mõlemat sama ressurss, näiteks võrk. Paralleel aitab ainult siis, kui harud ootavad eri ressursse.
 
-✅ **Edasi saad minna, kui** Graph View näitab `Avaldamine` all kahte kõrvuti haru, mõlemad on rohelised ja PR-i kirjelduses on etappide ajad enne ja pärast.
+**Edasi saad minna, kui** Graph View näitab `Avaldamine` all kahte kõrvuti haru, mõlemad on rohelised ja PR-i kirjelduses on etappide ajad enne ja pärast.
 
 ## Avalda ainult põhiharult
 
@@ -109,7 +109,7 @@ Job on tavaline Pipeline job, mitte multibranch, seega pole `when { branch 'main
 
 Proovi-job tegi kõik kontrollid, aga `Avaldamine` oli hall. See tõestab tingimuse mõlemat poolt: põhiharu avaldab, muu haru mitte. Proovi-job kustutatakse, sest see analüüsis sama Sonari projekti ja Community Build ei erista harusid: selle analüüs kirjutas sinu põhiharu oma üle.
 
-✅ **Edasi saad minna, kui** `labori-seis-proov` töötas Build'ist Quality Gate'ini ja `Avaldamine` oli Graph View's vahele jäetud (hall), Nexusesse uut versiooni ei tulnud ja proovi-job ning haru on kustutatud.
+**Edasi saad minna, kui** `labori-seis-proov` töötas Buildist Quality Gate'ini ja `Avaldamine` oli Graph View's vahele jäetud (hall), Nexusesse uut versiooni ei tulnud ja proovi-job ning haru on kustutatud.
 
 ## Paigalda testkeskkonda kinnitusega
 
@@ -125,9 +125,13 @@ Kirjuta etapp `Deploy` pärast `Avaldamine`-t. Nõuded:
 - samm ootab, kuni `curl -fsS http://localhost:8085/version` sisaldab commit'i 7 esimest märki, ja ebaõnnestub, kui seda ei juhtu; ebaõnnestumisel näitab `docker logs --tail 30 labseis-ci`
 - direktiivide süntaksi annab **Pipeline Syntax → Declarative Directive Generator** (`when`, `input`, `options`)
 
+**Ennusta:** mis juhtub etapiga `Deploy` pollSCM-i buildis, käsitsi käivitatud buildis ja Abort'iga katkestatud buildis?
+
 1. Tee väike commit ja oota pollSCM-i buildi. `Deploy` peab olema vahele jäetud ja build lõpeb ilma ootamata.
 2. Vajuta **Build Now**. Build peatub etapis `Deploy`: vajuta konsoolis või Graph View's **Paigalda**.
 3. Vajuta veel kord **Build Now** ja seekord **Abort**. Vaata buildi tulemust.
+
+Kontrolli konteinerit ja salvesta Jenkinsfile repositooriumi:
 
 ```bash
 docker ps --filter name=labseis-ci --format '{{.Image}} {{.Status}}'
@@ -137,7 +141,7 @@ git commit -am "k06: parallel, when, input + deploy" && git push
 
 Kolm buildi andsid kolm eri tulemust sama Jenkinsfile'iga: pollSCM jättis etapi vahele, kinnitus paigaldas, Abort katkestas. `/version` vastus sama räsiga tõestab, et käima läks just see build, mitte vana image. Abort'iga build jättis vana konteineri tööle, sest `docker rm` käivitub alles pärast kinnitust.
 
-✅ **Edasi saad minna, kui** pollSCM-i build jättis `Deploy` vahele, kinnitatud build töötas lõpuni ja `/version` näitab sama commit'i mis buildi nimi, Abort'iga build on ABORTED ja konteiner `labseis-ci` töötab edasi viimati kinnitatud versiooniga.
+**Edasi saad minna, kui** pollSCM-i build jättis `Deploy` vahele, kinnitatud build töötas lõpuni ja `/version` näitab sama commit'i mis buildi nimi, Abort'iga build on ABORTED ja konteiner `labseis-ci` töötab edasi viimati kinnitatud versiooniga.
 
 ## Tõesta, et konteineris on sama WAR
 
@@ -162,9 +166,9 @@ Ilma selle kontrollita on "build once" ainult lubadus Dockerfile'is. Auditis kü
 
 Sama räsi image'is ja Nexuses lõpetab tõendi ahela: Jenkins, Nexus ja konteiner kasutavad üht faili. `healthy` ja rida nulle tähendavad, et `/health` vastab. Kui räsi erineb, on Dockerfile'is midagi, mis WAR-i muudab, või käivitasid käsitsi vana image'i.
 
-✅ **Edasi saad minna, kui** kaks räsi on samad, konteiner on `healthy` ja PR-i kirjelduses on mõlemad read.
+**Edasi saad minna, kui** kaks räsi on samad, konteiner on `healthy` ja PR-i kirjelduses on mõlemad read.
 
-📎 **Selle mooduli tõend:** commit `k06: parallel, when, input + deploy`; PR-i kirjelduses `docker image ls` ja `docker inspect` väljund, `Avaldamine` etappide ajad enne ja pärast `parallel`-it, proovi-jobi Graph View ekraanipilt, `/version` väljund, kolme buildi põhjus ja tulemus (SCM change, Paigalda, Abort), konteineri ja Nexuse räsi ning healthcheck'i olek; `files` ja `docker` `OK`.
+**Selle mooduli tõend:** commit `k06: parallel, when, input + deploy`; PR-i kirjelduses `docker image ls` ja `docker inspect` väljund, `Avaldamine` etappide ajad enne ja pärast `parallel`-it, proovi-jobi Graph View ekraanipilt, `/version` väljund, kolme buildi põhjus ja tulemus (SCM change, Paigalda, Abort), konteineri ja Nexuse räsi ning healthcheck'i olek; `files` ja `docker` `OK`.
 
 ## Miks see nii töötab
 

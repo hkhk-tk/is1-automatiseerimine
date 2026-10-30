@@ -45,7 +45,7 @@ Kui `validate` ütleb `Reference to undeclared input variable` ja pakub `Did you
 
 Kui `git status` ei näita `terraform.tfvars`-i, töötab `.gitignore` enne esimest `git add`-i.
 
-✅ **Edasi saad minna, kui** `validate` on OK ja `git status --short` ei näita `terraform.tfvars`-i ega `.terraform/`-i.
+**Edasi saad minna, kui** `validate` on OK ja `git status --short` ei näita `terraform.tfvars`-i ega `.terraform/`-i.
 
 ## Alusta ühest VM-ist
 
@@ -67,7 +67,7 @@ Aadress `lab["web01"]` ütleb, et VM-i identiteet Tofu jaoks on võti `web01`, m
 
 > `vm_id ... already exists`: sinu vana VM samal ID-l on alles või `test01` jäi kustutamata, vaata UI-st. `403 Permission check failed (/storage/..., Datastore.AllocateSpace)`: kopeeri veateade täpselt koolitajale, ära proovi teist storage'it.
 
-✅ **Edasi saad minna, kui** plaan ütleb `1 to add` ja aadress on `proxmox_virtual_environment_vm.lab["web01"]`.
+**Edasi saad minna, kui** plaan ütleb `1 to add` ja aadress on `proxmox_virtual_environment_vm.lab["web01"]`.
 
 ## Püüa vead kinni plaanis
 
@@ -88,7 +88,7 @@ Lisa `vms`-ile `validation` plokid:
 
 Veateade nimetab sinu `error_message`-i, mitte provider'i või Proxmoxi viga. See tõestab, et kontroll toimus Tofu sees ja API-sse ei läinud ühtki päringut. Kui sinu teade ütleb, mida parandada, ei pea järgmine inimene koodi lugema.
 
-✅ **Edasi saad minna, kui** sammudes 1 ja 2 tuli sinu enda veateade enne, kui Proxmoxi poole midagi läks, ja pärast parandust on plaan jälle `1 to add`.
+**Edasi saad minna, kui** sammudes 1 ja 2 tuli sinu enda veateade enne, kui Proxmoxi poole midagi läks, ja pärast parandust on plaan jälle `1 to add`.
 
 ## Tee kõik viis salvestatud plaaniga
 
@@ -102,7 +102,7 @@ Nõuded:
 - `vm_id` = `IS1_VMID_BASE` + 1…5, IP lõpp `.11…15`
 - RAM: web01 512, app01 1536, rmq01 1024, mc01 512, db01 1024; app01 ja db01 ketas 12 GB
 - `apply` käib plaanifailist, mille enne läbi lugesid (`tofu plan -out=…`, `tofu apply <fail>`); plaanifail ei lähe Giti
-- enne `apply`-d kirjuta `NOTES.md`-sse, mitu lisatakse ja kas midagi kustutatakse
+- enne `apply`-d ennusta, mitu VM-i lisatakse ja kas midagi kustutatakse
 
 ```bash
 tofu plan
@@ -121,7 +121,7 @@ Data source loeb nüüd kaks malli, sest `vms`-is on mõlemad distrod. Teine `pl
 
 > AlmaLinuxi masinad jäävad agenti ootama: CPU tüüp puudub (vt [Üks VM koodist](lab-1-uks-vm.md), "Tee VM uuesti").
 
-✅ **Edasi saad minna, kui** UI-s töötavad viis VM-i, `tofu plan` ütleb "No changes", `state list` näitab viit `lab[...]` aadressi ja `git status` ei näita plaanifaili.
+**Edasi saad minna, kui** UI-s töötavad viis VM-i, `tofu plan` ütleb "No changes", `state list` näitab viit `lab[...]` aadressi ja `git status` ei näita plaanifaili.
 
 ## Vaata, mis on VM-i identiteet
 
@@ -135,12 +135,12 @@ Hostinime muutmine tundub kosmeetiline. Tofu jaoks on võti aga objekti aadress 
     tofu plan | grep -E '^\s+#|Plan:'
     ```
 
-2. Kirjuta `NOTES.md`-sse, mida plaan tahab teha ja millise kahe aadressiga.
+2. Vaata, mida plaan tahab teha ja milliseid kahte aadressi see nimetab.
 3. Pane nimi tagasi `web01`-ks ja kontrolli, et plaan on "No changes".
 
 Plaan tahab `lab["www01"]` luua ja `lab["web01"]` kustutada, kuigi IP, `vm_id` ja kõik muu on samad. Tofu võrdleb objekte aadressi, mitte sisu järgi. Kui VM-i kirjeldus läheb moodulisse, näed, kuidas `moved` plokk ütleb, et uus aadress on sama objekt.
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on plaan `1 to add, 1 to destroy` mõlema aadressiga ja pärast tagasivõtmist on plaan "No changes".
+**Edasi saad minna, kui** plaan näitas `1 to add, 1 to destroy` vana ja uue aadressiga ja pärast tagasivõtmist on plaan "No changes".
 
 ## Võrdle count'iga
 
@@ -157,11 +157,11 @@ Vanemas koodis on `count` VM-ide jaoks tavaline. Kes selle koodi üle võtab ja 
     ```
 
 3. Vaheta ressursil `count` välja `for_each = toset(var.nimed)` (`each.key` kahes kohas), tee `tofu apply` ja korda sama plaani.
-4. Kirjuta `NOTES.md`-sse mõlema plaani aadressid, siis `cd ~/labori-seis/k04-tofu && rm -rf /tmp/count-proov`.
+4. Võrdle kahe plaani aadresse, siis `cd ~/labori-seis/k04-tofu && rm -rf /tmp/count-proov`.
 
 `count`-iga tahab plaan asendada `f[1]`-e (`b.txt` → `c.txt`) ja kustutada `f[2]`, kuigi sina kustutasid ainult `b`. `for_each`-iga on plaanis ainult `f["b"]` kustutamine. Failide puhul on vahe kosmeetiline, VM-ide puhul tähendaks `count` app01 eemaldamisel rmq01, mc01 ja db01 asendust. `count` sobib ainult küsimusele "kas see üks asi on olemas", näiteks `count = var.enabled ? 1 : 0`.
 
-✅ **Edasi saad minna, kui** `count`-i plaan asendas `f[1]`-e ja kustutas `f[2]`, `for_each`-i plaan kustutas ainult `f["b"]` ja mõlemad on `NOTES.md`-s.
+**Edasi saad minna, kui** `count`-i plaan asendas `f[1]`-e ja kustutas `f[2]`, `for_each`-i plaan kustutas ainult `f["b"]`.
 
 ## Anna tulemus output'iga välja
 
@@ -188,7 +188,7 @@ echo 'proxmox_virtual_environment_vm.lab["db01"].ipv4_addresses' | tofu console
 
 Esimene plaan keeldus, sest output viitab tundlikule väärtusele. `sensitive` levib: kõik, mis tuleb tundlikust muutujast, on samuti tundlik. Teine plaan näitas `(sensitive value)`, aga `apply` oleks kirjutanud tokeni state'i lihttekstina. `sensitive` peidab väärtuse ekraanilt, mitte state'ist.
 
-✅ **Edasi saad minna, kui** `hosts` näitab viit IP-d ilma maskita, `vm_ids` viit ID-d, `NOTES.md`-s on mõlema token-output'i proovi tulemus ja `outputs.tf`-is tokeni output'i pole.
+**Edasi saad minna, kui** `hosts` näitab viit IP-d ilma maskita, `vm_ids` viit ID-d, token-output'i proov on tehtud ja `outputs.tf`-is tokeni output'i pole.
 
 ## Uuri avaldisi konsoolis
 
@@ -196,7 +196,7 @@ Enne testide kirjutamist proovid `tofu console`-is avaldisi, millest selle korra
 
 Vale avaldis `locals`-is ei ebaõnnestu alati. Sageli annab see lihtsalt vale tulemuse: tühja grupi, vale IP või puuduva hosti, ja viga tuleb välja alles Ansible'is.
 
-Käivita `tofu console` ja proovi ridu ükshaaval. Kirjuta iga rea juurde `NOTES.md`-sse, mida ootasid ja mida said ([funktsioonid](https://opentofu.org/docs/language/functions/)).
+Käivita `tofu console` ja proovi ridu ükshaaval. Ennusta iga rea tulemust enne, kui vajutad Enter ([funktsioonid](https://opentofu.org/docs/language/functions/)).
 
 1. `for` avaldised: list ja map, filtriga ja ilma.
 
@@ -251,7 +251,7 @@ Käivita `tofu console` ja proovi ridu ükshaaval. Kirjuta iga rea juurde `NOTES
 
 `random_password` ei vaja ühtki parooli käsitsi, aga tulemus on state'is lihttekstina. Seepärast läheb saladus Ansible'ile Vault'i krüpteerituna ja state'i tuleb kaitsta nagu paroolifaili ([krüpteeritud state](lisa.md#lisaprojekt-krupteeritud-state)). `keepers` teeb rotatsiooni koodis nähtavaks: plaan näitab `forces replacement`, mitte vaikset muutust. OpenTofu 1.11+ `ephemeral` ressurss hoiab sellise väärtuse state'ist üldse väljas, aga siis peab väärtust kasutav ressurss või provider selle samas käivituses kätte saama.
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on kõigi viie sammu avaldised ja käsud koos tulemusega ja selgitus, miks `try` ja `lookup` ei ebaõnnestunud.
+**Edasi saad minna, kui** kõik viis sammu andsid oodatud tulemuse ja oskad selgitada, miks `try` ja `lookup` ei ebaõnnestunud.
 
 ## Kirjuta tofu test
 
@@ -275,7 +275,7 @@ tofu validate
 
 > `tofu validate` kontrollib ka testifaile. Vigane test nurjab automaatse hindaja `validate` kontrolli, nii et käivita mõlemad.
 
-✅ **Edasi saad minna, kui** `tofu test` näitab kõiki `run` plokke `pass` ja `Success!`.
+**Edasi saad minna, kui** `tofu test` näitab kõiki `run` plokke `pass` ja `Success!`.
 
 ## Commit
 
@@ -293,9 +293,8 @@ git push -u origin k04-tofu
 
 `fmt` ja `secrets` `OK` tähendavad, et kood on ühes vormis ja ükski token ega privaatvõti pole Gitis.
 
-✅ **Edasi saad minna, kui** `bash autograde/check.sh k04 fmt` ja `bash autograde/check.sh k04 secrets` annavad `OK` ja haru on GitHubis.
+**Edasi saad minna, kui** `bash autograde/check.sh k04 fmt` ja `bash autograde/check.sh k04 secrets` annavad `OK` ja haru on GitHubis.
 
-📎 **Selle mooduli tõend:** commit `k04: viis VM-i…` koos `.terraform.lock.hcl` ja `tests/`-iga; `NOTES.md`-s ümbernimetamise plaan, `count`/`for_each` võrdlus, konsooli avaldised ja token-output'i proov; `tofu state list` ja `tofu test` väljund issue `K4.2` kommentaaris.
 
 ## Miks see nii töötab
 

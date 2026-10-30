@@ -45,7 +45,7 @@ Kopeeritud kontroll läheb aja jooksul lahku: ühes kohas parandatakse viga, tei
 
 Kordav kontroll on töökindlam kui ühekordne, sest konteiner võib olla `healthy`, aga Tomcat laadib rakendust veel. Timeout hoiab ära lõputu ootamise: kui commit ei klapi 120 sekundiga, on see deploy viga, mitte aeglane käivitus. Kokkuvõtte rida on tõend, mida näeb ka see, kes logi ei ava. Kui actionlint kaebab puuduva sisendi üle, on nimi `with:` all ja action'i `inputs:` all erinev.
 
-✅ **Edasi saad minna, kui** actionlint annab `0`, `k05 deploy` annab `OK`, deploy on main'il roheline ja käivituse kokkuvõttes on sinu action'i rida commit'iga.
+**Edasi saad minna, kui** actionlint annab `0`, `k05 deploy` annab `OK`, deploy on main'il roheline ja käivituse kokkuvõttes on sinu action'i rida commit'iga.
 
 ## Jäta meelde, mis töötas
 
@@ -66,7 +66,7 @@ Ilma selle teadmiseta peab rollback arvama: kas eelmine tag, kas `latest`, kas k
 
 Kokkuvõtte rida ja `docker inspect` andsid sama tag'i, seega loeb samm õiget konteinerit. `Config.Image` on nimi, millega konteiner loodi, mitte image'i ID: see on just see, mida `APP_IMAGE` vajab. Tühi väärtus esimesel deploy'l on õige käitumine, sest siis pole kuhugi tagasi minna. Kui samm ebaõnnestuks tühjas masinas, ei saaks sa kunagi esimest deploy'd teha.
 
-✅ **Edasi saad minna, kui** kokkuvõttes on rida eelmise image'iga ja see võrdub sellega, mida `docker inspect` näitas enne deploy'd.
+**Edasi saad minna, kui** kokkuvõttes on rida eelmise image'iga ja see võrdub sellega, mida `docker inspect` näitas enne deploy'd.
 
 ## Rollback
 
@@ -87,7 +87,7 @@ Punane job pärast edukat rollback'i on teadlik valik. Kui job läheks rohelisek
 
 Järjekord failis on ka täitmise järjekord: rollback'i samm peab olema pärast health check'i ja enne koristust, sest ta vajab `.env`-i. Teine tingimus (`prev` pole tühi) hoiab ära katse käivitada tühja nimega image'it. Roheline deploy jättis rollback'i vahele, ja just nii see peab käituma. Kui rollback käivituks ka rohelise deploy järel, oleks tingimus `always()`, mitte `failure()`.
 
-✅ **Edasi saad minna, kui** `grep` näitab rollback'i ja koristuse tingimusi ning roheline deploy jättis rollback'i sammu vahele (*skipped*).
+**Edasi saad minna, kui** `grep` näitab rollback'i ja koristuse tingimusi ning roheline deploy jättis rollback'i sammu vahele (*skipped*).
 
 ## Katkine versioon main'i
 
@@ -103,7 +103,7 @@ Just selline viga jõuab tootmisse: testid ei käivita konteinerit, ülevaataja 
     gh pr create --fill --base main && gh pr checks --watch && gh pr merge --merge
     ```
 
-3. Jälgi deploy'd ja vaata, mis töötab pärast seda.
+3. **Ennusta:** mida näitab `/version` pärast deploy'd? Jälgi deploy'd ja kontrolli.
 
     ```bash
     gh run watch
@@ -123,7 +123,7 @@ Just selline viga jõuab tootmisse: testid ei käivita konteinerit, ülevaataja 
 
 Deploy ebaõnnestus `--wait` juures, sest uus konteiner ei saanud kunagi `healthy` olekut, ja rollback pani eelmise image'i käima. `/version` näitas vahepeal eelmist commit'i, mis tähendab, et kasutaja nägi töötavat vana versiooni, mitte veateadet. Revert jätab ajalukku nii vea kui selle revert'i. Kui `/version` oleks pärast punast deploy'd tühi, ei käivitunud rollback ja sul tuleb vaadata `prev` sammu väljundit.
 
-✅ **Edasi saad minna, kui** katkise versiooni deploy oli punane ja logis on `::error::` rollback'ist, vahepeal näitas `/version` eelmist commit'i ja app01 image oli eelmine tag, ning pärast revert'i on deploy roheline ja `/version` võrdub `origin/main`-iga.
+**Edasi saad minna, kui** katkise versiooni deploy oli punane ja logis on `::error::` rollback'ist, vahepeal näitas `/version` eelmist commit'i ja app01 image oli eelmine tag, ning pärast revert'i on deploy roheline ja `/version` võrdub `origin/main`-iga.
 
 ## Ajajoon: kui kaua leht maas oli
 
@@ -141,11 +141,11 @@ Juhtkond küsib, kui kaua kasutajad viga nägid. Sellele vastab ainult ajajoon s
     ```
 
 2. Leia katkise deploy käivitusest deploy ja rollback'i sammu algus- ja lõpuaeg (*Actions* → käivitus → deploy → sammu kellaaeg).
-3. Kirjuta märkmikku ajajoon: vana konteineri `die`, uue `start`, rollback'i `start` ja `healthy`. Arvuta, mitu sekundit ei töötanud ükski terve app01.
+3. Pane sündmustest kokku ajajoon: vana konteineri `die`, uue `start`, rollback'i `start` ja `healthy`. Mitu sekundit ei töötanud ükski terve app01?
 
 Ajajoonel näed, et vana konteiner peatati enne, kui uus oli terve, sest `compose up` asendab teenuse, mitte ei pane uut kõrvale. Aeg vana `die` ja rollback'i `healthy` vahel on sinu katkestus ja see on peaaegu kogu `--wait-timeout` pikkune. Siit järeldad, et lühem timeout lühendab katkestust, aga liiga lühike nurjab ka aeglaselt käivituva terve versiooni. Kui ajajoonel pole `die` sündmust, oli deploy ajal konteiner juba maas ja katkestus algas varem.
 
-✅ **Edasi saad minna, kui** märkmikus on neli kellaaega, katkestuse kestus sekundites ja üks lause selle kohta, mis seda lühendaks.
+**Edasi saad minna, kui** tead katkestuse kestust sekundites ja oskad öelda, mis seda lühendaks.
 
 ## Tühistatud deploy ja viimane terve image
 
@@ -184,30 +184,30 @@ Lõpus teeb deploy rollback'i ka tühistamisel ja rollback'i siht tuleb viimases
 
 Tühistatud käivituse logis on rollback'i samm roheline ja `/version` näitab eelmist commit'i: kasutaja ei jäänud kontrollimata versiooni peale. `docker compose up --wait` katkeb, aga juba loodud konteiner jääb tööle, seepärast on rollback'i samm vajalik. Ebaterve app01-ga käivituse kokkuvõttes on rollback'i sihiks `last-good`, mitte töötav image. See on oluline siis, kui eelmine deploy katkes nii, et ükski samm ei käivitunud. Kui kokkuvõttes on ikka töötava konteineri image, loeb `prev` health olekut valest kohast: `docker inspect` vajab konteineri ID-d, mitte image'i nime.
 
-✅ **Edasi saad minna, kui** tühistatud käivituses käivitus rollback'i samm ja `/version` näitas eelmist commit'i, korduskäivitus oli roheline, ebaterve app01-ga deploy kokkuvõttes on rollback'i siht võetud failist `last-good`, faili sisu võrdub töötava app01 image'iga ja actionlint vaikib.
-
-📎 **Selle mooduli tõend:** `.github/actions/verify-deploy/action.yml` repos, punase deploy link koos rollback'i reaga, `/version` ja `docker inspect` väljund rollback'i järel, revert'i PR, katkestuse ajajoon, tühistatud deploy link koos rollback'i reaga ja kokkuvõte, kus rollback'i siht tuli failist `last-good`; `check.sh k05 deploy` → `OK`.
+**Edasi saad minna, kui** tühistatud käivituses käivitus rollback'i samm ja `/version` näitas eelmist commit'i, korduskäivitus oli roheline, ebaterve app01-ga deploy kokkuvõttes on rollback'i siht võetud failist `last-good`, faili sisu võrdub töötava app01 image'iga ja actionlint vaikib.
 
 ## Miks see nii töötab
 
-**Composite action.** Composite action'i sammud kuvatakse logis kutsuva sammu all. Need sammud kasutavad sama töökausta, sama keskkonda ja sama runner'it nagu kutsuv job.
+??? info "Ava selgitused"
 
-**Rollback ja image'i tag.** Rollback kasutab image'i tag'i, mis oli enne deploy'd konteineri väljal `Config.Image`. Kui see tag on registry'st kustutatud, kuid lokaalselt alles, rollback töötab, sest rollback'i samm ei käivita `pull`-i: piisab võtmest `--no-build` ja lokaalsest image'ist.
+    **Composite action.** Composite action'i sammud kuvatakse logis kutsuva sammu all. Need sammud kasutavad sama töökausta, sama keskkonda ja sama runner'it nagu kutsuv job.
 
-**`/health` ja `/health/live`.** `/health` vastab 200 ainult siis, kui db01 ja rmq01 vastavad, seega sobib see deploy kontrolliks. `/health/live` vastab alati, kui protsess töötab. Seda kasutab 7. kohtumisel livenessProbe, sest andmebaasi katkestuse pärast ei tohi rakenduse konteinerit taaskäivitada.
+    **Rollback ja image'i tag.** Rollback kasutab image'i tag'i, mis oli enne deploy'd konteineri väljal `Config.Image`. Kui see tag on registry'st kustutatud, kuid lokaalselt alles, rollback töötab, sest rollback'i samm ei käivita `pull`-i: piisab võtmest `--no-build` ja lokaalsest image'ist.
 
-**HEALTHCHECK image'is.** HEALTHCHECK on image'i osa. Seetõttu toob vana image kaasa ka vana HEALTHCHECK'i, kui `compose.yaml` seda `healthcheck:`-plokiga üle ei kirjuta. Vaikeväärtused on `interval` 30 s, `timeout` 30 s, `retries` 3 ja `start-period` 0, nii et katkine konteiner jõuab olekusse `unhealthy` umbes 90 sekundiga. `--wait-timeout` peab olema sellest pikem, muidu ebaõnnestub deploy enne, kui Docker on otsustanud.
+    **`/health` ja `/health/live`.** `/health` vastab 200 ainult siis, kui db01 ja rmq01 vastavad, seega sobib see deploy kontrolliks. `/health/live` vastab alati, kui protsess töötab. Seda kasutab 7. kohtumisel livenessProbe, sest andmebaasi katkestuse pärast ei tohi rakenduse konteinerit taaskäivitada.
 
-**Rollback ja andmed.** Rollback on ohutu ainult siis, kui vana versioon oskab töötada andmetega, mille uus versioon on jätnud. Meie rakendus ei muuda selle päeva versioonides andmebaasi skeemi, seega saab vana image'it kasutada.
+    **HEALTHCHECK image'is.** HEALTHCHECK on image'i osa. Seetõttu toob vana image kaasa ka vana HEALTHCHECK'i, kui `compose.yaml` seda `healthcheck:`-plokiga üle ei kirjuta. Vaikeväärtused on `interval` 30 s, `timeout` 30 s, `retries` 3 ja `start-period` 0, nii et katkine konteiner jõuab olekusse `unhealthy` umbes 90 sekundiga. `--wait-timeout` peab olema sellest pikem, muidu ebaõnnestub deploy enne, kui Docker on otsustanud.
 
-**Skeemi muutus deploy'l.** Tootmissüsteemis tähendab skeemi muutus, et deploy tehakse kahes osas: kõigepealt skeem, mis sobib mõlemale versioonile, ja seejärel kood.
+    **Rollback ja andmed.** Rollback on ohutu ainult siis, kui vana versioon oskab töötada andmetega, mille uus versioon on jätnud. Meie rakendus ei muuda selle päeva versioonides andmebaasi skeemi, seega saab vana image'it kasutada.
 
-**Katkestuse ajajoon.** `docker events` tagastab minevikust ainult viimased 1000 sündmust, nii et hõivatud hostil tuleb ajajoon koostada kohe pärast intsidenti.
+    **Skeemi muutus deploy'l.** Tootmissüsteemis tähendab skeemi muutus, et deploy tehakse kahes osas: kõigepealt skeem, mis sobib mõlemale versioonile, ja seejärel kood.
 
-**Tühistamine ja `failure()`.** Tühistamisel märgib GitHub käivituse olekuks `cancelled` ja hindab ülejäänud sammude tingimused uuesti. Sammud tingimusega `always()` või `cancelled()` käivituvad, `failure()` annab `false`. Töötavale sammule saadab runner SIGINT-i, 7,5 sekundi pärast SIGTERM-i ja 2,5 sekundi pärast tapab protsessipuu ([Workflow cancellation](https://docs.github.com/actions/reference/workflows-and-actions/workflow-cancellation)). `timeout-minutes`-i ületamine lõpeb samuti tühistamisega. Kui runner'i protsess ise sureb, ei käivitu ükski samm ja ainus jälg, mis järgmisele deploy'le jääb, on see, mis on kettal: siin fail `last-good`.
+    **Katkestuse ajajoon.** `docker events` tagastab minevikust ainult viimased 1000 sündmust, nii et hõivatud hostil tuleb ajajoon koostada kohe pärast intsidenti.
 
-**Katkestuseta deploy.** Katkestuseta deploy vajaks kahte konteinerit ja koormusjaoturit, mis suunab liikluse uuele konteinerile alles siis, kui see on terve. Nii töötab Kubernetes (7. kohtumine).
+    **Tühistamine ja `failure()`.** Tühistamisel märgib GitHub käivituse olekuks `cancelled` ja hindab ülejäänud sammude tingimused uuesti. Sammud tingimusega `always()` või `cancelled()` käivituvad, `failure()` annab `false`. Töötavale sammule saadab runner SIGINT-i, 7,5 sekundi pärast SIGTERM-i ja 2,5 sekundi pärast tapab protsessipuu ([Workflow cancellation](https://docs.github.com/actions/reference/workflows-and-actions/workflow-cancellation)). `timeout-minutes`-i ületamine lõpeb samuti tühistamisega. Kui runner'i protsess ise sureb, ei käivitu ükski samm ja ainus jälg, mis järgmisele deploy'le jääb, on see, mis on kettal: siin fail `last-good`.
 
-**Smoke test seestpoolt.** Smoke test käivitub runner'i masinast ja vaatab süsteemi seestpoolt. See ei näita, kas leht on kättesaadav väljastpoolt VPN-i. Seda osa kontrollib monitooringu kodutöö, mis kontrollib sama aadressi teisest kohast.
+    **Katkestuseta deploy.** Katkestuseta deploy vajaks kahte konteinerit ja koormusjaoturit, mis suunab liikluse uuele konteinerile alles siis, kui see on terve. Nii töötab Kubernetes (7. kohtumine).
+
+    **Smoke test seestpoolt.** Smoke test käivitub runner'i masinast ja vaatab süsteemi seestpoolt. See ei näita, kas leht on kättesaadav väljastpoolt VPN-i. Seda osa kontrollib monitooringu kodutöö, mis kontrollib sama aadressi teisest kohast.
 
 Kui jõudsid kiiremini: [Lisaülesanded → 7. Smoke test](lisa.md#7-smoke-test), kontrollid ajakava järgi `/health`-i läbi web01 ja vaatad, et kontroll läheb punaseks, kui teenus seisab.

@@ -8,7 +8,7 @@ tags:
 
 Release'i tag, mille commit'is midagi puudub või midagi üleliigset on, jõuab tootmisse ja seda märkab alles see, kes kuu aja pärast kloonib. Kõik muudatused on juba main'il: Labori seis ja rikete parandus PR-iga, `gitops.yml` PR-iga, Application, values-fail ja revert otse. Tag `k07` läheb main'i HEAD-ile, kus on ka boti viimane commit, ja nagu release'i tag tootmises lubab ta, et selles commit'is on kõik vajalik ja mitte midagi, mida seal olla ei tohi. Enne tag'i käivitad samad kontrollid ise, ka värskes kloonis.
 
-**Kui teed seda tööl iga päev:** enne release'i tag'i käivitad testid CI-s puhtast kloonist. Kui see on sul juba korras, kirjuta `NOTES.md` jaotis, tee etapi „Enne esitamist“ kontrollid ühe käsureaga ja mine otse etappi „[Värske kloon](#varske-kloon)“.
+**Kui teed seda tööl iga päev:** enne release'i tag'i käivitad testid CI-s puhtast kloonist. Kui see on sul juba korras, kirjuta `NOTES.md` jaotis, tee etapi „Enne esitamist“ kontrollid ja mine otse etappi „[Tag](#tag)“.
 
 ## Oma töökohale
 
@@ -20,7 +20,7 @@ git switch main && git pull
 git add NOTES.md && git commit -m "K7 tööl [skip ci]" && git push
 ```
 
-✅ **Edasi saad minna, kui** `NOTES.md`-s on jaotis `## K7 tööl` 3–5 lausega ja see on main'il.
+**Edasi saad minna, kui** `NOTES.md`-s on jaotis `## K7 tööl` 3–5 lausega ja see on main'il.
 
 ## Enne esitamist
 
@@ -38,35 +38,9 @@ Kontrollid repositooriumi ja klastri olekut oma masinas. Automaatne hindaja näe
     git status --short
     ```
 
-2. Käivita kõik kuus testi:
+Tühjad `grep`-id ja tühi `git status` tähendavad, et kõik, mis on sinu kaustas, on ka commit'is, ja et saladusi commit'is pole. Ülejäänu kontrollib automaatne hindaja tag'i järgi: failid, kubeconform, objektid, hügieen, Application ja `gitops.yml`. Hindaja töötab värskes kloonis, nii et see leiab ka faili, mis on sinu kaustas, aga mitte Gitis.
 
-    ```bash
-    git switch main && git pull
-    for t in files kubeconform objects hygiene gitops cibump; do bash autograde/check.sh k07 $t; done
-    bash autograde/check.sh cloud secrets
-    ```
-
-Tühjad `grep`-id ja tühi `git status` tähendavad, et kõik, mis on sinu kaustas, on ka commit'is, ja et saladusi commit'is pole. Kuus `OK`-d on sama tulemus, mida automaatne hindaja näeb, kui tema keskkond on sinu omaga sama.
-
-✅ **Edasi saad minna, kui** `actionlint` vaikib, mõlemad `grep`-id on tühjad, Application on `Synced Healthy`, `git status` on tühi ja kõik kuus testi annavad `OK`.
-
-## Värske kloon
-
-Kloonid oma repo GitHubist uude kausta ja käivitad testid seal. Nii näed, mida automaatne hindaja näeb: ainult seda, mis on GitHubis, mitte sinu kohalikke faile.
-
-Värske kloon leiab faili, mis on sinu kaustas, aga mitte Gitis: `.gitignore` peitis manifesti või jäi `git add` tegemata.
-
-1. Klooni main ja käivita testid:
-
-    ```bash
-    D=$(mktemp -d) && git clone -q --depth 1 "$(git remote get-url origin)" "$D" && cd "$D"
-    for t in files kubeconform objects hygiene gitops cibump; do bash autograde/check.sh k07 $t; done
-    cd - && rm -rf "$D"
-    ```
-
-Kui kloonis on kõik kuus `OK`, ei sõltu tulemus sinu masinast. Kui mõni test ebaõnnestub kloonis, aga mitte sinu kaustas, näitab `git status --ignored` puuduva faili.
-
-✅ **Edasi saad minna, kui** värskes kloonis annavad kõik kuus testi `OK`.
+**Edasi saad minna, kui** `actionlint` vaikib, mõlemad `grep`-id on tühjad, Application on `Synced Healthy` ja `git status` on tühi.
 
 ## Tag
 
@@ -83,7 +57,7 @@ git ls-remote --tags origin | grep k07
 
 `ls-remote` näitab tag'i ja commit'i SHA-d GitHubis. Kui see SHA on sama mis `git rev-parse HEAD`, on tag õige commit'i peal.
 
-✅ **Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k07`.
+**Edasi saad minna, kui** `git ls-remote --tags origin` näitab `k07`.
 
 ## Automaatse hindaja tulemus
 
@@ -91,7 +65,7 @@ Tag `k07` käivitab GitHubis automaatse hindaja. Tulemus on paari minuti pärast
 
 Kui tulemus erineb sellest, mida nägid kohapeal, on vahe keskkonnas: tööriista versioon või skeemide allalaadimine. Loe põhjust Releases'i kirjest, mitte ainult punkte.
 
-✅ **Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
+**Edasi saad minna, kui** Releases näitab tulemust 100 lähedal.
 
 ## Lõputest
 
@@ -118,11 +92,11 @@ Koolitaja käivitab sama kontrolli kõigile (`k07-verify.sh`) ja tulemus jõuab 
 
 Neli Deployment'i 1/1, `/health` `UP` ja `Synced Healthy` koos tähendavad, et klaster vastab Gitile ja rakendus töötab. Rida Labori seisus tõestab veel ühte asja: sinu rakendus võttis vastu päringu väljastpoolt ja kirjutas selle andmebaasi.
 
-✅ **Edasi saad minna, kui** db01, mc01, rmq01 ja app01 on 1/1, `/health` annab `UP`, Application on `Synced Healthy` ja Labori seisus on rida `lab-07`.
+**Edasi saad minna, kui** db01, mc01, rmq01 ja app01 on 1/1, `/health` annab `UP`, Application on `Synced Healthy` ja Labori seisus on rida `lab-07`.
 
-## Tõendid moodulite kaupa
+## Tõendid osade kaupa
 
-Kontrolli, et iga mooduli issue's on tõend. Nimekiri on sama, mida koolitaja vaatab.
+Kontrolli, et K7 issue's on iga osa tõend. Nimekiri on sama, mida koolitaja vaatab.
 
 - [ ] 1. Oma klaster: kaks context'i, `pause`, iptables'i rida, `Allocated resources`, katse "k3s maas"; k3s01 on välja lülitatud
 - [ ] 2. Namespace ja põhiobjektid: `can-i` tabel (namespace'e `no`, põhjus), owner `ReplicaSet`, Endpoints = pod'ide IP-d, karantiini katse, ConfigMap volume vs env
@@ -131,16 +105,16 @@ Kontrolli, et iga mooduli issue's on tõend. Nimekiri on sama, mida koolitaja va
 - [ ] 5. Neli riket: neli rida "sümptom → käsk → põhjus → parandus", ajajoon, `kubectl diff` tühi, PR main'is
 - [ ] 6. Helm alused: `helm history` kolme revisjoniga, käsitsi muudatuse `diff`, ebaõnnestunud upgrade ja automaatne rollback logis ainult `200`-ga, values-fail Gitis, podinfo eemaldatud
 - [ ] 7. GitOps: boti commit, `/version` SHA = boti commit'i SHA, drift'i kestus, `OutOfSync` ilma selfHeal'ita, prune, `ComparisonError`, halb commit + revert, halva koodi kolm kellaaega ja logis ainult `200`
-- [ ] 8. Esitamine: kuus testi `OK` ka värskes kloonis, tag `k07`, Releases tulemus, Labori seisus `lab-07`, `NOTES.md` jaotis `## K7 tööl`
+- [ ] 8. Esitamine: tag `k07`, Releases tulemus, Labori seisus `lab-07`, `NOTES.md` jaotis `## K7 tööl`
 
 Kui mõni linnuke jääb tegemata, kirjuta issue'sse, mis jäi ja miks. Koolitaja hindab ka seda, kas sa tead, mis puudu on.
 
-✅ **Edasi saad minna, kui** kõik linnukesed on tehtud ja iga mooduli issue on suletud.
+**Edasi saad minna, kui** kõik linnukesed on tehtud ja iga mooduli issue on suletud.
 
-📎 **Selle mooduli tõend:** tag `k07` main'i peal, värske klooni kuus `OK`-d, automaatse hindaja tulemus GitHubi Releases all, Labori seisus rida `lab-07` ja link `NOTES.md` jaotisele `## K7 tööl`.
+**Selle osa tõend:** tag `k07` main'i peal, automaatse hindaja tulemus GitHubi Releases all, Labori seisus rida `lab-07` ja link `NOTES.md` jaotisele `## K7 tööl`.
 
 ## Miks see nii töötab
 
-**Värske kloon.** Värske kloon põhineb samal põhimõttel, mida CI kasutab igal käivitusel: alusta tühjast kaustast ja kontrolli, kas Gitis olevast piisab.
+**Puhas kloon.** Automaatne hindaja alustab tühjast kaustast nagu CI igal käivitusel: tulemus sõltub ainult sellest, mis on Gitis.
 
 **Viis mehhanismi.** Iga praktikumis nähtud väljund peaks olema seletatav ühe mehhanismiga: admission, scheduler, kubelet, kube-proxy või kontroller.

@@ -7,21 +7,17 @@ tags:
 
 # 4. kohtumine · Taristu koodina: loeng
 
-**Eeldus:** eelmisel korral pakkisid teenused image'itesse ja käivitasid stacki Compose'iga; masinad, millel see töötas, olid aga endiselt käsitsi loodud.
+Eelmisel korral pakkisid teenused image'itesse ja käivitasid need Compose'iga, aga masinad, millel need töötasid, olid endiselt käsitsi loodud. Täna kirjeldad koodina ka masinate loomise. Taristu kood kirjeldab soovitud olekut, aga tööriist teab maailmast ainult seda, mis on tema [state'is](https://opentofu.org/docs/language/state/). Taristu koodina haldamisel tuleb seepärast kooskõlas hoida kolm asja: kood, state ja tegelik olek.
 
-Kolmel eelmisel kohtumisel seadistasid masinaid, mille loomine polnud kuskil kirjas. Täna kirjeldad koodina ka masinate loomise. Taristu kood kirjeldab soovitud olekut, aga tööriist teab maailmast ainult seda, mis on tema [state'is](https://opentofu.org/docs/language/state/). Taristu koodina haldamisel tuleb kooskõlas hoida kolm asja: kood, state ja tegelik olek.
+??? abstract "Õpiväljundid"
 
-## 🎯 Õpiväljundid
+    Pärast seda loengut oskad:
 
-Pärast seda loengut oskad:
-
-- selgitada provisioning'u ja orkestreerimise erinevust ning seda, kuidas deklaratiivne tööriist arvutab muudatuste plaani;
-- kirjeldada, mida state sisaldab, miks tööriist seda vajab ja millised riskid sellega kaasnevad;
-- põhjendada, miks plaan loetakse enne muudatust ja kuidas poliitika koodina seda automaatselt kontrollib;
-- eristada drift'i liike ja valida, kas muudatus läheb koodi või võetakse tagasi;
-- kavandada süsteemi elutsüklit loomisest mahavõtmiseni ja võrrelda parandamist kohapeal asendamisega golden image'ist;
-- jagada töö Ansible'i ja OpenTofu vahel ning põhjendada, kus üks lõpeb ja teine algab;
-- hinnata OpenTofu ja Terraformi erinevusi ning paigutada need teiste IaC tööriistade kõrvale.
+    - selgitada, kuidas deklaratiivne tööriist arvutab plaani koodi, state'i ja tegeliku oleku põhjal;
+    - kirjeldada, mida state sisaldab, miks tööriist seda vajab ja millised riskid sellega kaasnevad;
+    - lugeda plaani enne muudatust ja põhjendada, kuidas poliitika koodina seda automaatselt kontrollib;
+    - leida drift'i ja otsustada, kas muudatus läheb koodi või võetakse tagasi;
+    - jagada töö OpenTofu ja Ansible'i vahel ning võrrelda OpenTofut ja Terraformi.
 
 [Virtuaalse taristu haldus ja SDDC](../teemad/virtuaaltaristu.md) · [Provisioning](../teemad/provisioning.md) · [Taristu koodina ja poliitika koodina](../teemad/iac.md) · [IT-migratsioon ja pilve migratsioon](../teemad/migratsioon.md) · [Standard Operating Environment ja IT-süsteemi elutsükkel](../teemad/soe-ja-elutsukkel.md) · [Orkestreerimine ja automatiseerimine](../teemad/orkestreerimine.md)
 
@@ -29,7 +25,7 @@ Pärast seda loengut oskad:
 
 Tüüpiline kohapealne (on-prem) VM luuakse tiketi alusel: VMware'i või Proxmoxi template, käsitsi muudetud RAM ja ketas, IP tabelist ja runbook'i samm "lisa monitooringusse". Viie aasta pärast on masina tegelik kirjeldus ainult hüperviisoris ja sellist snowflake serverit ei saa samast allikast uuesti luua.
 
-**Provisioning** on kõik, mis viib ressursi olematusest kasutatavaks: VM, ketas, võrk, IP, DNS-kirje, ligipääs ja esimene käivitus. 1. kohtumisel nägid cloud-init'i, mis teeb masina sees provisioning'u viimase sammu. Taristu koodina (IaC) viib selle kirjelduse Giti. [OpenTofu](https://opentofu.org/docs/) haldab hüperviisori või pilve API objekte: VM-e, kettaid, võrke, DNS-kirjeid. Mudel on **deklaratiivne**: kirjeldad lõppseisu ja tööriist arvutab ise, millised API kutsed mis järjekorras selleks vaja on.
+**Provisioning** on kõik, mis viib ressursi olematusest kasutatavaks: VM, ketas, võrk, IP, DNS-kirje, ligipääs ja esimene käivitus. 1. kohtumisel nägid cloud-init'i, mis teeb masina sees provisioning'u viimase sammu. Taristu koodina (IaC) viib selle kirjelduse Giti. [OpenTofu](https://opentofu.org/docs/) haldab hüperviisori või pilve API objekte: VM-e, kettaid, võrke, DNS-kirjeid. Mudel on **deklaratiivne**: kirjeldad soovitud lõppolekut ja tööriist arvutab ise, millised API kutsed mis järjekorras selleks vaja on.
 
 Koodis on kolm põhimõistet. **Provider** on eraldi Go binaar, mille `tofu init` registry'st alla laeb. Kogu Proxmoxi, AWS-i või GitHubi tundmine on [provider'is](https://search.opentofu.org/provider/bpg/proxmox/latest). **Resource** on objekt, mille elutsüklit Tofu haldab. **Data source** ainult loeb, näiteks leiab malli tag'i järgi, et selle ID-d ei peaks koodi kirjutama.
 

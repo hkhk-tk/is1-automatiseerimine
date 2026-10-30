@@ -18,7 +18,7 @@ Read on laboriosade kaupa. Neljas veerg on mehhanism, mille järgi tunned vea ä
 | freestyle: `sudo: a terminal is required` / `sudo apt update` ebaõnnestub | `id` buildi konsoolis | ootuspärane: kasutajal `jenkins` pole sudo-t | build töötab tavakasutajana; sudo puudumine on turvapiir, mitte viga |
 | agent jäi pärast `pkill -9` punaseks | `systemctl cat jenkins-agent \| grep Restart`, `journalctl -u jenkins-agent -n 20` | `Restart=on-failure` puudub, `RestartSec` ei ole veel möödas või unit on olekus `failed` | pärast `StartLimitBurst` taaskäivitust `StartLimitIntervalSec` jooksul (vaikimisi 5 korda 10 s jooksul) jätab systemd unit'i olekusse `failed` ja vajab `systemctl reset-failed`-i |
 | `ps` väljundis on saladus näha | `ps -o args -u jenkins` | agent käivitati käsitsi `-secret <väärtus>` kujul | `-secret @/opt/jenkins/secret` laseb Remotingul lugeda väärtuse failist, nii et `/proc/<pid>/cmdline`-is on ainult tee |
-| `Couldn't find any revision to build` | GitHubis haru `k06-jenkins`, folderi credential `github` | haru puudub GitHubis või token vale: `git push -u origin k06-jenkins`, token *Contents: Read* | Jenkins loeb GitHubist, mitte sinu kohalikust repost; push'imata haru tema jaoks ei eksisteeri |
+| `Couldn't find any revision to build` | GitHubis haru `k06-jenkins`, folderi credential `github` | haru puudub GitHubis või token vale: `git push -u origin k06-jenkins`, token *Contents: Read* | Jenkins loeb GitHubist, mitte sinu kohalikust repositooriumist; push'imata haru tema jaoks ei eksisteeri |
 | `Could not find credentials entry with ID …` või 401, kuigi parool pole muutunud | folderi Credentials, `credentialsId` Jenkinsfile'is | credential'i ID Jenkinsfile'is ei klapi folderis olevaga | Jenkins otsib credential'it ID järgi job'i folderist ja ülemistest tasemetest; teise nimega credential'it ta ei leia |
 | `Tool type "maven" does not have an install of "MAVEN3.9"` | `tools` plokk | vale tööriista nimi: `maven3`, `jdk21` | `tools` otsib administraatori antud nime, mitte versiooni |
 | `Scripts not permitted to use method …` | buildi konsool, Jenkinsfile'i Groovy osa | meetod pole Groovy sandboxis lubatud: kasuta sammu `sh` või lubatud sammu | Jenkinsfile'i Groovy osa töötab controlleris piiratud režiimis; see on turvapiir, mitte viga sinu koodis |
@@ -43,15 +43,15 @@ Read on laboriosade kaupa. Neljas veerg on mehhanism, mille järgi tunned vea ä
 | Quality Gate ootab timeout'ini | koolitaja: Sonar → Webhooks → Recent deliveries | webhook ei jõua Jenkinsini | Jenkins ei küsi tulemust, vaid ootab, et Sonar selle saadaks |
 | `k06 quality` FAIL: projectKey | `grep -n projectKey k06-jenkins/Jenkinsfile` | võti on `labori-seis`, peab olema `labori-seis-<gh>` | ühise võtmega kirjutaksid kõik õppijad sama projekti üle |
 | Maven ei kasuta Nexust | logis pole `kooli-nexus` | `-s k06-jenkins/settings.xml` puudub mõnest `mvn` käsust | iga `mvn` käsk loeb settings-faili eraldi; üks käsk ilma `-s`-ta läheb otse Centralisse |
-| Nexus 400 Bad Request | buildi nimi, Nexus Browse | versioon juba olemas: versioonis peavad olema `BUILD_NUMBER` ja commit | hosted repo ei luba sama versiooni üle kirjutada (*Disable redeploy*) |
-| redeploy katse annab `201` | Nexuse repo seadistus | repo lubab redeploy'd: ütle koolitajale | ilma selle piiranguta saab vana versiooni vaikselt asendada |
+| Nexus 400 Bad Request | buildi nimi, Nexus Browse | versioon juba olemas: versioonis peavad olema `BUILD_NUMBER` ja commit | hosted repositoorium ei luba sama versiooni üle kirjutada (*Disable redeploy*) |
+| redeploy katse annab `201` | Nexuse repositooriumi seadistus | repositoorium lubab redeploy'd: ütle koolitajale | ilma selle piiranguta saab vana versiooni vaikselt asendada |
 | `curl --upload-file` annab `401`, kuigi parool on õige | `printf` rida, `echo ${#NEXUS_PASS}` | `read -rs` jäi vahele või muutuja on teises shellis | `curl -K-` loeb kasutaja ja parooli standardsisendist; tühi parool on vale parool |
 | Nexus 403 | Nexuse tee konsoolis | groupId pole `ee.hkhk.<gh>` või credential vale | Nexuse õigused on seotud teega; võõras groupId on võõras kaust |
 | Nexus 401 | folderi credential `nexus` | parool vale | Nexus ei tundnud kasutajat ära |
 | `sha1sum` ei klapi | buildi number ja versioon | võrdled eri buildi WAR-e | iga build teeb uue WAR-i, mille räsi erineb ka siis, kui kood on sama |
 | **4. Image, paralleel ja deploy** | | | |
 | `permission denied ... /var/run/docker.sock` | `id jenkins`, `ls -l /var/run/docker.sock` | `jenkins` pole `docker` grupis või agenti pole taaskäivitatud: `sudo systemctl restart jenkins-agent` | grupid loetakse protsessi käivitamisel; töötav protsess uut gruppi ei näe |
-| `docker build`: `COPY failed: file not found` | build context | kontekst peab olema `target`, mitte `.` | `COPY` otsib faili konteksti suhtes; repo juures pole `labori-seis.war` |
+| `docker build`: `COPY failed: file not found` | build context | kontekst peab olema `target`, mitte `.` | `COPY` otsib faili konteksti suhtes; repositooriumi juurkaustas pole `labori-seis.war` |
 | `k06 docker` FAIL: build once | `grep -n '^COPY' k06-jenkins/Dockerfile` | Dockerfile ei kopeeri valmis WAR-i | automaatne hindaja otsib `COPY … .war` rida; mitmeastmeline fail kompileerib uuesti |
 | image'eid koguneb üle 3 | `docker image ls labori-seis` | koristus puudub plokist `cleanup` või `tail -n +4` vale | `tail -n +4` alustab neljandast reast; `+3` jätaks alles kaks |
 | `ART_VERSION` on Docker etapis tühi | etapp Build | versioon arvutatakse Nexuse etapis, mis töötab paralleelselt: vii etappi Build | paralleelsed harud ei näe teineteise muutujaid enne, kui need on seatud |
@@ -95,5 +95,5 @@ Read on laboriosade kaupa. Neljas veerg on mehhanism, mille järgi tunned vea ä
 | roheline, aga järgmine build punane | Nexuse haru konsool | üks roheline build ei tõesta versioonimist: vaata [Neli punast buildi](lab-7-neli-punast.md) veaotsingu tabelist 400 rida | mõni viga tuleb välja alles teisel korral, kui esimene tulemus on juba olemas |
 | **8. Esitamine** | | | |
 | automaatne hindaja FAIL, kohalikult OK | `diff <(git ls-files k06-jenkins \| sort) <(find k06-jenkins -type f \| sort)` | fail on kettal, aga commit'imata | automaatne hindaja näeb ainult Gitis olevaid faile |
-| Releases all tulemust pole | `git ls-remote --tags origin` | tag on ainult kohalikus repos | vaja on `git push origin k06` |
+| Releases all tulemust pole | `git ls-remote --tags origin` | tag on ainult kohalikus repositooriumis | vaja on `git push origin k06` |
 | tulemus vastab vanale versioonile | `git log --oneline -1 k06` ja `git log --oneline -1 main` | tag pandi enne merge'i | tag jäi haru commit'ile, mida `main`-is pole |

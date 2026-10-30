@@ -7,20 +7,17 @@ tags:
 
 # 5. kohtumine · Pidev integratsioon ja tarne: loeng
 
-**Eeldus:** 4. kohtumisel tõstsid OpenTofu'ga taristu koodist üles, 3. kohtumisest on rakendus image'ina olemas.
+3. kohtumisest on rakendus image'ina olemas ja 4. kohtumisel lõid OpenTofu'ga taristu koodist. Seni on iga tööriist oodanud, et keegi selle käivitaks. Täna paneme ahela tööle ilma käsitsi käivitamiseta: commit'ist saab artefakt ja artefaktist töötav teenus. **Pipeline on tarneahel**: iga lüli selles, alates sõltuvusest ja action'ist kuni runner'i, deploy'ni ja muudatuse kirjeni, on otsus selle kohta, keda ja mida sa usaldad.
 
-Seni on iga tööriist oodanud, et keegi selle käivitaks. Täna paneme ahela tööle ilma käsitsi käivitamiseta: commit'ist saab artefakt ja artefaktist töötav teenus. **Pipeline on tarneahel**: iga lüli selles, alates sõltuvusest ja action'ist kuni runner'i, deploy'ni ja muudatuse kirjeni, on otsus selle kohta, keda ja mida sa usaldad.
+## Õpiväljundid
 
-## 🎯 Õpiväljundid
+Päeva lõpuks oskad:
 
-- Selgitad, mis probleemi lahendab pidev integratsioon ja mille poolest erinevad pidev tarnimine ja pidev paigaldus.
-- Kirjeldad pipeline'i sündmusest käivituva job'ide graafina ja põhjendad, milline kontroll peab pipeline'i peatama ja milline ainult hoiatama.
-- Eristad artefakti, vahemälu ja allikakoodi ning põhjendad, miks ehitatakse üks kord ja sama artefakt liigub edasi.
-- Hindad tarneahela riske ja valid automaatsed turvakontrollid (skänn, SBOM, allkiri), mis peatavad ohtliku artefakti enne deploy'd.
-- Põhjendad, millal on deploy õnnestunud, ja kirjeldad automaatse rollback'i eeldusi ning piire.
-- Seod pipeline'i ITSM-i muudatuste haldusega: standardmuudatus, kinnitus environment'iga ja automaatne tikett.
-- Võrdled GitHubi hallatud ja self-hosted runner'it turvalisuse ja ligipääsu järgi.
-
+- selgitada, mis probleemi lahendab pidev integratsioon ja mille poolest erinevad pidev tarnimine ja pidev paigaldus;
+- kirjeldada pipeline'i job'ide graafina ja põhjendada, milline kontroll peab pipeline'i peatama ja milline ainult hoiatama;
+- põhjendada, miks artefakt ehitatakse üks kord, ja valida automaatsed turvakontrollid, mis peatavad ohtliku artefakti enne deploy'd;
+- põhjendada, millal on deploy õnnestunud, ning kirjeldada automaatse rollback'i eeldusi ja piire;
+- siduda pipeline'i muudatuste haldusega ja võrrelda GitHubi hallatud ja self-hosted runner'it turvalisuse järgi.
 
 [DevOps automation ja deployment automation](../teemad/devops-automaatika.md) · [Sündmuspõhine automaatika](../teemad/sundmuspohine-automaatika.md) · [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md) · [IT-teenuste haldus (ITSM)](../teemad/itsm.md)
 
@@ -28,7 +25,7 @@ Seni on iga tööriist oodanud, et keegi selle käivitaks. Täna paneme ahela t�
 
 Kvartaalne väljalase käib paljudes asutustes ühtemoodi: neli meeskonda koguvad kuus nädalat muudatusi, CAB kinnitab paketi ja laupäevases hooldusaknas paigaldatakse see 40-sammulise runbook'i järgi. Kui midagi läheb katki, on põhjuse kandidaate sadu ja ainus tagasiminek on kogu paketi rollback.
 
-**Pidev integratsioon** (CI) pöörab selle ümber: iga commit ehitatakse ja testitakse kohe, sama käsuga ja samas puhtas keskkonnas. Martin Fowler kirjeldab CI-d tavana, kus iga arendaja integreerib vähemalt kord päevas ja iga integratsiooni kontrollib automaatne build ([Continuous Integration](https://martinfowler.com/articles/continuousIntegration.html)). Muutuja on tagasiside aeg: viga, mis leitakse kümne minuti pärast, on ühe commit'i suurune. Sama viga kuue nädala pärast on uurimistöö.
+**Pidev integratsioon** (CI) pöörab selle ümber: iga commit ehitatakse ja testitakse kohe, sama käsuga ja samas puhtas keskkonnas. Martin Fowler kirjeldab CI-d tavana, kus iga arendaja integreerib vähemalt kord päevas ja iga integratsiooni kontrollib automaatne build ([Continuous Integration](https://martinfowler.com/articles/continuousIntegration.html)). Määrav on tagasiside aeg: viga, mis leitakse kümne minuti pärast, on ühe commit'i suurune. Sama viga kuue nädala pärast on uurimistöö.
 
 CI tulemus on **artefakt**: Java puhul WAR või JAR, meie ahelas lõpuks image. **Pidev tarnimine** (continuous delivery) tähendab, et iga roheline artefakt *võiks* minna tootmisse ja otsuse teeb inimene. **Pidev paigaldus** (continuous deployment) jätab selle otsuse ära ja iga roheline commit main'is jõuab ise serverisse. Mõlemat lühendatakse CD-ks.
 
@@ -39,9 +36,9 @@ CI tulemus on **artefakt**: Java puhul WAR või JAR, meie ahelas lõpuks image. 
 
 **DevOps automation** on sama mõte kogu tarne kohta: build, test, image, deploy ja kontroll on üks versioonihalduses ahel, mida arendaja ja admin muudavad samas repos. Deploy runbook'i sammud lähevad workflow'sse ja nende muutmine käib PR-iga. Hind on see, et pipeline'ist saab ise tootmissüsteem. Tal on tootmise credential'id, ta vajab monitooringut ja tema rike peatab kõigi meeskondade tarne.
 
-DORA mõõdab tarnimist viie näitajaga ([DORA metrics](https://dora.dev/guides/dora-metrics/)). Läbilaskevõimet näitavad aeg commit'ist tootmiseni, deploy'de sagedus ja taastumisaeg ebaõnnestunud deploy'st. Ebastabiilsust näitavad ebaõnnestunud muudatuste osakaal ja deploy'de ümbertöö osakaal: plaanimata deploy'd, mille tootmisintsident peale sundis. Algselt oli näitajaid neli. 2023. aastal asendati MTTR taastumisajaga just ebaõnnestunud deploy'st ja 2024. aastal lisati ümbertöö osakaal, sest uurijad oletasid, et ebaõnnestunud muudatuste osakaal mõõdab tegelikult ümbertööd, ja tahtsid seda eraldi kontrollida ([näitajate ajalugu](https://dora.dev/guides/dora-metrics/history/)). Küsitlusuuringud väidavad aastast aastasse, et sagedamini ja väiksemate muudatustega tarnivad meeskonnad ei maksa selle eest suurema rikete osakaaluga. See on korrelatsioon küsitlusandmetest, mitte tõestatud põhjuslik seos. Adminitöös on otsesem teine tagajärg: kui pipeline rakendab igal deploy'l koodis kirjeldatud soovitud oleku uuesti, kirjutab järgmine deploy käsitsi tehtud paranduse üle samamoodi nagu playbook.
+DORA mõõdab tarnimist viie näitajaga ([DORA metrics](https://dora.dev/guides/dora-metrics/)). Läbilaskevõimet näitavad aeg commit'ist tootmiseni, deploy'de sagedus ja taastumisaeg ebaõnnestunud deploy'st. Ebastabiilsust näitavad ebaõnnestunud muudatuste osakaal ja deploy'de ümbertöö osakaal: plaanimata deploy'd, mille tootmisintsident peale sundis. Küsitlusuuringud väidavad aastast aastasse, et sagedamini ja väiksemate muudatustega tarnivad meeskonnad ei maksa selle eest suurema rikete osakaaluga. See on korrelatsioon küsitlusandmetest, mitte tõestatud põhjuslik seos. Adminitöös on otsesem teine tagajärg: kui pipeline rakendab igal deploy'l koodis kirjeldatud soovitud oleku uuesti, kirjutab järgmine deploy käsitsi tehtud paranduse üle samamoodi nagu playbook.
 
-CI-l on adminitöös eelkäija. Build-server, mille öine cron-skript käivitas `mvn package` ja kopeeris tulemuse NFS-kettale, tegi sama tööd kahe puudusega: see ei käivitunud iga muudatuse peale ja selle keskkonda muudeti aastate jooksul käsitsi. CI eeldab ka harumudelit. Kui meeskond hoiab nädalaid elavaid feature-harusid, ehitab CI küll iga commit'i, aga integratsioon lükkub merge'i päeva ja konfliktid on sama suured kui varem. Seepärast käib CI-ga kaasas trunk-based arendus: haru on olemas päeva või kaks ja pooleli töö peidetakse feature flag'i taha, mitte harusse.
+CI-l on adminitöös eelkäija. Build-server, mille öine cron-skript käivitas `mvn package` ja kopeeris tulemuse NFS-kettale, tegi sama tööd kahe puudusega: see ei käivitunud iga muudatuse peale ja selle keskkonda muudeti aastate jooksul käsitsi. CI eeldab ka harumudelit. Kui meeskond hoiab nädalaid kestvaid feature-harusid, ehitab CI küll iga commit'i, aga integratsioon lükkub merge'i päeva ja konfliktid on sama suured kui varem. Seepärast käib CI-ga kaasas trunk-based arendus: haru on olemas päeva või kaks ja pooleli töö peidetakse feature flag'i taha, mitte harusse.
 
 Iseseisvaks lugemiseks: [DevOps automation ja deployment automation](../teemad/devops-automaatika.md).
 

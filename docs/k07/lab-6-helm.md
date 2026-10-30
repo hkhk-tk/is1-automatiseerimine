@@ -35,7 +35,7 @@ Võõrast chart'i ei paigaldata pimesi. Vaikeväärtustes võib olla avalik Load
 
 `show chart` näitab chart'i ja rakenduse versiooni eraldi: `version` on template'ide versioon, `appVersion` image'i versioon. Need võivad muutuda eri ajal. Viis võtit `show values` väljundis on need, mida sa selles moodulis muudad või kontrollid.
 
-✅ **Edasi saad minna, kui** `helm version` näitab `v4.2` ja `show values` leiab viis võtit.
+**Edasi saad minna, kui** `helm version` näitab `v4.2` ja `show values` leiab viis võtit.
 
 ## Mida chart teeks: helm template
 
@@ -65,7 +65,7 @@ Chart võib luua objekte, mida sa ei oodanud: ServiceAccount, HPA, Ingress, mõn
 
 Vaikeväärtustega tuleb Deployment ja Service. `--set` muutis ainult ühte rida ja kõik ülejäänu jäi samaks. Serveri dry-run näitas, kas sinu õigused ja kvoot need objektid lubaksid. Kui siin oleks tulnud `Forbidden`, ebaõnnestuks ka `helm install`.
 
-✅ **Edasi saad minna, kui** oskad nimetada objektid, mille chart loob, `--set replicaCount=2` muutis `replicas:` rida ja serveri dry-run vastas iga objekti kohta `(server dry run)`.
+**Edasi saad minna, kui** oskad nimetada objektid, mille chart loob, `--set replicaCount=2` muutis `replicas:` rida ja serveri dry-run vastas iga objekti kohta `(server dry run)`.
 
 ## Oma values-fail
 
@@ -88,7 +88,7 @@ Käsurea `--set` ununeb. Väärtused, millega paigaldad, lähevad faili ja Giti.
 
 Kui väärtus on values-failis vales kohas, ei anna Helm viga: ta lihtsalt ei kasuta seda. Seepärast kontrollid renderdatud tulemust, mitte faili. Kui `PODINFO_UI_MESSAGE` puudub, on võti vales tasemel.
 
-✅ **Edasi saad minna, kui** renderdatud Deployment'is on `replicas: 1`, sinu teade ja sinu `requests` ning `limits`.
+**Edasi saad minna, kui** renderdatud Deployment'is on `replicas: 1`, sinu teade ja sinu `requests` ning `limits`.
 
 ## Paigaldus oma namespace'i
 
@@ -118,7 +118,7 @@ Release'i Secret'is on kõik väärtused ja renderdatud manifestid, mistõttu ro
 
 `helm list` näitab release'i olekut ja revisjoni. Objektidel on label `app.kubernetes.io/instance=podinfo`, millega Helm nad hiljem üles leiab. Curl'i vastuses on `hostname` pod'i nimi ja `message` sinu tekst: rakendus luges väärtuse keskkonnamuutujast, mille chart sinu failist tegi.
 
-✅ **Edasi saad minna, kui** `helm list` näitab `podinfo` olekus `deployed`, revision 1, ja curl näitab sinu teadet.
+**Edasi saad minna, kui** `helm list` näitab `podinfo` olekus `deployed`, revision 1, ja curl näitab sinu teadet.
 
 ## Upgrade, history ja rollback
 
@@ -146,13 +146,15 @@ Helmi rollback on kiire, aga ta ei tea Gitist midagi. Kui values-fail on Gitis j
 
 `history` näitab kolme rida ja igaühel on oma Secret. Revisjon 3 on sisult sama mis 1, aga tal on uus number ja kirjeldus `Rollback to 1`. `get values` näitas pärast upgrade'i ka `--set` väärtust: Helm mäletab, kuidas iga revisjon tehti, isegi kui sina ei mäleta.
 
-✅ **Edasi saad minna, kui** `history` näitab kolme revisjoni (install, upgrade, rollback) ja kolmas kirjeldus on `Rollback to 1`.
+**Edasi saad minna, kui** `history` näitab kolme revisjoni (install, upgrade, rollback) ja kolmas kirjeldus on `Rollback to 1`.
 
 ## Käsitsi muudatus Helmi all
 
 Muudad Helmi paigaldatud objekti kubectl'iga ja vaatad, kas Helm seda märkab. Helm ei jälgi klastrit pidevalt. Ta võrdleb ainult siis, kui sa käsu annad.
 
 See on vahe Helmi ja Argo CD vahel. Helmiga võib klaster nädalaid erineda sellest, mis release'is kirjas, ja keegi ei tea, kuni järgmine upgrade muudatuse kas üle kirjutab või alles jätab. Argo CD märkab sama asja sekunditega.
+
+**Ennusta:** kas Helm märkab käsitsi tehtud muudatust ja taastab selle ise?
 
 1. Muuda koopiate arvu käsitsi ja võrdle release'iga:
 
@@ -166,7 +168,7 @@ See on vahe Helmi ja Argo CD vahel. Helmiga võib klaster nädalaid erineda sell
 
 `helm status` ütles ikka `deployed`, kuigi klastris oli kaks koopiat. Helmi jaoks on release korras, sest ta vaatab oma Secret'it, mitte klastrit. `kubectl diff` release'i manifestiga näitas erinevust kohe. Sama mõte, release'i manifest kui tõe allikas, on Argo CD aluseks.
 
-✅ **Edasi saad minna, kui** `helm status` näitas `deployed`, `diff` näitas `- replicas: 2` ja `+ replicas: 1` ning pärast `apply`-d on jälle üks koopia.
+**Edasi saad minna, kui** `helm status` näitas `deployed`, `diff` näitas `- replicas: 2` ja `+ replicas: 1` ning pärast `apply`-d on jälle üks koopia.
 
 ## Ebaõnnestunud upgrade ilma katkestuseta
 
@@ -192,7 +194,7 @@ kubectl get rs -l app.kubernetes.io/name=podinfo             # uus ReplicaSet 0 
 
 Vana pod teenindas kogu aja, sest uus ei saanud kunagi Ready'ks ja Deployment'i rolling update ei kustuta vana enne. Helm seda ei arvesta: see ootab ainult ajapiirini ja märgib siis revisjoni `failed`-iks. Ilma `--rollback-on-failure`-ita jääks release olekusse `failed`, Deployment poolikusse rollout'i ja järgmine `helm upgrade` alustaks sellest olekust. Argo CD all sama lippu ei ole: seal hoiab vana versiooni alles Deployment ise ja rollback on `git revert`.
 
-✅ **Edasi saad minna, kui** `helm history` näitab `failed` revisjoni ja selle järel automaatset `Rollback to …` olekuga `deployed`, logis pole ühtegi muud koodi kui `200` ja image on sama mis enne upgrade'i.
+**Edasi saad minna, kui** `helm history` näitab `failed` revisjoni ja selle järel automaatset `Rollback to …` olekuga `deployed`, logis pole ühtegi muud koodi kui `200` ja image on sama mis enne upgrade'i.
 
 ## Koristus ja commit
 
@@ -217,9 +219,9 @@ Lisaprojektis paigaldad podinfo uuesti, seekord Argo CD kaudu. Kui `helm uninsta
 
 `get all` ei leidnud midagi ja kvoodi `pods` kasutus vähenes ühe võrra. `hygiene` on ikka `OK`, sest test ei loe alamkausta `helm/`, ja see on õige: values-fail ei ole manifest.
 
-✅ **Edasi saad minna, kui** `get all` ei leia podinfo objekte, values-fail on main'il ja `hygiene` annab endiselt `OK`.
+**Edasi saad minna, kui** `get all` ei leia podinfo objekte, values-fail on main'il ja `hygiene` annab endiselt `OK`.
 
-📎 **Selle mooduli tõend:** issue `K7.6` kommentaaris `grep '^kind:'` väljund `helm template`-ist, `helm list`, `helm history` kolme revisjoniga, `diff` käsitsi muudatusest, ebaõnnestunud upgrade'i `helm history | tail -3` koos `grep -vc` tulemusega 0 ja link values-failile.
+**Selle osa tõend:** issue `K7.6` kommentaaris `grep '^kind:'` väljund `helm template`-ist, `helm list`, `helm history` kolme revisjoniga, `diff` käsitsi muudatusest, ebaõnnestunud upgrade'i `helm history | tail -3` koos `grep -vc` tulemusega 0 ja link values-failile.
 
 ## Miks see nii töötab
 

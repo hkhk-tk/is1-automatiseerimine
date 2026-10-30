@@ -27,7 +27,7 @@ Koolitaja teeb sinu töötavas Labori seisus neli viga: Gitis on kõik õige, kl
 
 *Tabel L7.3. Veaotsingu tabel.*
 
-> ⚠️ `kubectl diff -f k07-k8s/` näitaks vastuse kohe. Kasuta seda alles siis, kui kõik neli põhjust on kirjas.
+> `kubectl diff -f k07-k8s/` näitaks vastuse kohe. Kasuta seda alles siis, kui kõik neli põhjust on kirjas.
 
 ## Väljast sisse: Ingress → Service → pod
 
@@ -48,7 +48,7 @@ Iga komponent vastab oma koodiga: Traefik annab reegli puudumisel 404 ja tühja 
 
 Port-forward läheb Ingress'ist mööda. Kui see annab teise vastuse kui curl hostiga, on vähemalt üks viga Ingress'is ja vähemalt üks võib olla sügavamal. Kui mõlemad annavad sama vea, on probleem Service'is või pod'is. Selline võrdlus jagab otsinguruumi pooleks ühe käsuga.
 
-✅ **Edasi saad minna, kui** tead, miks kasutaja ei näe lehte, ja kaks rida on kirjas.
+**Edasi saad minna, kui** tead, miks kasutaja ei näe lehte, ja kaks rida on kirjas.
 
 ## Pod'id, mis ei jõua Running'usse
 
@@ -69,7 +69,7 @@ Vaatad kogu namespace'i, mitte ainult kasutaja teed. Kõik rikked ei ole kasutaj
 
 `get deploy,rs` näitab sageli rohkem kui `get pods`. Kaks ReplicaSet'i sama Deployment'i all, millest mõlemal on pod'e, tähendab pooleli jäänud rolloutit. Deployment, mille all pole ühtegi pod'i, tähendab, et ReplicaSet ei saanud pod'i luua. Iga põhjus peab olema nimetatud objekti ja välja täpsusega, näiteks "Deployment X, väli Y, väärtus Z", mitte "midagi oli valesti".
 
-✅ **Edasi saad minna, kui** issue'sse on kirjas neli rida "sümptom → käsk → põhjus" ja iga põhjus on nimetatud objekti ja välja täpsusega.
+**Edasi saad minna, kui** issue'sse on kirjas neli rida "sümptom → käsk → põhjus" ja iga põhjus on nimetatud objekti ja välja täpsusega.
 
 ## Ajajoon ja järeldused
 
@@ -90,7 +90,7 @@ Ilma ajajooneta jääb järeldus "koolitaja muutis midagi". Ajajoon näitab, mil
 
 Kui kaks riket on samas ajas, aga eri objektides, on need tõenäoliselt sõltumatud. Kui üks Events'i rida tuleb kohe pärast teist ja samas ahelas, võib teine olla esimese tagajärg. Viimane küsimus "mis oleks tabanud" on see, millest tekib ennetus: Argo CD juures näed, et osa neist riketest ta lihtsalt ei lubaks.
 
-✅ **Edasi saad minna, kui** issue's on ajajoon vähemalt nelja reaga ja iga rikke juures üks lause kontrolli kohta, mis selle oleks tabanud.
+**Edasi saad minna, kui** issue's on ajajoon vähemalt nelja reaga ja iga rikke juures üks lause kontrolli kohta, mis selle oleks tabanud.
 
 ## Parandus Gitist
 
@@ -117,7 +117,7 @@ Käsitsi parandus klastris oleks kiire, aga see jätaks klastri ja Giti lahku sa
 
 Esimene `diff` oli sinu vastuste kontroll. Kui seal oli rida, mida sinu neljas põhjuses polnud, jäi midagi märkamata: lisa see issue'sse. Tühi `diff` lõpus tõestab, et klastris pole enam ühtegi käsitsi muudatust. Kui `diff` jääb mittetühjaks ka pärast `apply`-d, on mõni väli selline, mida `apply` ei muuda, ja see vajab eraldi tegevust.
 
-✅ **Edasi saad minna, kui** kõik neli Deployment'i on 1/1, `/health` annab `UP` ja `kubectl diff` on tühi.
+**Edasi saad minna, kui** kõik neli Deployment'i on 1/1, `/health` annab `UP` ja `kubectl diff` on tühi.
 
 ## Main'i
 
@@ -131,9 +131,9 @@ git switch main && git pull
 
 `objects` ja `hygiene` kontrollivad, et parandamise käigus ei tulnud faili midagi, mida seal olla ei tohi. Merge commit main'il on punkt, kust Argo CD alustab.
 
-✅ **Edasi saad minna, kui** `objects` ja `hygiene` on `OK` ja haru `k07-k8s` on PR-iga main'is.
+**Edasi saad minna, kui** `objects` ja `hygiene` on `OK` ja haru `k07-k8s` on PR-iga main'is.
 
-📎 **Selle mooduli tõend:** issue `K7.5` kommentaaris neli rida "sümptom → käsk → põhjus → parandus", ajajoon, iga rikke juures kontroll, mis selle oleks tabanud, tühi `kubectl diff` ja merge'itud PR.
+**Selle osa tõend:** issue `K7.5` kommentaaris neli rida "sümptom → käsk → põhjus → parandus", ajajoon, iga rikke juures kontroll, mis selle oleks tabanud, tühi `kubectl diff` ja merge'itud PR.
 
 ## Miks see nii töötab
 

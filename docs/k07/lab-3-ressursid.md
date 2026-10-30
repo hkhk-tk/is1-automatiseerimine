@@ -25,7 +25,7 @@ Jagatud klastris kaitseb kvoot teisi sinu vigade eest. Ilma selleta võtaks üks
     kubectl describe resourcequota | grep -E 'pods|requests'
     ```
 
-2. Küsi rohkem pod'e, kui kvoot lubab, ja vaata, kus viga näha on:
+2. **Ennusta:** kas üleliigsed pod'id jäävad olekusse `Pending` või neid ei teki üldse? Küsi rohkem pod'e, kui kvoot lubab, ja vaata, kus viga näha on:
 
     ```bash
     kubectl scale deploy web --replicas=20
@@ -40,7 +40,7 @@ Jagatud klastris kaitseb kvoot teisi sinu vigade eest. Ilma selleta võtaks üks
 
 Deployment näitas READY näiteks `14/20`, aga ükski pod polnud `Pending`. Puuduvaid pod'e ei olnud lihtsalt olemas. Seepärast ei aita siin `describe pod`: viga on ReplicaSet'i juures, sest just tema püüdis pod'e luua ja sai API serverilt keeldumise.
 
-✅ **Edasi saad minna, kui** `get deploy web` näitas READY alla 20, ReplicaSet'i Events'is oli `exceeded quota: is-quota … pods` ja nüüd on jälle 2/2.
+**Edasi saad minna, kui** `get deploy web` näitas READY alla 20, ReplicaSet'i Events'is oli `exceeded quota: is-quota … pods` ja nüüd on jälle 2/2.
 
 ## LimitRange täidab tühjad väljad
 
@@ -61,7 +61,7 @@ See on mugav, aga ohtlik. Vaikeväärtus sobib väikesele nginx'ile, aga JVM-ile
 
 Pod'i spec'is on väärtused, mida sa ei kirjutanud. Need lisas admission-kontroller enne salvestamist, nii et etcd-s on pod juba täidetud väljadega. Kui hiljem `kubectl get pod -o yaml` väljundist faili teed, lähevad need väärtused faili kaasa ja näevad välja nagu sinu omad.
 
-✅ **Edasi saad minna, kui** pod'i spec'is on requests ja limits, mida sina ei kirjutanud, ja need on samad mis LimitRange'i `Default` veergudes.
+**Edasi saad minna, kui** pod'i spec'is on requests ja limits, mida sina ei kirjutanud, ja need on samad mis LimitRange'i `Default` veergudes.
 
 ## Pending: pod ei leia node'i
 
@@ -87,7 +87,7 @@ Tootmisklastris jääb pod `Pending`-uks, kui ta küsib rohkem mälu, kui ühelg
 
 Pod on olemas, NODE veerus on `<none>` ja Events'is on `FailedScheduling` koos lausega `0/N nodes are available: … didn't match Pod's node affinity/selector`. Võrdle eelmise etapiga: kvoodi korral polnud pod'i üldse, siin on pod olemas ja ootab.
 
-✅ **Edasi saad minna, kui** pod `kuhu` oli `Pending`, Events'is oli `FailedScheduling` koos põhjusega ja oskad öelda, mille poolest see erineb `exceeded quota` veast.
+**Edasi saad minna, kui** pod `kuhu` oli `Pending`, Events'is oli `FailedScheduling` koos põhjusega ja oskad öelda, mille poolest see erineb `exceeded quota` veast.
 
 ## OOMKilled
 
@@ -99,7 +99,7 @@ OOMKilled ei jäta rakenduse logisse sageli midagi, sest protsess tapetakse ilma
     - Pod `malu`, image `busybox:1.37`, `restartPolicy: Never`
     - `resources`: requests `memory: 16Mi`, limits `memory: 64Mi`
     - käsk `dd if=/dev/zero of=/dev/null bs=128M count=1` (dd hoiab 128 MB puhvrit mälus)
-2. Tee `kubectl apply` ja vaata, kuidas konteiner lõppes:
+2. **Ennusta:** mis olekus ja mis koodiga konteiner lõpeb? Tee `kubectl apply` ja vaata:
 
     ```bash
     kubectl apply -f malu.yaml && sleep 10
@@ -115,7 +115,7 @@ OOMKilled ei jäta rakenduse logisse sageli midagi, sest protsess tapetakse ilma
 
 Esimene katse lõppes `reason: OOMKilled` ja `exitCode: 137`, teine `Completed` ja koodiga 0. Ainus vahe oli puhvri suurus limiidi suhtes. `kubectl top` näitab tegelikku kasutust ja seda saad võrrelda requests'iga: kui kasutus on kogu aeg palju väiksem, küsib pod liiga palju ja raiskab node'i mahtu.
 
-✅ **Edasi saad minna, kui** esimesel korral on `reason` `OOMKilled` ja `exitCode` 137, teisel korral on pod `Completed`.
+**Edasi saad minna, kui** esimesel korral on `reason` `OOMKilled` ja `exitCode` 137, teisel korral on pod `Completed`.
 
 ## Events ja describe
 
@@ -141,7 +141,7 @@ Events kaovad umbes tunniga. Kui rike oli öösel ja vaatad hommikul, on Events'
 
 Hoiatuste filter peitis tavalised sündmused (`Scheduled`, `Pulled`, `Started`) ja jättis alles need, mis vajavad tähelepanu. `kubectl events --for` näitab ühe objekti ajalugu õiges järjekorras. Salvestatud fail jääb alles ka siis, kui klaster sündmused kustutab.
 
-✅ **Edasi saad minna, kui** oskad öelda, milline kolmest käsust näitas OOMKilled'i põhjust kõige lühemalt, ja Events'i fail on salvestatud.
+**Edasi saad minna, kui** oskad öelda, milline kolmest käsust näitas OOMKilled'i põhjust kõige lühemalt, ja Events'i fail on salvestatud.
 
 ## Pod'i sisse kubectl debug'iga
 
@@ -172,7 +172,7 @@ Distroless-image'is pole shelli ja `kubectl exec` ei aita. `kubectl debug` lisab
 
 Debug-konteineri `ps` näitas nginx'i master- ja worker-protsesse, kuigi need töötavad teises konteineris. Põhjus on ühine PID namespace. `wget localhost` jõudis nginx'ini, sest pod'i konteinerid jagavad ka network namespace'i: sama `pause`, mida nägid oma klastri node'il `crictl`-iga.
 
-✅ **Edasi saad minna, kui** debug-konteineris näitas `ps` nginx'i protsesse ja `wget localhost` nginx'i lehte.
+**Edasi saad minna, kui** debug-konteineris näitas `ps` nginx'i protsesse ja `wget localhost` nginx'i lehte.
 
 ## Kaks katkist pod'i
 
@@ -198,7 +198,7 @@ Siin loeb järjekord. Üks rike paistab Events'is ja logi on tühi. Teine paista
 
 Kirjuta iga pod'i kohta, mis käsk põhjuse näitas. Kui `--previous` andis rohkem kui tavaline `logs`, tähendab see, et konteiner oli juba uuesti käivitatud ja vana logi oli ainult eelmise käivituse oma. Parandatud pod, mis jõuab `Running`-usse ja jääb sinna, tõestab, et leidsid põhjuse, mitte ainult sümptomi.
 
-✅ **Edasi saad minna, kui** üks pod oli `ImagePullBackOff`, teine `CrashLoopBackOff`, ühe põhjus leidus Events'is ja teise oma ainult logides, ja mõlemad parandatud pod'id töötavad.
+**Edasi saad minna, kui** üks pod oli `ImagePullBackOff`, teine `CrashLoopBackOff`, ühe põhjus leidus Events'is ja teise oma ainult logides, ja mõlemad parandatud pod'id töötavad.
 
 ## Koristus
 
@@ -217,9 +217,9 @@ Unustatud katsepod ei tee midagi, aga hoiab kvooti kinni. Labori seisu ehitades 
 
 `get all` ei näita ConfigMap'e ega Secret'eid, ainult workload'e ja Service'eid. `describe resourcequota` on parem mõõdik: kui requests on nulli lähedal, on ruum vaba.
 
-✅ **Edasi saad minna, kui** `kubectl get all` näitab ainult koolitaja objekte ja `describe resourcequota` näitab kasutust nulli lähedal.
+**Edasi saad minna, kui** `kubectl get all` näitab ainult koolitaja objekte ja `describe resourcequota` näitab kasutust nulli lähedal.
 
-📎 **Selle mooduli tõend:** issue `K7.3` kommentaaris `exceeded quota` rida, LimitRange'i lisatud `resources`, `FailedScheduling` rida, `OOMKilled` / 137, debug-konteineri `ps` väljund ja kummagi katkise pod'i kohta "olek → käsk → põhjus → parandus".
+**Selle osa tõend:** issue `K7.3` kommentaaris `exceeded quota` rida, LimitRange'i lisatud `resources`, `FailedScheduling` rida, `OOMKilled` / 137, debug-konteineri `ps` väljund ja kummagi katkise pod'i kohta "olek → käsk → põhjus → parandus".
 
 ## Miks see nii töötab
 

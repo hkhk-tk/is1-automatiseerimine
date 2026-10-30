@@ -31,7 +31,7 @@ Commit'i SHA image'i sees on ainus usaldusväärne viis hiljem öelda, mis kood 
 
 Sama SHA mõlemas väljundis tõestab, et build-arg jõuab runtime stage'i ja rakendus saab selle `/version` vastusesse panna. Multi-stage Dockerfile'is ei kandu `ARG` ühest stage'ist teise, seepärast tuleb see viimases stage'is uuesti öelda. Kui paned `ARG`-i faili algusesse, muutub see iga commit'iga ja Docker ehitab kõik järgmised kihid uuesti.
 
-✅ **Edasi saad minna, kui** build õnnestub ja `printenv` annab sama 40-märgilise SHA mis `git rev-parse HEAD`.
+**Edasi saad minna, kui** build õnnestub ja `printenv` annab sama 40-märgilise SHA mis `git rev-parse HEAD`.
 
 ## Image ghcr.io-sse kihtide vahemäluga
 
@@ -66,7 +66,7 @@ Registry on piir CI ja CD vahel: kõik, mis on registry's, on testitud ja deploy
 
 `needs: [build, security]` tähendab, et image tehakse alles siis, kui testid ja skänn on läbi. `CACHED` teises käivituses tõestab, et sõltuvuste allalaadimise kiht tuli vahemälust: tühi commit ei muutnud pom'i, seega polnud põhjust seda uuesti teha. Tag sha7 on see, mida deploy kasutab, `latest` on ainult inimesele mugavuseks. Kui deploy kasutaks `latest`-i, ei saaks sa kunagi kindel olla, mis versioon parasjagu töötab.
 
-✅ **Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga), teises käivituses on `dependency:go-offline` kiht `CACHED` ja `bash autograde/check.sh k05 structure` annab `OK`.
+**Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga), teises käivituses on `dependency:go-offline` kiht `CACHED` ja `bash autograde/check.sh k05 structure` annab `OK`.
 
 ## Runner control node'ile, ohutult
 
@@ -109,7 +109,7 @@ Self-hosted runner avalikus repos on tuntud ründevektor: keegi teeb forgi, muud
 
 `Listening for Jobs` tähendab, et runner hoiab GitHubiga väljuvat HTTPS-ühendust ja ootab tööd. Sissetulevat porti ei avata, seega ei pea VPN-i ega tulemüüri muutma. Kui `gh api` näitab `offline`, kuigi teenus töötab, ei pääse masin `github.com`-i: vaata `journalctl` viimaseid ridu.
 
-✅ **Edasi saad minna, kui** repo on `PRIVATE`, logis on `Listening for Jobs`, `gh api` näitab olekut `online` ja label'eid `self-hosted,Linux,X64,labseis` ning `.github/actionlint.yaml` on repos.
+**Edasi saad minna, kui** repo on `PRIVATE`, logis on `Listening for Jobs`, `gh api` näitab olekut `online` ja label'eid `self-hosted,Linux,X64,labseis` ning `.github/actionlint.yaml` on repos.
 
 ## Deploy job
 
@@ -141,7 +141,7 @@ Lisad job'i, mis töötab sinu runner'il ja teeb need kolm käsku, mida tegid 3.
 
 `docker inspect` näitab registry tag'i, mitte lokaalset nime: konteiner tuli image'ist, mille CI ehitas ja testis. PR-il oli deploy *skipped*, sest `if:` lubab ainult push'i main'i. Ilma selle reata töötaks iga PR-i kood sinu masinas. Kui deploy jääb kollaseks olekusse *Queued*, ei leia GitHub runner'it, mille label'id vastavad `runs-on`-ile. Self-hosted runner'it ootav job ebaõnnestub 24 tunni pärast.
 
-✅ **Edasi saad minna, kui** `deploy` lõpeb roheliselt, app01 image on `ghcr.io/…:<sha7>` ja PR-il oli deploy *skipped*.
+**Edasi saad minna, kui** `deploy` lõpeb roheliselt, app01 image on `ghcr.io/…:<sha7>` ja PR-il oli deploy *skipped*.
 
 ## Tõenda commit
 
@@ -178,7 +178,7 @@ Roheline deploy, mille järel töötab vana versioon, on halvem kui punane deplo
 
 Kaks sama SHA-d tähendavad, et merge-commit, image tag, konteiner ja rakenduse vastus viitavad samale koodile. Kontroll käivitub konteineri sees (`exec`), seega ei sõltu see nginx'ist ega VPN-ist. Kui `/version` näitaks eelmist commit'i ja deploy oleks ikka roheline, puuduks sul just see samm.
 
-✅ **Edasi saad minna, kui** deploy on roheline ja `/version` `commit` võrdub `git rev-parse origin/main`-iga.
+**Edasi saad minna, kui** deploy on roheline ja `/version` `commit` võrdub `git rev-parse origin/main`-iga.
 
 ## Mis jääb runner'isse maha
 
@@ -199,11 +199,11 @@ Päeva alguses tegid `.env`-ist koopia `~/k03.env` ja deploy kopeeris selle runn
     grep -c 'ghcr.io' ~/.docker/config.json 2>/dev/null || echo 0
     ```
 
-3. Kirjuta märkmikku: kas `.env` on töökaustas, mis õigustega, mitu image'it on masinas ja kas ghcr.io kirje on alles.
+3. Vasta: kas `.env` on töökaustas, mis õigustega, mitu image'it on masinas ja kas ghcr.io kirje on alles?
 
 `.env` on töökaustas pärast job'i lõppu ja just selle parandab koristussamm, mille lisad koos environment'i secret'itega. Iga deploy jätab masinasse ühe image'i juurde, nii et mõne kuu pärast täidab see ketta: koristus on lisaülesanne [12. Vanad image'id registry's ja runner'is](lisa.md#12-vanad-imageid-registrys-ja-runneris). Ära kustuta neid praegu käsitsi, sest rollback vajab eelmist image'it. ghcr.io kirjet ei tohiks pärast job'i olla, sest login-action logib *Post* sammus välja. Kui see on alles, logisid sa kunagi käsitsi sisse ja see token on nüüd kettal.
 
-✅ **Edasi saad minna, kui** märkmikus on neli vastust ja oskad öelda, milline neist on turvaprobleem.
+**Edasi saad minna, kui** tead neljale küsimusele vastust ja oskad öelda, milline neist on turvaprobleem.
 
 ## Muudatus haru kaudu tootmisse
 
@@ -224,26 +224,26 @@ git fetch --prune && git branch -a | grep fix-pealkiri
 
 Uus pealkiri brauseris ja õige `/version` tõestavad, et muudatus jõudis tootmisse ilma käsitsi sammuta. PR-il töötas image ilma push'ita: Dockerfile'i build kontrolliti enne merge'i, aga registry'sse ei jõudnud midagi ülevaatamata. Kui `grep fix-pealkiri` näitab veel midagi, on haru alles kas GitHubis või lokaalselt ja `--prune` või `git branch -d` jäi tegemata.
 
-✅ **Edasi saad minna, kui** PR-il töötasid build, security, compat ja image (ilma push'ita), leht näitab uut pealkirja, `/version` võrdub `origin/main`-iga ja viimane `grep` on tühi.
-
-📎 **Selle mooduli tõend:** sama SHA `printenv`-is ja `git rev-parse`-is, ghcr.io tag = sha7, `CACHED` rida, runner `online` label'iga `labseis`, `docker inspect` väljund, `/version` = `origin/main`, runner'i töökausta neli vastust; `check.sh k05 structure` → `OK`.
+**Edasi saad minna, kui** PR-il töötasid build, security, compat ja image (ilma push'ita), leht näitab uut pealkirja, `/version` võrdub `origin/main`-iga ja viimane `grep` on tühi.
 
 ## Miks see nii töötab
 
-**Registry ilma pikaajalise võtmeta.** Paljudes õpetustes lükatakse image Amazon ECR-i IAM-kasutaja juurdepääsuvõtmetega (access key), mis salvestatakse GitHubi secret'iteks ja millel on sageli vajalikust laiemad õigused. Meie workflow lükkab image'i registry'sse ghcr.io job'i enda `GITHUB_TOKEN`-iga, mis kehtib ainult käivituse ajal, nii et pikaajalist võtit ei ole vaja. ECR-i kasutad kodutöös.
+??? info "Ava selgitused"
 
-**Build PR-il, push main'is.** Ehitamine PR-il leiab katkise Dockerfile'i enne merge'i. Image'i lükkamine registry'sse nõuab aga kirjutusõigust. Seda õigust ei ole mõistlik anda PR-i käivitusele ja forgist tulnud PR-i token on vaikimisi niikuinii ainult lugemisõigusega.
+    **Registry ilma pikaajalise võtmeta.** Paljudes õpetustes lükatakse image Amazon ECR-i IAM-kasutaja juurdepääsuvõtmetega (access key), mis salvestatakse GitHubi secret'iteks ja millel on sageli vajalikust laiemad õigused. Meie workflow lükkab image'i registry'sse ghcr.io job'i enda `GITHUB_TOKEN`-iga, mis kehtib ainult käivituse ajal, nii et pikaajalist võtit ei ole vaja. ECR-i kasutad kodutöös.
 
-**`type=gha` vahemälu.** Vaikimisi `docker`-draiver klassikalise image store'iga (kursuse VM-i Docker 29 seadistus) ei toeta vahemälu tüüpi `type=gha`. Seetõttu loob `docker/setup-buildx-action` BuildKiti `docker-container`-draiveriga builderi ja vahemälu kasutatakse ainult selle builderi kaudu.
+    **Build PR-il, push main'is.** Ehitamine PR-il leiab katkise Dockerfile'i enne merge'i. Image'i lükkamine registry'sse nõuab aga kirjutusõigust. Seda õigust ei ole mõistlik anda PR-i käivitusele ja forgist tulnud PR-i token on vaikimisi niikuinii ainult lugemisõigusega.
 
-**Runner'i label'id.** Label'id määravad, millisele runner'ile job suunatakse. Ilma oma label'ita võiks `runs-on: self-hosted` job'i võtta mis tahes runner, mis on repole registreeritud või organisatsiooni tasemel repole lubatud.
+    **`type=gha` vahemälu.** Vaikimisi `docker`-draiver klassikalise image store'iga (kursuse VM-i Docker 29 seadistus) ei toeta vahemälu tüüpi `type=gha`. Seetõttu loob `docker/setup-buildx-action` BuildKiti `docker-container`-draiveriga builderi ja vahemälu kasutatakse ainult selle builderi kaudu.
 
-**web01 taaskäivitamine.** `restart web01` on vajalik, sest meie web01 konfiguratsioonis on `proxy_pass`-is staatiline nimi. nginx lahendab sellise nime ainult käivitumisel, uue konteineri IP-aadress on aga teine. Üldine põhimõte: kui teenus lahendab sõltuvuse nime ainult käivitumisel, tuleb see pärast sõltuvuse asendamist taaskäivitada. Muutujaga `proxy_pass` ja `resolver`-direktiiviga (3. kohtumisel) lahendaks nginx nime iga päringu ajal uuesti.
+    **Runner'i label'id.** Label'id määravad, millisele runner'ile job suunatakse. Ilma oma label'ita võiks `runs-on: self-hosted` job'i võtta mis tahes runner, mis on repole registreeritud või organisatsiooni tasemel repole lubatud.
 
-**Kiirus ja koristus.** Alles jäänud image'i kihid teevad deploy kiireks, kuid iga job pärib ka eelmise job'i jäägid. Seetõttu on deploy job'il koristussamm ja lisaülesanne [15. Ühekordne runner](lisa.md#15-uhekordne-runner) näitab, kuidas iga job saab puhta keskkonna.
+    **web01 taaskäivitamine.** `restart web01` on vajalik, sest meie web01 konfiguratsioonis on `proxy_pass`-is staatiline nimi. nginx lahendab sellise nime ainult käivitumisel, uue konteineri IP-aadress on aga teine. Üldine põhimõte: kui teenus lahendab sõltuvuse nime ainult käivitumisel, tuleb see pärast sõltuvuse asendamist taaskäivitada. Muutujaga `proxy_pass` ja `resolver`-direktiiviga (3. kohtumisel) lahendaks nginx nime iga päringu ajal uuesti.
 
-**Pull-mudel.** Runner hoiab GitHubiga HTTPS long poll'i: ühendus on avatud 50 sekundit ja kui tööd ei tule, avatakse uus. VPN-i taga olev masin saab töid ilma ühegi avatud sissetuleva pordita. Sama ühenduse kaudu uuendab runner ennast: kui runner on uuendusest üle 30 päeva maas, ei anna GitHub talle tööd, ja runner, mis pole 14 päeva ühendust võtnud, eemaldatakse.
+    **Kiirus ja koristus.** Alles jäänud image'i kihid teevad deploy kiireks, kuid iga job pärib ka eelmise job'i jäägid. Seetõttu on deploy job'il koristussamm ja lisaülesanne [15. Ühekordne runner](lisa.md#15-uhekordne-runner) näitab, kuidas iga job saab puhta keskkonna.
 
-**Ühekordse runner'i piir.** Just-in-time runner registreeritakse ühe job'i jaoks ja lahendab töökausta jääkide probleemi, kuid mitte kõike: Dockeri image'id ja kodukausta failid on endiselt jagatud, sest runner töötab samas masinas sama kasutajana. Täielik eraldatus tähendaks iga job'i jaoks uut VM-i või konteinerit. Nii töötavad GitHubi hallatud runner'id. Self-hosted runner on kompromiss: ligipääs VPN-i taha ühe masina hinnaga.
+    **Pull-mudel.** Runner hoiab GitHubiga HTTPS long poll'i: ühendus on avatud 50 sekundit ja kui tööd ei tule, avatakse uus. VPN-i taga olev masin saab töid ilma ühegi avatud sissetuleva pordita. Sama ühenduse kaudu uuendab runner ennast: kui runner on uuendusest üle 30 päeva maas, ei anna GitHub talle tööd, ja runner, mis pole 14 päeva ühendust võtnud, eemaldatakse.
+
+    **Ühekordse runner'i piir.** Just-in-time runner registreeritakse ühe job'i jaoks ja lahendab töökausta jääkide probleemi, kuid mitte kõike: Dockeri image'id ja kodukausta failid on endiselt jagatud, sest runner töötab samas masinas sama kasutajana. Täielik eraldatus tähendaks iga job'i jaoks uut VM-i või konteinerit. Nii töötavad GitHubi hallatud runner'id. Self-hosted runner on kompromiss: ligipääs VPN-i taha ühe masina hinnaga.
 
 Kui jõudsid kiiremini: [Lisaülesanded → 10. Trivy poliitika](lisa.md#10-trivy-poliitika), skännid image'i enne push'i ja lased kriitilise leiu korral job'i ebaõnnestuda.

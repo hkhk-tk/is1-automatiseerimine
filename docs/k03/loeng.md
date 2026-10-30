@@ -12,7 +12,7 @@ tags:
 
 Seni oli iga teenus server, mida seadistasid: paketid, konfiguratsioonifail, systemd unit. Täna muutub töö ühik. Teenus on valmis pakitud artefakt, mis käivitatakse protsessina, ja kõik, mis peab alles jääma, asub sellest väljaspool. **Konteiner on ühekordne, image on muutumatu, olek on mujal.** Võrgud, Compose, deploy ja baas-image'ite haldus tulenevad sellest jaotusest.
 
-## 🎯 Õpiväljundid
+## Õpiväljundid
 
 Pärast seda loengut oskad:
 
