@@ -762,4 +762,4 @@ Nüüd oskad lugeda ja käivitada väikest playbook'i. Järgmisel kohtumisel lai
 
     *Tabel 5.3. Ansible Automation Platformi komponendid.*
 
-    Kõik need ehitavad sama asja peale, mida sel kohtumisel õpid: inventory, moodul ja playbook. Ilma nendeta pole platvormist kasu.
+    Kõik need tööriistad kasutavad samu põhimõisteid, mida sel kohtumisel õpid: inventory't, mooduleid ja playbook'e. Platvorm ei asenda neid, vaid käivitab neid tsentraalselt.
