@@ -106,6 +106,12 @@ ansible-playbook tools.yml --limit web01
 
 ## A4 · Sildid
 
+**Silt** (`tags`) on ülesandele antud nimi. Võtmega `--tags` käivitad ainult nende siltidega ülesanded. Kui muutsid ainult sisselogimise teadet, ei ole vaja paketiülesandeid uuesti käivitada. Playbook'is on kaks silti: `paketid` ja `motd`. Kõik playbook'i sildid näed käsuga:
+
+```bash
+ansible-playbook tools.yml --list-tags
+```
+
 Muuda playbook'is teate teksti (rida `content:`), näiteks lisa `Küsimused: IT-tugi.`, ja käivita ainult sildiga `motd` ülesanne.
 
 **Ennusta:** millised ülesanded käivituvad ja mitu on `changed`?
@@ -117,10 +123,6 @@ ansible-playbook tools.yml --tags motd
 ??? success "Oodatav tulemus"
 
     Käivitub ainult ülesanne `Teade sisselogimisel` ja faktide kogumine. Paketiülesanded jäävad vahele. Kõigi viie masina kokkuvõttes on `changed=1`.
-
-```bash
-ansible-playbook tools.yml --list-tags
-```
 
 ## A5 · Commit
 

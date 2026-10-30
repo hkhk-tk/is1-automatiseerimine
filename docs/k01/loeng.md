@@ -207,6 +207,18 @@ Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
 **Administraatori õigused.** Päeva ülesanne ei vaja administraatori õigusi. Paketi paigaldamiseks või `/etc` all oleva faili muutmiseks lisatakse play'le või ülesandele `become: true`: Ansible logib sisse tavakasutajana ja käivitab ülesande `sudo` kaudu. Laboris `sudo` parooli ei küsi, töökohas lisatakse käsule `-K`.
 
+**Tingimus, sihtmasinad ja sildid.** Labori masinates on kaks distributsiooni ja samal programmil võib olla eri paketinimi (Ubuntus `vim`, AlmaLinuxis `vim-enhanced`). Kolm vahendit aitavad sama playbook'i kasutada eri masinates ja osaliselt:
+
+| Vahend | Mida teeb | Näide |
+|---|---|---|
+| `when` | ülesanne käivitatakse ainult siis, kui tingimus on tõene; muidu on tulemus `skipping` | `when: ansible_facts['os_family'] == "RedHat"` |
+| `--limit` | käivitab playbook'i ainult osas masinatest, playbook'i muutmata | `ansible-playbook tools.yml --limit web01` |
+| `tags` | ülesande silt; `--tags` käivitab ainult valitud siltidega ülesanded | `ansible-playbook tools.yml --tags motd` |
+
+*Tabel 5. Tingimus, sihtmasinad ja sildid.*
+
+Tingimus põhineb **faktidel**: andmetel, mida Ansible kogub masinast enne ülesandeid (operatsioonisüsteem, versioon, võrk). Ubuntus on `ansible_facts['os_family']` väärtus `Debian`, AlmaLinuxis `RedHat`.
+
 ## 6. Käivitamine ja tulemus
 
 ```bash
@@ -228,7 +240,7 @@ web01   : ok=3  changed=2  unreachable=0  failed=0  skipped=0
 | `failed` | ülesanne ebaõnnestus |
 | `skipped` | ülesanne jäeti tingimuse (`when`) tõttu vahele |
 
-*Tabel 5. PLAY RECAP väljad.*
+*Tabel 6. PLAY RECAP väljad.*
 
 Kui kaust ja fail on juba olemas ja õiged, on tulemus `ok` ja `changed=0`: Ansible ei muuda midagi ainult seetõttu, et playbook käivitati.
 
