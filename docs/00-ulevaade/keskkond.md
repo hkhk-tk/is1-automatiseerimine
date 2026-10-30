@@ -44,7 +44,7 @@ Kõik kursuse käsud käivitad control node'is. Oma arvutisse on vaja paigaldada
 Kursusel on kaks parooli. Kumbagi ei ole vaja muuta:
 
 - **kooli konto** (näiteks `maasikas.is126`) on VPN-i ja Proxmoxi jaoks;
-- **virtuaalmasinate kasutaja** `kasutaja` parooli saad juhendajalt.
+- **virtuaalmasinate kasutaja** `kasutaja` parooli leiad [arutelu teatest „Virtuaalmasinate kasutaja ja parool“](https://github.com/hkhk-tk/is126-arutelu/discussions/categories/teated).
 
 ## 1 · VPN
 
@@ -92,7 +92,7 @@ Ava Proxmox brauseris. VPN-ühendus peab olema aktiivne.
 
 **2.2 Kontrolli masinaid.** Vasakul on kuus virtuaalmasinat, mille nimed lõpevad nii: `-Control`, `-Web01`, `-App01`, `-Rmq01`, `-Mc01` ja `-Db01` (näiteks `Automatiseerimine-IS126-Maasikas-Control`). Kõik peavad töötama. Kui mõni masin on välja lülitatud, vali see ja vajuta **Start**.
 
-**2.3 Ava control node'i konsool.** Vali `-Control` masin ja seejärel **Console**. Logi sisse kasutajaga `kasutaja` ja parooliga, mille said juhendajalt. Käivita need käsud:
+**2.3 Ava control node'i konsool.** Vali `-Control` masin ja seejärel **Console**. Logi sisse kasutajaga `kasutaja` ja virtuaalmasinate parooliga (vt arutelu teadet). Käivita need käsud:
 
 ```bash
 sudo rm -f /etc/ssh/ssh_host_*
