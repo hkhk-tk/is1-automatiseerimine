@@ -124,7 +124,19 @@ ansible-playbook tools.yml --tags motd
 
     Käivitub ainult ülesanne `Teade sisselogimisel` ja faktide kogumine. Paketiülesanded jäävad vahele. Kõigi viie masina kokkuvõttes on `changed=1`.
 
-## A5 · Commit
+## A5 · Korduv käivitus ja commit
+
+**Ennusta:** kõik paketid on paigaldatud ja teade on olemas. Mida näitab kogu playbook'i käivitus nüüd?
+
+```bash
+ansible-playbook tools.yml
+```
+
+??? success "Oodatav tulemus"
+
+    Kõigi viie masina kokkuvõttes on `changed=0`. Ubuntu ülesanded on AlmaLinuxi masinates endiselt `skipping` ja vastupidi.
+
+Salvesta playbook repositooriumi ja saada see GitHubi:
 
 ```bash
 cd ~/kursus
@@ -133,7 +145,7 @@ git commit -m "k01: tools.yml when, limit ja tags"
 git push
 ```
 
-**Valmis, kui** `tools.yml` teine käivitus annab kõigil viiel masinal `changed=0`.
+**Valmis, kui** `tools.yml` korduv käivitus annab kõigil viiel masinal `changed=0` ja fail on GitHubis.
 
 ??? info "Loe juurde"
 

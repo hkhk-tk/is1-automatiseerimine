@@ -136,6 +136,8 @@ ssh web01 cat automation-lab/training.conf
 
 ## A5 · Commit
 
+Salvesta `ansible.cfg`, inventory ja playbook repositooriumi ja saada need GitHubi:
+
 ```bash
 cd ~/kursus
 git add k01/ansible.cfg k01/inventory.ini k01/training.yml

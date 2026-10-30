@@ -94,6 +94,8 @@ ssh web01 stat -c '%y' automation-lab/training.conf
 
     Muutmise aeg on uus: skript kirjutas faili üle, kuigi sisu oli juba õige. Ansible'i moodul kontrollib enne tegelikku olekut ja muudab faili ainult siis, kui see on vajalik.
 
+Salvesta skript repositooriumi ja saada see GitHubi:
+
 ```bash
 cd ~/kursus
 git add k01/prepare-training.sh
