@@ -12,6 +12,7 @@ tags:
     - **Masinad:** control node ja viis labori VM-i (web01, app01, rmq01 Ubuntu; mc01, db01 AlmaLinux), kasutaja `kasutaja`
     - **Failid:** kursuse repositooriumi kaust `~/kursus/k01/`
     - **Esitamine:** tag `k01` GitHubis
+    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga) näitab iga sammu, kui see on sinu masinates tehtud
 
 Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi. Seejärel käivita käsk ja võrdle tulemust oma ennustusega. Kui need erinevad, uuri, miks.
 

@@ -36,7 +36,7 @@ ssh web01 "cat automation-lab/README.txt; stat -c '%a %n' automation-lab/README.
 
 ## A2 · Töö esitamine
 
-Töö esitatakse tag'iga `k01`: automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele. Tee muudatustest commit, saada see GitHubi ja lisa tag:
+Töö esitatakse tag'iga `k01`. Tee muudatustest commit, saada see GitHubi ja lisa tag:
 
 ```bash
 cd ~/kursus
@@ -47,26 +47,8 @@ git tag k01
 git push origin k01
 ```
 
-Kohustuslik osa (kõik viis faili olemas ja süntaktiliselt korras) annab 80 punkti. `when` ja `tags` failis `tools.yml` ning `README.txt` annavad kumbki 10 boonuspunkti.
+Automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemus ilmub mõne minuti pärast [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele. Kohustuslik osa annab 80 punkti, `when` ja `tags` failis `tools.yml` ning `README.txt` kumbki 10 boonuspunkti.
 
-Kui hindaja leiab vea, paranda see, tee uus commit ja saada tag uuesti:
-
-```bash
-git tag -f k01
-git push -f origin k01
-```
-
-Kontrolli GitHubis, et kaustas `k01/` on kõik viis faili:
-
-| Fail | Kus see valmis |
-|---|---|
-| `prepare-training.sh` | [2. Käsitsi ja skriptiga](lab-2-kasitsi.md) |
-| `ansible.cfg`, `inventory.ini` | [3. Ansible'i alused](lab-3-ansible-alused.md) |
-| `training.yml` | [4. Esimene playbook](lab-4-playbook.md) ja selle lehe A1 |
-| `tools.yml` | [5. Playbook viiele masinale](lab-5-parem-playbook.md) |
-
-*Tabel 1. Esitatavad failid.*
-
-**Valmis, kui** kõik viis faili ja tag `k01` on GitHubis ning Classroom 50 näitab kohustusliku osa eest 80 punkti.
+Kui hindaja leiab vea, paranda see, tee uus commit ja saada tag uuesti: `git tag -f k01 && git push -f origin k01`.
 
 Edasi: [Kodutöö](kodutoo.md).
