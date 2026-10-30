@@ -106,12 +106,12 @@ nav:
           - Loeng: k02/loeng.md
           - Praktikum:
               - k02/lab.md
-              - 1. Algseis: k02/lab-1-algseis.md
-              - 2. Kasutajad: k02/lab-2-kasutajad.md
-              - 3. Veebiserver: k02/lab-3-veebiserver.md
-              - 4. Andmebaas: k02/lab-4-andmebaas.md
-              - 5. Rollid: k02/lab-5-rollid.md
-              - 6. Kontrollitud muudatus ja esitamine: k02/lab-6-esitamine.md
+              - 1. Projekt ja inventory: k02/lab-1-projekt.md
+              - 2. Esimene roll: k02/lab-2-common.md
+              - 3. Andmebaas: k02/lab-3-andmebaas.md
+              - 4. Vahemälu ja järjekord: k02/lab-4-vahemalu-jarjekord.md
+              - 5. Rakendus ja veebiserver: k02/lab-5-rakendus.md
+              - 6. Korduv käivitus ja esitamine: k02/lab-6-esitamine.md
               - Abi: k02/abi.md
           - Kodutöö: k02/kodutoo.md
           - Lisaülesanded: k02/lisa.md

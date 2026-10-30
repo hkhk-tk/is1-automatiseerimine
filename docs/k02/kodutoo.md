@@ -6,69 +6,77 @@ tags:
 
 # 2. kohtumine · Kodutöö
 
-## H1 · Uus kasutaja
+Kodutöös muudad töötava süsteemi seadeid ja näed, kuidas mallid ja handler'id viivad muudatuse õigetesse masinatesse. Kõik käsud käivitad control node'is kaustas `~/kursus/k02-ansible`. Tee kodutöö harus `main` pärast praktikumi ühendamist või uues harus.
 
-Lisa failis `group_vars/all.yml` kasutajate loendisse oma eesnimi. Kontrolli muudatust kõigepealt ühes masinas ja rakenda see seejärel kõigile:
+## H1 · Suurem vahemälu
+
+Memcachedi mälu on rolli vaikeväärtuses 64 MB. Suurenda seda ainult masinas mc01: loo fail `host_vars/mc01.yml` ja pane sinna `memcached_mem_mb: 128`.
+
+**Ennusta:** millised ülesanded on `changed` ja kas Memcached taaskäivitatakse?
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --limit web01 --check
-ansible-playbook site.yml --ask-vault-pass
-ansible all -m ansible.builtin.command -a "id <sinu-nimi>"
+ansible-playbook site.yml --check --diff --limit mc01
+ansible-playbook site.yml --limit mc01
+ssh mc01 cat /etc/sysconfig/memcached
 ```
 
 ??? success "Oodatav tulemus"
 
-    `--check` näitab web01-s ühte muudatust (`changed`), kuid ei muuda midagi. Käivitamisel on igas masinas `changed=1` (kasutaja) ning veebiserverites on lisaks `changed` veebilehe ülesandel, sest kasutajate loend on lehel. Käsk `id` leiab kasutaja igast masinast.
+    `--diff` näitab rida `CACHESIZE`. Käivitamisel muutub mall ja väljundis on `RUNNING HANDLER [memcached : Restart memcached]`. Failis on `CACHESIZE="128"`.
 
 Tee muudatustest commit ja saada need GitHubi.
 
-## H2 · app01 oma pealkiri
+## H2 · Rakenduse mälu
 
-Loo fail `host_vars/app01.yml`, milles on muutujal `veeb_pealkiri` teine väärtus. Vaata muudatust enne käivitamist ja rakenda see seejärel:
+Muuda failis `group_vars/app.yml` väärtus `tomcat_heap: 384m`. Käivita playbook ainult rakendusserveris ja kontrolli, et rakendus töötab pärast taaskäivitust:
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --limit app01 --check --diff
-ansible-playbook site.yml --ask-vault-pass --limit app01
-ssh app01 curl -s http://localhost | grep h1
+ansible-playbook site.yml --limit app01
+ssh app01 "ps -o args= -C java | grep -o 'Xmx[0-9a-z]*'"
+curl -s http://<web01 IP-aadress>/health
 ```
 
 ??? success "Oodatav tulemus"
 
-    `--diff` näitab muudetud `<h1>` rida. Pärast käivitamist on app01 veebilehel uus pealkiri ja web01 pealkiri jääb samaks.
+    Muutub teenuse lisaseadete fail, handler taaskäivitab Tomcati ja `ps` näitab `Xmx384m`. `/health` vastab `UP`.
 
 Tee muudatustest commit ja saada need GitHubi.
 
-## H3 · Uus parool
+## H3 · Uus andmebaasi parool
 
-Vaheta andmebaasi kasutaja parool:
+Paroolivahetus puudutab kahte masinat: andmebaasi kasutajat db01-s ja rakenduse seadeid app01-s. Vaheta Vaultis väärtus `vault_db_password`:
 
 ```bash
-ansible-vault edit group_vars/andmebaas/vault.yml
-ansible-playbook site.yml --ask-vault-pass --limit db01
-ssh -t db01 "mysql -u labor -p -e 'SELECT 1;' labor"
+ansible-vault edit group_vars/all/vault.yml
+```
+
+**Ennusta:** millistes masinates on käivitusel muudatusi?
+
+```bash
+ansible-playbook site.yml
+curl -s http://<web01 IP-aadress>/health
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kasutaja ülesande tulemus on `changed` ja väljundis on `censored`. Uue parooliga sisselogimine töötab, vanaga mitte.
+    db01-s muutub kasutaja parool ja app01-s rakenduse seadete fail, mille järel Tomcat taaskäivitatakse. Teistes masinates on `changed=0`. `/health` vastab `UP`, sest mõlemad pooled said sama parooli.
 
-Tee muudatustest commit ja saada need GitHubi. Kontrolli GitHubis, et `vault.yml` on endiselt krüpteeritud.
+Tee muudatustest commit ja saada need GitHubi. `vault.yml` on GitHubis endiselt krüpteeritud.
 
-## H4 · Boonus: kolmas veebiserver
+## H4 · Boonus: ajavöönd kõigis masinates
 
-Lisa `rmq01` gruppi `veeb` ainult inventory's. Rolli ega playbook'i ära muuda.
+Lisa `requirements.yml`-i kogu `community.general` (koos versiooniga) ja rolli `common` ülesanne, mis määrab kõigis masinates ajavööndiks `Europe/Tallinn`. Sobiva mooduli leiad käsuga `ansible-doc -l community.general | grep -i timezone`.
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --limit rmq01
-ssh rmq01 curl -s http://localhost | grep Masin
+ansible-galaxy collection install -r requirements.yml
+ansible-playbook site.yml
+ansible all -m ansible.builtin.command -a "timedatectl show -p Timezone"
 ```
 
 ??? success "Oodatav tulemus"
 
-    rmq01-s töötab nginx ja veebilehel on `Masin: rmq01`. Kolmanda veebiserveri lisamiseks piisas ühest reast inventory's.
+    Kõigis viies masinas on `Timezone=Europe/Tallinn` ja teine käivitus annab `changed=0`.
 
-Seejärel eemalda `rmq01` grupist `veeb` ja eemalda nginx: `ansible rmq01 -b -m ansible.builtin.package -a "name=nginx state=absent"`. rmq01-s hakkab hiljem tööle teine teenus.
-
----
+Tee muudatustest commit ja saada need GitHubi.
 
 Vajad abi? Kirjuta [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehele ning lisa käsk ja kogu veateade tekstina.

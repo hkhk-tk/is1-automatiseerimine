@@ -4,93 +4,88 @@ tags:
   - Praktikum
 ---
 
-# 6. Kontrollitud muudatus ja esitamine
+# 6. Korduv käivitus ja esitamine
 
-!!! abstract "Eesmärgid"
+Labori seis töötab. Enne esitamist kontrollid kahte asja, mida automatiseerimisel töös vajad: kuidas muudatust enne rakendamist näha ja ühe masina peal proovida, ning kas kogu playbook on idempotentne.
 
-    - vaatad muudatust enne selle tegemist (`--check --diff`);
-    - proovid muudatust kõigepealt ühes masinas (`--limit`);
-    - rakendad muudatust masinhaaval (`serial`);
-    - esitad projekti.
+## A1 · Muudatus enne rakendamist
 
-Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
-
-## A1 · Muudatus mallis
-
-Lisa `roles/veeb/templates/index.html.j2`-sse enne `</body>` rida:
-
-```html
-  <p>Kursus: {{ kursus }}</p>
-```
-
-Kontrolli enne käivitamist, mis web01-s muutuks:
+Muuda failis `roles/common/defaults/main.yml` teate teksti, näiteks lisa lõppu ` Küsimused: IT-tugi.`. Vaata enne käivitamist, mida Ansible ühes masinas muudaks:
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --check --diff --limit web01
+ansible-playbook site.yml --check --diff --limit web01
 ```
 
-??? success "Oodatav tulemus"
-
-    ```
-    +  <p>Kursus: IS1-26</p>
-    changed: [web01]
-    ```
-
-    `--check` ei muutnud masinas midagi: käsk `ssh web01 curl -s http://localhost | grep Kursus` ei leia veel midagi.
-
-Rakenda muudatus web01-s ja kontrolli tulemust:
+Väljundis on teate vana ja uus rida ning masinas ei muutu midagi. Rakenda muudatus kõigepealt ühes masinas ja seejärel kõigis:
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --limit web01
-ssh web01 curl -s http://localhost | grep Kursus
+ansible-playbook site.yml --limit web01
+ansible-playbook site.yml
 ```
 
-## A2 · `serial`
+## A2 · Masinate kaupa: `serial`
 
-Lisa `site.yml`-is play'le `Veebiserverid` rida `serial: 1` (rea `become: true` alla):
+Kui sama muudatus läheb korraga kõigisse masinatesse ja on vigane, on korraga katki kõik. Võti `serial` käivitab play masinate kaupa: kõigepealt mõni masin ja alles siis järgmised. Kui esimeses osas tuleb viga, ülejäänud masinaid ei puudutata.
+
+Lisa `site.yml`-i esimesse play'sse rida `serial: 2`:
 
 ```yaml
-- name: Veebiserverid
-  hosts: veeb
+- name: Kõik masinad
+  hosts: all
   become: true
-  serial: 1
+  serial: 2
   roles:
-    - veeb
+    - common
 ```
 
+**Ennusta:** mitu korda on väljundis rida `PLAY [Kõik masinad]`?
+
 ```bash
-ansible-playbook site.yml --ask-vault-pass
+ansible-playbook site.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    Veebiserverite play käivitatakse kaks korda: kõigepealt kõik ülesanded web01-s, seejärel app01-s (inventory järjekorras). web01 oli juba muudetud, seega on seal tulemus `ok`, app01-s `changed`. Kui web01-s oleks midagi ebaõnnestunud, ei oleks play app01-ni jõudnud.
+    Kolm korda: kaks masinat, kaks masinat ja üks masin.
 
-Teisel käivitusel on `changed=0`.
+## A3 · Korduv käivitus
 
-## A3 · Töö esitamine
+Automaatne hindaja kontrollib, et kogu playbook on idempotentne. Selleks salvestad teise käivituse väljundi faili `run2.txt`.
+
+**Ennusta:** mitu muudatust on nüüd kogu playbook'i käivitusel?
+
+```bash
+ansible-playbook site.yml | tee run2.txt
+```
+
+??? success "Oodatav tulemus"
+
+    PLAY RECAP-is on kõigil viiel masinal `changed=0` ja `failed=0`. Kui mõnes masinas on `changed`, vaata väljundist, milline ülesanne muutis, paranda see ja salvesta `run2.txt` uuesti.
+
+## A4 · Töö esitamine
+
+Salvesta viimased muudatused ja saada need GitHubi:
 
 ```bash
 cd ~/kursus
-git add -A k02
-git commit -m "k02: serial ja muudatus mallis"
+git add -A
+git commit -m "k02: serial ja run2.txt"
 git push
 ```
 
-Ava oma repositoorium GitHubis ja kontrolli, et seal on järgmised failid:
+Ava GitHubis oma repositoorium ja tee pull request harust `k02-ansible` harusse `main` (**Compare & pull request**). Vaata muudatused üle ja ühenda (**Merge pull request**). Pärast ühendamist lisa tag:
 
-| Fail või kaust | Kus see tehti |
-|---|---|
-| `ansible.cfg`, `inventory.ini` | [1. Algseis](lab-1-algseis.md) |
-| `group_vars/`, `host_vars/` | [1. Algseis](lab-1-algseis.md), [4. Andmebaas](lab-4-andmebaas.md) |
-| `requirements.yml` | [4. Andmebaas](lab-4-andmebaas.md) |
-| `roles/common`, `roles/veeb`, `roles/andmebaas` | [5. Rollid](lab-5-rollid.md) |
-| `site.yml` | [5. Rollid](lab-5-rollid.md) ja A2 |
+```bash
+git switch main
+git pull
+git tag k02
+git push origin k02
+```
 
-*Tabel 1. Esitatavad failid.*
+Töö esitatakse tag'iga `k02`. Automaatne hindaja kontrollib tag'iga märgitud versiooni: failid ja rollid, inventory, mallid ja handlerid, Vault, `run2.txt`, süntaks ja `ansible-lint`. Tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele.
 
-Ava GitHubis fail `group_vars/andmebaas/vault.yml`. Selle sisu peab algama reaga `$ANSIBLE_VAULT`.
+Kui hindaja leiab vea, paranda see harus `main`, tee commit ja saada tag uuesti: `git tag -f k02 && git push -f origin k02`.
 
-**Valmis, kui** kõik failid on GitHubis, `vault.yml` on krüpteeritud ja `site.yml` teisel käivitusel on `changed=0`.
+**Valmis, kui** pull request on ühendatud ja tag `k02` on GitHubis.
 
 Edasi: [Kodutöö](kodutoo.md).

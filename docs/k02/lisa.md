@@ -6,62 +6,62 @@ tags:
 
 # 2. kohtumine · Lisaülesanded
 
-Need ülesanded on neile, kes on praktikumi lõpetanud. Kõik käsud käivita control node'is kaustas `~/kursus/k02`.
+Need ülesanded on neile, kes on praktikumi lõpetanud. Kõik käsud käivitad control node'is kaustas `~/kursus/k02-ansible`.
 
-## L1 · Kasutajad sõnastikena
+## L1 · Distributsiooni väärtused rolli sees
 
-Praegu on `labori_kasutajad` nimede loend. Muuda see sõnastike loendiks, kus igal kasutajal on ka shell ja kommentaar:
+Rolli `mariadb` vaikeväärtused on AlmaLinuxi omad ja Ubuntus tuleks need grupimuutujatega üle kirjutada. Teine võimalus on, et roll valib väärtused ise masina distributsiooni järgi. Loo failid `roles/mariadb/vars/RedHat.yml` (praegused väärtused) ja `roles/mariadb/vars/Debian.yml`:
 
 ```yaml
-labori_kasutajad:
-  - { nimi: anna, shell: /bin/bash, kommentaar: "Anna Tamm" }
-  - { nimi: peeter, shell: /bin/sh, kommentaar: "Peeter Mets" }
+mariadb_paketid:
+  - mariadb-server
+  - python3-pymysql
+mariadb_conf_dir: /etc/mysql/mariadb.conf.d
+mariadb_socket: /run/mysqld/mysqld.sock
 ```
 
-Muuda rolli `common` ülesannet ja veebilehe malli nii, et need kasutaksid välja `item.nimi`.
+Eemalda need kolm muutujat failist `defaults/main.yml` ja lisa rolli ülesannete algusesse:
 
-??? tip "Vihje"
+```yaml
+- name: Distributsiooni väärtused
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+```
 
-    Mallis saad nimede loendi avaldisega `{{ labori_kasutajad | map(attribute='nimi') | join(', ') }}`.
+Teine käivitus peab andma `changed=0`. Mõtle: millal on parem, et roll teab distributsioonide väärtusi ise, ja millal, et need on inventory juures grupimuutujates?
 
-Sõnastik hoiab ühe kasutaja omadused koos ja tsükkel jääb samaks.
+## L2 · `ansible-lint`
 
-## L2 · Vaikeväärtus ja selle üle kirjutamine
-
-Lisa rolli `veeb` `defaults/main.yml`-i muutuja `veeb_taustavarv: "#ffffff"` ja kasuta seda mallis (`<body style="background: {{ veeb_taustavarv }}">`). Kirjuta see üle ainult app01-le `host_vars/app01.yml`-is.
+Automaatne hindaja kontrollib projekti `ansible-lint`-iga. Paigalda see ja kontrolli oma projekti enne esitamist:
 
 ```bash
-ansible veeb -m ansible.builtin.debug -a "var=veeb_taustavarv"
+sudo apt install -y ansible-lint
+ansible-lint
 ```
 
-Vaikeväärtus teeb rolli kohe kasutatavaks ja üle tuleb kirjutada ainult vajalikud muutujad.
+Iga leiu juures on reegli nimi, näiteks `fqcn` (mooduli täisnimi) või `name[casing]` (ülesande nimi algab suure tähega). Reegli kirjelduse leiad [ansible-lint reeglite lehelt](https://ansible.readthedocs.io/projects/lint/rules/).
 
 ## L3 · Viga ja `-vvv`
 
-Tekita failis `roles/veeb/tasks/main.yml` meelega taandeviga (nihuta üks `ansible.builtin.template:` rida kahe tühiku võrra paremale) ja käivita:
+Tekita failis `roles/nginx/tasks/main.yml` meelega taandeviga: nihuta üks `ansible.builtin.template:` rida kahe tühiku võrra paremale. Käivita:
 
 ```bash
 ansible-playbook site.yml --syntax-check
 ```
 
-Leia veateatest rea ja veeru number ning paranda viga. Seejärel käivita playbook detailse väljundiga:
+Veateade näitab rea ja veeru numbrit. Paranda viga ja käivita playbook ühes masinas detailse väljundiga:
 
 ```bash
-ansible-playbook site.yml --ask-vault-pass --limit web01 --check -vvv | head -60
+ansible-playbook site.yml --limit web01 --check -vvv | head -60
 ```
 
-Vaata väljundist, millise kasutajaga ja millise SSH käsuga Ansible ühendub.
+Väljundist näed, millise kasutajaga ja millise SSH käsuga Ansible ühendub. See aitab ühendusvigade korral.
 
-Veateade näitab tavaliselt täpselt, kus viga on. `-vvv` näitab, mida Ansible SSH kaudu tegelikult teeb, ja aitab ühendusvigade korral.
+## L4 · Ainult rakenduse uuendus
 
-## L4 · Kogu `community.general`: ajavöönd
-
-Lisa `requirements.yml`-i kogu `community.general` ja rolli `common` ülesanne, mis määrab kõigis masinates ajavööndiks `Europe/Tallinn` (moodul `community.general.timezone`).
+Uue rakenduse versiooni paigaldamiseks ei ole vaja kogu süsteemi läbi käia. Lisa rolli `tomcat` WAR-i ülesannetele silt `deploy` ja käivita ainult need:
 
 ```bash
-ansible-galaxy collection install -r requirements.yml
-ansible-playbook site.yml --ask-vault-pass
-ansible all -m ansible.builtin.command -a "timedatectl show -p Timezone"
+ansible-playbook site.yml --tags deploy --limit app01
 ```
 
-Paljud igapäevased moodulid on kogudes, mitte `ansible.builtin`-is. Fail `requirements.yml` hoiab projekti sõltuvused koodiga samas repositooriumis.
+Mõtle, mis peab juhtuma pärast uue WAR-i paigaldamist ja kuidas seda rollis kirjeldada.
