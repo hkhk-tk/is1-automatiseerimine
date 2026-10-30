@@ -20,7 +20,7 @@ tags:
 
 Enne selle osa alustamist peab [töökeskkond](../00-ulevaade/keskkond.md) olema valmis: VPN-ühendus töötab ja VS Code'i terminal avaneb control node'is.
 
-Jäta Proxmox brauseris avatuks, sest selles osas on vaja viie virtuaalmasina IP-aadresse. Masina IP-aadressi näed, kui valid Proxmoxis masina ja avad vahelehe **Summary**. Aadress on real **IPs**. Neid aadresse kasutad sammus A2.
+Jäta Proxmox brauseris avatuks, sest selles osas on vaja viie virtuaalmasina IP-aadresse. Masina IP-aadressi näed, kui valid Proxmoxis masina ja avad vahelehe **Summary**. Aadress on real **IPs**. Neid aadresse kasutad sammudes A2 ja A3.
 
 | Masin (nime lõpp Proxmoxis) | Operatsioonisüsteem |
 |---|---|
@@ -48,9 +48,9 @@ exec bash
 
     Laboris `sudo` parooli ei küsi, sest virtuaalmasinate mallis on kasutajal `kasutaja` lubatud kasutada `sudo`-t ilma paroolita. `hostnamectl` muudab hostinime püsivalt, nii et see jääb alles ka pärast taaskäivitust.
 
-## A2 · SSH-võti ja ühendus masinatega
+## A2 · Üks masin käsitsi
 
-Loo control node'is SSH-võtmepaar ja lisa avalik võti viide masinasse. Siis saad masinatesse sisse logida nime järgi ja ilma paroolita.
+Seadista SSH-ühendus masinaga web01 käsitsi. IP-aadressi võta Proxmoxist.
 
 <figure style="max-width:720px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 720 210" role="img" aria-label="control node'is on võtmepaar ja SSH konfiguratsioonifail; avalik võti lisatakse ssh-copy-id abil viide virtuaalmasinasse" xmlns="http://www.w3.org/2000/svg">
@@ -68,33 +68,23 @@ Loo control node'is SSH-võtmepaar ja lisa avalik võti viide masinasse. Siis sa
 <figcaption>Joonis 1. Privaatvõti jääb control node'i, avalik võti lisatakse igasse virtuaalmasinasse.</figcaption>
 </figure>
 
-Loo võtmepaar (üks kord):
-
 ```bash
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-```
-
-Ava SSH konfiguratsioonifail (`code ~/.ssh/config`) ja lisa sinna iga masina kohta kirje. IP-aadressi võta Proxmoxist:
-
-```text
-Host web01
-    HostName 192.168.125.11
-    User kasutaja
-```
-
-Seejärel tee iga masinaga kolm asja: lisa avalik võti (esimesel ühendusel kinnita `yes` ja sisesta parool), määra hostinimi ja kontrolli, et parooli enam ei küsita:
-
-```bash
+printf 'Host web01\n    HostName 192.168.125.11\n    User kasutaja\n' >> ~/.ssh/config
 ssh-copy-id web01
 ssh web01 "sudo hostnamectl set-hostname web01"
 ssh web01 hostname
 ```
 
-Viimane käsk peab kuvama `web01`. Korda samu käske masinatega `app01`, `rmq01`, `mc01` ja `db01`.
+`ssh-copy-id` küsib esimesel korral kinnitust (`yes`) ja parooli. Viimane käsk peab kuvama `web01` ilma parooli küsimata.
 
-??? example "Kõik viis masinat korraga skriptiga"
+## A3 · Ülejäänud masinad skriptiga
 
-    Skript teeb sama viie masinaga korraga ja loob lisaks igale masinale uued SSH hostivõtmed. Loo control node'is fail `~/ssh-seadistus.sh`, kopeeri sinna skript ja asenda viis IP-aadressi Proxmoxist leitud aadressidega:
+Sama töö nelja masinaga käsitsi tähendaks samade käskude kordamist neli korda. Skript teeb selle kõigi viie masinaga korraga.
+
+??? example "Skript `~/ssh-seadistus.sh`"
+
+    Loo control node'is fail `~/ssh-seadistus.sh`, kopeeri sinna skript ja asenda IP-aadressid Proxmoxist leitud aadressidega:
 
     ```bash
     #!/usr/bin/env bash
@@ -186,30 +176,15 @@ Viimane käsk peab kuvama `web01`. Korda samu käske masinatega `app01`, `rmq01`
     fi
     ```
 
-    Käivita skript. Iga masina juures küsitakse parooli üks kord:
-
-    ```bash
-    bash ~/ssh-seadistus.sh
-    ```
-
-    Lõpus peab olema rida `Valmis: kõik viis masinat töötavad.`
-
-## A3 · Proovi ise
-
 ```bash
-cat ~/.ssh/config
-ssh web01
-hostname
-exit
+bash ~/ssh-seadistus.sh
 ```
 
-??? success "Oodatav tulemus"
-
-    `cat` kuvab viis `Host`-plokki. `ssh web01` logib sisse ilma parooli küsimata ja prompt on `kasutaja@web01`. Käsk `exit` viib tagasi control node'i.
+Lõpus peab olema rida `Valmis: kõik viis masinat töötavad.`
 
 !!! warning "Privaatvõti jääb control node'i"
 
-    Fail `~/.ssh/id_ed25519` (ilma laiendita `.pub`) on privaatvõti. Seda ei kopeerita mujale, ei lisata Giti ega saadeta kellelegi. Avalikku võtit (`.pub`) võib jagada.
+    Fail `~/.ssh/id_ed25519` on privaatvõti. Seda ei kopeerita mujale, ei lisata Giti ega saadeta kellelegi. Avalikku võtit `id_ed25519.pub` võib jagada.
 
 ## A4 · Võti GitHubi ja kursuse repo
 
