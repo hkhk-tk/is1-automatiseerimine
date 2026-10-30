@@ -25,17 +25,14 @@ Classroom 50 loob sulle repositooriumi `<klassiruum>-labori-seis-<github>`.
 ## Igal kohtumisel
 
 1. 1. kohtumisel salvestad failid kausta `k01/` ja töötad otse harus `main`. Alates 2. kohtumisest töötad oma harus: `git switch -c k02` jne.
-2. Iga kohtumise issue'd on milestone'is `K1` … `K7` ja neil on silt `plokk`. Üks issue vastab ühele praktikumi osale. Sulge issue commit'iga, mille sõnumis on `closes #3`.
-3. Saad tööd ise kontrollida, näiteks käsuga `bash autograde/check.sh k01 files`. Kõik testid on failis `autograde/TESTS.md`.
-4. Kohtumise lõpus esita töö tag'iga. Alates 2. kohtumisest tee enne seda pull request harusse `main` ja ühenda see (merge).
+2. Kohtumise lõpus esita töö tag'iga. Alates 2. kohtumisest tee enne seda pull request harusse `main` ja ühenda see (merge).
 
     ```bash
     git switch main && git pull
     git tag k01 && git push origin k01
     ```
 
-Kui pead pärast tag'i midagi parandama, tee uus commit ja seejärel `git tag -f k01 && git push -f origin k01`. Võti `-f` kehtib ainult
-tag'i kohta: harule `main` ei tehta kunagi force-push'i. Kui jäid maha, võta koolitaja eelmise kohtumise lahendus (`lahendus/kNN`, vt repositooriumi `README.md`) ja jätka sealt.
+Kui pead pärast tag'i midagi parandama, tee uus commit ja seejärel `git tag -f k01 && git push -f origin k01`. Võti `-f` kehtib ainult tag'i kohta: harule `main` ei tehta kunagi force-push'i. Kui jäid maha, kirjuta arutelu kategooriasse **Küsimused**.
 
 ## Hindamine
 

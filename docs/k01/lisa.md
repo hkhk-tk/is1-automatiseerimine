@@ -27,27 +27,14 @@ ansible all -m ansible.builtin.command -a "id kolleeg"
 
 ## L2 · ansible-lint
 
-Paigalda `ansible-lint` ja kontrolli sellega oma playbook'e:
-
-=== "Ubuntu"
-
-    ```bash
-    sudo apt install -y ansible-lint
-    ```
-
-=== "AlmaLinux"
-
-    ```bash
-    sudo dnf install -y python3-pip && pip3 install --user ansible-lint
-    ```
+`--syntax-check` kontrollib ainult, kas faili saab lugeda. `ansible-lint` kontrollib playbook'e ka levinud vigade ja soovitatud stiilireeglite suhtes, enne kui playbook masinaid muudab. Paigalda see control node'i ja kontrolli oma playbook'e:
 
 ```bash
+sudo apt install -y ansible-lint
 ansible-lint training.yml tools.yml
 ```
 
 Paranda vähemalt üks leitud märkus ja käivita kontroll uuesti.
-
-`--syntax-check` kontrollib ainult, kas faili saab lugeda. `ansible-lint` kontrollib playbook'e levinud vigade ja soovitatud stiilireeglite suhtes enne, kui playbook masinaid muudab.
 
 ## L3 · Failide kopeerimine hallatavatest masinatest
 

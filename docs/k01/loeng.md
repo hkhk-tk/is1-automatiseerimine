@@ -37,7 +37,7 @@ tags:
 <line class="a" x1="550" y1="50" x2="578" y2="50" marker-end="url(#lxt)"/>
 <rect class="hi" x="580" y="20" width="130" height="60" rx="8"/><text class="b" x="645" y="47" text-anchor="middle">Kontroll</text><text class="s" x="645" y="66" text-anchor="middle">cat, stat</text>
 </svg>
-<figcaption>Joonis 1.1. Päeva ülesanne lahendatakse kolmel viisil ja tulemust kontrollitakse iga kord samamoodi.</figcaption>
+<figcaption>Joonis 1. Päeva ülesanne lahendatakse kolmel viisil ja tulemust kontrollitakse iga kord samamoodi.</figcaption>
 </figure>
 
 ## 1. Miks automatiseerida?
@@ -60,7 +60,7 @@ Kõike ei ole mõtet automatiseerida. Automaatika tuleb kirjutada, testida ja ho
 
 ## 2. Skripti piirid
 
-Kui paned käsitsi tehtud käsud faili, saad skripti:
+Esimene samm automatiseerimise poole on skript: käsitsi tehtud käsud pannakse faili.
 
 ```bash
 #!/usr/bin/env bash
@@ -104,14 +104,14 @@ Bashi skriptist eristavad Ansible'it kolm asja:
 <text class="b" x="436" y="156">3. muudab ainult erinevuse</text>
 <text class="s" x="436" y="190">pärast tööd moodul kustutatakse</text>
 </svg>
-<figcaption>Joonis 5.1. Ansible töötab control node'is ja teeb töö hallatavas masinas SSH kaudu.</figcaption>
+<figcaption>Joonis 2. Ansible töötab control node'is ja teeb töö hallatavas masinas SSH kaudu.</figcaption>
 </figure>
 
 Ansible on paigaldatud ainult **control node**'i. Masinat, mida Ansible seadistab, nimetatakse **hallatavaks masinaks**. Iga ülesande jaoks saadab Ansible SSH kaudu hallatavasse masinasse väikese Pythoni programmi, **mooduli**. Moodul kontrollib tegelikku olekut, teeb vajaduse korral muudatuse ja tagastab tulemuse.
 
 ## 4. Inventory ja `ansible.cfg`
 
-**Inventory** on fail, kus on kirjas hallatavad masinad ja grupid:
+Et Ansible teaks, milliseid masinaid hallata, on need kirjas failis, mida nimetatakse **inventory**'ks. Masinad võib jagada gruppidesse:
 
 ```ini
 [ubuntu]
@@ -144,7 +144,9 @@ inventory = inventory.ini
 
 Hoia `ansible.cfg`, inventory ja playbook'id koos samas kaustas ja Gitis.
 
-## 5. Ad-hoc käsk ja playbook
+## 5. Ad-hoc käsk ja moodulid
+
+Ansible'il on kaks põhikäsku. Üks käivitab ühe mooduli kohe, teine terve playbook'i:
 
 | Käsk | Mida teeb | Näide |
 |---|---|---|
@@ -153,9 +155,9 @@ Hoia `ansible.cfg`, inventory ja playbook'id koos samas kaustas ja Gitis.
 
 *Tabel 3. Ansible'i kaks põhikäsku.*
 
-Vastus `pong` tähendab, et Ansible jõuab SSH kaudu masinasse ja seal töötab Python. Ad-hoc käsk sobib kiireks kontrolliks. Seadistuse, mida soovid korrata, kirjuta playbook'i.
+Moodul `ping` vastab `pong`, kui Ansible jõuab SSH kaudu masinasse ja seal töötab Python. Ad-hoc käsk sobib kiireks kontrolliks. Seadistuse, mida soovid korrata, kirjuta playbook'i.
 
-**Moodulid** täidavad konkreetseid haldusülesandeid. Alustamiseks piisab mõnest:
+Iga moodul täidab üht kindlat haldusülesannet. Alustamiseks piisab mõnest:
 
 | Moodul | Mida haldab |
 |---|---|
@@ -168,6 +170,8 @@ Vastus `pong` tähendab, et Ansible jõuab SSH kaudu masinasse ja seal töötab 
 *Tabel 4. Sagedasemad moodulid.*
 
 Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
+
+## 6. Playbook
 
 **Playbook** on YAML-fail, milles on üks või mitu **play**'d. Play määrab, millistes masinates (`hosts`) millised **ülesanded** (`tasks`) täidetakse. Iga ülesanne kasutab üht moodulit. Päeva ülesanne playbook'ina:
 
@@ -198,16 +202,22 @@ Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 <rect class="box" x="42" y="82" width="310" height="110" rx="6"/><text class="b" x="56" y="104">ülesanne: Kaust on olemas</text><text class="c" x="56" y="132">ansible.builtin.file</text><text class="s" x="56" y="160">path · state: directory · mode</text><text class="s" x="56" y="180">moodul + parameetrid</text>
 <rect class="box" x="368" y="82" width="310" height="110" rx="6"/><text class="b" x="382" y="104">ülesanne: Konfiguratsioonifail …</text><text class="c" x="382" y="132">ansible.builtin.copy</text><text class="s" x="382" y="160">dest · content · mode</text><text class="s" x="382" y="180">moodul + parameetrid</text>
 </svg>
-<figcaption>Joonis 7.1. Playbook koosneb play'dest. Igal play'l on sihtmasinad ja ülesanded ning iga ülesanne kasutab üht moodulit.</figcaption>
+<figcaption>Joonis 3. Playbook koosneb play'dest. Igal play'l on sihtmasinad ja ülesanded ning iga ülesanne kasutab üht moodulit.</figcaption>
 </figure>
 
 Ülesannete nimed kirjeldavad olekut („Kaust **on** olemas“), mitte tegevust („Tee kaust“).
 
-**YAML-i põhireeglid:** võtme ja väärtuse vahel on koolon ja tühik (`mode: "0750"`), loendi element algab märgiga `-` ning taane tehakse tühikutega, mitte tabulaatoriga. Õigused kirjuta jutumärkides: `mode: 0750` loetakse arvuna ja tulemus võib olla vale. Süntaksit kontrollib käsk `ansible-playbook training.yml --syntax-check`.
+### YAML-i põhireeglid
 
-**Administraatori õigused.** Päeva ülesanne ei vaja administraatori õigusi. Paketi paigaldamiseks või `/etc` all oleva faili muutmiseks lisatakse play'le või ülesandele `become: true`: Ansible logib sisse tavakasutajana ja käivitab ülesande `sudo` kaudu. Laboris `sudo` parooli ei küsi, töökohas lisatakse käsule `-K`.
+Võtme ja väärtuse vahel on koolon ja tühik (`mode: "0750"`), loendi element algab märgiga `-` ning taane tehakse tühikutega, mitte tabulaatoriga. Õigused kirjuta jutumärkides: `mode: 0750` loetakse arvuna ja tulemus võib olla vale. Süntaksit kontrollib käsk `ansible-playbook training.yml --syntax-check`.
 
-**Tingimus, sihtmasinad ja sildid.** Labori masinates on kaks distributsiooni ja samal programmil võib olla eri paketinimi (Ubuntus `vim`, AlmaLinuxis `vim-enhanced`). Kolm vahendit aitavad sama playbook'i kasutada eri masinates ja osaliselt:
+### Administraatori õigused
+
+Päeva ülesanne ei vaja administraatori õigusi. Paketi paigaldamiseks või `/etc` all oleva faili muutmiseks lisatakse play'le või ülesandele `become: true`: Ansible logib sisse tavakasutajana ja käivitab ülesande `sudo` kaudu. Laboris `sudo` parooli ei küsi, töökohas lisatakse käsule `-K`.
+
+## 7. Tingimus, sihtmasinad ja sildid
+
+Labori masinates on kaks distributsiooni ja samal programmil võib olla eri paketinimi (Ubuntus `vim`, AlmaLinuxis `vim-enhanced`). Kolm vahendit aitavad sama playbook'i kasutada eri masinates ja osaliselt:
 
 | Vahend | Mida teeb | Näide |
 |---|---|---|
@@ -219,7 +229,9 @@ Mooduli parameetrid ja näited näed käsuga `ansible-doc ansible.builtin.file`.
 
 Tingimus põhineb **faktidel**: andmetel, mida Ansible kogub masinast enne ülesandeid (operatsioonisüsteem, versioon, võrk). Ubuntus on `ansible_facts['os_family']` väärtus `Debian`, AlmaLinuxis `RedHat`.
 
-## 6. Käivitamine ja tulemus
+## 8. Käivitamine ja tulemus
+
+Playbook käivitatakse käsuga `ansible-playbook`:
 
 ```bash
 ansible-playbook training.yml
@@ -256,14 +268,14 @@ Kui kaust ja fail on juba olemas ja õiged, on tulemus `ok` ja `changed=0`: Ansi
 <rect class="box" x="460" y="10" width="250" height="56" rx="8"/><text class="b" x="585" y="33" text-anchor="middle">Erineb → kirjuta</text><text class="c" x="585" y="53" text-anchor="middle">changed</text>
 <rect class="box" x="460" y="84" width="250" height="56" rx="8"/><text class="b" x="585" y="107" text-anchor="middle">Sama → ära kirjuta</text><text class="c" x="585" y="127" text-anchor="middle">ok</text>
 </svg>
-<figcaption>Joonis 7.2. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
+<figcaption>Joonis 4. Moodul võrdleb soovitud ja tegelikku sisu ning kirjutab ainult siis, kui need erinevad.</figcaption>
 </figure>
 
 Kui keegi muudab faili käsitsi, tekib **triiv (drift)**: tegelik olek erineb soovitud olekust. Järgmisel käivitusel taastab Ansible soovitud sisu ja `changed` on ainult sellel ülesandel. Võtmetega `--check --diff` näed enne käivitamist, mida Ansible muudaks.
 
 Idempotentsus sõltub lahendusest, mitte tööriistast. Käsumoodulid (`command`, `shell`) ei tea soovitud olekut ja võivad anda igal käivitusel `changed`. Ka Bashi skripti saab kirjutada idempotentseks.
 
-## 7. Kontrolli tulemust masinas
+## 9. Kontrolli tulemust masinas
 
 Kui Ansible lõpetab vigadeta, tähendab see ainult seda, et ülesanded käivitusid. See ei tõenda, et masinas on vajalik tulemus. Kui playbook'is on vale tee, vale õigus või vale masin, lõpetab Ansible samuti edukalt, aga ülesanne jääb tegemata. Seepärast kontrolli pärast käivitamist masinat ennast:
 
@@ -274,7 +286,7 @@ ssh web01 stat -c '%a %U %n' automation-lab automation-lab/training.conf
 
 Muudatuse mõju saab piirata juba enne käivitamist. Võti `--check --diff` näitab, mida Ansible muudaks, ilma midagi muutmata. Võti `--limit web01` käivitab playbook'i ainult ühes masinas. Nii proovid muudatust enne, kui see jõuab kõigisse masinatesse.
 
-## 8. Kokkuvõte
+## 10. Kokkuvõte
 
 - **Skriptis tuleb iga kontroll ise kirjutada,** Ansible'i moodulites on need olemas.
 - **Playbook kirjeldab soovitud olekut:** inventory määrab masinad, playbook ülesanded ja moodul võrdleb soovitud olekut tegelikuga.

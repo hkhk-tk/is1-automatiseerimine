@@ -25,7 +25,7 @@ Päeva lõpuks oskad:
 | | Osa |
 |---|---|
 | 1 | Miks automatiseerida? Ansible'i tutvustus ja loeng |
-| 2 | [Keskkonna ettevalmistamine](lab-1-keskkond.md): SSH-võti, masinate nimed ja repo |
+| 2 | [Keskkonna ettevalmistamine](lab-1-keskkond.md): SSH-võti, masinate nimed ja repositoorium |
 | 3 | [Ülesande täitmine käsitsi ja Bashi skriptiga](lab-2-kasitsi.md) |
 | 4 | [Ansible'i alused](lab-3-ansible-alused.md): ad-hoc käsud viiel masinal |
 | 5 | [Esimene playbook](lab-4-playbook.md) |
@@ -44,7 +44,7 @@ Kaustas `k01/` peavad olema järgmised failid:
 - `training.yml`
 - `tools.yml`
 
-Kontrolli, et kõik muudatused on commit'itud ja GitHubi saadetud ning GitHubis on tag `k01`. Tag on esitamine: automaatne hindaja kontrollib just seda versiooni.
+Töö esitatakse tag'iga `k01`. Automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemuse näed Classroom 50-s. Päeva jooksul näitab laboritahvel, millised sammud on sinu masinates tehtud.
 
 ## Abi
 

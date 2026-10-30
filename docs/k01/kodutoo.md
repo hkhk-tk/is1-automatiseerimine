@@ -13,7 +13,7 @@ Vasta [1. kohtumise testile](https://docs.google.com/forms/d/e/1FAIpQLSdd-Ah3csw
 
 ## H1 · Muuda üht väärtust
 
-Muuda playbook'is `training.yml` hallatava faili sisu: `enabled=true` → `enabled=false`. Käivita playbook kaks korda:
+Kui soovitud olek muutub, muudad playbook'i, mitte masinat. Asenda playbook'is `training.yml` rida `enabled=true` reaga `enabled=false` ja käivita playbook kaks korda:
 
 ```bash
 ansible-playbook training.yml
@@ -30,11 +30,11 @@ ansible-playbook training.yml
 
 Tee muudatustest commit. Kirjelda commit'i sõnumis lühidalt, mida muutsid. Seejärel saada muudatused GitHubi.
 
-💭 **Mõtle:** mida näitas teine käivitus ja miks Ansible ei muutnud faili uuesti?
+**Mõtle:** mida näitas teine käivitus ja miks Ansible ei muutnud faili uuesti?
 
 ## H2 · Sama seadistus kõigile Ubuntu masinatele
 
-Muuda `training.yml`-is `hosts: web01` → `hosts: ubuntu`. Kontrolli muudatust kõigepealt masinas `app01` ja rakenda see seejärel kõigile Ubuntu grupi masinatele:
+Sama playbook sobib kõigile Ubuntu masinatele, kui muuta ainult sihtmasinaid. Asenda `training.yml`-is `hosts: web01` reaga `hosts: ubuntu`. Kontrolli muudatust kõigepealt masinas `app01` ja rakenda see seejärel kõigile grupi masinatele:
 
 ```bash
 ansible-playbook training.yml --limit app01 --check --diff
@@ -61,7 +61,5 @@ ansible all -m ansible.builtin.command -a "dig +short github.com"
     Esimese käsu järel on Ubuntu masinates paketi `dnsutils` ülesande olek `changed` ja AlmaLinuxi masinates paketi `bind-utils` ülesande olek `changed`. Teise distributsiooni ülesanded on olekus `skipping`. Teine käsk kuvab igast masinast ühe või mitu IP-aadressi.
 
 Tee muudatustest commit ja saada need GitHubi.
-
----
 
 Vajad abi? Kirjuta [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehele. Lisa käsk ja kogu veateade tekstina.
