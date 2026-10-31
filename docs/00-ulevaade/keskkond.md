@@ -101,7 +101,7 @@ sudo systemctl restart ssh
 hostname -I
 ```
 
-Käsk `hostname -I` kuvab masina IP-aadressi, näiteks `192.168.125.10`. Pane see aadress kirja, sest kasutad seda järgmises sammus.
+Käsk `hostname -I` kuvab sinu control node'i IP-aadressi (algab `192.168.125.`). Pane see aadress kirja, sest kasutad seda järgmises sammus. Kasuta ainult enda masinate aadresse: laborivõrgus on kõigi õppijate masinad.
 
 ??? info "Mida need käsud teevad?"
 
@@ -117,11 +117,11 @@ Need sammud teed oma arvutis.
 
 **3.1 Paigalda VS Code ja laiendus.** Paigalda [VS Code](https://code.visualstudio.com/). Ava vasakul **Extensions**, otsi laiendus **Remote - SSH** ja paigalda see.
 
-**3.2 Lisa control node SSH konfiguratsioonifaili.** Vajuta ++f1++, vali `Remote-SSH: Open SSH Configuration File` ja seejärel loendi esimene fail. Lisa faili järgmised read, asenda IP-aadress sammus 2.3 leitud aadressiga ja salvesta fail:
+**3.2 Lisa control node SSH konfiguratsioonifaili.** Vajuta ++f1++, vali `Remote-SSH: Open SSH Configuration File` ja seejärel loendi esimene fail. Lisa faili järgmised read, asenda `<control-IP>` sammus 2.3 leitud aadressiga ja salvesta fail:
 
 ```text
 Host control
-    HostName 192.168.125.10
+    HostName <control-IP>
     User kasutaja
 ```
 
