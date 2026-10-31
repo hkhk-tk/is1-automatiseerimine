@@ -145,7 +145,7 @@ Host control
 
     ```text
     Host web01
-        HostName 192.168.125.11
+        HostName <web01-IP>
         User kasutaja
         ProxyJump control
     ```

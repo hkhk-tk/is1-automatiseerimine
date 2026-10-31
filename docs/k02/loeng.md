@@ -38,19 +38,19 @@ Kui kõik see oleks ühes playbook'is, tekiks mitmesajarealine fail, mida on ras
 
 ```ini
 [web]
-web01 ansible_host=192.168.125.11
+web01 ansible_host=<web01-IP>
 
 [app]
-app01 ansible_host=192.168.125.12
+app01 ansible_host=<app01-IP>
 
 [queue]
-rmq01 ansible_host=192.168.125.13
+rmq01 ansible_host=<rmq01-IP>
 
 [cache]
-mc01 ansible_host=192.168.125.14
+mc01 ansible_host=<mc01-IP>
 
 [db]
-db01 ansible_host=192.168.125.15
+db01 ansible_host=<db01-IP>
 
 [ubuntu:children]
 web

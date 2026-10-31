@@ -40,23 +40,23 @@ interpreter_python = auto_silent
 
 Rida `interpreter_python = auto_silent` jätab ära hoiatuse, mille Ansible annab, kui leiab masinast Pythoni ise.
 
-Inventory's on grupp iga teenuse kohta: `web`, `app`, `queue`, `cache` ja `db`. Distributsiooni grupid `ubuntu` ja `alma` koosnevad nüüd teistest gruppidest. Seda tähendab järelliide `:children`. Näites on aadressid `192.168.125.11–15`, asenda need oma masinate aadressidega (Proxmox, Summary → IPs või 1. kohtumise fail `~/.ssh/config`):
+Inventory's on grupp iga teenuse kohta: `web`, `app`, `queue`, `cache` ja `db`. Distributsiooni grupid `ubuntu` ja `alma` koosnevad nüüd teistest gruppidest. Seda tähendab järelliide `:children`. Asenda `<web01-IP>` jt oma masinate aadressidega (Proxmox, Summary → IPs või 1. kohtumise fail `~/.ssh/config`):
 
 ```ini
 [web]
-web01 ansible_host=192.168.125.11
+web01 ansible_host=<web01-IP>
 
 [app]
-app01 ansible_host=192.168.125.12
+app01 ansible_host=<app01-IP>
 
 [queue]
-rmq01 ansible_host=192.168.125.13
+rmq01 ansible_host=<rmq01-IP>
 
 [cache]
-mc01 ansible_host=192.168.125.14
+mc01 ansible_host=<mc01-IP>
 
 [db]
-db01 ansible_host=192.168.125.15
+db01 ansible_host=<db01-IP>
 
 [ubuntu:children]
 web

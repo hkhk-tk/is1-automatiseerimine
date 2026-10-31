@@ -38,11 +38,11 @@ Prompt on nüüd `kasutaja@control:~$`.
 <figcaption>Joonis 1. Privaatvõti jääb control node'i, avalik võti lisatakse igasse virtuaalmasinasse.</figcaption>
 </figure>
 
-Loo võtmepaar, lisa web01 SSH konfiguratsioonifaili, kopeeri avalik võti masinasse ja määra masina nimi. Asenda IP-aadress Proxmoxist leitud aadressiga:
+Loo võtmepaar, lisa web01 SSH konfiguratsioonifaili, kopeeri avalik võti masinasse ja määra masina nimi. Asenda `<web01-IP>` oma web01 IP-aadressiga Proxmoxist (Summary → IPs). Ära kasuta kellegi teise aadressi: laborivõrgus on kõigi õppijate masinad ja vale IP-ga seadistad teise inimese masinat.
 
 ```bash
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-printf 'Host web01\n    HostName 192.168.125.11\n    User kasutaja\n' >> ~/.ssh/config
+printf 'Host web01\n    HostName <web01-IP>\n    User kasutaja\n' >> ~/.ssh/config
 ssh-copy-id web01
 ssh web01 "sudo hostnamectl set-hostname web01"
 ssh web01 hostname
@@ -65,11 +65,19 @@ Sama töö tuleks teha veel neli korda. Skript teeb selle kõigi viie masinaga k
     #   bash ~/ssh-seadistus.sh
 
     # --- Sinu VM-ide IP-d (Proxmoxist). Muuda need! ---
-    WEB01_IP="192.168.125.11"
-    APP01_IP="192.168.125.12"
-    RMQ01_IP="192.168.125.13"
-    MC01_IP="192.168.125.14"
-    DB01_IP="192.168.125.15"
+    WEB01_IP="MUUDA"
+    APP01_IP="MUUDA"
+    RMQ01_IP="MUUDA"
+    MC01_IP="MUUDA"
+    DB01_IP="MUUDA"
+
+    # Skript ei käivitu, kui mõni IP on muutmata või vales võrgus
+    for ip in "$WEB01_IP" "$APP01_IP" "$RMQ01_IP" "$MC01_IP" "$DB01_IP"; do
+        if [[ ! "$ip" =~ ^192\.168\.125\.[0-9]{1,3}$ ]]; then
+            echo "VIGA: skripti alguses on IP '$ip'. Pane sinna oma masinate IP-d Proxmoxist." >&2
+            exit 1
+        fi
+    done
 
     ssh_kaust="$HOME/.ssh"
     voti="$ssh_kaust/id_ed25519"
@@ -98,13 +106,14 @@ Sama töö tuleks teha veel neli korda. Skript teeb selle kõigi viie masinaga k
         echo
         echo "=== $nimi ($ip) ==="
 
+        # Vana kirje (ka vale IP-ga) eemaldatakse ja kirjutatakse uuesti
         if grep -q "^Host $nimi\$" "$config"; then
-            echo "config: $nimi on juba olemas"
-        else
-            printf 'Host %s\n    HostName %s\n    User kasutaja\n    IdentityFile %s\n\n' \
-                "$nimi" "$ip" "$voti" >> "$config"
-            echo "config: lisatud $nimi"
+            awk -v h="$nimi" '/^Host /{skip=($2==h)} !skip' "$config" > "$config.tmp" && mv "$config.tmp" "$config"
+            chmod 600 "$config"
         fi
+        printf 'Host %s\n    HostName %s\n    User kasutaja\n    IdentityFile %s\n\n' \
+            "$nimi" "$ip" "$voti" >> "$config"
+        echo "config: $nimi -> $ip"
 
         # Küsib masina parooli üks kord. Kui võti on juba seal, ei küsi.
         if ! ssh-copy-id -i "$voti.pub" -o StrictHostKeyChecking=accept-new "$nimi"; then
