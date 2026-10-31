@@ -183,6 +183,10 @@ mkdir -p ~/kursus/k01
 
 Selle kohtumise failid lähevad kausta `~/kursus/k01/`.
 
+!!! warning "Aadress peab algama `git@github.com:`"
+
+    GitHub näitab vaikimisi HTTPS-aadressi (`https://github.com/...`). Sellega küsib `git` kasutajanime ja parooli ning lükkab parooli tagasi teatega, et vaja on tokenit. Tokenit ei ole vaja: vali **Code → SSH**. Kui oled juba HTTPS-iga kloonida proovinud, kustuta pooleli jäänud kaust (`rm -rf ~/kursus`) ja klooni uuesti SSH-aadressiga.
+
 ## Kui midagi ei tööta
 
 | Viga | Mida teha |
@@ -190,6 +194,8 @@ Selle kohtumise failid lähevad kausta `~/kursus/k01/`.
 | `Connection timed out` | kontrolli IP-aadressi Proxmoxis ja et masin töötab |
 | `Permission denied` | kasuta kasutajat `kasutaja` ja virtuaalmasinate parooli, mitte kooli konto parooli |
 | `REMOTE HOST IDENTIFICATION HAS CHANGED` | `ssh-keygen -R <ip>` ja proovi uuesti |
+| `git clone` küsib parooli või tokenit | aadress on HTTPS; kasuta **Code → SSH** aadressi `git@github.com:hkhk-tk/...` |
+| `Permission denied (publickey)` GitHubi juures | võti pole GitHubis: `cat ~/.ssh/id_ed25519.pub` ja lisa see **Settings → SSH and GPG keys** alla |
 
 *Tabel 1. Levinud vead.*
 

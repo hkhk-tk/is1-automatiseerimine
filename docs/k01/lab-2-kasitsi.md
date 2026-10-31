@@ -57,6 +57,8 @@ exit
 
 ## A2 · Skriptiga
 
+Selleks peab kaust `~/kursus` olemas olema (1. osa A4). Kontrolli: `ls ~/kursus`. Kui tuleb `No such file or directory`, klooni enne repositoorium.
+
 Samad käsud failis on skript. `mkdir -p` ei anna viga, kui kaust on juba olemas, nii et skripti saab käivitada mitu korda. Loo control node'is fail `~/kursus/k01/prepare-training.sh`:
 
 ```bash
