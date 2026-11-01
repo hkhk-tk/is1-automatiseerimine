@@ -11,7 +11,7 @@ Classroom 50 loob sulle repositooriumi `<klassiruum>-labori-seis-<github>`.
 
 | Kaust | Kohtumine |
 |---|---|
-| `k01/` | 1 (`prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml`) |
+| `k01/` | 1 (`prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml`, `haldus.yml`, `group_vars/`, `ajasunk.yml`) |
 | `k02-ansible/` | 2 |
 | `k03-docker/`, `.dockerignore` | 3 |
 | `k04-tofu/` | 4 |
