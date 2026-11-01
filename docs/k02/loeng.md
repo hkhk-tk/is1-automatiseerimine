@@ -231,7 +231,7 @@ mariadb_conf_dir: /etc/my.cnf.d
 mariadb_socket: /var/lib/mysql/mysql.sock
 ```
 
-Kui sama rolli on vaja Ubuntu masinas, ei muudeta rolli, vaid kirjutatakse need väärtused üle failis `group_vars/ubuntu.yml`. Nii jääb roll samaks ja inventory kirjeldab, milline masin on.
+Kui sama rolli on vaja Ubuntu masinas, kirjutatakse need väärtused üle failis `group_vars/ubuntu.yml`. Roll jääb samaks ja inventory kirjeldab, milline masin on.
 
 ## 5. Kogud
 

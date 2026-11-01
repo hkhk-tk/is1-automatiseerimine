@@ -37,7 +37,14 @@ Päeva lõpuks oskad:
 
 ## Mida päeva lõpuks esitad
 
-Kaustas `k02-ansible/` on projekt, mis paigaldab Labori seisu, ja fail `run2.txt` teise käivituse väljundiga. Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k02`. Automaatne hindaja kontrollib tag'iga märgitud versiooni, tulemus on Classroom 50-s. Vaulti parool ei ole Gitis.
+Kaustas `k02-ansible/` peavad olema järgmised failid:
+
+- `ansible.cfg`, `inventory.ini`, `requirements.yml` ja `site.yml`
+- `group_vars/all/main.yml`, krüpteeritud `group_vars/all/vault.yml`, `group_vars/app.yml` ja `host_vars/web01.yml`
+- rollid `common`, `mariadb`, `memcached`, `rabbitmq`, `tomcat` ja `nginx` kaustas `roles/`
+- `run2.txt` teise käivituse väljundiga
+
+Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k02`. Vaulti parool ei ole Gitis. Automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemuse näed Classroom 50-s. Päeva jooksul näitab laboritahvel, millised teenused sinu masinates töötavad.
 
 ## Abi
 

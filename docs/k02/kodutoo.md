@@ -6,7 +6,7 @@ tags:
 
 # 2. kohtumine · Kodutöö
 
-Kodutöös muudad töötava süsteemi seadeid ja näed, kuidas mallid ja handler'id viivad muudatuse õigetesse masinatesse. Kõik käsud käivitad control node'is kaustas `~/kursus/k02-ansible`. Tee kodutöö harus `main` pärast praktikumi ühendamist või uues harus.
+Kodutöös muudad töötava süsteemi seadeid ja näed, et muutuja uus väärtus jõuab mallide ja handler'ite kaudu ainult nendesse masinatesse, mida see puudutab. Kõik käsud käivitad control node'is kaustas `~/kursus/k02-ansible`. Tee kodutöö harus `main` pärast seda, kui praktikumi pull request on ühendatud.
 
 ## H1 · Suurem vahemälu
 
@@ -78,5 +78,19 @@ ansible all -m ansible.builtin.command -a "timedatectl show -p Timezone"
     Kõigis viies masinas on `Timezone=Europe/Tallinn` ja teine käivitus annab `changed=0`.
 
 Tee muudatustest commit ja saada need GitHubi.
+
+## Kodutöö esitamine
+
+Kodutöö esitatakse sama tag'iga `k02`. Liiguta tag viimasele commit'ile:
+
+```bash
+cd ~/kursus
+git switch main
+git pull
+git tag -f k02
+git push -f origin k02
+```
+
+Automaatne hindaja kontrollib ülesandeid H1, H2 ja H4 ning näitab tulemust Classroom 50-s boonustestidena.
 
 Vajad abi? Kirjuta [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehele ning lisa käsk ja kogu veateade tekstina.

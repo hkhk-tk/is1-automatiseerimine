@@ -7,7 +7,7 @@ tags:
 
 # 3. Andmebaas
 
-Andmebaas on teiste teenuste alus, seega alustad sellest. Selles osas paigaldad db01-sse MariaDB, kasutad Ansible'iga kaasa mitte tulevaid mooduleid (**kogu**), hoiad paroole krüpteeritult (**Vault**) ja muudad konfiguratsiooni nii, et teenus taaskäivitatakse ainult siis, kui konfiguratsioon muutus (**handler**).
+Andmebaas on teiste teenuste alus, seega alustad sellest. Selles osas paigaldad db01-sse MariaDB, kasutad mooduleid, mis Ansible'iga kaasa ei tule (**kogu**), hoiad paroole krüpteeritult (**Vault**) ja muudad konfiguratsiooni nii, et teenus taaskäivitatakse ainult siis, kui konfiguratsioon muutus (**handler**).
 
 !!! abstract "Dokumentatsioonis"
 
@@ -15,7 +15,7 @@ Andmebaas on teiste teenuste alus, seega alustad sellest. Selles osas paigaldad 
 
 ## A1 · Kogud
 
-Andmebaasi ja RabbitMQ kasutajate haldamise moodulid ei ole `ansible-core`'is, vaid eraldi **kogudes** (collections). Fail `requirements.yml` loetleb vajalikud kogud koos versioonidega, et kõigil oleks sama komplekt. Loo fail `requirements.yml`:
+Andmebaasi ja RabbitMQ kasutajate haldamise moodulid on eraldi **kogudes** (collections), `ansible-core` neid ei sisalda. Fail `requirements.yml` loetleb vajalikud kogud koos versioonidega, et kõigil oleks sama komplekt. Loo fail `requirements.yml`:
 
 ```yaml
 collections:
@@ -134,7 +134,7 @@ Fail `roles/mariadb/tasks/main.yml`, esimene osa:
 
 *Tabel 1. Moodulid rolli esimeses osas.*
 
-Tulemüüri ülesandes on tingimus `when`, sest `firewalld` on ainult AlmaLinuxis. Ubuntus jääb ülesanne vahele. See on teistsugune olukord kui paketinimed: ülesanne ei ole teises distributsioonis teise nimega, vaid seda pole seal vaja.
+Tulemüüri ülesandes on tingimus `when`, sest `firewalld` on ainult AlmaLinuxis. Ubuntus jääb ülesanne vahele. Paketinimede puhul oli sama ülesanne eri distributsioonis eri väärtusega. Tulemüüri ülesannet Ubuntus vaja ei ole, seepärast on siin `when`.
 
 Lisa `site.yml`-i play:
 

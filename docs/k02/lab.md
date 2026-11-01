@@ -29,7 +29,7 @@ Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või
 | [3. Andmebaas](lab-3-andmebaas.md) | kogu, Vault, mall ja handler | andmebaasis on tabelid ja algandmed |
 | [4. Vahemälu ja järjekord](lab-4-vahemalu-jarjekord.md) | roll `memcached` ise, RabbitMQ | mõlemad kuulavad oma porti |
 | [5. Rakendus ja veebiserver](lab-5-rakendus.md) | Tomcat ja rakendus, roll `nginx` ise | `/health` vastab web01 kaudu `UP` |
-| [6. Korduv käivitus ja esitamine](lab-6-esitamine.md) | `--check --diff`, `serial`, `run2.txt`, pull request | tag `k02` on GitHubis |
+| [6. Korduv käivitus ja esitamine](lab-6-esitamine.md) | `--check --diff`, `serial`, `block`/`rescue`, `ansible-lint`, `run2.txt`, pull request | tag `k02` on GitHubis |
 
 *Tabel 1. Praktikumi osad.*
 

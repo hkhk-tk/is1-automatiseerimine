@@ -6,7 +6,7 @@ tags:
 
 # 6. Korduv käivitus ja esitamine
 
-Labori seis töötab. Enne esitamist kontrollid kolme asja, mida automatiseerimisel töös vajad: kuidas muudatust enne rakendamist näha ja masinate kaupa rakendada, kuidas playbook vea korral ise põhjust otsib ja kas kogu playbook on idempotentne.
+Labori seis töötab. Enne esitamist kontrollid nelja asja, mida automatiseerimisel töös vajad: kuidas muudatust enne rakendamist näha ja masinate kaupa rakendada, kuidas playbook vea korral ise põhjust otsib, kas kood vastab Ansible'i headele tavadele ja kas kogu playbook on idempotentne.
 
 !!! abstract "Dokumentatsioonis"
 
@@ -122,7 +122,22 @@ Taasta Tomcat playbook'iga, mitte käsitsi:
 ansible-playbook site.yml --limit app01
 ```
 
-## A4 · Korduv käivitus
+## A4 · Koodi kontroll: `ansible-lint`
+
+Syntax-check leiab ainult vigase YAML-i ja tundmatud võtmed. Tööriist [`ansible-lint`](https://docs.ansible.com/projects/lint/) kontrollib ka seda, kas rollid järgivad häid tavasid: moodulid on täisnimega (`ansible.builtin.copy`), failidel on `mode`, tõeväärtused on `true`/`false` ja `command` ülesandel on `changed_when`. Automaatne hindaja kasutab sama tööriista, seepärast paigalda sama versioon. `pipx` paigaldab selle eraldi Pythoni keskkonda ja süsteemi Ansible jääb samaks:
+
+```bash
+sudo apt install -y pipx
+pipx install "ansible-lint==26.9.*"
+pipx ensurepath && source ~/.bashrc
+ansible-lint
+```
+
+??? success "Oodatav tulemus"
+
+    Viimane rida algab `Passed: 0 failure(s), 0 warning(s)`. Kui `ansible-lint` leiab vea, näitab ta reegli nime (näiteks `yaml[truthy]` või `risky-file-permissions`), faili ja rea. Reegli selgituse leiad [reeglite loendist](https://docs.ansible.com/projects/lint/rules/). Paranda viga ja käivita `ansible-lint` uuesti.
+
+## A5 · Korduv käivitus
 
 Automaatne hindaja kontrollib, et kogu playbook on idempotentne. Selleks salvestad teise käivituse väljundi faili `run2.txt`.
 
@@ -136,7 +151,7 @@ ansible-playbook site.yml | tee run2.txt
 
     PLAY RECAP-is on kõigil viiel masinal `changed=0` ja `failed=0`. Kui mõnes masinas on `changed`, vaata väljundist, milline ülesanne muutis, paranda see ja salvesta `run2.txt` uuesti.
 
-## A5 · Töö esitamine
+## A6 · Töö esitamine
 
 Salvesta viimased muudatused ja saada need GitHubi:
 
@@ -156,7 +171,7 @@ git tag k02
 git push origin k02
 ```
 
-Töö esitatakse tag'iga `k02`. Automaatne hindaja kontrollib tag'iga märgitud versiooni: failid ja rollid, inventory, mallid ja handlerid, Vault, `run2.txt`, süntaks ja `ansible-lint`. Tulemus ilmub [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele.
+Töö esitatakse tag'iga `k02`. Automaatne hindaja kontrollib tag'iga märgitud versiooni: failid ja rollid, inventory, mallid ja handler'id, Vault, `run2.txt`, süntaks ja `ansible-lint`. Need testid annavad kokku 100 punkti. Tulemus ilmub mõne minuti pärast [Classroom 50](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments) lehele, veateade ütleb, milline osa ja samm üle vaadata.
 
 Kui hindaja leiab vea, paranda see harus `main`, tee commit ja saada tag uuesti: `git tag -f k02 && git push -f origin k02`.
 
