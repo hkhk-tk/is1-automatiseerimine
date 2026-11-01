@@ -40,7 +40,7 @@ Iga osa lõpus on rida **Selle osa tõend**: need väljundid lisad oma repositoo
 2. [Namespace ja põhiobjektid](lab-2-namespace.md): `auth can-i`, kvoot, Deployment failist, Service, pod karantiini label'iga, ConfigMap ja Secret.
 3. [Ressursid ja rikkeotsing](lab-3-ressursid.md): `exceeded quota`, LimitRange, `FailedScheduling`, OOMKilled, events, `kubectl debug`, kaks katkist pod'i.
 4. [Labori seis klastris](lab-4-labori-seis.md): neli teenust, andmed PVC-l üle pod'i vahetuse, init-konteiner, Ingress, NetworkPolicy, rolling update ilma katkestuseta.
-5. [Neli riket](lab-5-neli-riket.md): neli koolitaja tehtud riket diagnoositud väljast sisse liikudes, ajajoon ja parandus Gitist.
+5. [Neli riket](lab-5-neli-riket.md): neli koolitaja tehtud riket, mille põhjus on leitud väljast sisse liikudes, ajajoon ja parandus Gitist.
 6. [Helm alused](lab-6-helm.md): `helm template`, values-fail, install, upgrade, rollback, käsitsi muudatus Helmi all ja ebaõnnestunud upgrade, mis võtab end ise tagasi.
 7. [GitOps Argo CD-ga](lab-7-argocd.md): Application, CI kirjutab tag'i, selfHeal, prune, katkine YAML, halb commit ja revert, vigane kood main'is ilma katkestuseta tagasi.
 8. [Esitamine](lab-8-esitamine.md): kontroll enne tag'i, tag `k07`, automaatse hindaja tulemus, lõputest HK6 ja üks samm oma töökohale.

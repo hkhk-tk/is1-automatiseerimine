@@ -88,7 +88,7 @@ Automaatika identiteedid on sama tüüpi. Pipeline'i token, AWX-i credential, Ar
     Use peidab saladuse ainult AWX-i liideses ja API-s. Playbook saab saladuse käivitusel kätte ja kes muudab projekti repot, võib panna playbook'i seda välja saatma. Tegelik piir on ka repo haru kaitse ja PR-i ülevaatus.
 
 ??? question "Millal on ABAC RBAC-ist parem ja mis on selle hind?"
-    Siis, kui otsus sõltub millestki, mis ei ole kasutaja roll: objekti omadusest (image'i allkiri, silt), keskkonnast (kellaaeg, võrk) või seosest (omanik). Hind on poliitika keerukus ja keelduva otsuse raske diagnoos. Tavaliselt jääb RBAC jämedaks piiriks ja ABAC tuleb peale kitsamate reeglitena, näiteks Kubernetese admission'is.
+    Siis, kui otsus sõltub millestki, mis ei ole kasutaja roll: objekti omadusest (image'i allkiri, silt), keskkonnast (kellaaeg, võrk) või seosest (omanik). Hind on poliitika keerukus ja see, et keelduva otsuse põhjust on raske leida. Tavaliselt jääb RBAC jämedaks piiriks ja ABAC tuleb peale kitsamate reeglitena, näiteks Kubernetese admission'is.
 
 ??? question "Kolleeg lahkus ja tema kasutaja kustutati IdP-st. Kas tema kubeconfig'i kliendisert lakkab töötamast?"
     Ei lakka. Kubernetes ei kontrolli kliendisertifikaatide tühistamist, nii et sert kehtib kuni aegumiseni. Kui sert on grupis `system:masters`, ei aita ka RBAC-i muutmine. Inimestele antakse ligipääs OIDC tokeniga, mille kehtivus on lühike, ja kliendiserte kasutatakse ainult hädakontona.

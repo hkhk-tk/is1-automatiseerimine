@@ -58,7 +58,7 @@ Grafana OnCall'i avatud versioon läks hooldusrežiimi 2025. aasta märtsis ja a
 
 18. novembril 2025 oli suur osa Cloudflare'i võrgust kella 11.20-st UTC umbes kolm tundi rikkis ja täielik taastumine võttis kuni 17.06-ni ([Cloudflare'i postmortem](https://blog.cloudflare.com/18-november-2025-outage/)). Kell 11.05 muudeti ClickHouse'i andmebaasi õigusi. Selle tõttu hakkas Bot Management'i tunnuste faili genereeriv päring tagastama topeltridu ja fail kasvas umbes 60 tunnuselt üle 200. Proxy moodulil oli 200 tunnuse fikseeritud piir ja piiri ületamisel lõppes protsess veaga (Rusti `unwrap()` `Err` väärtusel), mis andis kasutajatele 5xx vastuseid.
 
-Diagnoosi aeglustas kaks asja. Õiguste muudatus levis klastris järk-järgult ja fail genereeriti iga viie minuti järel uuesti, nii et võrku jõudis vaheldumisi hea ja vigane fail. Rike paistis tulevat ja minevat nagu rünnak. Samal ajal läks kokkusattumusena maha ka Cloudflare'ist eraldi hostitud staatuseleht ja osa meeskonnast arvas, et ründaja tabab mõlemat.
+Põhjuse leidmist aeglustasid kaks asja. Õiguste muudatus levis klastris järk-järgult ja fail genereeriti iga viie minuti järel uuesti, nii et võrku jõudis vaheldumisi hea ja vigane fail. Rike paistis tulevat ja minevat nagu rünnak. Samal ajal läks kokkusattumusena maha ka Cloudflare'ist eraldi hostitud staatuseleht ja osa meeskonnast arvas, et ründaja tabab mõlemat.
 
 Postmortem näitab SRE tava: avalik ajajoon minutite kaupa, tehniline juurpõhjus ilma süüdlaseta ja tegevused süsteemi tasemel. Tegevused olid konfifailide vastuvõtu valideerimine samamoodi nagu kasutaja sisendi puhul, globaalsed hädalülitid (*kill switch*), parem veakäsitlus moodulites ja üle moodulite ulatuv rikete ülevaatus. Admini jaoks on õppetund see, et konfiguratsioon on samuti deploy. Automaatselt genereeritud ja kiiresti leviv fail vajab samu kaitseid nagu kood: valideerimist, lainetena levitamist ja võimalust tagasi minna.
 
@@ -82,5 +82,5 @@ Postmortem näitab SRE tava: avalik ajajoon minutite kaupa, tehniline juurpõhju
 ??? question "Üks intsident kulutas 30% nelja nädala error budget'ist. Mida näidispoliitika nõuab?"
     Üle 20% kulutanud intsident vajab postmortem'i, milles on vähemalt üks P0 tegevus juurpõhjuse vastu. Kui kogu eelarve on nelja nädala aknas ületatud, peatatakse muudatused peale P0 ja turvaparanduste, kuni teenus on taas SLO piires.
 
-??? question "Cloudflare'i rike tuli ja läks viieminutiliste vahedega. Miks see diagnoosi raskendas ja mis on õppetund sinu automaatika jaoks?"
+??? question "Cloudflare'i rike tuli ja läks viieminutiliste vahedega. Miks see raskendas põhjuse leidmist ja mis on õppetund sinu automaatika jaoks?"
     Vahelduv rike näeb välja nagu väline rünnak või ülekoormus, mitte nagu deploy, ja tähelepanu läheb valesse kohta. Põhjus oli automaatselt genereeritud konfifail, mida levitati kogu võrku ilma valideerimata. Õppetund: genereeritud konfiguratsioon on samuti deploy ja vajab vastuvõtul valideerimist, lainetena levitamist ja hädalülitit.

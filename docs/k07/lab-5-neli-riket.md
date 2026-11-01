@@ -11,7 +11,7 @@ Koolitaja teeb sinu töötavas Labori seisus neli viga: Gitis on kõik õige, kl
 
 Ütle koolitajale, kui Labori seis klastris töötab. Argo CD Application'it sul veel olla ei tohi, muidu keeraks see vead kohe tagasi.
 
-**Kui teed seda tööl iga päev:** diagnoosid Kubernetese intsidente `kubectl get events` ja `describe` järgi ilma juhendita. Kui see on sul juba korras, ära loe veaotsingu tabelit, pane endale piiriks 20 minutit kõigi nelja põhjuseni ja mine otse etappi „[Väljast sisse: Ingress → Service → pod](#valjast-sisse-ingress-service-pod)“.
+**Kui teed seda tööl iga päev:** leiad Kubernetese intsidentide põhjuse `kubectl get events` ja `describe` järgi ilma juhendita. Kui see on sul juba korras, ära loe veaotsingu tabelit, pane endale piiriks 20 minutit kõigi nelja põhjuseni ja mine otse etappi „[Väljast sisse: Ingress → Service → pod](#valjast-sisse-ingress-service-pod)“.
 
 Üks rike võib anda mitu sümptomit ja üks sümptom võib varjata teist, seega ära lõpeta esimese leiu juures.
 

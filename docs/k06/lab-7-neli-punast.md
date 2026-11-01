@@ -161,7 +161,7 @@ Kokkuvõte on blameless postmortem'i lühike kuju. Sümptomi ja paranduse leiab 
     git log --oneline -6
     ```
 
-Kui sinu põhjus erineb skripti omast, kirjuta erinevus tabelisse. Sageli leiab diagnoos sümptomist õige koha, aga vale mehhanismi. Kaheksa `OK`-i tähendavad, et parandused ei lõhkunud midagi, mida automaatne hindaja kontrollib.
+Kui sinu põhjus erineb skripti omast, kirjuta erinevus tabelisse. Sageli leiad sümptomi järgi õige koha, aga vale mehhanismi. Kaheksa `OK`-i tähendavad, et parandused ei lõhkunud midagi, mida automaatne hindaja kontrollib.
 
 **Edasi saad minna, kui** tabelis on neli rida ennetusega, kõik kaheksa kontrolli annavad `OK` ja `git log` näitab pärast `chore` commit'i vähemalt kolme `fix(...)` commit'i.
 

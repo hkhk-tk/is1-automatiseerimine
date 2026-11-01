@@ -33,7 +33,7 @@ Osad 1–4 teed kohtumisel (laupäeval kell 10–15). Osad 5–9 võid lõpetada
 | [5. Tootmiskeskkonda sobiv stack](lab-5-tootmine.md) | piirangud, saladused failidest, sisemine võrk, logid, varundus |
 | [6. Registry, Trivy ja SBOM](lab-6-registry.md) | image'id Gitea's, tag ja digest, haavatavused, SBOM |
 | [7. Sama teenus Podmaniga](lab-7-podman.md) | mc01 ja db01 rootless Podmanis, Quadlet, SELinux |
-| [8. Kolm riket](lab-8-kolm-riket.md) | vigane stack, diagnoos ja parandus koodis |
+| [8. Kolm riket](lab-8-kolm-riket.md) | vigane stack, põhjuse otsimine ja parandus koodis |
 | [9. Esitamine](lab-9-esitamine.md) | värske klooni test, PR, tag `k03` |
 
 *Tabel 1. Praktikumi osad.*
