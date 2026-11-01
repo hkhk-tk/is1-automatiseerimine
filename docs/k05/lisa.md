@@ -1014,7 +1014,7 @@ gh pr create --fill && sleep 60 && gh pr checks
     """Testid ei vaja ruuterit ega võrku: ConnectHandler asendatakse võltsiga.
 
     Kui netmiko pole paigaldatud (nt kiire kohalik proov), paneb see fail asemele tühja mooduli,
-    et `import vorgukogu` õnnestuks. CI-s on päris netmiko requirements.txt-ist.
+    et `import vorgukogu` õnnestuks. CI-s on tegelik netmiko requirements.txt-ist.
     """
 
     import sys
@@ -1029,7 +1029,7 @@ gh pr create --fill && sleep 60 && gh pr checks
         stub = types.ModuleType("netmiko")
 
         def _no_network(**kwargs):
-            raise RuntimeError("testis pole päris ühendust")
+            raise RuntimeError("testis pole tegelikku ühendust")
 
         stub.ConnectHandler = _no_network
         sys.modules["netmiko"] = stub

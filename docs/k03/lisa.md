@@ -608,7 +608,7 @@ journalctl -t labseis-backup -n 5 --no-pager
     last=$(find backup -maxdepth 1 -name 'labseis-*.sql.gz' | sort -r | head -n 1)
     c="labseis-verify-$$"; trap 'docker rm -f "$c" >/dev/null 2>&1 || true' EXIT
     docker run -d --name "$c" --network none -e MARIADB_ROOT_PASSWORD="$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')" mariadb:11.4
-    until docker exec "$c" healthcheck.sh --connect --innodb_initialized 2>/dev/null; do sleep 2; done   # päris skriptis ajapiiriga
+    until docker exec "$c" healthcheck.sh --connect --innodb_initialized 2>/dev/null; do sleep 2; done   # tootmisskriptis ajapiiriga
     gzip -dc "$last" | docker exec -i "$c" sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot'
     n=$(docker exec "$c" sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -uroot -N -e "SELECT COUNT(*) FROM labseis.result"')
     [[ "$n" -gt 0 ]] || die "taastatud baasis result=$n"

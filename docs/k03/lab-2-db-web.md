@@ -117,7 +117,7 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
 `nginx -T` näitab lõplikku konfiguratsiooni, mille entrypoint template'ist tegi. IP-aadress `resolver` real tähendab, et envsubst sai muutuja kätte. `proxy_pass $app_upstream` alles tähendab, et nginx lahendab nime iga päringu ajal resolver'i kaudu, mitte ainult käivitusel.
 
-**Edasi saad minna, kui** `resolver` real on päris IP-aadress ja `proxy_pass $app_upstream;` on alles. Kirjuta TOEND.md-sse, miks `$host` ja `$app_upstream` jäid envsubst'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
+**Edasi saad minna, kui** `resolver` real on tegelik IP-aadress ja `proxy_pass $app_upstream;` on alles. Kirjuta TOEND.md-sse, miks `$host` ja `$app_upstream` jäid envsubst'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
 
 ## Mis juhtub, kui app01 puudub
 

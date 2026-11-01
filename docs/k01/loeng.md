@@ -154,7 +154,7 @@ Dokumentatsioon on inglise keeles. Tabelis on [Ansible concepts](https://docs.an
 | role | roll | korduvkasutatav komplekt ülesandeid, handlereid, muutujaid ja malle | K2 |
 | collection | kogu | moodulite, rollide ja pluginate pakett, paigaldatakse Galaxyst | K2 |
 | plugin | plugin | laiendab Ansible'it: ühendus (SSH), filtrid (`sort`), väljundi kuju | K2 |
-| Execution Environment | — | konteiner, milles on Ansible ja kogud; control node konteinerina | K3 |
+| Execution Environment | - | konteiner, milles on Ansible ja kogud; control node konteinerina | K3 |
 
 *Tabel 4. Ansible'i põhimõisted.*
 

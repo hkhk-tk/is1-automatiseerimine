@@ -73,7 +73,7 @@ Read on moodulite kaupa. Viimane veerg on mehhanism: selle järgi tunned vea är
 | genereeritud fail ei läbi `validate`-i | vea rida | mustandis on omavahel vastuolus argumente: eemalda vaikeväärtused ja ühe ploki duplikaadid | provider kirjutab kõik loetud atribuudid, ka need, mida ei tohi koos anda |
 | pärast importi tahab plaan VM-i asendada | `# forces replacement` rida | imporditud VM-i panid moodulisse (`clone`) või muutsid asendust nõudvat argumenti | `clone` on loomise argument; imporditud VM-il pole seda state'is ja koodis olev `clone` nõuab asendust |
 | iga plaan ebaõnnestub pärast VM-i kustutamist | `ls import.tf` | `import` plokk jäi alles | import plokk ütleb, et objekt peab olemas olema; kui seda pole, ei saa Tofu importi teha |
-| `-refresh-only` ei näita paketti | — | ootuspärane: masina sisu on Ansible'i ala (`changed` korduval käivitusel) | Tofu näeb ainult seda, mida Proxmoxi API VM-i kohta ütleb |
+| `-refresh-only` ei näita paketti | - | ootuspärane: masina sisu on Ansible'i ala (`changed` korduval käivitusel) | Tofu näeb ainult seda, mida Proxmoxi API VM-i kohta ütleb |
 | `workspace new dev`: `AccessDenied` | `backend.hcl` | `workspace_key_prefix` puudub, state läheb `env:/` alla | vaikimisi prefiks on `env:`, mis on väljaspool sinu võtme lubatud prefiksit |
 | dev-plaan tahab luua viis VM-i | `tofu workspace show`, käsurida | `-var-file=env/dev.tfvars` puudub; precondition peaks peatama | uus workspace on tühi state; ilma dev-failita on `vms` sama mis Labori seisus |
 | `k02-ansible/inventory-dev.ini` on `git status`-es | `.gitignore` | rida puudub | dev-i inventory on genereeritud ja ajutine; see ei kuulu Labori seisu |

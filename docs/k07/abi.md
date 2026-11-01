@@ -112,7 +112,7 @@ Otsi sümptomi järgi. Viimane veerg ütleb mehhanismi, selle järgi leiad ka ve
 | tag pole GitHubis | `git ls-remote --tags origin` | tavaline `git push` tag'e ei lükka: `git push origin k07` | tag läheb üles ainult nimega või `--tags`/`--follow-tags`-iga |
 | `kubeconform`: `additional properties … not allowed` | veateate fail ja rida | taandeviga: väli on vales tasemel | `-strict` keelab välja, mida skeemis sellel tasemel pole |
 | `hygiene`: `namespace: rida manifestis` | `grep -n 'namespace:' k07-k8s/*.yaml` | eemalda: namespace tuleb context'ist | namespace peab tulema context'ist või Argo destination'ist, mitte failist |
-| `hygiene`: `replicas: 3 — jagatud klastris kuni 2` | `grep -n replicas k07-k8s/*.yaml` | rolling update'i katse jäi failis 2-st suuremaks | jagatud klastri kvoot ei kannata suuri koopiate arve |
+| `hygiene`: `replicas: 3`: jagatud klastris kuni 2 | `grep -n replicas k07-k8s/*.yaml` | rolling update'i katse jäi failis 2-st suuremaks | jagatud klastri kvoot ei kannata suuri koopiate arve |
 | värskes kloonis ebaõnnestub test, kohapeal mitte | `git status --ignored` | fail on kohapeal, aga mitte Gitis | automaatne hindaja näeb ainult commit'itud faile |
 | `cloud secrets`: kubeconfig Gitis | `git ls-files \| grep -i kube` | `git rm --cached <fail>` ja `.gitignore`-i | kubeconfig'is on tunnus, millega saab klastrisse |
 | parandus pärast esitust | `git log --oneline -1 k07` | tag on vana commit'i peal: `git tag -f k07 && git push -f origin k07` | tag viitab endiselt commit'ile, mille juures ta loodi |

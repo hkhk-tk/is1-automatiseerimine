@@ -44,7 +44,7 @@ peaks probleemi märkama varem ja kirjutama tulemuse Labori seisu.
 ```bash
 ./k01-bash/golden-signals.sh                 # nt 200 0.034
 ssh app01 sudo systemctl stop tomcat         # järgmine käivitus: 502 …, siis start
-ssh db01 'df -h /; sudo fallocate -l 1G /tmp/fill'   # vaata enne df-i, et ketas päriselt täis ei saaks
+ssh db01 'df -h /; sudo fallocate -l 1G /tmp/fill'   # vaata enne df-i, et ketas täis ei saaks
 ssh db01 sudo rm /tmp/fill
 shellcheck k01-bash/golden-signals.sh; crontab -l
 ```

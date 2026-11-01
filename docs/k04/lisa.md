@@ -518,7 +518,7 @@ tofu test | tail -1
     `tofu test` hoiab state'i mälus ja kustutab lõpus kõik, mis `run` lõi; backend'i ja Labori seisu state'i see ei puuduta. Ülejäänud muutujad tulevad `terraform.tfvars`-ist, token keskkonnast.
 
     ```hcl
-    # tests/integration/it01.tftest.hcl: loob päris VM-i
+    # tests/integration/it01.tftest.hcl: loob tegeliku VM-i
     # Käivita: tofu test -test-directory=tests/integration
     variables {
       inventory_path = "build/inventory-it.ini"
