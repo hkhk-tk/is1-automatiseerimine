@@ -4,11 +4,11 @@ tags:
   - Kodutöö
 ---
 
-# 2. kohtumine · Kodutöö
+# Kodutöö: muutujad ja paroolid töötavas süsteemis
 
-Kodutöös muudad töötava süsteemi seadeid ja näed, et muutuja uus väärtus jõuab mallide ja handler'ite kaudu ainult nendesse masinatesse, mida see puudutab. Kõik käsud käivitad control node'is kaustas `~/kursus/k02-ansible`. Tee kodutöö harus `main` pärast seda, kui praktikumi pull request on ühendatud.
+Kodutöös muudad töötava süsteemi seadeid ja näed, et muutuja uus väärtus jõuab mallide ja handler'ite kaudu ainult nendesse masinatesse, mida see puudutab. Kodutöö on boonus. Käsud käivitad control node'is kaustas `~/kursus/k02-ansible` harus `main`, pärast seda, kui praktikumi pull request on ühendatud.
 
-## H1 · Suurem vahemälu
+## Osa 1 · Suurem vahemälu
 
 Memcachedi mälu on rolli vaikeväärtuses 64 MB. Suurenda seda ainult masinas mc01: loo fail `host_vars/mc01.yml` ja pane sinna `memcached_mem_mb: 128`.
 
@@ -24,25 +24,21 @@ ssh mc01 cat /etc/sysconfig/memcached
 
     `--diff` näitab rida `CACHESIZE`. Käivitamisel muutub mall ja väljundis on `RUNNING HANDLER [memcached : Restart memcached]`. Failis on `CACHESIZE="128"`.
 
-Tee muudatustest commit ja saada need GitHubi.
-
-## H2 · Rakenduse mälu
+## Osa 2 · Rakenduse mälu
 
 Muuda failis `group_vars/app.yml` väärtus `tomcat_heap: 384m`. Käivita playbook ainult rakendusserveris ja kontrolli, et rakendus töötab pärast taaskäivitust:
 
 ```bash
 ansible-playbook site.yml --limit app01
 ssh app01 "ps -o args= -C java | grep -o 'Xmx[0-9a-z]*'"
-curl -s http://<web01 IP-aadress>/health
+ssh web01 curl -s localhost/health
 ```
 
 ??? success "Oodatav tulemus"
 
     Muutub teenuse lisaseadete fail, handler taaskäivitab Tomcati ja `ps` näitab `Xmx384m`. `/health` vastab `UP`.
 
-Tee muudatustest commit ja saada need GitHubi.
-
-## H3 · Uus andmebaasi parool
+## Osa 3 · Uus andmebaasi parool
 
 Paroolivahetus puudutab kahte masinat: andmebaasi kasutajat db01-s ja rakenduse seadeid app01-s. Vaheta Vaultis väärtus `vault_db_password`:
 
@@ -54,18 +50,16 @@ ansible-vault edit group_vars/all/vault.yml
 
 ```bash
 ansible-playbook site.yml
-curl -s http://<web01 IP-aadress>/health
+ssh web01 curl -s localhost/health
 ```
 
 ??? success "Oodatav tulemus"
 
-    db01-s muutub kasutaja parool ja app01-s rakenduse seadete fail, mille järel Tomcat taaskäivitatakse. Teistes masinates on `changed=0`. `/health` vastab `UP`, sest mõlemad pooled said sama parooli.
+    db01-s muutub kasutaja parool ja app01-s rakenduse seadete fail, mille järel Tomcat taaskäivitatakse. Teistes masinates on `changed=0`. `/health` vastab `UP`, sest mõlemad pooled said sama parooli. `vault.yml` jääb GitHubis krüpteerituks.
 
-Tee muudatustest commit ja saada need GitHubi. `vault.yml` on GitHubis endiselt krüpteeritud.
+## Osa 4 · Ajavöönd kõigis masinates
 
-## H4 · Boonus: ajavöönd kõigis masinates
-
-Lisa `requirements.yml`-i kogu `community.general` (koos versiooniga) ja rolli `common` ülesanne, mis määrab kõigis masinates ajavööndiks `Europe/Tallinn`. Sobiva mooduli leiad käsuga `ansible-doc -l community.general | grep -i timezone`.
+Lisa `requirements.yml`-i kogu `community.general` koos versiooniga ja rolli `common` ülesanne, mis määrab kõigis masinates ajavööndiks `Europe/Tallinn`. Sobiva mooduli leiad käsuga `ansible-doc -l community.general | grep -i timezone`.
 
 ```bash
 ansible-galaxy collection install -r requirements.yml
@@ -77,20 +71,14 @@ ansible all -m ansible.builtin.command -a "timedatectl show -p Timezone"
 
     Kõigis viies masinas on `Timezone=Europe/Tallinn` ja teine käivitus annab `changed=0`.
 
-Tee muudatustest commit ja saada need GitHubi.
+## Töö esitamine
 
-## Kodutöö esitamine
-
-Kodutöö esitatakse sama tag'iga `k02`. Liiguta tag viimasele commit'ile:
+Kodutöö esitatakse sama tag'iga `k02`: tee muudatustest commit, saada need GitHubi ja liiguta tag viimasele commit'ile.
 
 ```bash
 cd ~/kursus
-git switch main
-git pull
-git tag -f k02
-git push -f origin k02
+git add -A k02-ansible && git commit -m "k02: kodutöö" && git push
+git tag -f k02 && git push -f origin k02
 ```
 
-Automaatne hindaja kontrollib ülesandeid H1, H2 ja H4 ning näitab tulemust Classroom 50-s boonustestidena.
-
-Vajad abi? Kirjuta [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions) lehele ning lisa käsk ja kogu veateade tekstina.
+Tulemuse näed Classroom 50-s.

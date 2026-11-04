@@ -4,145 +4,106 @@ tags:
   - Loeng
 ---
 
-# 2. kohtumine · Labori seis viies masinas
+# Loeng: Labori seis rollidega
+
+1. kohtumisel kirjutasid playbook'e, mis teevad viies masinas sama, ja panid distributsioonide erinevused grupimuutujatesse. Täna paigaldad viide masinasse rakenduse koos kõigi teenustega ja muudad ühe suure playbook'i rollidega projektiks.
 
 ??? abstract "Õpiväljundid"
 
-    Päeva lõpuks oskad:
+    Pärast loengut ja praktikumi oskad:
 
-    - jagada masinad inventory's gruppidesse teenuse ja distributsiooni järgi ning koostada gruppe gruppidest;
-    - otsustada, kas väärtus kuulub rolli vaikeväärtustesse, grupile või ühele masinale;
-    - kirjutada Jinja2 malli ja taaskäivitada teenust handler'iga ainult konfiguratsiooni muutumisel;
-    - jagada projekt rollideks, kasutada kogude mooduleid ja hoida paroole Vaultis;
-    - kontrollida muudatust enne rakendamist (`--check --diff`, `--limit`, `serial`).
+    - leida playbook'i vea sammudega sümptom, hüpotees, tõend ja parandus;
+    - jagada masinad inventory's teenuse ja distributsiooni gruppidesse ning valida muutujale õige taseme;
+    - kirjutada Jinja2 malli ja taaskäivitada teenust handler'iga ainult muudatuse korral;
+    - jagada playbook rollideks nii, et masinate olek ei muutu;
+    - kasutada kogude mooduleid ja hoida paroole Vaultis;
+    - kontrollida muudatust enne rakendamist (`--check --diff`, `--limit`, `serial`, `ansible-lint`).
 
-## 1. Viis masinat, viis teenust
+## 1. Ühest failist projektiks
 
-1. kohtumisel tegid kõigis masinates sama: kaust, paketid, kasutajad. Täna paigaldad viide masinasse rakenduse Labori seis koos kõigi teenustega, mida see vajab. Iga masin teeb erinevat tööd:
+Rakendus Labori seis vajab viit teenust ja iga masin teeb erinevat tööd. Brauser saadab päringu web01-le, Nginx suunab selle app01-le ja rakendus kasutab andmebaasi, vahemälu ja sõnumijärjekorda.
 
-![Labori seis viies masinas: web01 Nginx, app01 Tomcat, db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_stack.svg){ width="720" }
+<figure markdown="span">
+  ![Labori seis viies masinas: web01 Nginx, app01 Tomcat, db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_stack.svg){ width="720" }
+  <figcaption>Joonis 2.1. Labori seisu teenused viies masinas (Talvik, 2026).</figcaption>
+</figure>
 
-| Masin | Teenus | Ülesanne |
-|---|---|---|
-| web01 | Nginx | võtab vastu HTTP päringud ja suunab need rakendusserverisse |
-| app01 | Tomcat | käivitab rakenduse (Java WAR-fail) |
-| db01 | MariaDB | hoiab andmeid |
-| mc01 | Memcached | hoiab vahemälu |
-| rmq01 | RabbitMQ | edastab sõnumeid järjekorra kaudu |
+Kõik need teenused saab paigaldada ühe playbook'iga. Selline fail töötab, aga seda on raske muuta: väärtused ja paroolid on ülesannetes, sama tingimus kordub mitmes kohas ja ühe teenuse muutmiseks tuleb lugeda läbi kogu fail. Töökohas on see sage olukord, sest playbook kasvab koos süsteemiga.
 
-Kui kõik see oleks ühes playbook'is, tekiks mitmesajarealine fail, mida on raske lugeda ja ohtlik muuta. Seetõttu jaotatakse projekt osadeks: inventory grupid, muutujad, mallid ja rollid.
+**Refaktoreerimine** tähendab, et koodi ülesehitus muutub, aga tulemus jääb samaks. Ansible'is saab seda tõestada: kui uus projekt annab samades masinates `--check --diff` käivitusel ainult oodatud erinevused ja teisel käivitusel `changed=0`, on masinate olek sama.
 
-### Grupid
+??? question "Kontrolli ennast"
 
-1. kohtumise inventory's olid grupid distributsiooni järgi (`ubuntu`, `alma`). Nüüd lisanduvad grupid teenuse järgi ja distributsioonigrupid koostatakse nendest:
+    1. Miks on ühe faili playbook'i viie teenuse puhul raske muuta?
+    2. Kuidas tõestad, et ümberkirjutatud playbook ei muutnud masinate olekut?
+
+## 2. Vigade otsimine
+
+Playbook võib lõppeda vigadeta ja süsteem ikka mitte töötada. Viga leitakse samade sammudega nagu iga teine haldusviga: **sümptom** (mida näed), **hüpotees** (mis võib olla põhjus), **tõend** (käsk, mis hüpoteesi kinnitab või lükkab ümber), parandus ja kontroll. Hüpotees kirjutatakse üles enne tõendi otsimist, siis on näha, kas mõttekäik oli õige.
+
+Teine sage viga on playbook, mis muudab masinat igal käivitusel. Moodulid `shell` ja `command` käivitavad käsu iga kord, sest need ei tea soovitud olekut. Rida `echo … >> /etc/hosts` lisab igal käivitusel faili uue rea ja `systemctl restart` katkestab teenuse ka siis, kui midagi ei muutunud. Selliste ülesannete asemel kasutatakse moodulit, mis kontrollib olekut (`blockinfile`, `lineinfile`, `template`), ja taaskäivitust handler'iga.
+
+??? note "Tabel 2.1. Käsk ja moodul"
+
+    | Käsk ülesandes | Moodul, mis kontrollib olekut |
+    |---|---|
+    | `echo "…" >> /etc/hosts` | `ansible.builtin.blockinfile` |
+    | `sed -i 's/…/…/' fail` | `ansible.builtin.lineinfile` või `template` |
+    | `systemctl restart teenus` igal käivitusel | handler, mida teavitab `notify` |
+    | `mysql -e "CREATE USER …"` | `community.mysql.mysql_user` |
+
+??? question "Kontrolli ennast"
+
+    1. Playbook lõppes `failed=0`, aga rakendus ei tööta. Mis on järgmine samm?
+    2. Miks annab `command` ülesanne igal käivitusel `changed`?
+
+## 3. Grupid ja muutujad
+
+1. kohtumise inventory's olid grupid distributsiooni järgi. Labori seisus lisanduvad grupid teenuse järgi ja distributsioonigrupid koostatakse nendest. Järelliide `:children` tähendab, et grupi liikmed on teised grupid. Teenusegrupp määrab, mida masinas teha, distributsioonigrupp hoiab grupimuutujaid, mis ütlevad, kuidas.
 
 ```ini
 [web]
 web01 ansible_host=<web01-IP>
 
-[app]
-app01 ansible_host=<app01-IP>
-
-[queue]
-rmq01 ansible_host=<rmq01-IP>
-
-[cache]
-mc01 ansible_host=<mc01-IP>
-
 [db]
 db01 ansible_host=<db01-IP>
-
-[ubuntu:children]
-web
-app
-queue
 
 [alma:children]
 cache
 db
-
-[all:vars]
-ansible_user=kasutaja
 ```
 
-![Inventory: grupid teenuse ja distributsiooni järgi](assets/k02_inventory.svg){ width="720" }
+Muutuja `ansible_host` on masina IP-aadress. Kui see on inventory's, on aadress kirjas ainult ühes kohas ja mallid saavad seda kasutada.
 
-Teenusegrupp määrab, **mida** masinas teha (db01 saab MariaDB). Distributsioonigrupp hoiab 1. kohtumisel tehtud grupimuutujaid, mis ütlevad, **kuidas** seda teha (paketinimed, failide asukohad). Sufiks `:children` tähendab, et grupi liikmed on teised grupid. Inventory struktuuri näeb käsuga `ansible-inventory --graph`.
+<figure markdown="span">
+  ![Inventory: grupid teenuse ja distributsiooni järgi](assets/k02_inventory.svg){ width="720" }
+  <figcaption>Joonis 2.2. Iga masin on teenuse grupis ja distributsiooni grupis (Talvik, 2026).</figcaption>
+</figure>
 
-## 2. Muutujad ja faktid
+Muutujad on kaustades `group_vars` ja `host_vars`. Grupi muutujad võivad olla ühes failis või kaustas, kus on mitu faili: kausta kuju `group_vars/all/` on vajalik, kui osa muutujaid on krüpteeritud. Kui sama muutuja on mitmes kohas, kehtib täpsem väärtus.
 
-1. kohtumisel panid distributsioonide erinevused faili `group_vars/<grupp>.yml`. Labori seisus on muutujaid rohkem ja need on eri tasemetel. Andmebaasi nimi, kasutaja ja parool on vaja nii db01-s (andmebaasi loomiseks) kui ka app01-s (rakenduse ühendamiseks). Kui väärtus on kirjas ühes kohas muutujana, ei saa need kaks kohta omavahel lahku minna.
+??? note "Tabel 2.2. Milline väärtus kehtib (nõrgemast tugevamani)"
 
-### Kus muutujaid hoitakse
+    | Koht | Näide selles projektis |
+    |---|---|
+    | rolli `defaults/main.yml` | `tomcat_heap: 256m` |
+    | `group_vars/all/` | `labseis_db_name: labseis` |
+    | `group_vars/<grupp>.yml` | `group_vars/app.yml`: `tomcat_heap: 512m` |
+    | `host_vars/<masin>.yml` | `host_vars/web01.yml`: `nginx_upstream: app01:8080` |
+    | käsurea `-e` | `-e tomcat_heap=1g` |
 
-Grupi muutujad võivad olla ühes failis või kaustas, kus on mitu faili. Kausta kuju on vajalik, kui osa muutujaid on krüpteeritud (`vault.yml`). Ühe masina muutujad on kaustas `host_vars`:
-
-```text
-group_vars/all/main.yml     # kõik masinad: andmebaasi nimi ja kasutaja
-group_vars/all/vault.yml    # kõik masinad: paroolid krüpteeritult
-group_vars/app.yml          # grupp app: tomcat_heap
-host_vars/web01.yml         # ainult web01: nginx_upstream
-```
-
-Rollis on oma vaikeväärtused failis `roles/<roll>/defaults/main.yml`. Need on kõige nõrgemad: iga `group_vars` või `host_vars` väärtus kirjutab need üle.
-
-### Milline väärtus jääb kehtima
-
-Kui sama muutuja on mitmes kohas, kehtib täpsem väärtus. Lihtsustatud järjekord nõrgemast tugevamani:
-
-| Koht | Näide selles projektis |
-|---|---|
-| rolli `defaults/main.yml` | `tomcat_heap: 256m` |
-| `group_vars/all` | `labseis_db_name: labseis` |
-| `group_vars/<grupp>` | `group_vars/app.yml`: `tomcat_heap: 512m` |
-| `host_vars/<masin>` | `host_vars/web01.yml`: `nginx_upstream: app01:8080` |
-| käsurea `-e` | `-e tomcat_heap=1g` |
-
-Tomcat saab 512 MB mälu, sest grupi väärtus on tugevam kui rolli vaikeväärtus. Ühe masina muutujaid näeb käsuga `ansible-inventory --host app01`. Kogu järjekord on lehel [Variable precedence](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence).
-
-### Faktid
-
-Faktid on andmed, mida Ansible kogub masinast iga play alguses: distributsioon, IP-aadressid, mälu. 1. kohtumisel kasutasid fakti `ansible_facts['os_family']` tingimuses `when`. Labori seisus on tingimus ainult tulemüüri ülesannetes, sest `firewalld` on olemas ainult AlmaLinuxis:
-
-```yaml
-- name: Tulemüür lubab andmebaasi pordi
-  ansible.posix.firewalld:
-    port: "{{ mariadb_port }}/tcp"
-    permanent: true
-    immediate: true
-    state: enabled
-  when: ansible_facts['os_family'] == "RedHat"
-```
-
-Paketinimede ja failiteede erinevused on muutujates, mitte tingimustes. `when` sobib siis, kui ülesanne on ühes distributsioonis vajalik ja teises mitte.
+    Kogu järjekord on lehel [Variable precedence](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence). Ühe masina muutujaid näitab `ansible-inventory --host app01`.
 
 Teiste masinate andmetele pääseb ligi muutujatega `groups` ja `hostvars`. Rakenduse seadetes on andmebaasi aadress `{{ groups['db'][0] }}`, st grupi `db` esimene masin. Kui andmebaas kolib teise masinasse, muudetakse ainult inventory't.
 
-## 3. Mallid ja handler'id
+??? question "Kontrolli ennast"
 
-### Mall
+    1. Kas mc01 on grupis `alma`, kui inventory's on `[alma:children]` all `cache`?
+    2. Rolli vaikeväärtus on 256m ja `group_vars/app.yml`-is 512m. Mis väärtuse saab app01?
 
-Moodul `copy` kopeerib faili muutmata kujul. Moodul `template` töötleb faili enne kopeerimist Jinja2-ga: `{{ muutuja }}` asendatakse väärtusega, `{% for %}` ja `{% if %}` kordavad või valivad ridu. Mallifailid on rolli kaustas `templates/` ja nende laiend on `.j2`.
+## 4. Mallid ja handler'id
 
-Nginxi seadistus web01-s tuleb mallist, kus rakendusserveri aadress on muutujas:
-
-```nginx
-# {{ ansible_managed }}
-upstream labori_seis {
-    server {{ nginx_upstream }};
-}
-
-server {
-    listen 80 default_server;
-    location / {
-        proxy_pass http://labori_seis;
-    }
-}
-```
-
-Rida `{{ ansible_managed }}` lisab faili algusesse märkuse, et faili haldab Ansible ja käsitsi tehtud muudatused kirjutatakse üle.
-
-Tsükliga mall koostab rollis `common` faili `/etc/hosts` read kõigi inventory masinate kohta:
+Moodul `copy` kopeerib teksti muutmata kujul. Moodul `template` töötleb faili enne kopeerimist Jinja2-ga: `{{ muutuja }}` asendatakse väärtusega, `{% for %}` ja `{% if %}` kordavad või valivad ridu. Mallid on rolli kaustas `templates/` ja nende laiend on `.j2`. Rida `{{ ansible_managed }}` lisab faili algusesse märkuse, et faili haldab Ansible ja käsitsi tehtud muudatused kirjutatakse üle.
 
 ```jinja
 {% for h in groups['all'] | sort %}
@@ -150,179 +111,109 @@ Tsükliga mall koostab rollis `common` faili `/etc/hosts` read kõigi inventory 
 {% endfor %}
 ```
 
-Filter `sort` hoiab masinate järjekorra alati samana. Ilma selleta võib järjekord käivituste vahel muutuda ja fail oleks iga kord `changed`.
+Filter `sort` hoiab masinate järjekorra alati samana. Ilma selleta võib järjekord muutuda ja fail oleks iga kord `changed`.
 
-### Handler
-
-Kui Nginxi konfiguratsioonifail muutub, tuleb Nginx uuesti laadida. Kui fail ei muutunud, ei ole selleks põhjust. Handler on ülesanne, mis käivitub ainult siis, kui mõni teine ülesanne teda `notify` abil teavitas ja oli `changed`:
+**Handler** on ülesanne, mis käivitub play lõpus ainult siis, kui mõni teine ülesanne teavitas teda võtmega `notify` ja tegi muudatuse. Handler käivitub üks kord, isegi kui teda teavitas mitu ülesannet. Kui teenus peab enne järgmisi ülesandeid uue seadistusega töötama, käivitab `ansible.builtin.meta: flush_handlers` ootel handler'id kohe.
 
 ```yaml
-# roles/nginx/tasks/main.yml
 - name: Labori seisu sait on seadistatud
   ansible.builtin.template:
     src: labori-seis.conf.j2
     dest: /etc/nginx/sites-available/labori-seis
     mode: "0644"
   notify: Reload nginx
-
-# roles/nginx/handlers/main.yml
-- name: Reload nginx
-  ansible.builtin.service:
-    name: nginx
-    state: reloaded
 ```
 
-Handler käivitub play lõpus üks kord, isegi kui teda teavitas mitu ülesannet. Kui teenus peab enne järgmisi ülesandeid uue seadistusega töötama, käivitab ülesanne `ansible.builtin.meta: flush_handlers` ootel handler'id kohe. Rollis `mariadb` on see enne andmebaasi loomist, sest MariaDB peab enne seda uue konfiguratsiooniga taaskäivituma.
+<figure markdown="span">
+  ![Moodul võrdleb soovitud olekut tegeliku olekuga ja muudab ainult erinevuse](assets/k02_idempotentsus.svg){ width="720" }
+  <figcaption>Joonis 2.3. Kui fail ei muutu, ei käivitu ka handler (Talvik, 2026).</figcaption>
+</figure>
 
-![Moodul võrdleb soovitud olekut tegeliku olekuga ja muudab ainult erinevuse](assets/k02_idempotentsus.svg){ width="720" }
+??? question "Kontrolli ennast"
 
-Teisel käivitusel ei muutu ükski fail, seega ei käivitu ka ükski handler. Kokkuvõttes on `changed=0`.
+    1. Kolm ülesannet teavitavad sama handler'it ja kaks neist on `changed`. Mitu korda handler käivitub?
+    2. Miks tuleb teenuse seadistus enne andmebaasi loomist rakendada (`flush_handlers`)?
 
-## 4. Rollid
+## 5. Rollid
 
-Roll on kaust kindla ülesehitusega. Ansible leiab failid nime järgi, neid ei pea playbook'is eraldi nimetama:
+**Roll** on kindla ülesehitusega kaust ühe teenuse jaoks. Ansible leiab failid nime järgi, neid ei pea playbook'is eraldi nimetama. Fail `site.yml` määrab ainult, milline roll millises grupis käivitub.
 
 ```text
 roles/nginx/
-├── defaults/main.yml     # vaikeväärtused, mida võib üle kirjutada
-├── handlers/main.yml     # handler'id
-├── tasks/main.yml        # ülesanded
-└── templates/            # mallid
-    └── labori-seis.conf.j2
+├── defaults/main.yml     vaikeväärtused, mida võib üle kirjutada
+├── handlers/main.yml     handler'id
+├── tasks/main.yml        ülesanded
+└── templates/            mallid
 ```
 
-Rolli skeleti loob käsk `ansible-galaxy role init roles/nginx`. Kogu projekti kaustastruktuur (`inventory`, `group_vars`, `host_vars`, `roles`, `site.yml`) järgib dokumentatsiooni soovitust [Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html), nii et teine Ansible'i kasutaja leiab sinu projektist asjad samast kohast. Selles projektis on kuus rolli: `common` kõigile masinatele ja üks roll iga teenuse jaoks. Fail `site.yml` määrab, milline roll millises grupis käivitub:
+Playde järjekord `site.yml`-is on oluline: andmebaas, vahemälu ja sõnumijärjekord paigaldatakse enne rakendust, sest rakendus ühendub käivitumisel nende kõigiga. `defaults` on kõige nõrgemad ja mõeldud ülekirjutamiseks, `vars` on tugevamad kui `group_vars` ning sobivad väärtustele, mida rolli kasutaja ei peaks muutma. Kogu projekti kaustastruktuur järgib dokumentatsiooni soovitust [Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html).
 
-```yaml
-- name: Kõik masinad
-  hosts: all
-  become: true
-  serial: 2
-  roles:
-    - common
+Rolli `mariadb` vaikeväärtused on AlmaLinuxi omad, sest andmebaas on db01-s. Kui sama rolli on vaja Ubuntu masinas, ei muudeta rolli, vaid kirjutatakse väärtused üle failis `group_vars/ubuntu.yml`. Tingimus `when` jääb ülesandele, mida ühes distributsioonis on vaja ja teises ei ole, näiteks tulemüür `firewalld` AlmaLinuxis.
 
-- name: Andmebaas
-  hosts: db
-  become: true
-  roles:
-    - mariadb
+Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne valmis rolli kasutamist vaata, millal seda viimati uuendati, milliseid distributsioone see toetab, kas sellel on testid ja millise litsentsiga see on. Roll käivitub `become: true` õigustes, nii et see on võõras kood sinu serverites. Kasutatava rolli versioon pannakse kirja faili `requirements.yml`.
 
-# … vahemälu, järjekord, rakendus
+??? question "Kontrolli ennast"
 
-- name: Veebiserver
-  hosts: web
-  become: true
-  roles:
-    - nginx
-```
+    1. Miks peab andmebaasi play olema `site.yml`-is enne rakendusserveri play'd?
+    2. Mida kontrollid enne, kui kasutad Galaxy rolli tootmises?
 
-Playde järjekord on oluline: andmebaas, vahemälu ja sõnumijärjekord paigaldatakse enne rakendust, sest rakendus ühendub käivitumisel nende kõigiga. Viimane play kontrollib mooduliga `uri`, et `http://localhost/health` web01-s vastab koodiga 200.
+## 6. Kogud ja Vault
 
-`defaults` ja `vars` erinevad tugevuse poolest. `defaults` on kõige nõrgemad ja mõeldud ülekirjutamiseks. `vars` on tugevamad kui `group_vars` ning sobivad väärtustele, mida rolli kasutaja ei peaks muutma.
+Moodulid `apt`, `template` ja `service` kuuluvad kogusse `ansible.builtin`, mis on `ansible-core`'iga kaasas. Andmebaasi, RabbitMQ ja tulemüüri moodulid on eraldi kogudes. Mooduli täisnimi näitab kogu: `community.mysql.mysql_user` on moodul `mysql_user` kogust `community.mysql`. Kogud ja nende versioonid on failis `requirements.yml` ja `ansible-galaxy collection install -r requirements.yml` paigaldab need. Versioon on kinni, et sama projekt töötaks kuu aja pärast samamoodi.
 
-Rolli `mariadb` vaikeväärtused on AlmaLinuxi omad, sest andmebaas on db01-s:
+??? note "Tabel 2.3. Kogud selles projektis"
 
-```yaml
-# roles/mariadb/defaults/main.yml
-mariadb_paketid:
-  - mariadb-server
-  - python3-PyMySQL
-mariadb_conf_dir: /etc/my.cnf.d
-mariadb_socket: /var/lib/mysql/mysql.sock
-```
+    | Kogu | Moodul | Kasutus |
+    |---|---|---|
+    | `community.mysql` | `mysql_db`, `mysql_user` | andmebaas `labseis` ja selle kasutaja |
+    | `community.rabbitmq` | `rabbitmq_user` | järjekorra kasutaja |
+    | `ansible.posix` | `firewalld` | AlmaLinuxi tulemüüri pordid |
 
-Kui sama rolli on vaja Ubuntu masinas, kirjutatakse need väärtused üle failis `group_vars/ubuntu.yml`. Roll jääb samaks ja inventory kirjeldab, milline masin on.
+Paroolid peavad olema repositooriumis, sest playbook vajab neid. Avatekstina ei tohi neid sinna panna: kõik, kellel on ligipääs repositooriumile või selle koopiale, näeksid neid. **Ansible Vault** krüpteerib terve faili ja Ansible avab selle käivitamisel. Paroolid on kahes failis: krüpteeritud `vault.yml`, kus on ainult eesliitega `vault_` väärtused, ja loetav `main.yml`, mis viitab neile (`labseis_db_password: "{{ vault_db_password }}"`).
 
-## 5. Kogud
+<figure markdown="span">
+  ![Vault: krüpteeritud väärtus, avatekstis viide ja kasutus mallis](assets/k02_vault_vahekiht.svg){ width="720" }
+  <figcaption>Joonis 2.4. Saladus krüpteeritud failis, viide loetavas failis, kasutus mallis (Talvik, 2026).</figcaption>
+</figure>
 
-Moodulid `apt`, `template` ja `service` kuuluvad kogusse `ansible.builtin`, mis on Ansible'iga kaasas. Andmebaasi, RabbitMQ kasutajate ja tulemüüri moodulid on eraldi kogudes. Mooduli täisnimi näitab, millisest kogust see pärineb:
+Vaulti parool on control node'is failis `~/.config/is1/vault_pass` (`chmod 600`) ja `ansible.cfg` rida `vault_password_file` ütleb, kust see võtta. Fail on väljaspool repositooriumi. Ülesanne võtmesõnaga `no_log: true` peidab väljundi, et parool ei jõuaks logisse.
 
-| Moodul | Kogu | Kasutus selles projektis |
-|---|---|---|
-| [`community.mysql.mysql_db`](https://docs.ansible.com/projects/ansible/latest/collections/community/mysql/mysql_db_module.html) | community.mysql | andmebaas `labseis` |
-| [`community.mysql.mysql_user`](https://docs.ansible.com/projects/ansible/latest/collections/community/mysql/mysql_user_module.html) | community.mysql | andmebaasi kasutaja |
-| [`community.rabbitmq.rabbitmq_user`](https://docs.ansible.com/projects/ansible/latest/collections/community/rabbitmq/rabbitmq_user_module.html) | community.rabbitmq | järjekorra kasutaja |
-| [`ansible.posix.firewalld`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/posix/firewalld_module.html) | ansible.posix | AlmaLinuxi tulemüüri pordid |
+??? question "Kontrolli ennast"
 
-Vajalikud kogud ja nende versioonid on failis `requirements.yml`:
-
-```yaml
-collections:
-  - name: community.mysql
-    version: 3.12.0
-  - name: community.rabbitmq
-    version: 1.4.0
-  - name: ansible.posix
-    version: 1.6.2
-```
-
-Käsk `ansible-galaxy collection install -r requirements.yml` paigaldab need control node'i. Versioon on fikseeritud, et sama projekt töötaks kuu aja pärast samamoodi. Mooduli dokumentatsiooni näeb ka ilma brauserita: `ansible-doc community.mysql.mysql_user`.
-
-## 6. Paroolid Vaultis
-
-Andmebaasi ja RabbitMQ paroolid peavad olema repositooriumis, sest playbook vajab neid. Avatekstina ei tohi neid sinna panna: kõik, kellel on ligipääs repositooriumile või selle koopiale, näeksid neid.
-
-Ansible Vault krüpteerib terve faili. Krüpteeritud faili saab Gitis hoida ja Ansible avab selle käivitamisel automaatselt:
-
-```bash
-ansible-vault create group_vars/all/vault.yml   # uus krüpteeritud fail
-ansible-vault edit group_vars/all/vault.yml     # muutmine
-ansible-vault view group_vars/all/vault.yml     # vaatamine
-```
-
-Paroolid on kahes failis. `vault.yml` on krüpteeritud ja sisaldab ainult saladusi eesliitega `vault_`. `main.yml` on avatekstis ja viitab neile:
-
-```yaml
-# group_vars/all/main.yml
-labseis_db_password: "{{ vault_db_password }}"
-```
-
-![Vault: krüpteeritud väärtus, avatekstis viide ja kasutus mallis](assets/k02_vault_vahekiht.svg){ width="720" }
-
-Nii leiab `grep labseis_db_password` kõik kasutuskohad ka siis, kui Vault on lukus, ja on näha, millised saladused projektis on.
-
-Vaulti parool ise on control node'is failis `~/.config/is1/vault_pass`, ligipääs ainult omanikule (`chmod 600`). Failis `ansible.cfg` on rida `vault_password_file = ~/.config/is1/vault_pass`, seega ei pea parooli igal käivitusel sisestama. See fail asub väljaspool repositooriumi ja Giti ei lähe.
-
-Ansible võib parooli näidata ka väljundis, näiteks `--diff` või vea korral. Ülesanne võtmesõnaga `no_log: true` peidab oma väljundi. Seda kasutatakse paroole sisaldavate ülesannete juures.
+    1. Miks on viide `labseis_db_password` loetavas failis, kui väärtus on krüpteeritud failis?
+    2. Kus on Vaulti parool ja miks mitte repositooriumis?
 
 ## 7. Kontrollitud muudatus
 
-1. kohtumisel kasutasid `--check --diff` ja `--limit` võtmeid ühe faili puhul. Viie masina ja viie teenusega projektis on need veel olulisemad, sest üks vigane mall võib peatada teenuse kõigis grupi masinates korraga.
+Viie masinaga projektis võib üks vigane mall peatada teenuse kõigis grupi masinates korraga. Seepärast vaadatakse muudatus enne rakendamist üle ja rakendatakse see kõigepealt ühes masinas.
 
-| Võti või võtmesõna | Tulemus |
-|---|---|
-| `--check --diff` | näitab, mis failides muutuks, midagi muutmata |
-| `--limit app01` | rakendab muudatuse ainult valitud masinates |
-| `serial: 2` | play töötleb korraga ainult kahte masinat |
-| `--syntax-check`, `ansible-lint` | leiab vead enne käivitamist |
+??? note "Tabel 2.4. Muudatuse kontroll"
 
-Vaikimisi täidab Ansible iga ülesande kõigis play masinates ja liigub seejärel järgmise ülesande juurde. Võtmesõna `serial` muudab seda: play täidetakse esmalt esimeses masinate rühmas ja alles siis järgmises. Kui esimeses rühmas mõni ülesanne ebaõnnestub, peatub play enne, kui viga jõuab teiste masinateni. Väljundis näed sama play päist mitu korda, üks kord iga rühma kohta.
+    | Võti või võtmesõna | Tulemus |
+    |---|---|
+    | `--check --diff` | näitab, mis failides muutuks, midagi muutmata |
+    | `--limit app01` | rakendab muudatuse ainult valitud masinates |
+    | `serial: 2` | play töötleb korraga kahte masinat; vea korral ülejäänuid ei puudutata |
+    | `--syntax-check` | leiab vigase YAML-i ja tundmatud võtmed |
+    | `ansible-lint` | kontrollib häid tavasid: täisnimed, `mode`, `changed_when` |
 
-Muudatuse tavaline järjekord:
+Vaikimisi täidab Ansible iga ülesande kõigis play masinates ja liigub seejärel järgmise juurde. `serial` täidab play kõigepealt esimeses masinate rühmas ja alles siis järgmises, väljundis on sama play päis iga rühma kohta. [ansible-lint](https://docs.ansible.com/projects/lint/) leiab vead, mida süntaksikontroll ei leia, ja automaatne hindaja kasutab sama tööriista.
 
-1. muuda muutujat või malli;
-2. vaata `--check --diff --limit <masin>` abil, mis muutuks;
-3. rakenda muudatus `--limit` abil ühes masinas ja kontrolli teenust;
-4. rakenda muudatus kõigis masinates;
-5. käivita playbook uuesti ja veendu, et kokkuvõttes on `changed=0`;
-6. tee commit ja saada muudatused GitHubi.
+??? question "Kontrolli ennast"
 
-??? info "Loe juurde"
+    1. Viie masinaga play'l on `serial: 2`. Mitu korda on väljundis play päis?
+    2. Miks käivitatakse muudatus enne kõiki masinaid `--limit`'iga ühes masinas?
 
-    - [Roles](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
-    - [Templating (Jinja2)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_templating.html)
-    - [Handlers](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_handlers.html)
-    - [Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/index.html)
-    - [Strategies ja serial](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_strategies.html)
+??? abstract "Kokkuvõte"
 
-## 8. Kokkuvõte
-
-- **Grupid** inventory's jagavad masinad teenuse ja distributsiooni järgi; `:children` koostab grupi gruppidest.
-- **Muutujad** on `group_vars` ja `host_vars` failides; kehtima jääb täpsem väärtus, rolli `defaults` on kõige nõrgemad.
-- **Mall** koostab muutujatest ja faktidest iga masina jaoks oma konfiguratsioonifaili; **handler** taaskäivitab teenuse ainult muudatuse korral.
-- **Roll** hoiab ühe teenuse ülesanded, mallid ja vaikeväärtused ühes kaustas; `site.yml` määrab, milline roll millises grupis käivitub.
-- **Kogud** paigaldatakse `requirements.yml` järgi; mooduli täisnimi näitab kogu.
-- **Vault** hoiab paroole Gitis krüpteeritult; Vaulti parool Giti ei lähe.
-- **Muudatus:** kõigepealt `--check --diff`, siis üks masin, seejärel kõik.
-
-Järgmisel kohtumisel paned rakenduse konteinerisse. Ansible jääb tööriistaks, mis paigaldab masinatesse Dockeri ja käivitab konteinerid.
+    | Mõiste | Lühidalt |
+    |---|---|
+    | refaktoreerimine | ülesehitus muutub, olek mitte; tõend on `--check --diff` ja `changed=0` |
+    | sümptom, hüpotees, tõend | vigade otsimise sammud, hüpotees enne tõendit |
+    | `:children` | grupp, mille liikmed on teised grupid |
+    | `group_vars`, `host_vars`, `defaults` | muutujate tasemed, täpsem väärtus kehtib |
+    | mall | Jinja2 fail, millest Ansible teeb igale masinale oma faili |
+    | handler | käivitub ainult muudatuse korral, üks kord |
+    | roll | ühe teenuse ülesanded, mallid ja vaikeväärtused ühes kaustas |
+    | kogu | moodulite pakett, versioon failis `requirements.yml` |
+    | Vault | krüpteeritud saladused Gitis, parool väljaspool repositooriumi |

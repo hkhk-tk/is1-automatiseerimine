@@ -68,9 +68,9 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
 -   <span class="paev-nr">02 · Ansible</span>
 
-    **Ansible mitmele masinale**
+    **Labori seis rollidega**
 
-    Muutujad, mallid, handler'id ja rollid. Päeva lõpuks seadistab üks käsk kogu labori.
+    Vigade otsimine, grupid ja muutujad, Vault, mallid, handler'id ja rollid. Päeva lõpuks seadistab üks käsk kogu labori.
 
     [Ava õppepäev →](k02/index.md)
 
