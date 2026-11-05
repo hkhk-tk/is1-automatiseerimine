@@ -10,7 +10,7 @@ Täna paigaldad rakenduse Labori seis viide masinasse: kõigepealt parandad ühe
 
 **Edenemine:** laboritahvel <http://192.168.125.187:8093> (VPN-iga).
 
-Abi: [levinud vead](abi.md) · [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions)
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina.
 
 ??? abstract "Õpiväljundid"
 
@@ -66,6 +66,14 @@ ansible-doc community.mysql.mysql_user | head -20
 ??? success "Oodatav tulemus"
 
     Kolm kogu on paigaldatud kausta `~/.ansible/collections`. `ansible-doc` näitab mooduli kirjeldust ja parameetreid.
+
+??? warning "Kui moodulit ei leita"
+
+    Viga `couldn't resolve module/action 'community.mysql.mysql_db'` tähendab, et kogu pole paigaldatud või paigaldati teise kasutajana. Käivita kogude paigaldus uuesti ilma `sudo`-ta ja kontrolli:
+
+    ```bash
+    ansible-galaxy collection list | grep -E "community.mysql|community.rabbitmq|ansible.posix"
+    ```
 
 ### 1.3 Esimene käivitus
 
@@ -248,6 +256,10 @@ Sulgudes olevad käsud käivituvad alamkestas, nii et töökaust jääb `~/kursu
 
 Muutuja `ansible_host` on masina IP-aadress. `labseis.yml` võtab aadressid faktidest, aga fakte kogub Ansible ainult masinatest, mis käivituses osalevad. Proovi: `ansible-playbook labseis.yml --limit mc01` ebaõnnestub esimeses ülesandes, sest teiste masinate fakte pole. Kui aadress on inventory's, on see alati olemas ja kirjas ainult ühes kohas.
 
+??? warning "Kui näed `'dict object' has no attribute 'ansible_default_ipv4'`"
+
+    Mall või ülesanne kasutab teise masina fakte, aga see masin ei osalenud käivituses (`--limit`). Kasuta faktide asemel inventory muutujat `ansible_host` või käivita ilma `--limit`'ita.
+
 Asenda faili `inventory.ini` sisu ja pane `<web01-IP>` jt asemele oma masinate aadressid (Proxmox, Summary → IPs või `~/.ssh/config`). Fail `inventory.ini`:
 
 ```ini
@@ -345,6 +357,17 @@ ansible app01,web01 -m ansible.builtin.debug -a "var=tomcat_heap"
 
     app01-s `512m`, web01-s `VARIABLE IS NOT DEFINED!`, sest web01 ei ole grupis `app`. Rollid kasutavad neid muutujaid 5.–7. osas.
 
+??? warning "Kui muutuja puudub ka app01-s"
+
+    Kontrolli grupikuuluvust ja faili nime:
+
+    ```bash
+    ansible-inventory --graph
+    ls group_vars
+    ```
+
+    app01 peab olema grupis `app` ja fail peab olema `group_vars/app.yml`. Kui käivitus annab vea `We were unable to read either as JSON nor YAML` ja väärtuses on `{{`, puuduvad väärtuse ümber jutumärgid: `password: "{{ vault_db_password }}"`.
+
 Muuda failis `group_vars/app.yml` väärtus ajutiselt `640m`-ks. **Ennusta**, mida näitavad kaks käsku, ja kontrolli:
 
 ```bash
@@ -401,6 +424,12 @@ ansible db01 -m ansible.builtin.debug -a "msg={{ labseis_db_password | length }}
 ??? success "Oodatav tulemus"
 
     Esimene rida on `$ANSIBLE_VAULT;1.1;AES256`. `debug` näitab parooli pikkust (`11`), mitte parooli ennast: Ansible avas faili, aga saladust pole vaja terminali kuvada. Sisu muudad käsuga `ansible-vault edit group_vars/all/vault.yml`.
+
+??? warning "Kui Vaulti faili ei saa avada"
+
+    `Attempting to decrypt but no vault secrets found`: Vaulti parooli faili pole või `ansible.cfg`-s puudub rida `vault_password_file`. Kontrolli `ls -l ~/.config/is1/vault_pass` ja `grep vault ansible.cfg`.
+
+    `Decryption failed`: failis `~/.config/is1/vault_pass` on teine parool kui see, millega `vault.yml` loodi.
 
 <figure markdown="span">
   ![Vault: saladus vault.yml-is, nimi main.yml-is, kasutus mallis](assets/k02_vault_vahekiht.svg){ width="720" }
@@ -696,6 +725,14 @@ ansible-playbook site.yml --limit db01
 
     **Peab säilima:** paketid, teenus, tulemüür, andmebaas ja kasutaja (kõik `ok`). **Teadlik muudatus:** `--diff` näitab konfiguratsioonifailis uut rida `# Ansible managed`. Käivitusel on see `changed` ja väljundis `RUNNING HANDLER [mariadb : Restart mariadb]`. Tabeleid uuesti ei laadita, sest andmebaas oli olemas. Teisel käivitusel on `changed=0` ja `ssh web01 curl -s localhost/health` näitab `"db":"UP"`.
 
+??? warning "Kui handler ei käivitu või andmebaas ei vasta"
+
+    `The requested handler 'Restart mariadb' was not found`: handler'i nimi failis `handlers/main.yml` peab olema täpselt sama mis `notify:` real. Handler ei käivitu ka siis, kui ülesanne oli `ok`: see on oodatud.
+
+    `A MySQL module is required`: db01-s puudub `python3-PyMySQL`, see on rolli esimeses ülesandes.
+
+    `/health` näitab `"db":"DOWN"`: kontrolli `ssh db01 sudo ss -tln | grep 3306` (peab olema `0.0.0.0:3306`), `ssh db01 sudo firewall-cmd --list-ports` ja `ssh app01 getent hosts db01`.
+
 ### 6.2 Roll `memcached`
 
 Rolli ülesehitus on sama mis `mariadb`-l. Mall asendab `labseis.yml`-is olnud teksti, pordi ja mälu väärtus tulevad vaikeväärtustest.
@@ -785,6 +822,10 @@ ssh mc01 sudo ss -tln | grep 11211
 
     **Teadlik muudatus:** esimesel käivitusel muutub ainult mall (uus rida `# Ansible managed`) ja handler taaskäivitab Memcachedi. Teisel käivitusel on `changed=0`. **Peab säilima:** Memcached kuulab aadressil `0.0.0.0:11211`.
 
+??? warning "Kui `/health` näitab cache DOWN"
+
+    Kontrolli kolme kohta nagu 2. osas: `ssh mc01 systemctl is-active memcached`, `ssh mc01 sudo ss -tln | grep 11211` ja `ssh mc01 sudo firewall-cmd --list-ports`.
+
 Vaata ilma midagi muutmata, mis juhtuks, kui vahemälu oleks 96 MB. Väärtus antakse ainult selle käsu jaoks käsurealt:
 
 ```bash
@@ -865,6 +906,10 @@ ssh rmq01 sudo rabbitmqctl list_users
 ??? success "Oodatav tulemus"
 
     `changed=0`, sest kasutaja oli olemas. Ei muutu: `on_create` määrab parooli ainult kasutaja loomisel. Siis on rakenduse seadetes uus parool ja RabbitMQ-s vana ning `/health` näitab `"queue":"DOWN"`. Paroolivahetuseks on `update_password: always`, mis muudab parooli, kui see erineb. Loendis on `labseis`, aga mitte `guest`.
+
+??? warning "Kui `/health` näitab queue DOWN"
+
+    RabbitMQ kasutaja või parool ei klapi rakenduse seadetega: `ssh rmq01 sudo rabbitmqctl list_users` ja võrdle Vaulti väärtusega (`ansible-vault view group_vars/all/vault.yml`).
 
 ```bash
 (cd ~/kursus && git add k02-ansible && git commit -m "k02: rollid mariadb, memcached, rabbitmq" && git push)
@@ -1036,6 +1081,10 @@ ansible-playbook site.yml --limit app01
 
     **Teadlik muudatus:** `--diff` näitab teenuse lisaseadete failis uut rida `# Ansible managed`, `failed=0`. Keskkonnamuutujate faili sisu `--diff` ei näita, sest ülesandel on `no_log: true`. Mõlemad mallid on `changed` ja handler taaskäivitab Tomcati üks kord. Ülesanne `Rakendus vastab app01-s` võib paar korda kirjutada `FAILED - RETRYING`, kuni rakendus käivitub.
 
+??? warning "Kui `Rakendus vastab app01-s` ebaõnnestub 40 korduse järel"
+
+    Rakendus ei käivitunud. Vaata logi: `ssh app01 sudo journalctl -u tomcat10 -n 50 --no-pager`. `ACCESS_REFUSED` viitab RabbitMQ paroolile, `Communications link failure` andmebaasile.
+
 ??? question "Kaks muudatust, üks taaskäivitus"
 
     Väljundis on kaks `changed` ülesannet, mis mõlemad teavitavad handler'it `Restart tomcat`, aga rida `RUNNING HANDLER [tomcat : Restart tomcat]` on üks. Miks?
@@ -1162,6 +1211,10 @@ ssh web01 curl -s localhost/health
 
     **Teadlik muudatus:** Nginxi saidi failis lisandub rida `# Ansible managed` ja handler laeb Nginxi seaded uuesti. **Peab säilima:** kõik play'd lõpevad ilma vigadeta, `/health` vastab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}`. Ava brauseris `http://<web01-IP>/`: avaneb Labori seisu leht.
 
+??? warning "Kui web01 annab `502 Bad Gateway`"
+
+    Nginx töötab, aga ei saa rakendusserverilt vastust: Tomcat ei tööta või `nginx_upstream` on vale. Kontrolli `ssh app01 curl -s localhost:8080/health/live` ja `grep nginx_upstream host_vars/web01.yml`.
+
 Võrdle muutujat ja serverisse kirjutatud seadistust:
 
 ```bash
@@ -1229,6 +1282,10 @@ ansible-playbook site.yml | tee run2.txt
 ??? success "Oodatav tulemus"
 
     PLAY RECAP-is on kõigil viiel masinal `changed=0` ja `failed=0`. See tõendab, et projekt on korduvkäivitatav. Et süsteem töötab, tõendab viimane ülesanne `Rakendus ja selle sõltuvused töötavad web01 kaudu`: see on `ok` ainult siis, kui `db`, `queue` ja `cache` on `UP`. Kui mõnes masinas on `changed`, vaata, milline ülesanne muutis, paranda see ja salvesta `run2.txt` uuesti.
+
+??? warning "Kui teisel käivitusel on `changed`"
+
+    Vaata väljundist, milline ülesanne muutis. `shell` ja `command` asemel kasuta moodulit, mis kontrollib olekut. Mallis hoia järjekord samana (`sort`) ja ära kasuta väärtusi, mis muutuvad igal käivitusel (näiteks kellaaeg).
 
 ??? note "Kontrollnimekiri"
 
