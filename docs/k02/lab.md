@@ -10,6 +10,8 @@ Täna paigaldad rakenduse Labori seis viide masinasse: kõigepealt parandad ühe
 
 **Edenemine:** laboritahvel <http://192.168.125.187:8093> (VPN-iga).
 
+Abi: [levinud vead](abi.md) · [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions)
+
 ??? abstract "Õpiväljundid"
 
     1. Leiad playbook'i vea sammudega sümptom, hüpotees, tõend, parandus.
@@ -231,11 +233,10 @@ Andmebaasi parool, RabbitMQ parool ja token on failis avatekstina. Fail on Gitis
 Salvesta parandatud playbook:
 
 ```bash
-cd ~/kursus
-git add k02-ansible
-git commit -m "k02: labseis.yml vead parandatud"
-git push -u origin k02-ansible
+(cd ~/kursus && git add k02-ansible && git commit -m "k02: labseis.yml vead parandatud" && git push -u origin k02-ansible)
 ```
+
+Sulgudes olevad käsud käivituvad alamkestas, nii et töökaust jääb `~/kursus/k02-ansible`. Kõik järgmised käsud käivitad samas kaustas.
 
 ## Osa 3 · Inventory ja muutujad
 
@@ -247,38 +248,36 @@ git push -u origin k02-ansible
 
 Muutuja `ansible_host` on masina IP-aadress. `labseis.yml` võtab aadressid faktidest, aga fakte kogub Ansible ainult masinatest, mis käivituses osalevad. Proovi: `ansible-playbook labseis.yml --limit mc01` ebaõnnestub esimeses ülesandes, sest teiste masinate fakte pole. Kui aadress on inventory's, on see alati olemas ja kirjas ainult ühes kohas.
 
-Asenda faili `inventory.ini` sisu ja pane `<web01-IP>` jt asemele oma masinate aadressid (Proxmox, Summary → IPs või `~/.ssh/config`):
+Asenda faili `inventory.ini` sisu ja pane `<web01-IP>` jt asemele oma masinate aadressid (Proxmox, Summary → IPs või `~/.ssh/config`). Fail `inventory.ini`:
 
-??? example "Fail `inventory.ini`"
+```ini
+[web]
+web01 ansible_host=<web01-IP>
 
-    ```ini
-    [web]
-    web01 ansible_host=<web01-IP>
+[app]
+app01 ansible_host=<app01-IP>
 
-    [app]
-    app01 ansible_host=<app01-IP>
+[queue]
+rmq01 ansible_host=<rmq01-IP>
 
-    [queue]
-    rmq01 ansible_host=<rmq01-IP>
+[cache]
+mc01 ansible_host=<mc01-IP>
 
-    [cache]
-    mc01 ansible_host=<mc01-IP>
+[db]
+db01 ansible_host=<db01-IP>
 
-    [db]
-    db01 ansible_host=<db01-IP>
+[ubuntu:children]
+web
+app
+queue
 
-    [ubuntu:children]
-    web
-    app
-    queue
+[alma:children]
+cache
+db
 
-    [alma:children]
-    cache
-    db
-
-    [all:vars]
-    ansible_user=kasutaja
-    ```
+[all:vars]
+ansible_user=kasutaja
+```
 
 **Ennusta:** millised masinad on grupis `ubuntu`?
 
@@ -291,6 +290,18 @@ ansible all -m ansible.builtin.ping
 
     Grupi `ubuntu` all on grupid `web`, `app` ja `queue` ning nende kaudu masinad web01, app01 ja rmq01. Kõik viis masinat vastavad `pong`.
 
+Muutuja `group_names` näitab, millistesse gruppidesse masin kuulub. Just nende gruppide `group_vars` failidest saab masin oma muutujad.
+
+**Ennusta:** millistes gruppides on app01 ja millistes mc01?
+
+```bash
+ansible app01,mc01 -m ansible.builtin.debug -a var=group_names
+```
+
+??? success "Oodatav tulemus"
+
+    app01: `["app", "ubuntu"]`, mc01: `["alma", "cache"]`. Grupp `all` kehtib kõigile ja seda loendis ei näidata. app01 saab muutujad failidest `group_vars/all/`, `group_vars/app.yml` ja `group_vars/ubuntu.yml`, kui need on olemas.
+
 <figure markdown="span">
   ![Inventory: grupid teenuse ja distributsiooni järgi](assets/k02_inventory.svg){ width="720" }
   <figcaption>Joonis 2.2. Iga masin on kahes grupis: teenuse grupis ja distributsiooni grupis (Talvik, 2026).</figcaption>
@@ -298,37 +309,31 @@ ansible all -m ansible.builtin.ping
 
 ### 3.2 Muutujad kolmel tasemel
 
-Väärtused, mida kasutavad mitu masinat, lähevad kausta `group_vars/all/`. Kaust on vaja, sest 4. osas lisandub sinna krüpteeritud fail. Ühe grupi väärtused lähevad faili `group_vars/<grupp>.yml` ja ühe masina väärtused faili `host_vars/<masin>.yml`. Kui sama muutuja on mitmes kohas, kehtib täpsem.
+Väärtused, mida kasutavad mitu masinat, lähevad kausta `group_vars/all/`. Kausta kasutame selleks, et 4. osas saaks sinna loetava `main.yml` kõrvale krüpteeritud `vault.yml`. Ühe grupi väärtused lähevad faili `group_vars/<grupp>.yml` ja ühe masina väärtused faili `host_vars/<masin>.yml`. Kui sama muutuja on mitmes kohas, kehtib täpsem.
 
 ```bash
 mkdir -p group_vars/all host_vars
 ```
 
-??? example "Fail `group_vars/all/main.yml`"
+Fail `group_vars/all/main.yml`: andmebaasi ja järjekorra nimed, mida kasutavad db01, rmq01 ja app01.
 
-    Andmebaasi ja järjekorra nimed, mida kasutavad db01, rmq01 ja app01:
+```yaml
+labseis_db_name: labseis
+labseis_db_user: labseis
+labseis_mq_user: labseis
+```
 
-    ```yaml
-    labseis_db_name: labseis
-    labseis_db_user: labseis
-    labseis_mq_user: labseis
-    ```
+Fail `group_vars/app.yml`: rakendusserveri Java mälu. Väärtus on praegu otse `labseis.yml`-is (`-Xmx512m`).
 
-??? example "Fail `group_vars/app.yml`"
+```yaml
+tomcat_heap: 512m
+```
 
-    Rakendusserveri Java mälu. Väärtus on praegu otse `labseis.yml`-is (`-Xmx512m`):
+Fail `host_vars/web01.yml`: kuhu web01 päringud suunab.
 
-    ```yaml
-    tomcat_heap: 512m
-    ```
-
-??? example "Fail `host_vars/web01.yml`"
-
-    Kuhu web01 päringud suunab:
-
-    ```yaml
-    nginx_upstream: app01:8080
-    ```
+```yaml
+nginx_upstream: app01:8080
+```
 
 **Ennusta:** mida näitab `tomcat_heap` masinas app01 ja mida web01-s?
 
@@ -339,6 +344,17 @@ ansible app01,web01 -m ansible.builtin.debug -a "var=tomcat_heap"
 ??? success "Oodatav tulemus"
 
     app01-s `512m`, web01-s `VARIABLE IS NOT DEFINED!`, sest web01 ei ole grupis `app`. Rollid kasutavad neid muutujaid 5.–7. osas.
+
+Muuda failis `group_vars/app.yml` väärtus ajutiselt `640m`-ks. **Ennusta**, mida näitavad kaks käsku, ja kontrolli:
+
+```bash
+ansible app01 -m ansible.builtin.debug -a var=tomcat_heap
+ansible app01 -m ansible.builtin.debug -a var=tomcat_heap -e tomcat_heap=1g
+```
+
+??? success "Oodatav tulemus"
+
+    Esimene näitab `640m`, teine `1g`: käsurea `-e` on tugevam kui grupimuutuja. Pane väärtus tagasi `512m`-ks, sest see on praegu masinas kasutusel.
 
 ## Osa 4 · Paroolid Vaulti
 
@@ -379,12 +395,12 @@ Lisa faili `group_vars/all/main.yml` read, mis seovad saladused rollides kasutat
 
 ```bash
 head -1 group_vars/all/vault.yml
-ansible db01 -m ansible.builtin.debug -a "var=labseis_db_password"
+ansible db01 -m ansible.builtin.debug -a "msg={{ labseis_db_password | length }}"
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene rida on `$ANSIBLE_VAULT;1.1;AES256`. `debug` näitab parooli, sest Ansible avas faili. Sisu muudad käsuga `ansible-vault edit group_vars/all/vault.yml`.
+    Esimene rida on `$ANSIBLE_VAULT;1.1;AES256`. `debug` näitab parooli pikkust (`11`), mitte parooli ennast: Ansible avas faili, aga saladust pole vaja terminali kuvada. Sisu muudad käsuga `ansible-vault edit group_vars/all/vault.yml`.
 
 <figure markdown="span">
   ![Vault: saladus vault.yml-is, nimi main.yml-is, kasutus mallis](assets/k02_vault_vahekiht.svg){ width="720" }
@@ -393,9 +409,9 @@ ansible db01 -m ansible.builtin.debug -a "var=labseis_db_password"
 
 ## Osa 5 · Esimene roll: `common`
 
-**Roll** on kaust, kus ühe teenuse ülesanded, mallid, handler'id ja vaikeväärtused on kindlas ülesehituses. Playbook `site.yml` ütleb ainult, milline roll millises grupis käivitub. Esimene roll `common` käib kõigis masinates.
+**Roll** on kaust, kus ühe teenuse ülesanded, mallid, handler'id ja vaikeväärtused on kindlas ülesehituses. Playbook `site.yml` ütleb ainult, milline roll millises grupis käivitub. Esimene roll `common` käib kõigis masinates. Selle osa teed läbi nähtava näitega, järgmised rollid tehakse sama mustriga.
 
-Rollideks jagamisel tõstad ülesande `labseis.yml`-ist rolli ja kontrollid, et masina olek jääb samaks. Kui `--check --diff` ei näita muudatusi, on roll samaväärne.
+Rollideks jagamisel hoiad lahus kaks asja. **Peab säilima:** masinate olek ja rakenduse töö. **Teadlik muudatus:** see, mida muudad meelega, näiteks uus kommentaaririda konfiguratsioonifailis. Iga kontrolli juures on kirjas, kumb on kumb.
 
 ### 5.1 Rolli kaustad
 
@@ -412,70 +428,129 @@ mkdir -p roles/common/tasks roles/common/templates roles/common/defaults
     | `defaults/main.yml` | vaikeväärtused, mida grupi või masina muutuja saab üle kirjutada |
     | `handlers/main.yml` | ülesanded, mis käivituvad ainult muudatuse järel |
 
-### 5.2 Mall
+### 5.2 Ülesanne `labseis.yml`-ist rolli
 
-**Mall** on tekstifail, kuhu Ansible paneb muutujate väärtused (Jinja2). `{{ muutuja }}` asendatakse väärtusega ja `{% for %}` kordab rida iga loendi elemendi kohta. IP-aadress tuleb nüüd inventory'st (`ansible_host`), mitte faktidest. Väärtus on sama, seega plokk failis `/etc/hosts` ei muutu.
+`labseis.yml`-i esimeses play's on üks ülesanne. Pärast 2. osa parandust näeb see välja nii:
 
-??? example "Fail `roles/common/templates/hosts.j2`"
-
-    ```jinja
-    {% for h in groups['all'] | sort %}
-    {{ hostvars[h].ansible_host }} {{ h }}
-    {% endfor %}
-    ```
-
-??? example "Fail `roles/common/defaults/main.yml`"
-
-    ```yaml
-    common_motd: "Seda masinat haldab Ansible (Labori seis)."
-    ```
-
-### 5.3 Ülesanded ja `site.yml`
-
-Tõsta `labseis.yml`-i esimese play ülesanne rolli ja lisa teade sisselogimisel. `lookup('ansible.builtin.template', 'hosts.j2')` teeb mallist teksti control node'is ja annab selle plokiks.
-
-??? example "Fail `roles/common/tasks/main.yml`"
-
-    ```yaml
+```yaml
     - name: Masinad tunnevad üksteist nime järgi
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} labori-seis"
-        block: "{{ lookup('ansible.builtin.template', 'hosts.j2') }}"
+        block: |
+          {% for h in groups['all'] | sort %}
+          {{ hostvars[h].ansible_default_ipv4.address }} {{ h }}
+          {% endfor %}
+```
 
-    - name: Teade sisselogimisel
-      ansible.builtin.copy:
-        dest: /etc/motd
-        content: "{{ common_motd }}\n"
-        mode: "0644"
-    ```
+Selles on kolm osa, mis lähevad rollis eri kohtadesse:
 
-??? example "Fail `site.yml`"
+??? note "Tabel 2.2. Ülesande osad ja rolli failid"
 
-    ```yaml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      roles:
-        - common
-    ```
+    | `labseis.yml`-is | Rollis |
+    |---|---|
+    | ülesanne (`name`, moodul, `path`, `marker`) | `roles/common/tasks/main.yml` |
+    | ploki tekst `block: \|` all | mall `roles/common/templates/hosts.j2` |
+    | play päis `hosts: all`, `become: true` | `site.yml` |
+
+Ploki tekst tõstetakse malli. Mall võtab IP-aadressi inventory'st (`ansible_host`, 3. osa), mitte faktidest. Aadress on sama, nii et plokk failis `/etc/hosts` ei muutu. Fail `roles/common/templates/hosts.j2`:
+
+```jinja
+{% for h in groups['all'] | sort %}
+{{ hostvars[h].ansible_host }} {{ h }}
+{% endfor %}
+```
+
+Ülesanne jääb samaks, ainult `block:` väärtuseks tuleb mall. `lookup('ansible.builtin.template', 'hosts.j2')` teeb mallist teksti control node'is. **Marker** `# {mark} labori-seis` peab olema täpselt sama, mis `labseis.yml`-is: `blockinfile` haldab ainult markerite vahel olevat plokki, mitte kogu faili. Sama marker seob rolli ülesande plokiga, mille 2. osa parandus juba lõi. Fail `roles/common/tasks/main.yml`:
+
+```yaml
+- name: Masinad tunnevad üksteist nime järgi
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} labori-seis"
+    block: "{{ lookup('ansible.builtin.template', 'hosts.j2') }}"
+```
+
+Play päis läheb faili `site.yml`, mis käivitab rolli kõigis masinates:
+
+```yaml
+- name: Kõik masinad
+  hosts: all
+  become: true
+  roles:
+    - common
+```
 
 Kustuta `labseis.yml`-ist esimene play (`Kõik masinad`): seda tööd teeb nüüd roll.
+
+**Peab säilima:** plokk failis `/etc/hosts`. Inventory'st, mallist ja plokist tekib selline ahel:
+
+```text
+inventory.ini:  db01 ansible_host=192.168.125.50
+hosts.j2:       {{ hostvars[h].ansible_host }} {{ h }}
+/etc/hosts:     192.168.125.50 db01
+```
 
 **Ennusta:** mida näitab `--check --diff` failis `/etc/hosts`?
 
 ```bash
 ansible-playbook site.yml --check --diff
 ansible-playbook site.yml
+ssh app01 cat /etc/hosts
+```
+
+??? success "Oodatav tulemus"
+
+    `--check --diff` ei näita ühtki erinevust ja käivitusel on kõigis masinates `changed=0`. Failis on plokk `# BEGIN labori-seis` kuni `# END labori-seis` viie reaga. Roll tegi sama tulemuse kui `labseis.yml`.
+
+??? warning "Kui `--diff` näitab `/etc/hosts` muudatust"
+
+    Võrdle markerit ja IP-aadresse. Kui marker erineb, lisab `blockinfile` teise ploki. Kui aadress erineb, on `inventory.ini`-s vale IP: `ssh <masin> hostname -I`.
+
+### 5.3 Teadlik muudatus: teade sisselogimisel
+
+Roll on samaväärne. Nüüd lisad rolli kaudu uue asja: igas masinas on sisselogimisel teade. Teksti vaikeväärtus on rollis, nii et seda saab grupi või masina kaupa üle kirjutada. Fail `roles/common/defaults/main.yml`:
+
+```yaml
+common_motd: "Seda masinat haldab Ansible (Labori seis)."
+```
+
+Lisa faili `roles/common/tasks/main.yml` teine ülesanne:
+
+```yaml
+- name: Teade sisselogimisel
+  ansible.builtin.copy:
+    dest: /etc/motd
+    content: "{{ common_motd }}\n"
+    mode: "0644"
+```
+
+**Teadlik muudatus:** fail `/etc/motd` kõigis viies masinas.
+
+```bash
+ansible-playbook site.yml --check --diff
 ansible-playbook site.yml
 ```
 
 ??? success "Oodatav tulemus"
 
-    `--diff` näitab ainult faili `/etc/motd` muudatust, `/etc/hosts` ei muutu. Teisel käivitusel on `changed=0`.
+    `--diff` näitab ainult faili `/etc/motd` muudatust. Käivitusel on see `changed`, teisel käivitusel `changed=0`.
+
+Lisa ühele masinale oma tekst: kirjuta faili `host_vars/web01.yml` rida `common_motd: "web01: veebiserver. Muudatused ainult Ansible'iga."`. **Ennusta**, millises masinas fail muutub, ja kontrolli:
 
 ```bash
-cd ~/kursus && git add k02-ansible && git commit -m "k02: inventory, muutujad, Vault, roll common" && git push
+ansible-playbook site.yml --check --diff
+ansible-playbook site.yml
+ssh web01 cat /etc/motd
+ssh app01 cat /etc/motd
+```
+
+??? success "Oodatav tulemus"
+
+    Muutub ainult web01, teistes masinates on `changed=0`. Masina muutuja on tugevam kui rolli vaikeväärtus.
+
+```bash
+(cd ~/kursus && git add k02-ansible && git commit -m "k02: inventory, muutujad, Vault, roll common" && git push)
 ```
 
 ## Osa 6 · Rollid `mariadb`, `memcached` ja `rabbitmq`
@@ -619,7 +694,7 @@ ansible-playbook site.yml --limit db01
 
 ??? success "Oodatav tulemus"
 
-    `--diff` näitab konfiguratsioonifailis ainult uut rida `# Ansible managed`. Käivitusel on see `changed` ja väljundis `RUNNING HANDLER [mariadb : Restart mariadb]`. Tabeleid uuesti ei laadita, sest andmebaas oli olemas. Teisel käivitusel on `changed=0`.
+    **Peab säilima:** paketid, teenus, tulemüür, andmebaas ja kasutaja (kõik `ok`). **Teadlik muudatus:** `--diff` näitab konfiguratsioonifailis uut rida `# Ansible managed`. Käivitusel on see `changed` ja väljundis `RUNNING HANDLER [mariadb : Restart mariadb]`. Tabeleid uuesti ei laadita, sest andmebaas oli olemas. Teisel käivitusel on `changed=0` ja `ssh web01 curl -s localhost/health` näitab `"db":"UP"`.
 
 ### 6.2 Roll `memcached`
 
@@ -708,7 +783,17 @@ ssh mc01 sudo ss -tln | grep 11211
 
 ??? success "Oodatav tulemus"
 
-    Esimesel käivitusel muutub ainult mall (uus rida `# Ansible managed`) ja handler taaskäivitab Memcachedi. Teisel käivitusel on `changed=0`. Memcached kuulab aadressil `0.0.0.0:11211`.
+    **Teadlik muudatus:** esimesel käivitusel muutub ainult mall (uus rida `# Ansible managed`) ja handler taaskäivitab Memcachedi. Teisel käivitusel on `changed=0`. **Peab säilima:** Memcached kuulab aadressil `0.0.0.0:11211`.
+
+Vaata ilma midagi muutmata, mis juhtuks, kui vahemälu oleks 96 MB. Väärtus antakse ainult selle käsu jaoks käsurealt:
+
+```bash
+ansible-playbook site.yml --limit mc01 --check --diff -e memcached_mem_mb=96
+```
+
+??? success "Oodatav tulemus"
+
+    `--diff` näitab rida `-CACHESIZE="64"` ja `+CACHESIZE="96"` ning väljundis on `RUNNING HANDLER [memcached : Restart memcached]`. Kontrollrežiimis masinas midagi ei muutu: `ssh mc01 grep CACHESIZE /etc/sysconfig/memcached` näitab ikka `64`.
 
 ### 6.3 Roll `rabbitmq`
 
@@ -770,7 +855,7 @@ mkdir -p roles/rabbitmq/tasks roles/rabbitmq/defaults
 
 Kustuta `labseis.yml`-ist play `Sõnumijärjekord`.
 
-**Ennusta:** mis juhtuks, kui `update_password` oleks `always`?
+**Ennusta:** kui muudad hiljem Vaultis RabbitMQ parooli, kas olemasoleva kasutaja parool muutub?
 
 ```bash
 ansible-playbook site.yml --limit rmq01
@@ -779,10 +864,10 @@ ssh rmq01 sudo rabbitmqctl list_users
 
 ??? success "Oodatav tulemus"
 
-    `changed=0`, sest kasutaja oli olemas. Väärtusega `always` kontrolliks moodul parooli igal käivitusel ja kui RabbitMQ ei saa parooli võrrelda, oleks tulemus iga kord `changed`. Loendis on `labseis`, aga mitte `guest`.
+    `changed=0`, sest kasutaja oli olemas. Ei muutu: `on_create` määrab parooli ainult kasutaja loomisel. Siis on rakenduse seadetes uus parool ja RabbitMQ-s vana ning `/health` näitab `"queue":"DOWN"`. Paroolivahetuseks on `update_password: always`, mis muudab parooli, kui see erineb. Loendis on `labseis`, aga mitte `guest`.
 
 ```bash
-cd ~/kursus && git add k02-ansible && git commit -m "k02: rollid mariadb, memcached, rabbitmq" && git push
+(cd ~/kursus && git add k02-ansible && git commit -m "k02: rollid mariadb, memcached, rabbitmq" && git push)
 ```
 
 ## Osa 7 · Rollid `tomcat` ja `nginx`
@@ -949,7 +1034,13 @@ ansible-playbook site.yml --limit app01
 
 ??? success "Oodatav tulemus"
 
-    `--diff` näitab teenuse lisaseadete failis uut rida `# Ansible managed` ja `failed=0`. Keskkonnamuutujate faili sisu `--diff` ei näita, sest ülesandel on `no_log: true`. Mõlemad mallid on `changed` ja handler taaskäivitab Tomcati üks kord. Ülesanne `Rakendus vastab app01-s` võib paar korda kirjutada `FAILED - RETRYING`, kuni rakendus käivitub.
+    **Teadlik muudatus:** `--diff` näitab teenuse lisaseadete failis uut rida `# Ansible managed`, `failed=0`. Keskkonnamuutujate faili sisu `--diff` ei näita, sest ülesandel on `no_log: true`. Mõlemad mallid on `changed` ja handler taaskäivitab Tomcati üks kord. Ülesanne `Rakendus vastab app01-s` võib paar korda kirjutada `FAILED - RETRYING`, kuni rakendus käivitub.
+
+??? question "Kaks muudatust, üks taaskäivitus"
+
+    Väljundis on kaks `changed` ülesannet, mis mõlemad teavitavad handler'it `Restart tomcat`, aga rida `RUNNING HANDLER [tomcat : Restart tomcat]` on üks. Miks?
+
+    Handler käivitub üks kord, kui teda on teavitatud, ükskõik mitu ülesannet seda tegid. `flush_handlers` käivitab selle enne kontrolli, nii et kontroll näeb juba uute seadetega rakendust.
 
 ### 7.2 Roll `nginx`
 
@@ -974,8 +1065,6 @@ mkdir -p roles/nginx/tasks roles/nginx/templates roles/nginx/defaults roles/ngin
         location / {
             proxy_pass http://labori_seis;
             proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
     }
     ```
@@ -1030,7 +1119,7 @@ mkdir -p roles/nginx/tasks roles/nginx/templates roles/nginx/defaults roles/ngin
         enabled: true
     ```
 
-Viimane play kontrollib, et kogu Labori seis vastab web01 kaudu.
+Viimane play kontrollib, et kogu Labori seis vastab web01 kaudu. HTTP kood `200` üksi ei piisa: 1. osas vastas rakendus koodiga `200`, aga vahemälu oli `DOWN`. `/health` tagastab JSON-i ja `uri` annab selle väljale `json`, nii et kontroll vaatab iga sõltuvust eraldi.
 
 ??? example "Lisa `site.yml`-i"
 
@@ -1045,13 +1134,18 @@ Viimane play kontrollib, et kogu Labori seis vastab web01 kaudu.
       hosts: web
       gather_facts: false
       tasks:
-        - name: Rakendus vastab web01 kaudu
+        - name: Rakendus ja selle sõltuvused töötavad web01 kaudu
           ansible.builtin.uri:
             url: http://localhost/health
             status_code: 200
+            return_content: true
           register: health
           check_mode: false
-          until: health.status == 200
+          until:
+            - health.status | default(-1) == 200
+            - (health.json | default({})).get('db', '') == 'UP'
+            - (health.json | default({})).get('queue', '') == 'UP'
+            - (health.json | default({})).get('cache', '') == 'UP'
           retries: 30
           delay: 5
     ```
@@ -1066,17 +1160,35 @@ ssh web01 curl -s localhost/health
 
 ??? success "Oodatav tulemus"
 
-    Nginxi saidi failis lisanduvad rida `# Ansible managed` ja kaks päist (`X-Real-IP`, `X-Forwarded-For`), handler laeb Nginxi seaded uuesti. Kõik play'd lõpevad ilma vigadeta, `/health` vastab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}`. Ava brauseris `http://<web01-IP>/`: avaneb Labori seisu leht.
+    **Teadlik muudatus:** Nginxi saidi failis lisandub rida `# Ansible managed` ja handler laeb Nginxi seaded uuesti. **Peab säilima:** kõik play'd lõpevad ilma vigadeta, `/health` vastab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}`. Ava brauseris `http://<web01-IP>/`: avaneb Labori seisu leht.
+
+Võrdle muutujat ja serverisse kirjutatud seadistust:
 
 ```bash
-cd ~/kursus && git add -A k02-ansible && git commit -m "k02: rollid tomcat ja nginx, labseis.yml kustutatud" && git push
+grep nginx_upstream host_vars/web01.yml roles/nginx/defaults/main.yml
+ssh web01 grep -A1 upstream /etc/nginx/sites-available/labori-seis
+```
+
+??? question "Kust väärtus tuli?"
+
+    Mõlemas failis on `app01:8080`. Kumma väärtuse kirjutas Ansible serverisse ja kuidas seda tõestad, ilma faile muutmata?
+
+    Kehtib `host_vars/web01.yml`, sest masina muutuja on tugevam kui rolli vaikeväärtus. Tõend: `ansible-playbook site.yml --limit web01 --check --diff -e nginx_upstream=app01:9090` näitab muudatust, ja sama väärtus ainult rolli vaikeväärtuses ei näitaks midagi.
+
+```bash
+(cd ~/kursus && git add -A k02-ansible && git commit -m "k02: rollid tomcat ja nginx, labseis.yml kustutatud" && git push)
 ```
 
 ## Osa 8 · Tõestus ja esitamine
 
 ### 8.1 Muudatus enne rakendamist ja masinate kaupa
 
-Muuda failis `roles/common/defaults/main.yml` teate teksti, näiteks lisa lõppu ` Küsimused: IT-tugi.`. Võti `serial` käivitab play masinate kaupa: kui esimeses rühmas tuleb viga, ülejäänud masinaid ei puudutata. Lisa `site.yml`-i esimesse play'sse `hosts:` rea järele rida `serial: 2`.
+Muuda failis `roles/common/defaults/main.yml` teate teksti, näiteks lisa lõppu ` Küsimused: IT-tugi.`. Võtmesõna `serial` töötleb play masinaid partiide kaupa. See määrab ainult partii suuruse. Kui tahad, et esimese vea järel ülejäänud partiid ei käivituks, lisa ka `any_errors_fatal: true`: siis peatub käivitus pärast vigase ülesande lõppu jooksva partii masinates. Juba tehtud muudatusi see tagasi ei võta. Lisa `site.yml`-i esimesse play'sse `hosts:` rea järele read:
+
+```yaml
+  serial: 2
+  any_errors_fatal: true
+```
 
 **Ennusta:** mitu korda on väljundis rida `PLAY [Kõik masinad]`?
 
@@ -1087,7 +1199,7 @@ ansible-playbook site.yml
 
 ??? success "Oodatav tulemus"
 
-    `--check --diff` näitab teate vana ja uut rida ning masinas ei muutu midagi. Käivitusel on rida `PLAY [Kõik masinad]` kolm korda: kaks masinat, kaks masinat ja üks masin.
+    `--check --diff` näitab teate vana ja uut rida ning masinas ei muutu midagi. Käivitusel on rida `PLAY [Kõik masinad]` kolm korda: kaks masinat, kaks masinat ja üks masin. web01 teade jääb samaks, sest see tuleb failist `host_vars/web01.yml`.
 
 ### 8.2 `ansible-lint`
 
@@ -1116,7 +1228,7 @@ ansible-playbook site.yml | tee run2.txt
 
 ??? success "Oodatav tulemus"
 
-    PLAY RECAP-is on kõigil viiel masinal `changed=0` ja `failed=0`. Kui mõnes masinas on `changed`, vaata, milline ülesanne muutis, paranda see ja salvesta `run2.txt` uuesti.
+    PLAY RECAP-is on kõigil viiel masinal `changed=0` ja `failed=0`. See tõendab, et projekt on korduvkäivitatav. Et süsteem töötab, tõendab viimane ülesanne `Rakendus ja selle sõltuvused töötavad web01 kaudu`: see on `ok` ainult siis, kui `db`, `queue` ja `cache` on `UP`. Kui mõnes masinas on `changed`, vaata, milline ülesanne muutis, paranda see ja salvesta `run2.txt` uuesti.
 
 ??? note "Kontrollnimekiri"
 
