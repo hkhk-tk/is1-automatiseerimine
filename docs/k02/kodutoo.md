@@ -18,7 +18,7 @@ Kodutöös muudad töötavat Labori seisu ja kontrollid, kuhu muudatus jõuab. K
 
 Kodutöö tehakse harus `main` pärast seda, kui praktikumi pull request on ühendatud. Väikese muudatuse puhul jätame haru ja pull request'i selles kursuses vahele. Käsud käivitad control node'is kaustas `~/kursus/k02-ansible`.
 
-Iga osa ennustus ja tulemus lähevad faili `README.md` samas kaustas (tabel töö esitamise juures). Ära kirjuta README-sse, logidesse ega ekraanipiltidele parooli ega Vaulti avatud sisu.
+Iga osa kohta see, mida ootasid, ja tulemus lähevad faili `README.md` samas kaustas (tabel töö esitamise juures). Ära kirjuta README-sse, logidesse ega ekraanipiltidele parooli ega Vaulti avatud sisu.
 
 ## Osa 1 · Suurem vahemälu
 
@@ -28,7 +28,7 @@ Memcachedi mälu on rolli vaikeväärtuses 64 MB. Suurenda seda ainult masinas m
 memcached_mem_mb: 128
 ```
 
-**Ennusta** enne käivitamist ja kirjuta README-sse: muutub fail ____, seda muudab ülesanne ____, handler ____ käivitub või ei käivitu, sest ____.
+Enne käivitamist kirjuta README-sse, mida ootad: muutub fail ____, seda muudab ülesanne ____, handler ____ käivitub või ei käivitu, sest ____.
 
 ```bash
 ansible-playbook site.yml --check --diff --limit mc01
@@ -68,7 +68,7 @@ Moodul `community.mysql.mysql_user` uuendab olemasoleva kasutaja parooli, kui se
 
 Paroolivahetus ei toimu mõlemas masinas samal hetkel. `site.yml` seadistab andmebaasi enne rakendusserverit, nii et vahepeal on andmebaasis uus parool ja rakenduse seadetes vana. Rakendus võib selle aja jooksul andmebaasiühenduse loomisel vea saada. Selles praktikumis kontrollime tulemust pärast kogu playbook'i lõppu, katkestuseta paroolivahetus on eraldi teema.
 
-**Ennusta:** millistes masinates on käivitusel muudatusi?
+**Küsimus enne käsku:** millistes masinates on käivitusel muudatusi?
 
 ```bash
 ansible-playbook site.yml
@@ -123,7 +123,7 @@ ansible all -m ansible.builtin.command -a "timedatectl show -p Timezone"
 Lisa faili `README.md` tabel ja täida see konkreetse väljundi põhjal, üks-kaks lauset lahtris:
 
 ```markdown
-| Muudatus | Minu ennustus | Muutunud ülesanded ja handler'id | Kuidas kontrollisin |
+| Muudatus | Mida ootasin | Muutunud ülesanded ja handler'id | Kuidas kontrollisin |
 |---|---|---|---|
 | Memcached 128 MB | | | |
 | Tomcat 384m | | | |

@@ -22,7 +22,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 Iga etapp on üles ehitatud samamoodi: **probleem** (mis praeguses failis on ebamugav), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee etapp eesmärgi järgi ise ja ava plokid ainult kontrolliks. Iga sammu juures on näidatud ainult read, mis muutuvad, ja etapi lõpus failipuu. Uus võte tehakse esimest korda koos, täielikult näidatuna. Teisel korral täiendad etteantud põhja ja kolmandal korral teed sama eesmärgi järgi. Kokkuvolditud plokid on kontrolliks.
 
-Rida **Ennusta** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
+Rida **Küsimus enne käsku** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
 
 ## Osa 1 · Algne playbook
 
@@ -98,7 +98,7 @@ Aadress `/health` näitab rakenduse ja iga sõltuvuse olekut eraldi. Kui üks s�
 
 ### 1.4 Esimene käivitus
 
-**Ennusta:** kas Labori seis töötab pärast esimest käivitust?
+**Küsimus enne käsku:** kas Labori seis töötab pärast esimest käivitust?
 
 ```bash
 ansible-playbook labseis.yml
@@ -186,7 +186,7 @@ ssh web01 curl -s localhost/health
 
 **Sümptom:** midagi ei ole muutunud, aga playbook teatab muudatustest.
 
-**Ennusta:** mitu ülesannet on teisel käivitusel `changed`?
+**Küsimus enne käsku:** mitu ülesannet on teisel käivitusel `changed`?
 
 ```bash
 ansible-playbook labseis.yml
@@ -232,7 +232,7 @@ ansible-playbook labseis.yml
 
 Failis on handler'id juba olemas: MariaDB, Memcachedi ja Nginxi seadete ülesanded teavitavad neid võtmega `notify` ja handler käivitub play lõpus ainult siis, kui fail muutus. Tomcati play's handler'it pole, taaskäivitus on tavaline ülesanne ja käivitub iga kord. Paranduses saavad Tomcati kaks seadete ülesannet sama mustri.
 
-**Ennusta:** play viimane ülesanne kontrollib, et rakendus vastab. Kas see kontroll peab toimuma enne või pärast Tomcati taaskäivitust? Mis juhtub, kui handler käivitub alles play lõpus?
+**Küsimus enne käsku:** play viimane ülesanne kontrollib, et rakendus vastab. Kas see kontroll peab toimuma enne või pärast Tomcati taaskäivitust? Mis juhtub, kui handler käivitub alles play lõpus?
 
 ??? example "Paranda: Tomcati taaskäivitus"
 
@@ -320,7 +320,7 @@ db
 ansible_user=kasutaja
 ```
 
-**Ennusta:** millised masinad on grupis `ubuntu` ja millistes gruppides on app01?
+**Küsimus enne käsku:** millised masinad on grupis `ubuntu` ja millistes gruppides on app01?
 
 ```bash
 ansible-inventory --graph
@@ -424,7 +424,7 @@ ansible-playbook labseis.yml --check --diff --limit app01
 
     `changed=0`: muutuja väärtus on sama, mis oli tekstis.
 
-Nüüd sama nõue uuesti: muuda mälu **ilma ülesandeid muutmata**. Kirjuta failis `group_vars/app.yml` ajutiselt `640m`. **Ennusta**, mida näitavad käsud:
+Nüüd sama nõue uuesti: muuda mälu **ilma ülesandeid muutmata**. Kirjuta failis `group_vars/app.yml` ajutiselt `640m`. Mõtle enne läbi, mida näitavad käsud:
 
 ```bash
 ansible-playbook labseis.yml --check --diff --limit app01
@@ -944,7 +944,7 @@ Kustuta `labseis.yml`-ist esimene play. Kontroll: `ansible-playbook site.yml --c
     common_motd: "web01: veebiserver. Muudatused ainult Ansible'iga."
     ```
 
-**Ennusta:** mis on `/etc/motd` failis web01-s ja mis app01-s?
+**Küsimus enne käsku:** mis on `/etc/motd` failis web01-s ja mis app01-s?
 
 ```bash
 ansible-playbook site.yml --check --diff
@@ -1220,7 +1220,7 @@ ssh web01 curl -s localhost/health
 
     `The requested handler 'Restart mariadb' was not found`: handler'i nimi peab olema täpselt sama mis `notify:` real. `A MySQL module is required`: db01-s puudub `python3-PyMySQL`. `"db":"DOWN"`: kontrolli `ssh db01 sudo ss -tln | grep 3306` (peab olema `0.0.0.0:3306`) ja `ssh db01 sudo firewall-cmd --list-ports`.
 
-**Ennusta:** RabbitMQ kasutaja ülesandes on `update_password: on_create`. Kui muudad hiljem Vaultis RabbitMQ parooli, kas olemasoleva kasutaja parool muutub?
+**Küsimus enne käsku:** RabbitMQ kasutaja ülesandes on `update_password: on_create`. Kui muudad hiljem Vaultis RabbitMQ parooli, kas olemasoleva kasutaja parool muutub?
 
 ??? success "Vastus"
 
@@ -1478,7 +1478,7 @@ Võtmesõna `serial` töötleb play masinaid partiide kaupa ja määrab ainult p
   any_errors_fatal: true
 ```
 
-**Ennusta:** mitu korda on väljundis rida `PLAY [Kõik masinad]`?
+**Küsimus enne käsku:** mitu korda on väljundis rida `PLAY [Kõik masinad]`?
 
 ```bash
 ansible-playbook site.yml
@@ -1718,7 +1718,7 @@ Kogenud õppijatele. Iga ülesanne on samas projektis ja lõpeb kontrolliga. Pä
     ansible-playbook -i inventories/prod/hosts.ini site.yml --limit app01 --check --diff
     ```
 
-    **Ennusta enne käsku:** kas `--diff` näitab `-Xmx768m`? Tegelikult annab käsk `changed=0`: projekti kõrval olev `group_vars/app.yml` (`512m`) on tugevam kui inventory kõrval olev. Tõsta grupi `app` väärtus testi inventory juurde ja proovi uuesti:
+    **Küsimus enne käsku:** kas `--diff` näitab `-Xmx768m`? Tegelikult annab käsk `changed=0`: projekti kõrval olev `group_vars/app.yml` (`512m`) on tugevam kui inventory kõrval olev. Tõsta grupi `app` väärtus testi inventory juurde ja proovi uuesti:
 
     ```bash
     mv group_vars/app.yml inventories/test/group_vars/app.yml
