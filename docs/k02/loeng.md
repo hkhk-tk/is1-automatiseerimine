@@ -99,7 +99,7 @@ $ ssh db01 sudo firewall-cmd --list-ports
 
 **Järeldus:** teenus töötab ja tulemüür lubab pordi, aga MariaDB kuulab aadressil `127.0.0.1`, st ainult db01 enda ühendusi. Konfiguratsioonifailis on rida `bind-address = 127.0.0.1`.
 
-**Parandus:** konfiguratsioonifail `bind-address = 0.0.0.0` ja handler, mis taaskäivitab MariaDB. **Korduskontroll:** `ss` näitab `0.0.0.0:3306` ja `/health` näitab `"db":"UP"`.
+**Parandus:** konfiguratsioonifail `bind-address = 0.0.0.0` ja handler, mis taaskäivitab MariaDB. **Korduskontroll:** `ss` näitab `0.0.0.0:3306` ja `/health` näitab `"db":"UP"`. `0.0.0.0` tähendab kuulamist kõigil IPv4-liidestel, mitte ligipääsu ainult rakendusserverist. Kes tohib ühenduda, määrab tulemüür (ja andmebaasi kasutaja `host`).
 
 Teine sage viga on playbook, mis muudab masinat igal käivitusel. Moodulid `shell` ja `command` käivitavad käsu iga kord, sest need ei tea soovitud olekut. Selliste ülesannete asemel kasutatakse moodulit, mis kontrollib olekut, ja taaskäivitust handler'iga.
 
@@ -114,7 +114,7 @@ Teine sage viga on playbook, mis muudab masinat igal käivitusel. Moodulid `shel
 
 ??? question "Kontrolli ennast"
 
-    1. Juhtumis oli kolm hüpoteesi. Milline väljundirida lükkas ümber tulemüüri hüpoteesi?
+    1. Juhtumis oli kolm hüpoteesi. Milline väljundirida näitas kindlat takistust app01-st tulevale ühendusele?
     2. Miks annab `command: systemctl restart tomcat10` igal käivitusel `changed`, ka siis, kui seaded ei muutunud?
 
 ## 3. Grupid ja muutujad
@@ -188,7 +188,7 @@ Grupimuutuja on tugevam kui rolli vaikeväärtus ja käsurea `-e` on tugevam kui
     | `host_vars/<masin>.yml` | `host_vars/web01.yml`: `nginx_upstream: app01:8080` |
     | käsurea `-e` | `-e tomcat_heap=1g` |
 
-    Kogu järjekord: [Variable precedence](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence). Ühe masina kõiki muutujaid näitab `ansible-inventory --host app01`.
+    Kogu järjekord: [Variable precedence](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence). `ansible-inventory --host app01` näitab inventory põhjal leitud masina muutujaid (`host_vars` ja `group_vars`). Rolli vaikeväärtusi ja playbook'is määratud väärtusi see ei näita, nende kontrolliks lisa `debug`-ülesanne play'sse või rolli.
 
 Teiste masinate andmetele pääseb ligi muutujatega `groups` ja `hostvars`. `groups['db'][0]` on grupi `db` esimene masin ja `hostvars['db01'].ansible_host` selle IP-aadress. Rakenduse seadetes on `DB_HOST={{ groups['db'][0] }}`, nii et andmebaasi kolimisel muudetakse ainult inventory't.
 
@@ -199,7 +199,20 @@ Teiste masinate andmetele pääseb ligi muutujatega `groups` ja `hostvars`. `gro
 
 ## 4. Mallid ja handler'id
 
-Moodul `copy` kopeerib teksti muutmata kujul. Moodul `template` töötleb faili enne kopeerimist Jinja2-ga: `{{ muutuja }}` asendatakse väärtusega, `{% for %}` kordab ridu. Mallid on rolli kaustas `templates/`, laiendiga `.j2`. Rida `{{ ansible_managed }}` lisab faili algusesse märkuse, et faili haldab Ansible.
+Mooduliga `copy` saab kopeerida olemasoleva faili või määrata sisu ülesande sees võtmega `content`. Pikem konfiguratsioon, mis sõltub muutujatest, viiakse eraldi Jinja2 malli ja failiks teeb selle moodul `template`. Nii on ülesanded ja konfiguratsioonitekst eri failides. Mallis asendatakse `{{ muutuja }}` väärtusega ja `{% for %}` kordab ridu. Mallifaili laiend on `.j2`. Rida `{{ ansible_managed }}` lisab faili algusesse märkuse, et faili haldab Ansible.
+
+Enne rolle on vahepealne etapp. Ülesanded ja handler on veel failis `labseis.yml`, aga väärtus ja konfiguratsioonitekst on juba eraldi failides:
+
+```text
+k02-ansible/
+├── ansible.cfg
+├── inventory.ini
+├── labseis.yml                        ülesanded ja handler
+├── host_vars/
+│   └── web01.yml                      nginx_upstream: app01:8080
+└── templates/
+    └── labori-seis-nginx.conf.j2      konfiguratsioonitekst
+```
 
 Nginxi näide tervikuna. **Lähteandmed** failis `host_vars/web01.yml`:
 
@@ -207,7 +220,7 @@ Nginxi näide tervikuna. **Lähteandmed** failis `host_vars/web01.yml`:
 nginx_upstream: app01:8080
 ```
 
-**Mall** `roles/nginx/templates/labori-seis.conf.j2`:
+**Mall** `templates/labori-seis-nginx.conf.j2`:
 
 ```nginx
 # {{ ansible_managed }}
@@ -225,20 +238,23 @@ server {
 **Ülesanne**, mis mallist faili teeb ja handler'it teavitab, ning **handler**:
 
 ```yaml
-# roles/nginx/tasks/main.yml
-- name: Labori seisu sait on seadistatud
-  ansible.builtin.template:
-    src: labori-seis.conf.j2
-    dest: /etc/nginx/sites-available/labori-seis
-    mode: "0644"
-  notify: Reload nginx
+# labseis.yml, play "Veebiserver"
+  tasks:
+    - name: Labori seisu sait on seadistatud
+      ansible.builtin.template:
+        src: labori-seis-nginx.conf.j2
+        dest: /etc/nginx/sites-available/labori-seis
+        mode: "0644"
+      notify: Reload nginx
 
-# roles/nginx/handlers/main.yml
-- name: Reload nginx
-  ansible.builtin.service:
-    name: nginx
-    state: reloaded
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
 ```
+
+Ansible otsib malli kaustast `templates/` playbook'i kõrval.
 
 **Tulemus** web01-s:
 
@@ -250,19 +266,30 @@ upstream labori_seis {
 }
 ```
 
+**Võrdlus enne käivitamist.** Mall annab sama teksti nagu algne `content:`, kui väärtus on sama. `--check --diff` näitab ainult uut esimest rida, mille lisas `{{ ansible_managed }}`:
+
+```text
+$ ansible-playbook labseis.yml --limit web01 --check --diff
+--- before: /etc/nginx/sites-available/labori-seis
++++ after: /etc/nginx/sites-available/labori-seis
+@@ -1,3 +1,4 @@
++# Ansible managed
+ upstream labori_seis {
+```
+
 **Kaks käivitust.** Esimesel korral fail muutub ja handler käivitub play lõpus. Teisel korral on fail juba õige, ülesanne on `ok` ja handler ei käivitu:
 
 ```text
 # esimene käivitus (lühendatud)
-TASK [nginx : Labori seisu sait on seadistatud]   changed: [web01]
-RUNNING HANDLER [nginx : Reload nginx]            changed: [web01]
+TASK [Labori seisu sait on seadistatud]   changed: [web01]
+RUNNING HANDLER [Reload nginx]            changed: [web01]
 
 # teine käivitus
-TASK [nginx : Labori seisu sait on seadistatud]   ok: [web01]
+TASK [Labori seisu sait on seadistatud]   ok: [web01]
 web01 : ... changed=0
 ```
 
-Handler käivitub play lõpus üks kord, isegi kui teda teavitas mitu ülesannet. Mõnikord peab uus seadistus kehtima enne järgmisi ülesandeid. Rollis `tomcat` kontrollib viimane ülesanne, et rakendus vastab. Kui Tomcati taaskäivitus jääks play lõppu, kontrolliks see ülesanne veel vana seadistusega rakendust. Rida `ansible.builtin.meta: flush_handlers` enne kontrolli käivitab ootel handler'id kohe.
+Handler käivitub play lõpus üks kord, isegi kui teda teavitas mitu ülesannet. Mõnikord peab uus seadistus kehtima enne järgmisi ülesandeid. Tomcati play's kontrollib viimane ülesanne, et rakendus vastab. Kui Tomcati taaskäivitus jääks play lõppu, kontrolliks see ülesanne veel vana seadistusega rakendust. Rida `ansible.builtin.meta: flush_handlers` enne kontrolli käivitab ootel handler'id kohe.
 
 <figure markdown="span">
   ![Moodul võrdleb soovitud olekut tegeliku olekuga ja muudab ainult erinevuse](assets/k02_idempotentsus.svg){ width="720" }
@@ -276,16 +303,16 @@ Handler käivitub play lõpus üks kord, isegi kui teda teavitas mitu ülesannet
 
 ## 5. Rollid
 
-**Roll** on kindla ülesehitusega kaust ühe teenuse jaoks. Ansible leiab failid nime järgi ja `site.yml` määrab ainult, milline roll millises grupis käivitub. 1. osa Nginxi play jaguneb rolli failide vahel nii:
+**Roll** on kindla ülesehitusega kaust ühe teenuse jaoks. Ansible leiab failid nime järgi ja `site.yml` määrab ainult, milline roll millises grupis käivitub. Eelmises osas eraldatud väärtus ja mall on juba olemas, nüüd koondatakse ühe teenuse osad ühte kausta. Nginxi play jaguneb rolli failide vahel nii:
 
 ??? note "Tabel 2.3. Nginxi play osad ja rolli failid"
 
     | `labseis.yml`-is | Rollis | Mis muutub |
     |---|---|---|
-    | `tasks:` all olevad ülesanded | `roles/nginx/tasks/main.yml` | `copy` koos tekstiga asendub `template`-ga |
-    | konfiguratsioonifaili tekst `content:` all | `roles/nginx/templates/labori-seis.conf.j2` | `app01:8080` asendub `{{ nginx_upstream }}`-ga |
+    | `tasks:` all olevad ülesanded | `roles/nginx/tasks/main.yml` | sama sisu |
+    | mall `templates/labori-seis-nginx.conf.j2` | `roles/nginx/templates/labori-seis.conf.j2` | sama sisu, rolli sees lühem nimi |
     | `handlers:` all olev handler | `roles/nginx/handlers/main.yml` | sama sisu |
-    | väärtus `app01:8080` | `roles/nginx/defaults/main.yml` ja `host_vars/web01.yml` | vaikeväärtus rollis, projekti väärtus inventory juures |
+    | `host_vars/web01.yml` | jääb samaks, lisaks `roles/nginx/defaults/main.yml` | vaikeväärtus rollis, projekti väärtus inventory juures |
     | play päis `hosts: web01`, `become: true` | `site.yml` | `hosts: web` (grupp, mitte masin) |
 
 Uus `site.yml` seob grupi rolliga:
@@ -298,27 +325,30 @@ Uus `site.yml` seob grupi rolliga:
     - nginx
 ```
 
-**Võrdlus enne ja pärast.** Projektis muutus palju: üks play asendus viie failiga. Serveris ei tohi muutuda midagi peale selle, mida muutsid teadlikult. Seda näitab `--check --diff` enne käivitamist:
-
-```text
-$ ansible-playbook site.yml --limit web01 --check --diff
---- before: /etc/nginx/sites-available/labori-seis
-+++ after: /etc/nginx/sites-available/labori-seis
-@@ -1,3 +1,4 @@
-+# Ansible managed
- upstream labori_seis {
-```
-
-Ainus erinevus on uus esimene rida, mille lisas `{{ ansible_managed }}`. Praktikumis lisad mallile ka kaks päist (`X-Real-IP`, `X-Forwarded-For`), siis näitab `--diff` ka neid: need on teadlikud muudatused. Pärast käivitamist kontrollitakse rakendust (`curl -s localhost/health`) ja teist käivitust (`changed=0`). Praktikumis teed sama ülejäänud viie teenusega ja otsustad igal korral, millised väärtused jäävad rolli vaikeväärtusteks ja millised lähevad grupimuutujatesse.
+**Võrdlus enne ja pärast.** Projektis muutus palju: üks play asendus viie failiga. Serveris ei tohi muutuda midagi peale selle, mida muutsid teadlikult. Mall ja väärtus on samad mis eelmises etapis, seega `ansible-playbook site.yml --limit web01 --check --diff` ei näita ühtegi erinevust ja annab `changed=0`. Praktikumis lisad mallile ka kaks päist (`X-Real-IP`, `X-Forwarded-For`), siis näitab `--diff` ka neid: need on teadlikud muudatused. Pärast käivitamist kontrollitakse rakendust (`curl -s localhost/health`) ja teist käivitust (`changed=0`). Praktikumis teed sama ülejäänud nelja teenusega, koondad kõigi masinate ühised ülesanded rolli `common` ja otsustad igal korral, millised väärtused jäävad rolli vaikeväärtusteks ja millised lähevad grupimuutujatesse.
 
 Playde järjekord `site.yml`-is on oluline: andmebaas, vahemälu ja sõnumijärjekord paigaldatakse enne rakendust, sest rakendus ühendub käivitumisel nende kõigiga. `defaults` on kõige nõrgemad ja mõeldud ülekirjutamiseks, `vars` on tugevamad kui `group_vars` ja sobivad väärtustele, mida rolli kasutaja ei peaks muutma. Projekti kaustastruktuur järgib dokumentatsiooni soovitust [Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html).
 
-Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne valmis rolli kasutamist vaata, millal seda viimati uuendati, milliseid distributsioone see toetab, kas sellel on testid ja millise litsentsiga see on. Roll käivitub `become: true` õigustes, nii et see on võõras kood sinu serverites.
+Valmis rolle jagatakse [Ansible Galaxys](https://galaxy.ansible.com/). Enne valmis rolli kasutamist vaata, millal seda viimati uuendati, milliseid distributsioone see toetab, kas sellel on testid ja millise litsentsiga see on. Selles projektis käivitatakse rollid play kaudu `become: true` õigustes, nii et võõras roll on võõras kood juurkasutaja õigustes.
+
+??? note "Tabel 2.4. Kust muudatust alustada"
+
+    | Mida muudad | Fail |
+    |---|---|
+    | masinad ja aadressid | `inventory.ini` |
+    | grupi seadistus | `group_vars/<grupp>.yml` |
+    | ühe masina erand | `host_vars/<masin>.yml` |
+    | teenuse ülesanded | `roles/<teenus>/tasks/main.yml` |
+    | konfiguratsioonitekst | `roles/<teenus>/templates/` |
+    | muudatusele järgnev tegevus | `roles/<teenus>/handlers/main.yml` |
+    | rolli kohandatav vaikeväärtus | `roles/<teenus>/defaults/main.yml` |
+    | gruppide ja rollide sidumine | `site.yml` |
 
 ??? question "Kontrolli ennast"
 
     1. Enne `--check --diff` käsku: millised failid web01-s muutuvad pärast Nginxi play tõstmist rolli?
     2. Miks on `site.yml`-is `hosts: web`, mitte `hosts: web01`?
+    3. Tahad muuta ühe rakendusserveri mälu. Millisest failist alustad? Aga siis, kui tahad muuta kõigi rakendusserverite paigaldusülesannet?
 
 ## 6. Kogud ja Vault
 
@@ -345,9 +375,9 @@ Versioon on kinni, et sama projekt töötaks kuu aja pärast samamoodi ja kõigi
 
 ```bash
 # 1. Vaulti parool control node'is, väljaspool repositooriumi
+mkdir -p ~/.config/is1 group_vars/all
 read -rsp "Vaulti parool: " p && printf '%s\n' "$p" > ~/.config/is1/vault_pass && unset p
 chmod 600 ~/.config/is1/vault_pass
-echo "vault_password_file = ~/.config/is1/vault_pass" >> ansible.cfg
 
 # 2. Krüpteeritud fail: redaktoris vault_db_password: "…" jne
 ansible-vault create group_vars/all/vault.yml
@@ -359,9 +389,17 @@ echo 'labseis_db_password: "{{ vault_db_password }}"' >> group_vars/all/main.yml
 head -1 group_vars/all/vault.yml          # $ANSIBLE_VAULT;1.1;AES256
 ansible-playbook site.yml --limit db01    # parooli ei küsita
 
-# Muutmine ja vaatamine
+# Muutmine ja vaatamine (view näitab paroole terminalis, selle väljundit ei lisata tõenditesse)
 ansible-vault edit group_vars/all/vault.yml
 ansible-vault view group_vars/all/vault.yml
+```
+
+Enne 2. sammu lisa failis `ansible.cfg` olemasolevasse sektsiooni `[defaults]` rida `vault_password_file`. Teist sektsiooni `[defaults]` ei looda:
+
+```ini
+[defaults]
+inventory = inventory.ini
+vault_password_file = ~/.config/is1/vault_pass
 ```
 
 Viide loetavas failis näitab, millised saladused projektis on, ja `grep labseis_db_password` leiab kõik kasutuskohad ka siis, kui Vault on lukus. Vault kaitseb salvestatud faili, aga mitte käivituse väljundit: ülesanne, mis kasutab parooli, saab võtmesõna `no_log: true`, et parool ei jõuaks logisse.
@@ -402,7 +440,7 @@ ansible-playbook site.yml       # changed=0
 
 Võtmesõna `serial` töötleb play masinaid partiide kaupa. Rolli `common` play käib kõigis viies masinas ja `serial: 2` jagab need kolmeks partiiks: kaks, kaks ja üks masin. Väljundis on play päis iga partii kohta. `serial` määrab ainult partii suuruse. Kas vea korral kogu play peatub, määravad eraldi `any_errors_fatal` ja `max_fail_percentage`. Teenuse play'del on selles projektis üks masin, seal partiidest kasu pole.
 
-??? note "Tabel 2.4. Muudatuse kontroll"
+??? note "Tabel 2.5. Muudatuse kontroll"
 
     | Võti või võtmesõna | Tulemus |
     |---|---|
@@ -426,7 +464,7 @@ Kontrollrežiim on simulatsioon. Ülesanne, mis sõltub eelmise ülesande tegeli
     | refaktoreerimine | ülesehitus muutub, käitumine mitte; kontroll `--check --diff`, `changed=0` ja rakenduse test |
     | sümptom, hüpotees, tõend | vigade otsimise sammud, hüpotees enne tõendit |
     | `:children` | grupp, mille liikmed on teised grupid |
-    | `group_vars`, `host_vars`, `defaults` | muutujate tasemed; kontroll `debug` ja `ansible-inventory --host` |
+    | `group_vars`, `host_vars`, `defaults` | muutujate tasemed; kontroll `ansible-inventory --host` ja `debug` |
     | mall ja handler | mall teeb faili, handler käivitub ainult faili muutumisel, üks kord |
     | roll | ühe teenuse ülesanded, mallid, handler'id ja vaikeväärtused ühes kaustas |
     | kogu | moodulite pakett, versioon failis `requirements.yml` |

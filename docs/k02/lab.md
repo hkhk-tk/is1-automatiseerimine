@@ -1912,7 +1912,17 @@ ansible-playbook labseis.yml
 mkdir -p ~/.config/is1
 read -rsp "Vaulti parool: " p && printf '%s\n' "$p" > ~/.config/is1/vault_pass && unset p
 chmod 600 ~/.config/is1/vault_pass
-echo "vault_password_file = ~/.config/is1/vault_pass" >> ansible.cfg
+```
+
+Ava `ansible.cfg` ja lisa olemasolevasse sektsiooni `[defaults]` rida `vault_password_file`. Teist sektsiooni `[defaults]` ei looda:
+
+```ini
+[defaults]
+inventory = inventory.ini
+vault_password_file = ~/.config/is1/vault_pass
+```
+
+```bash
 ansible-vault create group_vars/all/vault.yml
 ```
 
