@@ -10,7 +10,7 @@ tags:
 
 **Edenemine:** laboritahvel <http://192.168.125.187:8093> (VPN-iga).
 
-Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina.
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
 
 ??? abstract "Õpiväljundid"
 
@@ -20,7 +20,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     4. Koondad ühe teenuse ülesanded, malli, handler'i ja vaikeväärtused rolliks.
     5. Tõestad iga sammu järel `--check --diff`, korduva käivituse ja `/health`-iga, et süsteem töötab samamoodi.
 
-Iga etapp on üles ehitatud samamoodi: **probleem** (mis praeguses failis on ebamugav), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee etapp eesmärgi järgi ise ja ava plokid ainult kontrolliks. Iga etapi lõpus on kokkuvolditud plokis kogu `labseis.yml` selle etapi seisuga: kui jääd kinni, kopeeri see ja jätka.
+Iga etapp on üles ehitatud samamoodi: **probleem** (mis praeguses failis on ebamugav), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee etapp eesmärgi järgi ise ja ava plokid ainult kontrolliks. Iga sammu juures on näidatud ainult read, mis muutuvad, ja etapi lõpus failipuu. Uus võte tehakse esimest korda koos, täielikult näidatuna. Teisel korral täiendad etteantud põhja ja kolmandal korral teed sama eesmärgi järgi. Kokkuvolditud plokid on kontrolliks.
 
 Rida **Ennusta** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
 
@@ -72,7 +72,7 @@ ansible-doc community.mysql.mysql_user | head -20
 
 ### 1.3 Mis juhtub, kui avad Labori seisu
 
-Brauser ei pöördu otse rakenduse poole. Päringu võtab vastu Nginx web01-s ja edastab selle app01-le, kus Tomcatis töötab rakendus. Nii on avalikus võrgus ainult üks port (80) ja rakendusserverit saab vahetada, ilma et kasutaja aadress muutuks. Rakendus hoiab andmeid MariaDB-s (db01), sageli küsitud vastuseid Memcachedis (mc01) ja saadab sõnumeid RabbitMQ kaudu (rmq01).
+Brauser ei pöördu otse rakenduse poole. Päringu võtab vastu Nginx web01-s ja edastab selle app01-le, kus Tomcatis töötab rakendus. Kasutaja pöördub ainult Nginxi pordi 80 poole ja rakendusserverit saab vahetada, ilma et kasutaja aadress muutuks. Rakendus hoiab andmeid MariaDB-s (db01), sageli küsitud vastuseid Memcachedis (mc01) ja saadab sõnumeid RabbitMQ kaudu (rmq01).
 
 <figure markdown="span">
   ![Labori seis viies masinas: web01 Nginx, app01 Tomcat, db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_stack.svg){ width="720" }
@@ -215,6 +215,10 @@ ansible-playbook labseis.yml
     ansible all -b -m ansible.builtin.lineinfile -a "path=/etc/hosts regexp='^\S+ (web01|app01|rmq01|mc01|db01)$' state=absent"
     ```
 
+Failis on handler'id juba olemas: MariaDB, Memcachedi ja Nginxi seadete ülesanded teavitavad neid võtmega `notify` ja handler käivitub play lõpus ainult siis, kui fail muutus. Tomcati play's handler'it pole, taaskäivitus on tavaline ülesanne ja käivitub iga kord. Paranduses saavad Tomcati kaks seadete ülesannet sama mustri.
+
+**Ennusta:** play viimane ülesanne kontrollib, et rakendus vastab. Kas see kontroll peab toimuma enne või pärast Tomcati taaskäivitust? Mis juhtub, kui handler käivitub alles play lõpus?
+
 ??? example "Paranda: Tomcati taaskäivitus"
 
     Tomcat tuleb taaskäivitada ainult siis, kui seadete fail muutus. Selleks on **handler**: ülesanne, mis käivitub play lõpus ainult siis, kui mõni ülesanne teatas sellest võtmega `notify` ja tegi muudatuse. Kustuta ülesanne `Tomcat taaskäivitatakse, et seaded rakenduksid`. Lisa kahele seadete ülesandele (`Rakenduse seaded on failis` ja `Tomcat loeb rakenduse seaded ja kasutab Java 21`) rida:
@@ -252,338 +256,6 @@ ssh app01 grep -c db01 /etc/hosts
 ??? success "Oodatav tulemus"
 
     Teisel käivitusel on kõigis viies masinas `changed=0`. Failis `/etc/hosts` on db01 üks kord.
-
-??? example "Kogu `labseis.yml` pärast 2. osa"
-
-    ```yaml
-    # Labori seis viies masinas, kõik ühes failis.
-    # Käivitus: ansible-playbook labseis.yml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      tasks:
-        - name: Masinad tunnevad üksteist nime järgi
-          ansible.builtin.blockinfile:
-            path: /etc/hosts
-            marker: "# {mark} labori-seis"
-            block: |
-              {% for h in groups['all'] | sort %}
-              {{ hostvars[h].ansible_default_ipv4.address }} {{ h }}
-              {% endfor %}
-
-    - name: Andmebaas
-      hosts: db01
-      become: true
-      vars:
-        db_password: Labseis2026
-      tasks:
-        - name: MariaDB on paigaldatud (AlmaLinux)
-          ansible.builtin.dnf:
-            name: [mariadb-server, python3-PyMySQL]
-            state: present
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: MariaDB on paigaldatud (Ubuntu)
-          ansible.builtin.apt:
-            name: [mariadb-server, python3-pymysql]
-            state: present
-            update_cache: true
-          when: ansible_facts['os_family'] == "Debian"
-
-        - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
-          ansible.builtin.copy:
-            dest: /etc/my.cnf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "RedHat"
-          notify: Restart mariadb
-
-        - name: MariaDB kuulab kõigil liidestel (Ubuntu)
-          ansible.builtin.copy:
-            dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "Debian"
-          notify: Restart mariadb
-
-        - name: MariaDB töötab
-          ansible.builtin.service:
-            name: mariadb
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab andmebaasi pordi
-          ansible.posix.firewalld:
-            port: 3306/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: Muudatused rakenduvad
-          ansible.builtin.meta: flush_handlers
-
-        - name: Andmebaas labseis on olemas
-          community.mysql.mysql_db:
-            name: labseis
-            encoding: utf8mb4
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          register: uus_andmebaas
-
-        - name: Rakenduse kasutaja on olemas
-          community.mysql.mysql_user:
-            name: labseis
-            host: "%"
-            password: "{{ db_password }}"
-            priv: "labseis.*:ALL"
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-
-        - name: Skeem ja algandmed on kopeeritud
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../db/{{ item }}"
-            dest: "/root/{{ item }}"
-            mode: "0600"
-          loop: [schema.sql, seed.sql]
-
-        - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
-          community.mysql.mysql_db:
-            name: labseis
-            state: import
-            target: "/root/{{ item }}"
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          loop: [schema.sql, seed.sql]
-          when: uus_andmebaas.changed
-
-      handlers:
-        - name: Restart mariadb
-          ansible.builtin.service:
-            name: mariadb
-            state: restarted
-
-    - name: Vahemälu
-      hosts: mc01
-      become: true
-      tasks:
-        - name: Memcached on paigaldatud
-          ansible.builtin.dnf:
-            name: memcached
-            state: present
-
-        - name: Memcached kuulab kõigil liidestel
-          ansible.builtin.copy:
-            dest: /etc/sysconfig/memcached
-            content: |
-              PORT="11211"
-              USER="memcached"
-              MAXCONN="1024"
-              CACHESIZE="64"
-              OPTIONS="-l 0.0.0.0"
-            mode: "0644"
-          notify: Restart memcached
-
-        - name: Memcached töötab
-          ansible.builtin.service:
-            name: memcached
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab vahemälu pordi
-          ansible.posix.firewalld:
-            port: 11211/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-
-      handlers:
-        - name: Restart memcached
-          ansible.builtin.service:
-            name: memcached
-            state: restarted
-
-    - name: Sõnumijärjekord
-      hosts: rmq01
-      become: true
-      tasks:
-        - name: RabbitMQ on paigaldatud
-          ansible.builtin.apt:
-            name: rabbitmq-server
-            state: present
-            update_cache: true
-
-        - name: RabbitMQ töötab
-          ansible.builtin.service:
-            name: rabbitmq-server
-            state: started
-            enabled: true
-
-        - name: Rakenduse kasutaja on olemas
-          community.rabbitmq.rabbitmq_user:
-            user: labseis
-            password: Jarjekord2026
-            update_password: on_create
-            vhost: /
-            configure_priv: ".*"
-            read_priv: ".*"
-            write_priv: ".*"
-            state: present
-
-        - name: Vaikekasutajat guest ei ole
-          community.rabbitmq.rabbitmq_user:
-            user: guest
-            state: absent
-
-    - name: Rakendusserver
-      hosts: app01
-      become: true
-      tasks:
-        - name: Java 21 ja Tomcat 10 on paigaldatud
-          ansible.builtin.apt:
-            name: [openjdk-21-jre-headless, tomcat10]
-            state: present
-            update_cache: true
-
-        - name: Rakenduse seadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/labori-seis
-            state: directory
-            owner: root
-            group: tomcat
-            mode: "0750"
-
-        - name: Rakenduse seaded on failis
-          ansible.builtin.copy:
-            dest: /etc/labori-seis/env
-            content: |
-              DB_HOST=db01
-              DB_NAME=labseis
-              DB_USER=labseis
-              DB_PASSWORD=Labseis2026
-              MEMCACHED_HOST=mc01
-              RABBITMQ_HOST=rmq01
-              RABBITMQ_USER=labseis
-              RABBITMQ_PASSWORD=Jarjekord2026
-              TEACHER_TOKEN=opetaja-token-2026
-            owner: root
-            group: tomcat
-            mode: "0640"
-          notify: Restart tomcat
-
-        - name: Tomcati teenuse lisaseadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/systemd/system/tomcat10.service.d
-            state: directory
-            mode: "0755"
-
-        - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
-          ansible.builtin.copy:
-            dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
-            content: |
-              [Service]
-              EnvironmentFile=/etc/labori-seis/env
-              Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-              Environment=CATALINA_OPTS=-Xmx512m
-            mode: "0644"
-          notify: Restart tomcat
-
-        - name: Kas juurkontekstis on Tomcati näidisleht?
-          ansible.builtin.stat:
-            path: /var/lib/tomcat10/webapps/ROOT/index.html
-          register: naidis
-
-        - name: Näidislehe kaust on eemaldatud
-          ansible.builtin.file:
-            path: /var/lib/tomcat10/webapps/ROOT
-            state: absent
-          when: naidis.stat.exists
-
-        - name: Rakendus (WAR) on alla laaditud
-          ansible.builtin.get_url:
-            url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
-            dest: /var/lib/tomcat10/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: "0644"
-
-        - name: Muudatused rakenduvad enne kontrolli
-          ansible.builtin.meta: flush_handlers
-
-        - name: Rakendus vastab
-          ansible.builtin.uri:
-            url: http://localhost:8080/health/live
-          register: live
-          check_mode: false
-          until: live.status == 200
-          retries: 40
-          delay: 5
-
-      handlers:
-        - name: Restart tomcat
-          ansible.builtin.systemd_service:
-            name: tomcat10
-            state: restarted
-            daemon_reload: true
-
-    - name: Veebiserver
-      hosts: web01
-      become: true
-      tasks:
-        - name: Nginx on paigaldatud
-          ansible.builtin.apt:
-            name: nginx
-            state: present
-            update_cache: true
-
-        - name: Labori seisu sait on seadistatud
-          ansible.builtin.copy:
-            dest: /etc/nginx/sites-available/labori-seis
-            content: |
-              upstream labori_seis {
-                  server app01:8080;
-              }
-              server {
-                  listen 80 default_server;
-                  server_name _;
-                  location / {
-                      proxy_pass http://labori_seis;
-                      proxy_set_header Host $host;
-                  }
-              }
-            mode: "0644"
-          notify: Reload nginx
-
-        - name: Labori seisu sait on sisse lülitatud
-          ansible.builtin.file:
-            src: /etc/nginx/sites-available/labori-seis
-            dest: /etc/nginx/sites-enabled/labori-seis
-            state: link
-          notify: Reload nginx
-
-        - name: Vaikesait on välja lülitatud
-          ansible.builtin.file:
-            path: /etc/nginx/sites-enabled/default
-            state: absent
-          notify: Reload nginx
-
-        - name: Nginx töötab
-          ansible.builtin.service:
-            name: nginx
-            state: started
-            enabled: true
-
-      handlers:
-        - name: Reload nginx
-          ansible.builtin.service:
-            name: nginx
-            state: reloaded
-    ```
 
 ```bash
 (cd ~/kursus && git add k02-ansible && git commit -m "k02: labseis.yml vead parandatud" && git push -u origin k02-ansible)
@@ -688,337 +360,13 @@ ansible-playbook labseis.yml --limit mc01
 
     Rida kasutab veel fakte. Kontrolli, et ploki reas on `hostvars[h].ansible_host`.
 
-??? example "Kogu `labseis.yml` pärast 3. osa"
-
-    ```yaml
-    # Labori seis viies masinas, kõik ühes failis.
-    # Käivitus: ansible-playbook labseis.yml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      tasks:
-        - name: Masinad tunnevad üksteist nime järgi
-          ansible.builtin.blockinfile:
-            path: /etc/hosts
-            marker: "# {mark} labori-seis"
-            block: |
-              {% for h in groups['all'] | sort %}
-              {{ hostvars[h].ansible_host }} {{ h }}
-              {% endfor %}
-
-    - name: Andmebaas
-      hosts: db
-      become: true
-      vars:
-        db_password: Labseis2026
-      tasks:
-        - name: MariaDB on paigaldatud (AlmaLinux)
-          ansible.builtin.dnf:
-            name: [mariadb-server, python3-PyMySQL]
-            state: present
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: MariaDB on paigaldatud (Ubuntu)
-          ansible.builtin.apt:
-            name: [mariadb-server, python3-pymysql]
-            state: present
-            update_cache: true
-          when: ansible_facts['os_family'] == "Debian"
-
-        - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
-          ansible.builtin.copy:
-            dest: /etc/my.cnf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "RedHat"
-          notify: Restart mariadb
-
-        - name: MariaDB kuulab kõigil liidestel (Ubuntu)
-          ansible.builtin.copy:
-            dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "Debian"
-          notify: Restart mariadb
-
-        - name: MariaDB töötab
-          ansible.builtin.service:
-            name: mariadb
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab andmebaasi pordi
-          ansible.posix.firewalld:
-            port: 3306/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: Muudatused rakenduvad
-          ansible.builtin.meta: flush_handlers
-
-        - name: Andmebaas labseis on olemas
-          community.mysql.mysql_db:
-            name: labseis
-            encoding: utf8mb4
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          register: uus_andmebaas
-
-        - name: Rakenduse kasutaja on olemas
-          community.mysql.mysql_user:
-            name: labseis
-            host: "%"
-            password: "{{ db_password }}"
-            priv: "labseis.*:ALL"
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-
-        - name: Skeem ja algandmed on kopeeritud
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../db/{{ item }}"
-            dest: "/root/{{ item }}"
-            mode: "0600"
-          loop: [schema.sql, seed.sql]
-
-        - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
-          community.mysql.mysql_db:
-            name: labseis
-            state: import
-            target: "/root/{{ item }}"
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          loop: [schema.sql, seed.sql]
-          when: uus_andmebaas.changed
-
-      handlers:
-        - name: Restart mariadb
-          ansible.builtin.service:
-            name: mariadb
-            state: restarted
-
-    - name: Vahemälu
-      hosts: cache
-      become: true
-      tasks:
-        - name: Memcached on paigaldatud
-          ansible.builtin.dnf:
-            name: memcached
-            state: present
-
-        - name: Memcached kuulab kõigil liidestel
-          ansible.builtin.copy:
-            dest: /etc/sysconfig/memcached
-            content: |
-              PORT="11211"
-              USER="memcached"
-              MAXCONN="1024"
-              CACHESIZE="64"
-              OPTIONS="-l 0.0.0.0"
-            mode: "0644"
-          notify: Restart memcached
-
-        - name: Memcached töötab
-          ansible.builtin.service:
-            name: memcached
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab vahemälu pordi
-          ansible.posix.firewalld:
-            port: 11211/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-
-      handlers:
-        - name: Restart memcached
-          ansible.builtin.service:
-            name: memcached
-            state: restarted
-
-    - name: Sõnumijärjekord
-      hosts: queue
-      become: true
-      tasks:
-        - name: RabbitMQ on paigaldatud
-          ansible.builtin.apt:
-            name: rabbitmq-server
-            state: present
-            update_cache: true
-
-        - name: RabbitMQ töötab
-          ansible.builtin.service:
-            name: rabbitmq-server
-            state: started
-            enabled: true
-
-        - name: Rakenduse kasutaja on olemas
-          community.rabbitmq.rabbitmq_user:
-            user: labseis
-            password: Jarjekord2026
-            update_password: on_create
-            vhost: /
-            configure_priv: ".*"
-            read_priv: ".*"
-            write_priv: ".*"
-            state: present
-
-        - name: Vaikekasutajat guest ei ole
-          community.rabbitmq.rabbitmq_user:
-            user: guest
-            state: absent
-
-    - name: Rakendusserver
-      hosts: app
-      become: true
-      tasks:
-        - name: Java 21 ja Tomcat 10 on paigaldatud
-          ansible.builtin.apt:
-            name: [openjdk-21-jre-headless, tomcat10]
-            state: present
-            update_cache: true
-
-        - name: Rakenduse seadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/labori-seis
-            state: directory
-            owner: root
-            group: tomcat
-            mode: "0750"
-
-        - name: Rakenduse seaded on failis
-          ansible.builtin.copy:
-            dest: /etc/labori-seis/env
-            content: |
-              DB_HOST=db01
-              DB_NAME=labseis
-              DB_USER=labseis
-              DB_PASSWORD=Labseis2026
-              MEMCACHED_HOST=mc01
-              RABBITMQ_HOST=rmq01
-              RABBITMQ_USER=labseis
-              RABBITMQ_PASSWORD=Jarjekord2026
-              TEACHER_TOKEN=opetaja-token-2026
-            owner: root
-            group: tomcat
-            mode: "0640"
-          notify: Restart tomcat
-
-        - name: Tomcati teenuse lisaseadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/systemd/system/tomcat10.service.d
-            state: directory
-            mode: "0755"
-
-        - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
-          ansible.builtin.copy:
-            dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
-            content: |
-              [Service]
-              EnvironmentFile=/etc/labori-seis/env
-              Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-              Environment=CATALINA_OPTS=-Xmx512m
-            mode: "0644"
-          notify: Restart tomcat
-
-        - name: Kas juurkontekstis on Tomcati näidisleht?
-          ansible.builtin.stat:
-            path: /var/lib/tomcat10/webapps/ROOT/index.html
-          register: naidis
-
-        - name: Näidislehe kaust on eemaldatud
-          ansible.builtin.file:
-            path: /var/lib/tomcat10/webapps/ROOT
-            state: absent
-          when: naidis.stat.exists
-
-        - name: Rakendus (WAR) on alla laaditud
-          ansible.builtin.get_url:
-            url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
-            dest: /var/lib/tomcat10/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: "0644"
-
-        - name: Muudatused rakenduvad enne kontrolli
-          ansible.builtin.meta: flush_handlers
-
-        - name: Rakendus vastab
-          ansible.builtin.uri:
-            url: http://localhost:8080/health/live
-          register: live
-          check_mode: false
-          until: live.status == 200
-          retries: 40
-          delay: 5
-
-      handlers:
-        - name: Restart tomcat
-          ansible.builtin.systemd_service:
-            name: tomcat10
-            state: restarted
-            daemon_reload: true
-
-    - name: Veebiserver
-      hosts: web
-      become: true
-      tasks:
-        - name: Nginx on paigaldatud
-          ansible.builtin.apt:
-            name: nginx
-            state: present
-            update_cache: true
-
-        - name: Labori seisu sait on seadistatud
-          ansible.builtin.copy:
-            dest: /etc/nginx/sites-available/labori-seis
-            content: |
-              upstream labori_seis {
-                  server app01:8080;
-              }
-              server {
-                  listen 80 default_server;
-                  server_name _;
-                  location / {
-                      proxy_pass http://labori_seis;
-                      proxy_set_header Host $host;
-                  }
-              }
-            mode: "0644"
-          notify: Reload nginx
-
-        - name: Labori seisu sait on sisse lülitatud
-          ansible.builtin.file:
-            src: /etc/nginx/sites-available/labori-seis
-            dest: /etc/nginx/sites-enabled/labori-seis
-            state: link
-          notify: Reload nginx
-
-        - name: Vaikesait on välja lülitatud
-          ansible.builtin.file:
-            path: /etc/nginx/sites-enabled/default
-            state: absent
-          notify: Reload nginx
-
-        - name: Nginx töötab
-          ansible.builtin.service:
-            name: nginx
-            state: started
-            enabled: true
-
-      handlers:
-        - name: Reload nginx
-          ansible.builtin.service:
-            name: nginx
-            state: reloaded
-    ```
+```text
+k02-ansible/
+├── ansible.cfg
+├── inventory.ini          grupid ja ansible_host
+├── labseis.yml            hosts: grupid
+└── requirements.yml
+```
 
 ```bash
 (cd ~/kursus && git add k02-ansible && git commit -m "k02: inventory grupid" && git push)
@@ -1130,338 +478,6 @@ ansible-playbook labseis.yml --check --diff
 
     Kõigis masinates `changed=0`. Kui mõnes on `changed`, näitab `--diff`, millise väärtuse tekst erineb.
 
-??? example "Kogu `labseis.yml` pärast 4. osa"
-
-    ```yaml
-    # Labori seis viies masinas, kõik ühes failis.
-    # Käivitus: ansible-playbook labseis.yml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      tasks:
-        - name: Masinad tunnevad üksteist nime järgi
-          ansible.builtin.blockinfile:
-            path: /etc/hosts
-            marker: "# {mark} labori-seis"
-            block: |
-              {% for h in groups['all'] | sort %}
-              {{ hostvars[h].ansible_host }} {{ h }}
-              {% endfor %}
-
-    - name: Andmebaas
-      hosts: db
-      become: true
-      vars:
-        db_password: Labseis2026
-      tasks:
-        - name: MariaDB on paigaldatud (AlmaLinux)
-          ansible.builtin.dnf:
-            name: [mariadb-server, python3-PyMySQL]
-            state: present
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: MariaDB on paigaldatud (Ubuntu)
-          ansible.builtin.apt:
-            name: [mariadb-server, python3-pymysql]
-            state: present
-            update_cache: true
-          when: ansible_facts['os_family'] == "Debian"
-
-        - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
-          ansible.builtin.copy:
-            dest: /etc/my.cnf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "RedHat"
-          notify: Restart mariadb
-
-        - name: MariaDB kuulab kõigil liidestel (Ubuntu)
-          ansible.builtin.copy:
-            dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "Debian"
-          notify: Restart mariadb
-
-        - name: MariaDB töötab
-          ansible.builtin.service:
-            name: mariadb
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab andmebaasi pordi
-          ansible.posix.firewalld:
-            port: 3306/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: Muudatused rakenduvad
-          ansible.builtin.meta: flush_handlers
-
-        - name: Andmebaas labseis on olemas
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            encoding: utf8mb4
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          register: uus_andmebaas
-
-        - name: Rakenduse kasutaja on olemas
-          community.mysql.mysql_user:
-            name: "{{ labseis_db_user }}"
-            host: "%"
-            password: "{{ db_password }}"
-            priv: "{{ labseis_db_name }}.*:ALL"
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-
-        - name: Skeem ja algandmed on kopeeritud
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../db/{{ item }}"
-            dest: "/root/{{ item }}"
-            mode: "0600"
-          loop: [schema.sql, seed.sql]
-
-        - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            state: import
-            target: "/root/{{ item }}"
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          loop: [schema.sql, seed.sql]
-          when: uus_andmebaas.changed
-
-      handlers:
-        - name: Restart mariadb
-          ansible.builtin.service:
-            name: mariadb
-            state: restarted
-
-    - name: Vahemälu
-      hosts: cache
-      become: true
-      tasks:
-        - name: Memcached on paigaldatud
-          ansible.builtin.dnf:
-            name: memcached
-            state: present
-
-        - name: Memcached kuulab kõigil liidestel
-          ansible.builtin.copy:
-            dest: /etc/sysconfig/memcached
-            content: |
-              PORT="11211"
-              USER="memcached"
-              MAXCONN="1024"
-              CACHESIZE="64"
-              OPTIONS="-l 0.0.0.0"
-            mode: "0644"
-          notify: Restart memcached
-
-        - name: Memcached töötab
-          ansible.builtin.service:
-            name: memcached
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab vahemälu pordi
-          ansible.posix.firewalld:
-            port: 11211/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-
-      handlers:
-        - name: Restart memcached
-          ansible.builtin.service:
-            name: memcached
-            state: restarted
-
-    - name: Sõnumijärjekord
-      hosts: queue
-      become: true
-      tasks:
-        - name: RabbitMQ on paigaldatud
-          ansible.builtin.apt:
-            name: rabbitmq-server
-            state: present
-            update_cache: true
-
-        - name: RabbitMQ töötab
-          ansible.builtin.service:
-            name: rabbitmq-server
-            state: started
-            enabled: true
-
-        - name: Rakenduse kasutaja on olemas
-          community.rabbitmq.rabbitmq_user:
-            user: "{{ labseis_mq_user }}"
-            password: Jarjekord2026
-            update_password: on_create
-            vhost: /
-            configure_priv: ".*"
-            read_priv: ".*"
-            write_priv: ".*"
-            state: present
-
-        - name: Vaikekasutajat guest ei ole
-          community.rabbitmq.rabbitmq_user:
-            user: guest
-            state: absent
-
-    - name: Rakendusserver
-      hosts: app
-      become: true
-      tasks:
-        - name: Java 21 ja Tomcat 10 on paigaldatud
-          ansible.builtin.apt:
-            name: [openjdk-21-jre-headless, tomcat10]
-            state: present
-            update_cache: true
-
-        - name: Rakenduse seadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/labori-seis
-            state: directory
-            owner: root
-            group: tomcat
-            mode: "0750"
-
-        - name: Rakenduse seaded on failis
-          ansible.builtin.copy:
-            dest: /etc/labori-seis/env
-            content: |
-              DB_HOST={{ groups['db'][0] }}
-              DB_NAME={{ labseis_db_name }}
-              DB_USER={{ labseis_db_user }}
-              DB_PASSWORD=Labseis2026
-              MEMCACHED_HOST={{ groups['cache'][0] }}
-              RABBITMQ_HOST={{ groups['queue'][0] }}
-              RABBITMQ_USER={{ labseis_mq_user }}
-              RABBITMQ_PASSWORD=Jarjekord2026
-              TEACHER_TOKEN=opetaja-token-2026
-            owner: root
-            group: tomcat
-            mode: "0640"
-          notify: Restart tomcat
-
-        - name: Tomcati teenuse lisaseadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/systemd/system/tomcat10.service.d
-            state: directory
-            mode: "0755"
-
-        - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
-          ansible.builtin.copy:
-            dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
-            content: |
-              [Service]
-              EnvironmentFile=/etc/labori-seis/env
-              Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-              Environment=CATALINA_OPTS=-Xmx{{ tomcat_heap }}
-            mode: "0644"
-          notify: Restart tomcat
-
-        - name: Kas juurkontekstis on Tomcati näidisleht?
-          ansible.builtin.stat:
-            path: /var/lib/tomcat10/webapps/ROOT/index.html
-          register: naidis
-
-        - name: Näidislehe kaust on eemaldatud
-          ansible.builtin.file:
-            path: /var/lib/tomcat10/webapps/ROOT
-            state: absent
-          when: naidis.stat.exists
-
-        - name: Rakendus (WAR) on alla laaditud
-          ansible.builtin.get_url:
-            url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
-            dest: /var/lib/tomcat10/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: "0644"
-
-        - name: Muudatused rakenduvad enne kontrolli
-          ansible.builtin.meta: flush_handlers
-
-        - name: Rakendus vastab
-          ansible.builtin.uri:
-            url: http://localhost:8080/health/live
-          register: live
-          check_mode: false
-          until: live.status == 200
-          retries: 40
-          delay: 5
-
-      handlers:
-        - name: Restart tomcat
-          ansible.builtin.systemd_service:
-            name: tomcat10
-            state: restarted
-            daemon_reload: true
-
-    - name: Veebiserver
-      hosts: web
-      become: true
-      tasks:
-        - name: Nginx on paigaldatud
-          ansible.builtin.apt:
-            name: nginx
-            state: present
-            update_cache: true
-
-        - name: Labori seisu sait on seadistatud
-          ansible.builtin.copy:
-            dest: /etc/nginx/sites-available/labori-seis
-            content: |
-              upstream labori_seis {
-                  server {{ nginx_upstream }};
-              }
-              server {
-                  listen 80 default_server;
-                  server_name _;
-                  location / {
-                      proxy_pass http://labori_seis;
-                      proxy_set_header Host $host;
-                  }
-              }
-            mode: "0644"
-          notify: Reload nginx
-
-        - name: Labori seisu sait on sisse lülitatud
-          ansible.builtin.file:
-            src: /etc/nginx/sites-available/labori-seis
-            dest: /etc/nginx/sites-enabled/labori-seis
-            state: link
-          notify: Reload nginx
-
-        - name: Vaikesait on välja lülitatud
-          ansible.builtin.file:
-            path: /etc/nginx/sites-enabled/default
-            state: absent
-          notify: Reload nginx
-
-        - name: Nginx töötab
-          ansible.builtin.service:
-            name: nginx
-            state: started
-            enabled: true
-
-      handlers:
-        - name: Reload nginx
-          ansible.builtin.service:
-            name: nginx
-            state: reloaded
-    ```
-
 ```text
 k02-ansible/
 ├── ansible.cfg
@@ -1548,11 +564,27 @@ ssh web01 curl -s localhost/health
 
     `--diff` näitab ainult rida `+# Ansible managed`. Käivitusel on mall `changed` ja väljundis `RUNNING HANDLER [Reload nginx]`. Failis on rida `server app01:8080;`: muutuja `nginx_upstream` väärtus failist `host_vars/web01.yml`. `/health` vastab nagu enne.
 
-### 5.2 Mallid Memcachedile ja Tomcatile
+### 5.2 Memcached: täienda põhja
 
-Tee sama Memcachedi seadete failiga (`/etc/sysconfig/memcached`, mall `memcached.j2`) ja Tomcati teenuse lisaseadetega (`labori-seis.conf`, mall `labori-seis-tomcat.conf.j2`). Rakenduse seadete faili `env` jäta 6. osasse, sest selles on paroolid.
+Tõsta Memcachedi seadete tekst ülesandest `Memcached kuulab kõigil liidestel` faili `templates/memcached.j2`. Lisa malli esimeseks reaks `# {{ ansible_managed }}` nagu Nginxi mallis. Ülesanne jääb samaks, ainult `copy` ja `content` asenduvad. Täienda põhja:
 
-??? example "Failid `templates/memcached.j2` ja `templates/labori-seis-tomcat.conf.j2`"
+```yaml
+    - name: Memcached kuulab kõigil liidestel
+      ansible.builtin.template:
+        # lisa siia src ja loodud malli nimi
+        dest: /etc/sysconfig/memcached
+        mode: "0644"
+      notify: Restart memcached
+```
+
+```bash
+ansible-playbook labseis.yml --syntax-check
+ansible-playbook labseis.yml --check --diff --limit mc01
+```
+
+**Kontrolli:** kas Memcachedi seadetes muutub mõni väärtus või ainult see, kus teksti hoitakse?
+
+??? example "Fail `templates/memcached.j2` ja `src`"
 
     ```bash
     # {{ ansible_managed }}
@@ -1563,6 +595,28 @@ Tee sama Memcachedi seadete failiga (`/etc/sysconfig/memcached`, mall `memcached
     OPTIONS="-l 0.0.0.0"
     ```
 
+    Ülesandes: `src: memcached.j2`. `--diff` näitab ainult rida `+# Ansible managed`.
+
+### 5.3 Tomcat: eesmärgi järgi
+
+Tõsta Tomcati teenuse lisaseadete tekst (ülesanne `Tomcat loeb rakenduse seaded ja kasutab Java 21`) faili `templates/labori-seis-tomcat.conf.j2` ja muuda ülesanne seda kasutama. Säilita seadete väärtused (ka `{{ tomcat_heap }}`), sihtfail, õigused ja `notify: Restart tomcat`. Rakenduse seadete faili `env` jäta 6. osasse, sest selles on paroolid.
+
+??? tip "Vihje"
+
+    Vaata, kuidas muutus Nginxi ülesandes `copy` + `content` kujuks `template` + `src`. Mallis jääb `{{ tomcat_heap }}` alles: mall töötleb muutujat samamoodi nagu `content`.
+
+```bash
+ansible-playbook labseis.yml --check --diff
+ansible-playbook labseis.yml
+ansible-playbook labseis.yml
+```
+
+??? success "Oodatav tulemus"
+
+    `--diff` näitab Memcachedi ja Tomcati failis ainult rida `# Ansible managed`. Handler'id taaskäivitavad Memcachedi ja Tomcati. Teisel käivitusel `changed=0`.
+
+??? example "Fail `templates/labori-seis-tomcat.conf.j2`"
+
     ```ini
     # {{ ansible_managed }}
     [Service]
@@ -1571,328 +625,15 @@ Tee sama Memcachedi seadete failiga (`/etc/sysconfig/memcached`, mall `memcached
     Environment=CATALINA_OPTS=-Xmx{{ tomcat_heap }}
     ```
 
-    Ülesannetes asendub `copy` + `content` samamoodi `template` + `src`.
+    Ülesandes: `src: labori-seis-tomcat.conf.j2`.
 
-```bash
-ansible-playbook labseis.yml --check --diff
-ansible-playbook labseis.yml
+```text
+k02-ansible/
+├── ansible.cfg, inventory.ini, labseis.yml, requirements.yml
+├── group_vars/            all/main.yml, app.yml
+├── host_vars/web01.yml
+└── templates/             labori-seis-nginx.conf.j2, memcached.j2, labori-seis-tomcat.conf.j2
 ```
-
-??? success "Oodatav tulemus"
-
-    `--diff` näitab kahes failis ainult rida `# Ansible managed`. Handler'id taaskäivitavad Memcachedi ja Tomcati. Teisel käivitusel `changed=0`.
-
-??? example "Kogu `labseis.yml` pärast 5. osa"
-
-    ```yaml
-    # Labori seis viies masinas, kõik ühes failis.
-    # Käivitus: ansible-playbook labseis.yml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      tasks:
-        - name: Masinad tunnevad üksteist nime järgi
-          ansible.builtin.blockinfile:
-            path: /etc/hosts
-            marker: "# {mark} labori-seis"
-            block: |
-              {% for h in groups['all'] | sort %}
-              {{ hostvars[h].ansible_host }} {{ h }}
-              {% endfor %}
-
-    - name: Andmebaas
-      hosts: db
-      become: true
-      vars:
-        db_password: Labseis2026
-      tasks:
-        - name: MariaDB on paigaldatud (AlmaLinux)
-          ansible.builtin.dnf:
-            name: [mariadb-server, python3-PyMySQL]
-            state: present
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: MariaDB on paigaldatud (Ubuntu)
-          ansible.builtin.apt:
-            name: [mariadb-server, python3-pymysql]
-            state: present
-            update_cache: true
-          when: ansible_facts['os_family'] == "Debian"
-
-        - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
-          ansible.builtin.copy:
-            dest: /etc/my.cnf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "RedHat"
-          notify: Restart mariadb
-
-        - name: MariaDB kuulab kõigil liidestel (Ubuntu)
-          ansible.builtin.copy:
-            dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "Debian"
-          notify: Restart mariadb
-
-        - name: MariaDB töötab
-          ansible.builtin.service:
-            name: mariadb
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab andmebaasi pordi
-          ansible.posix.firewalld:
-            port: 3306/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: Muudatused rakenduvad
-          ansible.builtin.meta: flush_handlers
-
-        - name: Andmebaas labseis on olemas
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            encoding: utf8mb4
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          register: uus_andmebaas
-
-        - name: Rakenduse kasutaja on olemas
-          community.mysql.mysql_user:
-            name: "{{ labseis_db_user }}"
-            host: "%"
-            password: "{{ db_password }}"
-            priv: "{{ labseis_db_name }}.*:ALL"
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-
-        - name: Skeem ja algandmed on kopeeritud
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../db/{{ item }}"
-            dest: "/root/{{ item }}"
-            mode: "0600"
-          loop: [schema.sql, seed.sql]
-
-        - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            state: import
-            target: "/root/{{ item }}"
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          loop: [schema.sql, seed.sql]
-          when: uus_andmebaas.changed
-
-      handlers:
-        - name: Restart mariadb
-          ansible.builtin.service:
-            name: mariadb
-            state: restarted
-
-    - name: Vahemälu
-      hosts: cache
-      become: true
-      tasks:
-        - name: Memcached on paigaldatud
-          ansible.builtin.dnf:
-            name: memcached
-            state: present
-
-        - name: Memcached kuulab kõigil liidestel
-          ansible.builtin.template:
-            src: memcached.j2
-            dest: /etc/sysconfig/memcached
-            mode: "0644"
-          notify: Restart memcached
-
-        - name: Memcached töötab
-          ansible.builtin.service:
-            name: memcached
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab vahemälu pordi
-          ansible.posix.firewalld:
-            port: 11211/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-
-      handlers:
-        - name: Restart memcached
-          ansible.builtin.service:
-            name: memcached
-            state: restarted
-
-    - name: Sõnumijärjekord
-      hosts: queue
-      become: true
-      tasks:
-        - name: RabbitMQ on paigaldatud
-          ansible.builtin.apt:
-            name: rabbitmq-server
-            state: present
-            update_cache: true
-
-        - name: RabbitMQ töötab
-          ansible.builtin.service:
-            name: rabbitmq-server
-            state: started
-            enabled: true
-
-        - name: Rakenduse kasutaja on olemas
-          community.rabbitmq.rabbitmq_user:
-            user: "{{ labseis_mq_user }}"
-            password: Jarjekord2026
-            update_password: on_create
-            vhost: /
-            configure_priv: ".*"
-            read_priv: ".*"
-            write_priv: ".*"
-            state: present
-
-        - name: Vaikekasutajat guest ei ole
-          community.rabbitmq.rabbitmq_user:
-            user: guest
-            state: absent
-
-    - name: Rakendusserver
-      hosts: app
-      become: true
-      tasks:
-        - name: Java 21 ja Tomcat 10 on paigaldatud
-          ansible.builtin.apt:
-            name: [openjdk-21-jre-headless, tomcat10]
-            state: present
-            update_cache: true
-
-        - name: Rakenduse seadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/labori-seis
-            state: directory
-            owner: root
-            group: tomcat
-            mode: "0750"
-
-        - name: Rakenduse seaded on failis
-          ansible.builtin.copy:
-            dest: /etc/labori-seis/env
-            content: |
-              DB_HOST={{ groups['db'][0] }}
-              DB_NAME={{ labseis_db_name }}
-              DB_USER={{ labseis_db_user }}
-              DB_PASSWORD=Labseis2026
-              MEMCACHED_HOST={{ groups['cache'][0] }}
-              RABBITMQ_HOST={{ groups['queue'][0] }}
-              RABBITMQ_USER={{ labseis_mq_user }}
-              RABBITMQ_PASSWORD=Jarjekord2026
-              TEACHER_TOKEN=opetaja-token-2026
-            owner: root
-            group: tomcat
-            mode: "0640"
-          notify: Restart tomcat
-
-        - name: Tomcati teenuse lisaseadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/systemd/system/tomcat10.service.d
-            state: directory
-            mode: "0755"
-
-        - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
-          ansible.builtin.template:
-            src: labori-seis-tomcat.conf.j2
-            dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
-            mode: "0644"
-          notify: Restart tomcat
-
-        - name: Kas juurkontekstis on Tomcati näidisleht?
-          ansible.builtin.stat:
-            path: /var/lib/tomcat10/webapps/ROOT/index.html
-          register: naidis
-
-        - name: Näidislehe kaust on eemaldatud
-          ansible.builtin.file:
-            path: /var/lib/tomcat10/webapps/ROOT
-            state: absent
-          when: naidis.stat.exists
-
-        - name: Rakendus (WAR) on alla laaditud
-          ansible.builtin.get_url:
-            url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
-            dest: /var/lib/tomcat10/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: "0644"
-
-        - name: Muudatused rakenduvad enne kontrolli
-          ansible.builtin.meta: flush_handlers
-
-        - name: Rakendus vastab
-          ansible.builtin.uri:
-            url: http://localhost:8080/health/live
-          register: live
-          check_mode: false
-          until: live.status == 200
-          retries: 40
-          delay: 5
-
-      handlers:
-        - name: Restart tomcat
-          ansible.builtin.systemd_service:
-            name: tomcat10
-            state: restarted
-            daemon_reload: true
-
-    - name: Veebiserver
-      hosts: web
-      become: true
-      tasks:
-        - name: Nginx on paigaldatud
-          ansible.builtin.apt:
-            name: nginx
-            state: present
-            update_cache: true
-
-        - name: Labori seisu sait on seadistatud
-          ansible.builtin.template:
-            src: labori-seis-nginx.conf.j2
-            dest: /etc/nginx/sites-available/labori-seis
-            mode: "0644"
-          notify: Reload nginx
-
-        - name: Labori seisu sait on sisse lülitatud
-          ansible.builtin.file:
-            src: /etc/nginx/sites-available/labori-seis
-            dest: /etc/nginx/sites-enabled/labori-seis
-            state: link
-          notify: Reload nginx
-
-        - name: Vaikesait on välja lülitatud
-          ansible.builtin.file:
-            path: /etc/nginx/sites-enabled/default
-            state: absent
-          notify: Reload nginx
-
-        - name: Nginx töötab
-          ansible.builtin.service:
-            name: nginx
-            state: started
-            enabled: true
-
-      handlers:
-        - name: Reload nginx
-          ansible.builtin.service:
-            name: nginx
-            state: reloaded
-    ```
 
 ```bash
 (cd ~/kursus && git add k02-ansible && git commit -m "k02: konfiguratsioonitekstid mallidesse" && git push)
@@ -2004,309 +745,14 @@ ssh web01 curl -s localhost/health
 
     `grep` annab `0`. Esimesel käivitusel muutub `env` fail ja Tomcat taaskäivitatakse, teisel `changed=0`. `/health` vastab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}`.
 
-??? example "Kogu `labseis.yml` pärast 6. osa"
-
-    ```yaml
-    # Labori seis viies masinas, kõik ühes failis.
-    # Käivitus: ansible-playbook labseis.yml
-    - name: Kõik masinad
-      hosts: all
-      become: true
-      tasks:
-        - name: Masinad tunnevad üksteist nime järgi
-          ansible.builtin.blockinfile:
-            path: /etc/hosts
-            marker: "# {mark} labori-seis"
-            block: |
-              {% for h in groups['all'] | sort %}
-              {{ hostvars[h].ansible_host }} {{ h }}
-              {% endfor %}
-
-    - name: Andmebaas
-      hosts: db
-      become: true
-      tasks:
-        - name: MariaDB on paigaldatud (AlmaLinux)
-          ansible.builtin.dnf:
-            name: [mariadb-server, python3-PyMySQL]
-            state: present
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: MariaDB on paigaldatud (Ubuntu)
-          ansible.builtin.apt:
-            name: [mariadb-server, python3-pymysql]
-            state: present
-            update_cache: true
-          when: ansible_facts['os_family'] == "Debian"
-
-        - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
-          ansible.builtin.copy:
-            dest: /etc/my.cnf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "RedHat"
-          notify: Restart mariadb
-
-        - name: MariaDB kuulab kõigil liidestel (Ubuntu)
-          ansible.builtin.copy:
-            dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
-            content: |
-              [mysqld]
-              bind-address = 0.0.0.0
-              port = 3306
-            mode: "0644"
-          when: ansible_facts['os_family'] == "Debian"
-          notify: Restart mariadb
-
-        - name: MariaDB töötab
-          ansible.builtin.service:
-            name: mariadb
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab andmebaasi pordi
-          ansible.posix.firewalld:
-            port: 3306/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-          when: ansible_facts['os_family'] == "RedHat"
-
-        - name: Muudatused rakenduvad
-          ansible.builtin.meta: flush_handlers
-
-        - name: Andmebaas labseis on olemas
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            encoding: utf8mb4
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          register: uus_andmebaas
-
-        - name: Rakenduse kasutaja on olemas
-          community.mysql.mysql_user:
-            name: "{{ labseis_db_user }}"
-            host: "%"
-            password: "{{ labseis_db_password }}"
-            priv: "{{ labseis_db_name }}.*:ALL"
-            state: present
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          no_log: true
-
-        - name: Skeem ja algandmed on kopeeritud
-          ansible.builtin.copy:
-            src: "{{ playbook_dir }}/../db/{{ item }}"
-            dest: "/root/{{ item }}"
-            mode: "0600"
-          loop: [schema.sql, seed.sql]
-
-        - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
-          community.mysql.mysql_db:
-            name: "{{ labseis_db_name }}"
-            state: import
-            target: "/root/{{ item }}"
-            login_unix_socket: /var/lib/mysql/mysql.sock
-          loop: [schema.sql, seed.sql]
-          when: uus_andmebaas.changed
-
-      handlers:
-        - name: Restart mariadb
-          ansible.builtin.service:
-            name: mariadb
-            state: restarted
-
-    - name: Vahemälu
-      hosts: cache
-      become: true
-      tasks:
-        - name: Memcached on paigaldatud
-          ansible.builtin.dnf:
-            name: memcached
-            state: present
-
-        - name: Memcached kuulab kõigil liidestel
-          ansible.builtin.template:
-            src: memcached.j2
-            dest: /etc/sysconfig/memcached
-            mode: "0644"
-          notify: Restart memcached
-
-        - name: Memcached töötab
-          ansible.builtin.service:
-            name: memcached
-            state: started
-            enabled: true
-
-        - name: Tulemüür lubab vahemälu pordi
-          ansible.posix.firewalld:
-            port: 11211/tcp
-            permanent: true
-            immediate: true
-            state: enabled
-
-      handlers:
-        - name: Restart memcached
-          ansible.builtin.service:
-            name: memcached
-            state: restarted
-
-    - name: Sõnumijärjekord
-      hosts: queue
-      become: true
-      tasks:
-        - name: RabbitMQ on paigaldatud
-          ansible.builtin.apt:
-            name: rabbitmq-server
-            state: present
-            update_cache: true
-
-        - name: RabbitMQ töötab
-          ansible.builtin.service:
-            name: rabbitmq-server
-            state: started
-            enabled: true
-
-        - name: Rakenduse kasutaja on olemas
-          community.rabbitmq.rabbitmq_user:
-            user: "{{ labseis_mq_user }}"
-            password: "{{ labseis_mq_password }}"
-            update_password: on_create
-            vhost: /
-            configure_priv: ".*"
-            read_priv: ".*"
-            write_priv: ".*"
-            state: present
-          no_log: true
-
-        - name: Vaikekasutajat guest ei ole
-          community.rabbitmq.rabbitmq_user:
-            user: guest
-            state: absent
-
-    - name: Rakendusserver
-      hosts: app
-      become: true
-      tasks:
-        - name: Java 21 ja Tomcat 10 on paigaldatud
-          ansible.builtin.apt:
-            name: [openjdk-21-jre-headless, tomcat10]
-            state: present
-            update_cache: true
-
-        - name: Rakenduse seadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/labori-seis
-            state: directory
-            owner: root
-            group: tomcat
-            mode: "0750"
-
-        - name: Rakenduse seaded on failis
-          ansible.builtin.template:
-            src: env.j2
-            dest: /etc/labori-seis/env
-            owner: root
-            group: tomcat
-            mode: "0640"
-          notify: Restart tomcat
-          no_log: true
-
-        - name: Tomcati teenuse lisaseadete kaust on olemas
-          ansible.builtin.file:
-            path: /etc/systemd/system/tomcat10.service.d
-            state: directory
-            mode: "0755"
-
-        - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
-          ansible.builtin.template:
-            src: labori-seis-tomcat.conf.j2
-            dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
-            mode: "0644"
-          notify: Restart tomcat
-
-        - name: Kas juurkontekstis on Tomcati näidisleht?
-          ansible.builtin.stat:
-            path: /var/lib/tomcat10/webapps/ROOT/index.html
-          register: naidis
-
-        - name: Näidislehe kaust on eemaldatud
-          ansible.builtin.file:
-            path: /var/lib/tomcat10/webapps/ROOT
-            state: absent
-          when: naidis.stat.exists
-
-        - name: Rakendus (WAR) on alla laaditud
-          ansible.builtin.get_url:
-            url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
-            dest: /var/lib/tomcat10/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: "0644"
-
-        - name: Muudatused rakenduvad enne kontrolli
-          ansible.builtin.meta: flush_handlers
-
-        - name: Rakendus vastab
-          ansible.builtin.uri:
-            url: http://localhost:8080/health/live
-          register: live
-          check_mode: false
-          until: live.status == 200
-          retries: 40
-          delay: 5
-
-      handlers:
-        - name: Restart tomcat
-          ansible.builtin.systemd_service:
-            name: tomcat10
-            state: restarted
-            daemon_reload: true
-
-    - name: Veebiserver
-      hosts: web
-      become: true
-      tasks:
-        - name: Nginx on paigaldatud
-          ansible.builtin.apt:
-            name: nginx
-            state: present
-            update_cache: true
-
-        - name: Labori seisu sait on seadistatud
-          ansible.builtin.template:
-            src: labori-seis-nginx.conf.j2
-            dest: /etc/nginx/sites-available/labori-seis
-            mode: "0644"
-          notify: Reload nginx
-
-        - name: Labori seisu sait on sisse lülitatud
-          ansible.builtin.file:
-            src: /etc/nginx/sites-available/labori-seis
-            dest: /etc/nginx/sites-enabled/labori-seis
-            state: link
-          notify: Reload nginx
-
-        - name: Vaikesait on välja lülitatud
-          ansible.builtin.file:
-            path: /etc/nginx/sites-enabled/default
-            state: absent
-          notify: Reload nginx
-
-        - name: Nginx töötab
-          ansible.builtin.service:
-            name: nginx
-            state: started
-            enabled: true
-
-      handlers:
-        - name: Reload nginx
-          ansible.builtin.service:
-            name: nginx
-            state: reloaded
-    ```
+```text
+k02-ansible/
+├── ansible.cfg            vault_password_file
+├── inventory.ini, labseis.yml, requirements.yml
+├── group_vars/all/        main.yml (viited), vault.yml (krüpteeritud)
+├── group_vars/app.yml, host_vars/web01.yml
+└── templates/             labori-seis-nginx.conf.j2, memcached.j2, labori-seis-tomcat.conf.j2, env.j2
+```
 
 ```bash
 (cd ~/kursus && git add k02-ansible && git commit -m "k02: paroolid Vaulti" && git push)
@@ -2335,7 +781,7 @@ mkdir -p roles/nginx/tasks roles/nginx/handlers roles/nginx/templates roles/ngin
 mv templates/labori-seis-nginx.conf.j2 roles/nginx/templates/labori-seis.conf.j2
 ```
 
-Ülesanded tõstetakse `tasks:` alt faili `roles/nginx/tasks/main.yml`. Taane muutub: play's olid ülesanded neli tühikut sees, rollis algab `- name:` rea algusest. Malli nimi ülesandes muutub `labori-seis.conf.j2`-ks. Fail `roles/nginx/tasks/main.yml`:
+Ülesanded tõstetakse `tasks:` alt faili `roles/nginx/tasks/main.yml`. Taane muutub: play's olid ülesanded neli tühikut sees, rollis algab `- name:` rea algusest. Malli nimi ülesandes muutub `labori-seis.conf.j2`-ks. Paketi ülesandesse lisandub `cache_valid_time: 3600`: paketiloendit ei uuendata uuesti, kui see on alla tunni vana. Serveris see midagi ei muuda. Fail `roles/nginx/tasks/main.yml`:
 
 ```yaml
 - name: Nginx on paigaldatud
@@ -2496,7 +942,16 @@ ssh app01 cat /etc/motd
 
 ### 7.3 Rollid `memcached`, `mariadb` ja `rabbitmq`
 
-Iga teenuse puhul on sama muster: kaustad, mall `templates/`-st rolli, ülesanded ja handler'id play'st rolli, vaikeväärtused, play `site.yml`-i, kontroll, play kustutamine `labseis.yml`-ist. Rollid erinevad selle poolest, kuidas teenust seadistatakse.
+Iga teenuse puhul on sama järjekord. Memcachedi näitel:
+
+1. Loo rolli kaustad ja tõsta mall: `mkdir -p roles/memcached/{tasks,handlers,templates,defaults}` ja `mv templates/memcached.j2 roles/memcached/templates/`.
+2. Tõsta ülesanded ja handler'id play'st rolli ja lisa vaikeväärtused. Ära muuda selles sammus seadete väärtusi. Tee seda 7.1 Nginxi rolli järgi ise, allpool olevad failid on kontrolliks.
+3. Lisa `site.yml`-i play, mis annab grupile rolli (`hosts: cache`, `roles: [memcached]`).
+4. Kontrolli süntaksit: `ansible-playbook site.yml --syntax-check`.
+5. Rakenda ainult selles masinas: `ansible-playbook site.yml --limit mc01 --check --diff`, siis ilma `--check`-ita, ja `ssh web01 curl -s localhost/health`.
+6. Kustuta vana play `labseis.yml`-ist ja käivita `site.yml --limit mc01` uuesti: `changed=0`.
+
+MariaDB (`db01`, grupp `db`) ja RabbitMQ (`rmq01`, grupp `queue`) puhul asenda masina ja grupi nimi. Rollid erinevad selle poolest, kuidas teenust seadistatakse.
 
 **Memcached** seadistatakse failiga, seepärast on mall ja handler. Rollis tulevad port ja mälu vaikeväärtustest, nii et kodutöös saab mälu masina kaupa muuta.
 
@@ -2756,7 +1211,7 @@ ssh web01 curl -s localhost/health
 
 ### 7.4 Roll `tomcat` ja lõppkontroll
 
-Tomcati rollis on kolm eri asja: seadistus (kaks malli, mis teavitavad sama handler'it), rakenduse fail (WAR) ja kontroll, et rakendus vastab. `flush_handlers` käivitab taaskäivituse enne kontrolli, nii et kontroll näeb juba uute seadetega rakendust. `check_mode: false` laseb kontrollpäringu teha ka `--check` käivitusel, sest päring ainult loeb.
+Tomcati rollis on kolm eri asja: seadistus (kaks malli, mis teavitavad sama handler'it), rakenduse fail (WAR) ja kontroll, et rakendus vastab. `flush_handlers` käivitab taaskäivituse enne kontrolli, nii et kontroll näeb juba uute seadetega rakendust. `check_mode: false` laseb kontrollpäringu teha ka `--check` käivitusel, sest päring ainult loeb. Eelvaates näitab see praegu töötava rakenduse olekut, mitte veel rakendamata seadete tulemust.
 
 ??? example "Roll `tomcat`"
 
@@ -2941,6 +1396,7 @@ Lõplik `site.yml`:
 
 ```bash
 git rm labseis.yml
+ls templates      # peab olema tühi; kui mõni mall on alles, on selle roll pooleli
 rmdir templates
 ansible-playbook site.yml --check --diff
 ansible-playbook site.yml
@@ -2977,7 +1433,7 @@ Ansible'i väljund on tõend. Iga ülesande järel on iga masina tulemus:
     | `skipping: [web01]` | tingimus `when` ei olnud tõene |
     | `RUNNING HANDLER [nginx : Reload nginx]` | handler käivitus, sest mõni ülesanne teavitas ja muutis |
     | `fatal: [app01]: FAILED!` | ülesanne ebaõnnestus, selle masina ülejäänud ülesanded jäävad tegemata |
-    | `PLAY RECAP` | iga masina kokkuvõte; `changed=0` tähendab, et ükski ülesanne ei muutnud masinat |
+    | `PLAY RECAP` | iga masina kokkuvõte; `changed=0` tähendab, et ükski ülesanne ei muutnud masinat. `--check` käivitusel tähendab `changed`, et ülesanne muudaks masinat, masin ise jääb samaks |
 
 ### 8.2 Triiv
 
@@ -3060,9 +1516,9 @@ k02-ansible/
 
 ??? question "Teine laborikeskkond"
 
-    Samad viis teenust tuleb paigaldada teise õppija masinatesse, millel on teised IP-aadressid. Milliseid faile pead muutma ja millised peavad jääma samaks?
+    Samad viis teenust tuleb paigaldada teise õppija masinatesse, millel on teised IP-aadressid. Hostinimed, distributsioonid ja kasutaja on samad. Milliseid faile pead muutma ja millised peavad jääma samaks?
 
-    Muutub ainult `inventory.ini` (IP-aadressid) ja vajadusel Vaulti parool. Rollid, `site.yml` ja muutujad jäävad samaks. Just see ongi eraldamise kasu.
+    Nende eeldustega muutub ainult `inventory.ini` (IP-aadressid) ja vajadusel Vaulti parool. Rollid, `site.yml` ja muutujad jäävad samaks. Just see ongi eraldamise kasu.
 
 ??? note "Kontrollnimekiri"
 
@@ -3192,7 +1648,7 @@ Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpe
     ansible app01 -m ansible.builtin.setup -a "filter=ansible_local"
     ```
 
-    Väljundis on `"ansible_local": {"labseis": {"rakendus": {"heap": "512m", "versioon": "v1.1.0"}}}`. Kirjuta ülesanne, mis jätab WAR-i allalaadimise vahele, kui `ansible_local.labseis.rakendus.versioon` on juba sama. Vt [Adding custom facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts).
+    Väljundis on `"ansible_local": {"labseis": {"rakendus": {"heap": "512m", "versioon": "v1.1.0"}}}`. Kirjuta ülesanne, mis jätab WAR-i allalaadimise vahele, kui `ansible_local.labseis.rakendus.versioon` on juba sama. Mis juhtub, kui fakt ütleb, et versioon on paigaldatud, aga keegi kustutas WAR-faili? Mida peaks tingimus lisaks kontrollima? Vt [Adding custom facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts).
 
 ??? example "5 · Paroolid keskserverist: OpenBao"
 
