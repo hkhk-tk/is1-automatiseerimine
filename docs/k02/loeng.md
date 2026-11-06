@@ -421,7 +421,7 @@ Viide loetavas failis näitab, millised saladused projektis on, ja `grep labseis
     | Logi | puudub | iga päring logitakse |
     | Lisataristu | pole vaja | server, varundus, kõrgkäideldavus |
 
-Selles kursuses kasutame Ansible Vaulti, sest mõte (saladus ei ole avatekstis ja kasutatakse muutuja kaudu) on sama ja lisaserverit pole vaja. Keskserverit proovid praktikumi lisaülesandes 5.
+Selles kursuses kasutame Ansible Vaulti, sest mõte (saladus ei ole avatekstis ja kasutatakse muutuja kaudu) on sama ja lisaserverit pole vaja. Keskserverit proovid praktikumi lisaülesandes 4.
 
 ??? question "Kontrolli ennast"
 

@@ -1564,11 +1564,90 @@ git push origin k02
 
 Tulemuse näed Classroom 50-s.
 
+## Rikkeotsing
+
+Sama meetod nagu loengus: **sümptom → hüpotees → tõend → parandus → korduskontroll**. Kõige parem paaristööna: paariline käivitab „Tekita rike“ käsu, kui sa ei vaata, ja sina leiad põhjuse. Siis vahetage. Üksi tehes ära vaata käsku, käivita see ja alusta sümptomist. Iga rikke lõpus peab `ssh web01 curl -s localhost/health` näitama kõigil väljadel `UP` ja `ansible-playbook site.yml` andma `changed=0`.
+
+??? example "R1 · Vahemälu ei vasta"
+
+    Tekita rike: `ssh mc01 sudo systemctl stop memcached`
+
+    **Sümptom:** `/health` näitab `"cache":"DOWN"`, teised väljad `UP`.
+
+    ??? tip "Vihje"
+        Milline nool topoloogial on katki? Kas teenus töötab: `ssh mc01 systemctl is-active memcached`.
+
+    ??? success "Lahendus"
+        Memcached ei tööta. Roll ütleb `state: started`, seega parandab käivitus: `ansible-playbook site.yml --limit mc01` annab `changed=1`. Teisel käivitusel `changed=0`. Küsimus: miks parandas playbook rikke, kuigi sa koodi ei muutnud?
+
+??? example "R2 · Leht annab 502"
+
+    Tekita rike: `ssh web01 "sudo sed -i 's/app01:8080/app01:8081/' /etc/nginx/sites-available/labori-seis && sudo systemctl reload nginx"`
+
+    **Sümptom:** `ssh web01 curl -s -o /dev/null -w '%{http_code}' localhost/health` annab `502`.
+
+    ??? tip "Vihje"
+        Rakendus app01-s töötab? Kui jah, siis on viga web01 ja app01 vahel. `--check --diff` näitab, mis serveris erineb koodist.
+
+    ??? success "Lahendus"
+        Keegi muutis serveris faili käsitsi: see on triiv. `ansible-playbook site.yml --limit web01 --check --diff` näitab `-server app01:8081;` ja `+server app01:8080;`. Käivitus taastab faili ja handler laeb Nginxi uuesti. Eelvaates on ka `failed=1`: viimane play kontrollib rakendust, mis praegu annab 502.
+
+??? example "R3 · Andmebaas puudub pärast taaskäivitust"
+
+    Tekita rike: `ssh db01 sudo systemctl disable --now mariadb`
+
+    **Sümptom:** `/health` näitab `"db":"DOWN"`.
+
+    ??? tip "Vihje"
+        `ssh db01 systemctl is-active mariadb` ja `systemctl is-enabled mariadb`. Mida tähendab `disabled` järgmisel masina käivitusel?
+
+    ??? success "Lahendus"
+        MariaDB on peatatud ja automaatne käivitus välja lülitatud. Rollis on `state: started` ja `enabled: true`, käivitus parandab mõlemad. Ilma `enabled: true`-ta oleks teenus pärast masina taaskäivitust jälle maas.
+
+??? example "R4 · Grupimuutuja ei mõju"
+
+    Tekita rike: `mkdir -p roles/tomcat/vars && echo 'tomcat_heap: 128m' > roles/tomcat/vars/main.yml`
+
+    **Sümptom:** `ansible-playbook site.yml --limit app01 --check --diff` tahab muuta `-Xmx512m` → `-Xmx128m`, kuigi `group_vars/app.yml` ütleb `512m`.
+
+    ??? tip "Vihje"
+        Kust veel võib `tomcat_heap` tulla? `grep -rn tomcat_heap .`
+
+    ??? success "Lahendus"
+        Rolli `vars` on tugevam kui `group_vars`. Kustuta `roles/tomcat/vars` ja eelvaade on jälle tühi. Vaikeväärtus kuulub kausta `defaults`.
+
+??? example "R5 · Handler'it ei leita"
+
+    Tekita rike: `sed -i 's/notify: Reload nginx/notify: reload nginx/' roles/nginx/tasks/main.yml && sed -i '1a # rike' roles/nginx/templates/labori-seis.conf.j2`
+
+    **Sümptom:** `ansible-playbook site.yml --limit web01` lõpeb veaga.
+
+    ??? success "Lahendus"
+        Veateade: `The requested handler 'reload nginx' was not found`. Nimi `notify` real ja handler'i nimi peavad olema täpselt samad, ka suurtäht. Paranda `notify: Reload nginx` ja kustuta mallist rida `# rike`.
+
+??? example "R6 · Vault ei avane"
+
+    Tekita rike: `mv ~/.config/is1/vault_pass ~/.config/is1/vault_pass.bak`
+
+    **Sümptom:** iga käivitus lõpeb kohe veaga.
+
+    ??? success "Lahendus"
+        `ERROR! The vault password file /home/kasutaja/.config/is1/vault_pass was not found`. `ansible.cfg` viitab failile, mida pole. Taasta: `mv ~/.config/is1/vault_pass.bak ~/.config/is1/vault_pass`. Kui kolleeg kloonib repositooriumi, saab ta sama vea: Vaulti parool tuleb anda turvalise kanali kaudu, mitte Gitis.
+
+??? example "R7 · Mall ei koostu"
+
+    Tekita rike: `sed -i 's/{{ nginx_upstream }}/{{ nginx_upstreams }}/' roles/nginx/templates/labori-seis.conf.j2`
+
+    **Sümptom:** `ansible-playbook site.yml --limit web01` annab `FAILED`.
+
+    ??? success "Lahendus"
+        `'nginx_upstreams' is undefined`: mallis on muutuja nimes kirjaviga. Kas Nginx töötab edasi? Jah, mall koostatakse control node'is ja vigast faili serverisse ei saadeta. Paranda nimi.
+
 ## Lisaülesanded
 
-Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpeb kontrolliga. Pärast katset taasta projekt nii, et `run2.txt` jääb puhtaks.
+Kogenud õppijatele. Iga ülesanne on samas projektis ja lõpeb kontrolliga. Pärast katset taasta projekt nii, et `run2.txt` jääb puhtaks.
 
-??? example "1 · Vale väärtus peatab rolli enne muudatusi: `assert`"
+??? example "1 · Eeltingimused: vale väärtus peatab rolli enne muudatusi"
 
     Kui keegi kirjutab `tomcat_heap: palju`, käivitub Tomcat vigase seadistusega alles pärast taaskäivitust. Rolli alguses olev kontroll peatab käivituse enne, kui midagi muutub. Lisa faili `roles/tomcat/tasks/main.yml` algusesse:
 
@@ -1590,115 +1669,7 @@ Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpe
 
     Rolli sisendit saab kirjeldada ka failis `roles/tomcat/meta/argument_specs.yml` ([Role argument validation](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation)). See kontrollib, et muutuja on olemas ja õiget tüüpi, aga mitte väärtuse vormi: `-e '{"tomcat_heap": [512]}'` teisendab loendi tekstiks ja kontrollist läheb läbi. Miks on `assert` siin vajalik ka siis, kui `argument_specs` on olemas?
 
-??? example "2 · `include_tasks` ja `import_tasks`"
-
-    Tõsta rolli `mariadb` tulemüüri ülesanne faili `roles/mariadb/tasks/firewall.yml` (ilma `when`-ita) ja asenda see failis `main.yml`:
-
-    ```yaml
-    - name: Tulemüür (ainult AlmaLinux)
-      ansible.builtin.include_tasks: firewall.yml
-      when: ansible_facts['os_family'] == "RedHat"
-    ```
-
-    ```bash
-    ansible-playbook site.yml --limit db01 --list-tasks | grep -i tulemüür
-    ansible-playbook site.yml --limit db01 | grep included
-    ```
-
-    Asenda `include_tasks` `import_tasks`-iga ja käivita samad käsud uuesti. `include_tasks` loeb faili käivituse ajal: `--list-tasks` näitab ainult rida `Tulemüür (ainult AlmaLinux)` ja väljundis on `included: …/firewall.yml for db01`. `import_tasks` lisab faili ülesanded juba enne käivitust: `--list-tasks` näitab ülesannet `Tulemüür lubab andmebaasi pordi` ja tingimus kehtib igale ülesandele failis. Millal on vaja `include_tasks`-i (näiteks fail valitakse muutuja järgi)? Kuidas mõjuvad sildid (`--tags`) kummalegi? Vt [Re-using files and roles](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse.html). Taasta pärast katset `main.yml`.
-
-??? example "3 · Andmestruktuur ja filtrid: `dict2items`"
-
-    Andmebaasi serveris on vaja veel kahte andmebaasi eri kodeeringuga. Sõnastik on loetavam kui kaks eraldi muutujat. Fail `group_vars/db.yml`:
-
-    ```yaml
-    labseis_lisabaasid:
-      aruanded: utf8mb4
-      arhiiv: latin1
-    ```
-
-    Filter `dict2items` teeb sõnastikust loendi, mille elementidel on `key` ja `value`. `default({})` hoiab ülesande töökorras ka siis, kui muutujat pole. Lisa rolli `mariadb` lõppu:
-
-    ```yaml
-    - name: Lisaandmebaasid on olemas
-      community.mysql.mysql_db:
-        name: "{{ item.key }}"
-        encoding: "{{ item.value }}"
-        state: present
-        login_unix_socket: "{{ mariadb_socket }}"
-      loop: "{{ labseis_lisabaasid | default({}) | dict2items }}"
-      loop_control:
-        label: "{{ item.key }}"
-    ```
-
-    ```bash
-    ansible-playbook site.yml --limit db01
-    ansible-playbook site.yml --limit db01
-    ansible db01 -b -m ansible.builtin.command -a "mysql -N -e 'SELECT schema_name, default_character_set_name FROM information_schema.schemata'"
-    ```
-
-    Esimesel käivitusel `changed: [db01] => (item=aruanded)` ja `(item=arhiiv)`, teisel `changed=0`. `loop_control.label` näitab väljundis ainult nime, mitte kogu elementi. Leia [filtrite lehelt](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_filters.html), kuidas valiksid `selectattr` abil ainult `utf8mb4` andmebaasid. Kustuta katse lõpus andmebaasid (`state: absent`) ja fail `group_vars/db.yml`.
-
-??? example "4 · Kohandatud fakt: `ansible_local`"
-
-    Rakenduse versioon on praegu ainult WAR-faili aadressis. Kui roll kirjutab selle masinasse kohaliku faktina, saab iga järgmine käivitus (ja iga teine playbook) seda lugeda. Failid kaustas `/etc/ansible/facts.d` laiendiga `.fact` loetakse faktide kogumisel ja need on muutujas `ansible_local`. Lisa rolli `tomcat` lõppu:
-
-    ```yaml
-    - name: Kohalike faktide kaust on olemas
-      ansible.builtin.file:
-        path: /etc/ansible/facts.d
-        state: directory
-        mode: "0755"
-
-    - name: Rakenduse versioon on kohalik fakt
-      ansible.builtin.copy:
-        dest: /etc/ansible/facts.d/labseis.fact
-        content: |
-          [rakendus]
-          versioon={{ tomcat_war_url | regex_search('v[0-9.]+') }}
-          heap={{ tomcat_heap }}
-        mode: "0644"
-    ```
-
-    ```bash
-    ansible-playbook site.yml --limit app01
-    ansible app01 -m ansible.builtin.setup -a "filter=ansible_local"
-    ```
-
-    Väljundis on `"ansible_local": {"labseis": {"rakendus": {"heap": "512m", "versioon": "v1.1.0"}}}`. Kirjuta ülesanne, mis jätab WAR-i allalaadimise vahele, kui `ansible_local.labseis.rakendus.versioon` on juba sama. Mis juhtub, kui fakt ütleb, et versioon on paigaldatud, aga keegi kustutas WAR-faili? Mida peaks tingimus lisaks kontrollima? Vt [Adding custom facts](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts).
-
-??? example "5 · Paroolid keskserverist: OpenBao"
-
-    Ansible Vault hoiab paroole krüpteeritult repositooriumis. Töökohas on saladused sageli keskses serveris, kust Ansible need käivituse ajal küsib: Gitis pole ka krüpteeritud väärtust, ligipääsu saab tühistada ja iga päring jääb serveri logisse. Levinuim selline server on HashiCorp Vault. [OpenBao](https://openbao.org/) on selle avatud lähtekoodiga haru (sarnaselt OpenTofuga 4. kohtumisel) sama API-ga, nii et kogu [`community.hashi_vault`](https://docs.ansible.com/projects/ansible/latest/collections/community/hashi_vault/index.html) töötab mõlemaga.
-
-    Käivita OpenBao control node'is arendusrežiimis. See hoiab andmeid mälus ja kasutab teadaolevat juurtokenit, seega sobib ainult katseks:
-
-    ```bash
-    cd /tmp
-    curl -fsSLO https://github.com/openbao/openbao/releases/download/v2.7.1/openbao_2.7.1_linux_amd64.deb
-    sudo apt install -y ./openbao_2.7.1_linux_amd64.deb python3-hvac
-    nohup bao server -dev -dev-root-token-id=proov -dev-listen-address=127.0.0.1:8200 > /tmp/bao.log 2>&1 &
-    export BAO_ADDR=http://127.0.0.1:8200 BAO_TOKEN=proov VAULT_TOKEN=proov
-    bao kv put secret/labseis db_password=Labseis2026
-    cd ~/kursus/k02-ansible
-    ansible-galaxy collection install community.hashi_vault:==6.2.0
-    ```
-
-    Asenda failis `group_vars/all/main.yml` andmebaasi parooli viide lookup'iga. Lookup käivitub control node'is iga kord, kui muutujat kasutatakse:
-
-    ```yaml
-    labseis_db_password: "{{ lookup('community.hashi_vault.vault_kv2_get', 'labseis', engine_mount_point='secret', url='http://127.0.0.1:8200').secret.db_password }}"
-    ```
-
-    ```bash
-    ansible db01 -m ansible.builtin.debug -a "msg={{ labseis_db_password | length }}"
-    ansible-playbook site.yml --limit db01,app01 --check --diff
-    ```
-
-    Pikkus on `11` ja kontroll annab `changed=0`: parool on sama, ainult allikas muutus. Mis juhtub, kui teed `unset VAULT_TOKEN` või peatad serveri (`pkill -f "bao server"`)? Võrdle Ansible Vaultiga: mis on Gitis, kes saab parooli lugeda ja kuidas tühistad ligipääsu? Katse lõpus taasta failis `main.yml` rida `labseis_db_password: "{{ vault_db_password }}"`.
-
-
-??? example "6 · Kui midagi läheb valesti: `block` ja `rescue`"
+??? example "2 · Kui midagi läheb valesti: `block` ja `rescue`"
 
     Vea korral ütleb viimane play ainult, et `/health` ei vastanud. Põhjus on tavaliselt app01 Tomcati logis. Asenda `site.yml`-i viimase play ülesanne nii, et vea korral loeb Ansible rakendusserveri logi. `block` ja `rescue` töötavad nagu `try` ja `catch`, `delegate_to` käivitab ülesande teises masinas:
 
@@ -1735,17 +1706,7 @@ Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpe
 
     Proovi: `ssh app01 sudo systemctl stop tomcat10`, siis `ansible-playbook site.yml --limit web01 -e health_retries=2`. Kokkuvõttes on `failed=1` ja `rescued=1`. Taasta Tomcat playbook'iga: `ansible-playbook site.yml --limit app01`.
 
-??? example "7 · Üks krüpteeritud väärtus: `encrypt_string`"
-
-    `vault.yml` krüpteerib terve faili. Vahel on mugavam krüpteerida üks väärtus ja hoida see tavalises muutujate failis:
-
-    ```bash
-    ansible-vault encrypt_string 'proov123' --name vault_proov
-    ```
-
-    Kopeeri väljund faili `host_vars/db01.yml` ja kontrolli: `ansible db01 -m ansible.builtin.debug -a "msg={{ vault_proov | length }}"`. Mis juhtub `git diff`-is, kui muudad terves krüpteeritud failis ühte parooli, ja mis siis, kui krüpteeritud on üks väärtus? Vt [Encrypting content with Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault_encrypting_content.html). Kustuta katse lõpus fail `host_vars/db01.yml`.
-
-??? example "8 · Kaks keskkonda: test ja prod"
+??? example "3 · Kaks keskkonda: test ja prod"
 
     Töökohas paigaldatakse sama projekt mitmesse keskkonda. Rollid ja `site.yml` on samad, erinevad masinad ja mõned väärtused. Dokumentatsiooni soovitus ([Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html)) on hoida igal keskkonnal oma inventory ja selle kõrval oma `group_vars`. Selles katses on mõlemas keskkonnas samad masinad, prod-is on rakendusel rohkem mälu.
 
@@ -1769,4 +1730,34 @@ Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpe
     Prod näitab `-Xmx512m` → `+Xmx768m`, test `changed=0`. Viimane käsk kasutab `ansible.cfg`-s olevat `inventory.ini`-d ja näitab `+Xmx256m`: grupimuutujat pole enam ja kehtib rolli vaikeväärtus. Mida peaks `ansible.cfg`-s muutma, et vaikimisi oleks test ja prod-i jaoks tuleks `-i` alati kirjutada? Kuidas hoiaksid prod-i paroole eraldi Vaulti parooliga (`--vault-id prod@prompt`, [Managing vault passwords](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault_managing_passwords.html))?
 
     Taasta katse lõpus projekt, sest automaatne hindaja ootab faile vanas kohas: `mv inventories/test/group_vars/app.yml group_vars/app.yml && rm -r inventories`, siis `ansible-playbook site.yml --limit app01 --check --diff` annab `changed=0`.
+
+??? example "4 · Paroolid keskserverist: HashiCorp Vault ja OpenBao"
+
+    Ansible Vault hoiab paroole krüpteeritult repositooriumis. Töökohas on saladused sageli keskses serveris, kust Ansible need käivituse ajal küsib: Gitis pole ka krüpteeritud väärtust, ligipääsu saab tühistada ja iga päring jääb serveri logisse. Levinuim selline server on HashiCorp Vault (alates 2023 BSL-litsentsiga). [OpenBao](https://openbao.org/) on selle avatud lähtekoodiga haru (sarnaselt OpenTofuga 4. kohtumisel) sama API-ga, nii et kogu [`community.hashi_vault`](https://docs.ansible.com/projects/ansible/latest/collections/community/hashi_vault/index.html) töötab mõlemaga.
+
+    Käivita OpenBao control node'is arendusrežiimis. See hoiab andmeid mälus ja kasutab teadaolevat juurtokenit, seega sobib ainult katseks:
+
+    ```bash
+    cd /tmp
+    curl -fsSLO https://github.com/openbao/openbao/releases/download/v2.7.1/openbao_2.7.1_linux_amd64.deb
+    sudo apt install -y ./openbao_2.7.1_linux_amd64.deb python3-hvac
+    nohup bao server -dev -dev-root-token-id=proov -dev-listen-address=127.0.0.1:8200 > /tmp/bao.log 2>&1 &
+    export BAO_ADDR=http://127.0.0.1:8200 BAO_TOKEN=proov VAULT_TOKEN=proov
+    bao kv put secret/labseis db_password=Labseis2026
+    cd ~/kursus/k02-ansible
+    ansible-galaxy collection install community.hashi_vault:==6.2.0
+    ```
+
+    Asenda failis `group_vars/all/main.yml` andmebaasi parooli viide lookup'iga. Lookup käivitub control node'is iga kord, kui muutujat kasutatakse:
+
+    ```yaml
+    labseis_db_password: "{{ lookup('community.hashi_vault.vault_kv2_get', 'labseis', engine_mount_point='secret', url='http://127.0.0.1:8200').secret.db_password }}"
+    ```
+
+    ```bash
+    ansible db01 -m ansible.builtin.debug -a "msg={{ labseis_db_password | length }}"
+    ansible-playbook site.yml --limit db01,app01 --check --diff
+    ```
+
+    Pikkus on `11` ja kontroll annab `changed=0`: parool on sama, ainult allikas muutus. Mis juhtub, kui teed `unset VAULT_TOKEN` või peatad serveri (`pkill -f "bao server"`)? Võrdle Ansible Vaultiga: mis on Gitis, kes saab parooli lugeda ja kuidas tühistad ligipääsu? Katse lõpus taasta failis `main.yml` rida `labseis_db_password: "{{ vault_db_password }}"`.
 
