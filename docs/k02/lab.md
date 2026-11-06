@@ -2876,7 +2876,6 @@ Lõplik `site.yml`:
 - name: Kõik masinad
   hosts: all
   become: true
-  serial: 2
   roles:
     - common
 
