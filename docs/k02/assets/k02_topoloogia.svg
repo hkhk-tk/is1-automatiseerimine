@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 490" width="960" height="490"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700;font-size:16px}.s{font-size:14px}.m{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px;fill:#5e35b1}.o{fill:#e65100}.g{fill:#616161;font-size:13px}.d{stroke:#7e57c2;stroke-width:2;fill:none}.ssh{stroke:#ff9100;stroke-width:2;stroke-dasharray:7 5;fill:none}.u{fill:#ede7f6;stroke:#5e35b1;stroke-width:2}.a{fill:#fff3e0;stroke:#ff9100;stroke-width:2}</style><defs><marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="q" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/></marker></defs>
+<rect width="960" height="490" fill="#fff"/>
+<rect x="20" y="62" width="170" height="60" rx="8" fill="#fff" stroke="#7e57c2" stroke-width="2"/>
+<text x="105" y="88" text-anchor="middle" class="b">Brauser</text>
+<text x="105" y="108" text-anchor="middle" class="s">või curl /health</text>
+<rect x="260" y="30" width="180" height="110" rx="8" class="u"/>
+<text x="350" y="56" text-anchor="middle" class="b">web01 · Ubuntu</text>
+<text x="350" y="79" text-anchor="middle">Nginx :80</text>
+<text x="350" y="102" text-anchor="middle" class="m">[web] [ubuntu]</text>
+<text x="350" y="124" text-anchor="middle" class="g">roll nginx</text>
+<rect x="520" y="30" width="180" height="110" rx="8" class="u"/>
+<text x="610" y="56" text-anchor="middle" class="b">app01 · Ubuntu</text>
+<text x="610" y="79" text-anchor="middle">Tomcat 10 :8080</text>
+<text x="610" y="102" text-anchor="middle" class="m">[app] [ubuntu]</text>
+<text x="610" y="124" text-anchor="middle" class="g">roll tomcat</text>
+<rect x="260" y="220" width="180" height="110" rx="8" class="a"/>
+<text x="350" y="246" text-anchor="middle" class="b">db01 · AlmaLinux</text>
+<text x="350" y="269" text-anchor="middle">MariaDB :3306</text>
+<text x="350" y="292" text-anchor="middle" class="m">[db] [alma]</text>
+<text x="350" y="314" text-anchor="middle" class="g" style="font-size:12px">roll mariadb · firewalld</text>
+<rect x="520" y="220" width="180" height="110" rx="8" class="a"/>
+<text x="610" y="246" text-anchor="middle" class="b">mc01 · AlmaLinux</text>
+<text x="610" y="269" text-anchor="middle">Memcached :11211</text>
+<text x="610" y="292" text-anchor="middle" class="m">[cache] [alma]</text>
+<text x="610" y="314" text-anchor="middle" class="g" style="font-size:12px">roll memcached · firewalld</text>
+<rect x="770" y="220" width="170" height="110" rx="8" class="u"/>
+<text x="855" y="246" text-anchor="middle" class="b">rmq01 · Ubuntu</text>
+<text x="855" y="269" text-anchor="middle">RabbitMQ :5672</text>
+<text x="855" y="292" text-anchor="middle" class="m">[queue] [ubuntu]</text>
+<text x="855" y="314" text-anchor="middle" class="g">roll rabbitmq</text>
+<path d="M190,92 L258,92" class="d" marker-end="url(#p)"/>
+<text x="224" y="84" text-anchor="middle" class="g">:80</text>
+<path d="M440,85 L518,85" class="d" marker-end="url(#p)"/>
+<text x="479" y="77" text-anchor="middle" class="g">:8080</text>
+<path d="M570,140 L380,218" class="d" marker-end="url(#p)"/>
+<path d="M610,140 L610,218" class="d" marker-end="url(#p)"/>
+<path d="M660,140 L835,218" class="d" marker-end="url(#p)"/>
+<rect x="20" y="355" width="200" height="105" rx="8" fill="#5e35b1"/>
+<text x="120" y="382" text-anchor="middle" class="b" style="fill:#fff">control · Ubuntu</text>
+<text x="120" y="404" text-anchor="middle" class="s" style="fill:#fff">Ansible, Git</text>
+<text x="120" y="432" text-anchor="middle" class="s" style="fill:#ede7f6">~/kursus/k02-ansible</text>
+<path d="M220,405 L855,405" class="ssh"/>
+<path d="M350,405 L350,332" class="ssh" marker-end="url(#q)"/>
+<path d="M610,405 L610,332" class="ssh" marker-end="url(#q)"/>
+<path d="M855,405 L855,332" class="ssh" marker-end="url(#q)"/>
+<path d="M480,405 L480,165 L350,165 L350,142" class="ssh" marker-end="url(#q)"/>
+<path d="M730,405 L730,85 L702,85" class="ssh" marker-end="url(#q)"/>
+<text x="580" y="428" text-anchor="middle" class="o" style="font-size:14px;font-weight:600">SSH :22 · Ansible haldab kõiki viit masinat (kasutaja kasutaja, sudo)</text>
+<text x="480" y="476" text-anchor="middle" class="g">Laborivõrk 192.168.124.0/23 · IP-aadressid DHCP-st, vaata Proxmoxist (masin → Summary → IPs)</text>
+</svg>

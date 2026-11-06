@@ -24,8 +24,8 @@ tags:
 Rakendus Labori seis vajab viit teenust ja iga masin teeb erinevat tööd. Brauser saadab päringu web01-le, Nginx suunab selle app01-le ja rakendus kasutab andmebaasi, vahemälu ja sõnumijärjekorda.
 
 <figure markdown="span">
-  ![Labori seis viies masinas: web01 Nginx, app01 Tomcat, db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_stack.svg){ width="720" }
-  <figcaption>Joonis 2.1. Labori seisu teenused viies masinas (Talvik, 2026).</figcaption>
+  ![Labori topoloogia: control haldab SSH kaudu viit masinat; brauser → web01 Nginx → app01 Tomcat → db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_topoloogia.svg){ width="860" }
+  <figcaption>Joonis 2.1. Labori topoloogia: rakenduse liiklus (lilla) ja Ansible'i haldusühendused (oranž) (Talvik, 2026).</figcaption>
 </figure>
 
 Praktikumi algne playbook `labseis.yml` paigaldab kõik viis teenust ühest failist. Selle Nginxi osa näeb välja nii (lühendatud):
@@ -409,6 +409,20 @@ Viide loetavas failis näitab, millised saladused projektis on, ja `grep labseis
   <figcaption>Joonis 2.4. Saladus krüpteeritud failis, viide loetavas failis, kasutus mallis (Talvik, 2026).</figcaption>
 </figure>
 
+**Töökohas on saladused sageli keskserveris.** Ansible Vault sobib väikesele meeskonnale ja ühele repositooriumile: lisaserverit pole vaja ja kõik on Gitis. Suuremas organisatsioonis hoitakse saladusi tavaliselt keskses saladuste serveris, näiteks HashiCorp Vault või selle avatud lähtekoodiga haru [OpenBao](https://openbao.org/), või pilveteenuse saladuste halduris (AWS Secrets Manager, Azure Key Vault). Ansible küsib parooli käivituse ajal lookup'iga ([`community.hashi_vault`](https://docs.ansible.com/projects/ansible/latest/collections/community/hashi_vault/index.html)). Gitis pole siis ka krüpteeritud väärtust, ligipääsu saab ühe inimese või masina kaupa tühistada ja iga päring jääb serveri logisse. Mõlemat kasutatakse ka koos: Ansible Vaultis on ainult keskserveri ligipääsutoken.
+
+??? note "Tabel 2.5. Ansible Vault ja keskne saladuste server"
+
+    | | Ansible Vault | HashiCorp Vault, OpenBao |
+    |---|---|---|
+    | Kus saladus on | krüpteeritud failis Gitis | serveris, Gitis ainult viide |
+    | Kes saab lugeda | kõik, kellel on Vaulti parool | kellel on token ja õigus selle saladuse jaoks |
+    | Ligipääsu tühistamine | parool tuleb vahetada ja fail uuesti krüpteerida | tokeni tühistamine |
+    | Logi | puudub | iga päring logitakse |
+    | Lisataristu | pole vaja | server, varundus, kõrgkäideldavus |
+
+Selles kursuses kasutame Ansible Vaulti, sest mõte (saladus ei ole avatekstis ja kasutatakse muutuja kaudu) on sama ja lisaserverit pole vaja. Keskserverit proovid praktikumi lisaülesandes 5.
+
 ??? question "Kontrolli ennast"
 
     1. Kellelgi on repositooriumi koopia, aga mitte faili `~/.config/is1/vault_pass`. Mida näeb ta failist `vault.yml`?
@@ -440,7 +454,7 @@ ansible-playbook site.yml       # changed=0
 
 Võtmesõna `serial` töötleb play masinaid partiide kaupa. Rolli `common` play käib kõigis viies masinas ja `serial: 2` jagab need kolmeks partiiks: kaks, kaks ja üks masin. Väljundis on play päis iga partii kohta. `serial` määrab ainult partii suuruse. Kas vea korral kogu play peatub, määravad eraldi `any_errors_fatal` ja `max_fail_percentage`. Teenuse play'del on selles projektis üks masin, seal partiidest kasu pole.
 
-??? note "Tabel 2.5. Muudatuse kontroll"
+??? note "Tabel 2.6. Muudatuse kontroll"
 
     | Võti või võtmesõna | Tulemus |
     |---|---|

@@ -75,9 +75,24 @@ ansible-doc community.mysql.mysql_user | head -20
 Brauser ei pöördu otse rakenduse poole. Päringu võtab vastu Nginx web01-s ja edastab selle app01-le, kus Tomcatis töötab rakendus. Kasutaja pöördub ainult Nginxi pordi 80 poole ja rakendusserverit saab vahetada, ilma et kasutaja aadress muutuks. Rakendus hoiab andmeid MariaDB-s (db01), sageli küsitud vastuseid Memcachedis (mc01) ja saadab sõnumeid RabbitMQ kaudu (rmq01).
 
 <figure markdown="span">
-  ![Labori seis viies masinas: web01 Nginx, app01 Tomcat, db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_stack.svg){ width="720" }
-  <figcaption>Joonis 2.1. Brauser → web01 (Nginx) → app01 (Tomcat), mis kasutab andmebaasi, vahemälu ja sõnumijärjekorda (Talvik, 2026).</figcaption>
+  ![Labori topoloogia: control haldab SSH kaudu viit masinat; brauser → web01 Nginx → app01 Tomcat → db01 MariaDB, mc01 Memcached, rmq01 RabbitMQ](assets/k02_topoloogia.svg){ width="860" }
+  <figcaption>Joonis 2.1. Labori topoloogia: rakenduse liiklus (lilla) ja Ansible'i haldusühendused (oranž) (Talvik, 2026).</figcaption>
 </figure>
+
+Kirjuta tabelisse oma masinate IP-aadressid. Need on Proxmoxis masina lehel **Summary → IPs**. Sama tabeli järgi täidad 3. osas `inventory.ini`.
+
+??? note "Tabel 1.1. Masinad, rollid ja aadressid"
+
+    | Masin | Proxmoxi nimi | Distributsioon | Grupid | Port | Roll | IP-aadress |
+    |---|---|---|---|---|---|---|
+    | control | `Automatiseerimine-IS126-<Perenimi>-Control` | Ubuntu 24.04 | – | – | Ansible ja Git | |
+    | web01 | `…-Web01` | Ubuntu 24.04 | `web`, `ubuntu` | 80 | `nginx` | |
+    | app01 | `…-App01` | Ubuntu 24.04 | `app`, `ubuntu` | 8080 | `tomcat` | |
+    | rmq01 | `…-Rmq01` | Ubuntu 24.04 | `queue`, `ubuntu` | 5672 | `rabbitmq` | |
+    | mc01 | `…-Mc01` | AlmaLinux 9 | `cache`, `alma` | 11211 | `memcached` | |
+    | db01 | `…-Db01` | AlmaLinux 9 | `db`, `alma` | 3306 | `mariadb` | |
+
+    Kõik viis masinat on rollis `common`. AlmaLinuxi masinates töötab tulemüür `firewalld`, seepärast avatakse seal teenuse port.
 
 Aadress `/health` näitab rakenduse ja iga sõltuvuse olekut eraldi. Kui üks sõltuvus ei tööta, vastab rakendus ikka, aga vastav väli on `DOWN`. Siis on päring jõudnud Nginxi kaudu rakenduseni ja viga on rakenduse ja selle sõltuvuse vahel.
 
