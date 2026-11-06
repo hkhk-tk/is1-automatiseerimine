@@ -791,6 +791,8 @@ k02-ansible/
     | vaikeväärtus (praegu puudub) | `roles/nginx/defaults/main.yml` |
     | play päis `hosts: web`, `become: true` | `site.yml` |
 
+Kaustad võib luua käsitsi või käsuga `ansible-galaxy role init --init-path roles nginx`, mis loob kõik standardsed kaustad (ka `files`, `meta`, `tests`, `vars`). Siin loome ainult vajalikud:
+
 ```bash
 mkdir -p roles/nginx/tasks roles/nginx/handlers roles/nginx/templates roles/nginx/defaults
 mv templates/labori-seis-nginx.conf.j2 roles/nginx/templates/labori-seis.conf.j2
@@ -1742,4 +1744,29 @@ Lisaülesanded on kogenud õppijatele. Iga ülesanne on samas projektis ja lõpe
     ```
 
     Kopeeri väljund faili `host_vars/db01.yml` ja kontrolli: `ansible db01 -m ansible.builtin.debug -a "msg={{ vault_proov | length }}"`. Mis juhtub `git diff`-is, kui muudad terves krüpteeritud failis ühte parooli, ja mis siis, kui krüpteeritud on üks väärtus? Vt [Encrypting content with Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault_encrypting_content.html). Kustuta katse lõpus fail `host_vars/db01.yml`.
+
+??? example "8 · Kaks keskkonda: test ja prod"
+
+    Töökohas paigaldatakse sama projekt mitmesse keskkonda. Rollid ja `site.yml` on samad, erinevad masinad ja mõned väärtused. Dokumentatsiooni soovitus ([Sample Ansible setup](https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html)) on hoida igal keskkonnal oma inventory ja selle kõrval oma `group_vars`. Selles katses on mõlemas keskkonnas samad masinad, prod-is on rakendusel rohkem mälu.
+
+    ```bash
+    mkdir -p inventories/test/group_vars inventories/prod/group_vars
+    cp inventory.ini inventories/test/hosts.ini
+    cp inventory.ini inventories/prod/hosts.ini
+    echo 'tomcat_heap: 768m' > inventories/prod/group_vars/app.yml
+    ansible-playbook -i inventories/prod/hosts.ini site.yml --limit app01 --check --diff
+    ```
+
+    **Ennusta enne käsku:** kas `--diff` näitab `-Xmx768m`? Tegelikult annab käsk `changed=0`: projekti kõrval olev `group_vars/app.yml` (`512m`) on tugevam kui inventory kõrval olev. Tõsta grupi `app` väärtus testi inventory juurde ja proovi uuesti:
+
+    ```bash
+    mv group_vars/app.yml inventories/test/group_vars/app.yml
+    ansible-playbook -i inventories/prod/hosts.ini site.yml --limit app01 --check --diff
+    ansible-playbook -i inventories/test/hosts.ini site.yml --limit app01 --check --diff
+    ansible-playbook site.yml --limit app01 --check --diff
+    ```
+
+    Prod näitab `-Xmx512m` → `+Xmx768m`, test `changed=0`. Viimane käsk kasutab `ansible.cfg`-s olevat `inventory.ini`-d ja näitab `+Xmx256m`: grupimuutujat pole enam ja kehtib rolli vaikeväärtus. Mida peaks `ansible.cfg`-s muutma, et vaikimisi oleks test ja prod-i jaoks tuleks `-i` alati kirjutada? Kuidas hoiaksid prod-i paroole eraldi Vaulti parooliga (`--vault-id prod@prompt`, [Managing vault passwords](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault_managing_passwords.html))?
+
+    Taasta katse lõpus projekt, sest automaatne hindaja ootab faile vanas kohas: `mv inventories/test/group_vars/app.yml group_vars/app.yml && rm -r inventories`, siis `ansible-playbook site.yml --limit app01 --check --diff` annab `changed=0`.
 
