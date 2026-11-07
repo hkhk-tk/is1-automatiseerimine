@@ -46,7 +46,12 @@ ls
 
 ??? warning "Kui `labseis.yml` puudub"
 
-    Laadi see starterist: `curl -fsSLO https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/k02-ansible/labseis.yml` ja sama käsuga `requirements.yml`.
+    Laadi mõlemad failid starterist (käivita kaustas `~/kursus/k02-ansible`):
+
+    ```bash
+    curl -fsSLO https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/k02-ansible/labseis.yml
+    curl -fsSLO https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/k02-ansible/requirements.yml
+    ```
 
 ### 1.2 Kogud
 
