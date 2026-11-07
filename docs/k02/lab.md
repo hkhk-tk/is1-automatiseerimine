@@ -10,7 +10,7 @@ tags:
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
-Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa küsimusele käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
 
 ??? abstract "Õpiväljundid"
 
