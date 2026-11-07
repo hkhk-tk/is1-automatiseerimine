@@ -355,7 +355,7 @@ docker run -d --name w2 -P $HUB/nginx:1.30-alpine && docker port w2
 sudo nft list ruleset | grep -i dnat | head -3
 ```
 
-Ava oma arvuti brauseris (VPN-iga) `http://<control'i IP>:8081` ja proovi ka `http://<konteineri IP>`. Seejärel eemalda katse konteinerid:
+Ava oma arvuti brauseris (VPN-iga) `http://<control IP>:8081` ja proovi ka `http://<konteineri IP>`. Seejärel eemalda katse konteinerid:
 
 ```bash
 docker rm -f w w2 fg && docker container prune -f
@@ -1397,7 +1397,7 @@ docker compose up -d mc01 rmq01
 sleep 30; docker compose ps
 ```
 
-Ava brauseris `http://<control'i IP>:15672` ja logi sisse kasutajaga `labseis`.
+Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
 <figure markdown="span">
   ![RabbitMQ halduse UI Overview leht, node rabbit@rmq01 töötab](assets/k03_rabbitmq_overview.png)
@@ -1504,7 +1504,7 @@ curl -s http://localhost:8080/health; echo; curl -s http://localhost:8080/versio
 docker compose top app01
 ```
 
-Ava brauseris `http://<control'i IP>:8080/s/demo-kati-token`. See on näidisõppija vaade: token tuleb failist `db/seed.sql`. Õpetaja vaade on `/?token=<TEACHER_TOKEN>`.
+Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppija vaade: token tuleb failist `db/seed.sql`. Õpetaja vaade on `/?token=<TEACHER_TOKEN>`.
 
 <figure markdown="span">
   ![Labori seisu avaleht brauseris pordil 8080](assets/k03_labori_seis_avaleht.png)
@@ -1889,7 +1889,7 @@ docker run --rm --network labori-seis_back labseis-kontroll:test; echo
 Ava oma arvutist SSH-tunnel ja seejärel brauseris `http://localhost:15672`:
 
 ```bash
-ssh -L 15672:127.0.0.1:15672 kasutaja@<control'i IP>
+ssh -L 15672:127.0.0.1:15672 kasutaja@<control IP>
 ```
 
 ??? success "Oodatav tulemus"
