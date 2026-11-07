@@ -24,7 +24,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     6. Käivitad sama teenuse rootless Podmaniga systemd teenusena SELinuxi all.
     7. Leiad stackist rikked sammudega sümptom, hüpotees, tõend, parandus ja korduskontroll.
 
-Iga osa on üles ehitatud samamoodi nagu 2. kohtumisel: **probleem** (miks seda vaja on), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee osa eesmärgi järgi ise ja ava plokid ainult kontrolliks. Faili tükid on plokkides eraldi: lisa need järjest, loe selgitus ja käivita. Iga osa lõpus on kokkuvolditud „Miks see nii töötab“ ja veaotsingu tabel.
+Iga osa on üles ehitatud samamoodi nagu 2. kohtumisel: **probleem** (miks seda vaja on), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee osa eesmärgi järgi ise ja ava plokid ainult kontrolliks. Faili tükid on plokkides eraldi: lisa need järjest, loe selgitus ja käivita. Iga osa lõpus on kokkuvolditud „Miks see nii töötab“. Veaotsingu tabelid on osade kaupa lehe lõpus jaotises „Rikkeotsing“.
 
 Rida **Küsimus enne käsku** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
 
@@ -32,7 +32,7 @@ Tõendid kogud faili `k03-docker/TOEND.md`. Iga osa lõpus on kirjas, mida sinna
 
 ??? info "Testitud versioonid"
 
-    Docker Engine 29 (vähemalt 28), Compose v5 (vähemalt v2.24), ansible-core 2.16, Harbor 2.15, `mariadb:11.4`, `rabbitmq:4.1-management-alpine`, `memcached:1.6-alpine`, `nginx:1.30-alpine`, `tomcat:10.1-jre21-temurin`, `maven:3-eclipse-temurin-21`, `alpine:3.22`, Podman 5 (AlmaLinux 9.8), Trivy 0.6x. Vanema Compose'iga puuduvad sildid nagu `!override` ja prod-failis saad süntaksivea, mis ei ütle, et viga on versioonis.
+    Docker Engine 29 (vähemalt 28), Compose v5 (vähemalt v2.24), ansible-core 2.16, Harbor 2.15, `mariadb:11.4`, `rabbitmq:4.1-management-alpine`, `memcached:1.6-alpine`, `nginx:1.30-alpine`, `tomcat:10.1-jre21-temurin`, `maven:3-eclipse-temurin-21`, `alpine:3.22`, Podman 5 (AlmaLinux 9.8), Trivy 0.76. Vanema Compose'iga puuduvad sildid nagu `!override` ja prod-failis saad süntaksivea, mis ei ütle, et viga on versioonis.
 
     Dokumentatsioon: [Dockerfile](https://docs.docker.com/reference/dockerfile/), [Compose'i fail](https://docs.docker.com/reference/compose-file/), [Harbor](https://goharbor.io/docs/2.14.0/), [Podman](https://docs.podman.io/), [Trivy](https://trivy.dev/docs/latest/).
 
@@ -1534,7 +1534,7 @@ curl -s http://localhost:8080/health; echo; curl -s http://localhost:8080/versio
 docker compose top app01
 ```
 
-Ava brauseris `http://<control'i IP>:8080`.
+Ava brauseris `http://<control'i IP>:8080/s/demo-kati-token`. See on näidisõppija vaade: token tuleb failist `db/seed.sql`. Õpetaja vaade on `/?token=<TEACHER_TOKEN>`.
 
 <figure markdown="span">
   ![Labori seisu avaleht brauseris pordil 8080](assets/k03_labori_seis_avaleht.png)
@@ -2200,7 +2200,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 <figure markdown="span">
   ![Harbori projekti Repositories vaade kolme repositooriumiga labori-seis-app, labori-seis-db ja labori-seis-web](assets/k03_harbor_repositories.png)
-  <figcaption>Joonis 3.10. Kolm image'it Harboris git-SHA tag'iga (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.10. Kolm image'it sinu Harbori projektis (Talvik, 2026).</figcaption>
 </figure>
 
 ??? success "Oodatav tulemus"
@@ -2231,7 +2231,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 Harbori projektis on seade **Automatically scan images on push**. Iga uus image skannitakse Trivy'ga kohe pärast push'i ja tulemus on image'i juures. Nii näeb iga image'i kasutaja leide enne tõmbamist, ka siis, kui ise Trivy't käivitama ei hakka.
 
-Ava Harboris `labori-seis-app`, siis oma tag. Veerg **Vulnerabilities** näitab leidude arvu raskusastme kaupa. Klõpsa sellel, et näha pakettide kaupa.
+Ava Harboris `labori-seis-app`. Veerg **Vulnerabilities** näitab leidude arvu raskusastme kaupa. Klõpsa sellel, et näha pakettide kaupa.
 
 <figure markdown="span">
   ![Harbori artefakti vaade, Vulnerabilities veerg näitab Critical, High ja Medium leidude arvu](assets/k03_harbor_scan.png)
@@ -3221,15 +3221,6 @@ Pärast esitamist lülita Proxmoxis välja mc01 ja db01 (**VM → Shutdown**): P
     **`.env.example`.** `.env.example` kirjeldab nõutavaid keskkonnamuutujaid ja võimaldab konfiguratsiooni valideerida. See peab sisaldama iga muutujat, mida `compose.yaml` nõuab, väärtustega, millega fail valideerub.
 
     **Tag `k03`.** Tag `k03` määrab, milline commit esitatakse, ja automaatkontroll hindab alati seda commit'i, millele tag viitab. Tag `main`-i peal tähendab, et kontrollitakse sama koodi, mis on kursuse põhiharus. Kursusel on tag'i ümbertõstmine pärast parandust lubatud.
-
-## Kodutöö
-
-Pärast esitamist viib kodutöö sama stacki pilve ja monitooringu alla: control node'i asemel on pilvemasin ja kohaliku registry asemel ECR. Mõlemad kodutööd kasutavad selle korra faile muutmata kujul. Kui `compose.yaml` ja image'id töötavad registry'st, muutub pilves ainult registry aadress ja see, kuidas masin saab õiguse image'it tõmmata.
-
-| Issue | Mis | Juhend |
-|---|---|---|
-| `K3.K` | AWS: image ECR-i, Compose EC2-l, IAM roll võtme asemel | [`kodutood/k03-aws.md`](../kodutood/k03-aws.md) |
-| `K3.M` | Monitooring: konteinerite health-olek `docker events`-iga ja Uptime Kuma | [`kodutood/monitooring.md`](../kodutood/monitooring.md) → 3. kohtumine |
 
 ## Rikkeotsing
 
