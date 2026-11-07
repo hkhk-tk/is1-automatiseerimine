@@ -1256,16 +1256,16 @@ rm -f app/Dockerfile.naive
 
 ## Osa 4 · Kogu stack Compose'iga
 
-**Probleem:** viis `docker run` käsku shelli ajaloos ei ole soovitud olek. Järgmine administraator ei tea, millise võtmega mida käivitati, ja pärast taaskäivitust käivituvad teenused vales järjekorras.
+**Probleem:** viis `docker run` käsku shelli ajaloos ei kirjelda soovitud olekut. Järgmine administraator ei tea, millise võtmega mida käivitati, ja pärast taaskäivitust käivituvad teenused vales järjekorras.
 
-**Eesmärk:** võrk, nimed, volume'id ja muutujad, mis `docker run`-iga olid pikad käsuread, lähevad faili, mida saab Gitis hoida, üle vaadata ja korduvalt käivitada. Compose on Ansible'i playbook'i vaste konteineritele: fail kirjeldab soovitud olekut ja `up -d` viib süsteemi sellesse olekusse. Kirjutad faili teenus teenuse haaval ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)) ning iga teenuse järel käivitad `docker compose up -d <teenus>` ja kontrollid tulemust. Osa lõpus töötab kogu Labori seis ühe `compose.yaml`-iga ja üks tulemus läbib ahela web01-st db01-ni.
+**Eesmärk:** võrk, nimed, volume'id ja muutujad, mis `docker run`-iga olid pikad käsuread, lähevad faili, mida saab Gitis hoida, üle vaadata ja korduvalt käivitada. Compose on Ansible'i playbook'i vaste konteineritele: fail kirjeldab soovitud olekut ja `up -d` viib süsteemi sellesse olekusse. Kirjutad faili ühe teenuse kaupa ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)) ning iga teenuse järel käivitad `docker compose up -d <teenus>` ja kontrollid tulemust. Osa lõpus töötab kogu Labori seis ühe `compose.yaml`-iga ja üks tulemus läbib ahela web01-st db01-ni.
 
 <figure markdown="span">
   ![Brauser pöördub pordil 8080 web01 poole, web01 app01 poole, app01 db01, mc01 ja rmq01 poole; kõik on projekti võrgus labori-seis_default](assets/k03_compose_stack.svg)
   <figcaption>Joonis 3.5. Labori seis Compose'i stackina (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.3 kirjeldab, milline stack peab olema. Read on käivitusjärjekorras. Veerg „Hostis avatud“ ütleb, kes on väljast nähtav. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
+Tabel 3.3 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hostis avatud“ näitab, millised teenused on väljast nähtavad. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
 
 ??? note "Tabel 3.3. Stacki teenused"
 
@@ -1297,7 +1297,7 @@ Alustad saladustest ja andmebaasist, sest kõik teised sõltuvad neist. `.env` h
 
     `HUB=docker.io/library` on näidisfailis meelega: GitHubi automaatkontroll Harborit ei näe ja tõmbab Docker Hubist.
 
-Tee sellest `.env` oma väärtustega. `OWNER` on sinu GitHubi kasutajanimi väikeste tähtedega, `HUB` sama mis shellis:
+Loo selle põhjal fail `.env` oma väärtustega. `OWNER` on sinu GitHubi kasutajanimi väikeste tähtedega, `HUB` sama mis shellis:
 
 ```bash
 cp .env.example .env && chmod 600 .env
@@ -1354,9 +1354,9 @@ sleep 25; docker compose ps
 
 ### 4.2 mc01 ja rmq01
 
-Kaks backend'i teenust tulevad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Avatud Memcachedi port on tuntud ründevektor: vahemälust saab lugeda kõike, mis sinna pandi, ja UDP kaudu on seda kasutatud võimendusrünnakuteks. Port, mida keegi väljast ei vaja, jääb kinni.
+Kaks backend'i teenust käivitad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Avatud Memcachedi port on tuntud ründevektor: vahemälust saab lugeda kõike, mis sinna pandi, ja UDP kaudu on seda kasutatud võimendusrünnakuteks. Porti, mida väljast ei vajata, ei avaldata.
 
-Nõuded: rmq01-l `hostname: rmq01`, kasutaja `labseis` ja parool `.env`-ist (muutujad nagu `docker run -e`-ga), andmed volume'is `rmqdata` (`/var/lib/rabbitmq`); hostis on avatud ainult RabbitMQ halduse UI port `15672`, mc01-l `ports:` pole; healthcheck tabelist, toruga käsk vajab `CMD-SHELL` kuju; uus volume läheb ka faili lõpu `volumes:` alla.
+Nõuded: rmq01-l `hostname: rmq01`, kasutaja `labseis` ja parool `.env`-ist (muutujad nagu `docker run -e`-ga), andmed volume'is `rmqdata` (`/var/lib/rabbitmq`); hostis on avatud ainult RabbitMQ halduse UI port `15672`, mc01-l `ports:` pole; healthcheck tabelist, toruga käsk vajab `CMD-SHELL` kuju; lisa uus volume ka faili lõpus olevasse jaotisse `volumes:`.
 
 ??? example "Lahendus: mc01 ja rmq01"
 
@@ -1451,11 +1451,11 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
 ??? warning "Kui `db` on DOWN ja logis `Access denied`"
 
-    Volume algseadistati varem teise parooliga. Praktikumis on baas veel tühi, nii et `docker compose down -v` ja uuesti. Tootmises kustutaks see andmed: tee enne varukoopia ja kontrolli taastamist või muuda parool baasis endas.
+    Volume algseadistati varem teise parooliga. Praktikumis on baas veel tühi, nii et käivita `docker compose down -v` ja loo stack uuesti. Tootmises kustutaks see andmed: tee enne varukoopia ja kontrolli taastamist või muuda parool baasis endas.
 
 ### 4.4 web01 ja ühised seaded
 
-Viimane teenus avab stacki väljapoole. Kõigil teenustel on samad restart- ja logiseaded, seega kirjutad need üks kord ja viitad neile YAML-ankruga. Ilma logide rotatsioonita täidab üks jutukas konteiner `/var/lib/docker` partitsiooni ja siis seiskub kogu Docker koos kõigi teenustega.
+Viimase teenuse kaudu pääseb stackile ligi väljast. Kõigil teenustel on samad restart- ja logiseaded, seega kirjutad need üks kord ja viitad neile YAML-ankruga. Ilma logide rotatsioonita täidab üks palju logi kirjutav konteiner `/var/lib/docker` partitsiooni ja siis seiskub kogu Docker koos kõigi teenustega.
 
 Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
 
@@ -1471,7 +1471,7 @@ Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 jär
           max-file: "3"
     ```
 
-    Iga teenuse esimeseks reaks:
+    Lisa iga teenuse esimeseks reaks:
 
     ```yaml
       db01:
@@ -1517,11 +1517,11 @@ Ava brauseris `http://<control'i IP>:8080/s/demo-kati-token`. See on näidisõpp
 
 ??? warning "Kui `port is already allocated`"
 
-    Pordil 8080 on midagi muud: `ss -tlnp | grep 8080`. Muuda `.env`-is `WEB_PORT`.
+    Port 8080 on juba kasutusel. Vaata, milline protsess seda kasutab: `ss -tlnp | grep 8080`. Muuda `.env`-is `WEB_PORT`.
 
 ### 4.5 Töötava teenuse uurimine
 
-Töötavat stacki uurid samade küsimustega nagu iga teist teenust, kui kasutaja ütleb „läks aeglaseks“ või „annab vahel vea“. Iga käsk vastab ühele küsimusele: mis juhtub praegu (`logs -f`), mis juhtus viimasel ajal (`--since`), milline on seadistus (`inspect --format`), kui palju ressurssi kulub (`stats`), mis protsessid töötavad (`top`) ja milline fail konteineris on (`cp`). `docker restart` säilitab konteineri ja tema logi, aga `up -d --force-recreate` loob uue konteineri ja `json-file` logi kaob koos vanaga. Enne uuesti loomist tasub vajalikud väljad ja logiread välja võtta.
+Töötavat stacki uurid samade küsimustega nagu iga teist teenust, kui kasutaja ütleb „läks aeglaseks“ või „annab vahel vea“. Iga käsk vastab ühele küsimusele: mis juhtub praegu (`logs -f`), mis juhtus viimasel ajal (`--since`), milline on seadistus (`inspect --format`), kui palju ressurssi kulub (`stats`), mis protsessid töötavad (`top`) ja milline fail konteineris on (`cp`). `docker restart` säilitab konteineri ja tema logi, aga `up -d --force-recreate` loob uue konteineri ja `json-file` logi kaob koos vanaga. Enne konteineri uuesti loomist salvesta vajalikud väljad ja logiread.
 
 Jälgi teises terminalis web01 logi (`docker compose logs -f --since 1m web01`) ja tee esimeses päringuid:
 
@@ -1557,7 +1557,7 @@ diff web/nginx.conf /tmp/web01-default.conf
 
 ??? success "Oodatav tulemus"
 
-    Logis tekkisid read samal hetkel, kui tegid päringu, ja `/olematu` andis 404 rea, mida saad otsida ilma kogu logi kerimata. Inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud, üks teine number vahel näitab ajutist tõrget. `stats` näitab, et suurima mäluga on app01 ja db01. `top` näitab Java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` erineb ainult `resolver` real: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
+    Logis tekkisid read samal hetkel, kui tegid päringu, ja päring `/olematu` andis logisse 404 rea, mida saad otsida ilma kogu logi kerimata. Inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud, üks teine number vahel näitab ajutist tõrget. `stats` näitab, et kõige rohkem mälu kasutavad app01 ja db01. `top` näitab Java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` näitab erinevust ainult `resolver` real: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
 
     `docker cp` töötab ka teises suunas, hostist konteinerisse. See sobib silumiseks, aga mitte parandamiseks: järgmine `up -d` loob konteineri uuesti ja sinu fail kaob.
 
@@ -1575,7 +1575,7 @@ docker compose up -d
 
 Muuda `.env`-is `WEB_PORT` väärtuseks `8088` ja uuenda stacki.
 
-**Küsimus enne käsku:** millised teenused pordi muutus uuesti loob?
+**Küsimus enne käsku:** millised teenused luuakse pordi muutmise järel uuesti?
 
 ```bash
 sed -i 's/^WEB_PORT=.*/WEB_PORT=8088/' .env && docker compose up -d
@@ -1586,7 +1586,7 @@ sed -i 's/^WEB_PORT=.*/WEB_PORT=8080/' .env && docker compose up -d
 
 ??? success "Oodatav tulemus"
 
-    Esimene `up -d` ütles kõigi kohta `Running`: midagi ei muutunud ja midagi ei loodud. Pordi muutus lõi uuesti ainult web01, sest ainult selle seadistus erines. `RunningFor` näitab, et teised jäid alles. `/health` vastas pordil 8088. Kui `up -d` loob ilma muudatuseta midagi uuesti, on failis väärtus, mis muutub iga käivitusega.
+    Esimene `up -d` ütles kõigi kohta `Running`: midagi ei muutunud ja midagi ei loodud. Pordi muutmise järel loodi uuesti ainult web01, sest ainult selle seadistus erines. `RunningFor` näitab, et teised jäid alles. `/health` vastas pordil 8088. Kui `up -d` loob ilma muudatuseta midagi uuesti, on failis väärtus, mis muutub iga käivitusega.
 
 ### 4.7 Tulemus web01-st db01-ni
 
@@ -1597,7 +1597,7 @@ sed -i 's/^WEB_PORT=.*/WEB_PORT=8080/' .env && docker compose up -d
   <figcaption>Joonis 3.8. Ühe tulemuse teekond läbi stacki (Talvik, 2026).</figcaption>
 </figure>
 
-Joonis näitab, et POST ja GET käivad eri teid. Kirjutamine on asünkroonne: app01 vastab kohe ja tulemus jõuab baasi alles siis, kui consumer sõnumi järjekorrast võtab. Lugemine käib vahemälu kaudu.
+Joonis näitab, et POST- ja GET-päringud käivad eri teid. Kirjutamine on asünkroonne: app01 vastab kohe ja tulemus jõuab baasi alles siis, kui consumer sõnumi järjekorrast võtab. Lugemine käib vahemälu kaudu.
 
 ```bash
 docker run --rm --network labori-seis_default labseis-kontroll:test; echo
@@ -1618,7 +1618,7 @@ docker compose exec mc01 sh -c 'echo stats | nc -w 1 127.0.0.1 11211' | grep -E 
 
 ### 4.8 Riku ja vaata
 
-Peatad ühe sõltuvuse, lood rakenduse uuesti ja taaskäivitad terve masina. Need kolm juhtuvad tootmises: järjekorra server läheb hooldusse, konveier uuendab rakendust, host saab tuumauuenduse.
+Peatad ühe sõltuvuse, lood rakenduse uuesti ja taaskäivitad terve masina. Need kolm juhtuvad tootmises: järjekorraserver läheb hooldusse, konveier uuendab rakendust, host saab tuumauuenduse.
 
 ```bash
 docker compose stop rmq01
@@ -1633,7 +1633,7 @@ Taaskäivita control (`sudo reboot`) ja vaata pärast sisselogimist `docker comp
 
 ??? success "Oodatav tulemus"
 
-    `/health` andis 503 ja app01 läks `unhealthy`, aga keegi seda ei taaskäivitanud. Kui rmq01 tagasi tuli, taastas rakendus ühenduse ise. Uuesti loomise järel vastas web01 ilma 502-ta: `nginx.conf`-i `resolver` leidis app01 uue IP 10 sekundi jooksul. Pärast taaskäivitust käivitas stacki `restart: unless-stopped`, mitte sina.
+    `/health` andis 503 ja app01 läks `unhealthy`, aga keegi seda ei taaskäivitanud. Kui rmq01 uuesti käivitus, taastas rakendus ühenduse ise. Uuesti loomise järel vastas web01 ilma 502-ta: `nginx.conf`-i `resolver` leidis app01 uue IP 10 sekundi jooksul. Pärast taaskäivitust käivitas stacki `restart: unless-stopped`, mitte sina.
 
 ### 4.9 Commit
 
@@ -1667,9 +1667,9 @@ git status --short
 
     **Compose ja orkestraator.** Compose haldab üht hosti. Kui host läheb rikki, on stack maas. Kui tahad kahte app01 koopiat, uuendust ilma 502-ta või teenuse kolimist teisele masinale, Compose ei aita. Seda tööd teeb orkestraator. Dockeril on oma sisseehitatud orkestraator Swarm (lisaülesanne 1). Orkestraatoris ei käivita sa konteinerit ise. Ütled, et koopiaid peab olema kolm, ja manager hoiab seda olekut: kustutatud koopia asemele tuleb uus, ilma et keegi oleks käsu andnud. Sama juhtimistsüklit (control loop) kasutab Kubernetes. Swarmi uuendus vahetab koopiad ükshaaval ja teenus vastab kogu aja, sest avaldatud port on Swarmi ingress-võrgus ja suunab liikluse ainult töötavatele koopiatele.
 
-    **Miks Kubernetes, mitte Swarm.** Swarm on lihtne ja loeb sama Compose'i vormingut (`docker stack deploy -c`). Meie `compose.yaml` töötaks seal peaaegu muutmata, välja arvatud kaks asja: `build:` ei toimi, image peab olema registry's, ja `depends_on` jäetakse kõrvale. Orkestraator eeldab, et rakendus talub puuduvat sõltuvust ja ühendub ise uuesti, nagu Labori seis rikketestis tegi. Swarmi ökosüsteem on aga väike ja areneb aeglaselt. Kubernetest toetavad pilvede hallatud teenused, monitooringu- ja turvatööriistad, ja seda küsitakse tööpakkumistes.
+    **Miks Kubernetes, mitte Swarm.** Swarm on lihtne ja loeb sama Compose'i vormingut (`docker stack deploy -c`). Meie `compose.yaml` töötaks seal peaaegu muutmata, välja arvatud kaks asja: `build:` ei toimi, image peab olema registry's, ja `depends_on` jäetakse kõrvale. Orkestraator eeldab, et rakendus talub puuduvat sõltuvust ja ühendub ise uuesti, nagu Labori seis rikketestis tegi. Swarmi ökosüsteem on aga väike ja areneb aeglaselt. Kubernetest toetavad pilvede hallatud teenused, monitooringu- ja turvatööriistad, ja selle oskust küsitakse tööpakkumistes.
 
-    Sisuline vahe on mudelis. Kubernetes eristab liveness'i ja readiness'i kontrolli (`livenessProbe` ja `readinessProbe`), Swarmil on üks healthcheck. Kubernetesel on namespace'id, RBAC, NetworkPolicy, püsikettad CSI kaudu ja laiendused (operaatorid, Helm), mis teevad temast platvormi, mitte ainult konteinerite käivitamise vahendi. Hind on keerukus, ja seepärast kasutame 7. kohtumisel k3s-i, mis paneb sama API ühe binaarina kokku.
+    Sisuline vahe on mudelis. Kubernetes eristab liveness'i ja readiness'i kontrolli (`livenessProbe` ja `readinessProbe`), Swarmil on üks healthcheck. Kubernetesel on namespace'id, RBAC, NetworkPolicy, püsikettad CSI kaudu ja laiendused (operaatorid, Helm), mis teevad sellest platvormi, mitte ainult konteinerite käivitamise vahendi. Hind on keerukus, ja seepärast kasutame 7. kohtumisel k3s-i, mis paneb sama API ühe binaarina kokku.
 
     **Compose'ist Kubernetesesse.** Tabel näitab, kuidas tänane töö Kubernetesesse üle läheb. Mõisted jäävad samaks, muutub ainult see, kes soovitud olekut hoiab.
 
@@ -1688,11 +1688,11 @@ git status --short
 
 ## Osa 5 · Tootmiskeskkonda sobiv stack
 
-**Probleem:** stack töötab, aga paroolid on konteineri keskkonnas, kõik teenused on ühes võrgus internetiga, mälupiire pole ning logid ja ketas kasvavad vabalt. Tootmisserveris tähendab see, et üks teenus võtab teiste mälu, parool lekib `inspect`-ist, kompromiteeritud rakendus pääseb internetti, veebijuurde ilmub võõras fail ja ketas saab täis.
+**Probleem:** stack töötab, aga paroolid on konteineri keskkonnas, kõik teenused on ühes võrgus internetiga, mälupiire pole ning logid kasvavad piiramatult ja ketas täitub. Tootmisserveris tähendab see, et üks teenus võtab teiste mälu, parool lekib `inspect`-ist, kompromiteeritud rakendus pääseb internetti, veebijuurde ilmub võõras fail ja ketas saab täis.
 
-**Eesmärk:** kirjutad prod-faili `compose.prod.yaml`, mis tuleb `compose.yaml` peale, varundad ja taastad andmebaasi volume'i ning paned paika koristuspoliitika. `compose.yaml` jääb muutmata, sest seda loevad automaatkontroll, 5. kohtumise konveier ja 7. kohtumise töö. Logide rotatsiooni lisad Dockeri rolli, et see kehtiks igas masinas, kuhu roll paigaldatakse.
+**Eesmärk:** kirjutad prod-faili `compose.prod.yaml`, mille seaded liidetakse `compose.yaml`-i seadetega, varundad ja taastad andmebaasi volume'i ning paned paika koristuspoliitika. `compose.yaml` jääb muutmata, sest seda loevad automaatkontroll, 5. kohtumise konveier ja 7. kohtumise töö. Logide rotatsiooni lisad daemoni seadetesse, 8. osas läheb sama seade rolli.
 
-Tabel 3.4 on prod-faili sisu ühe pildina. Iga rida vastab küsimustele: kui palju see teenus tohib võtta, kuhu ta näeb ja mis on temas kirjutuskaitstud. Väärtused mahuvad kokku umbes 2 GB sisse ja on valitud control'i mälu järgi. Tootmisserveris mõõdad need `docker stats`-iga koormuse all.
+Tabel 3.4 näitab prod-faili sisu ühes kohas. Iga rida vastab küsimustele: kui palju ressursse teenus tohib kasutada, millistesse võrkudesse see kuulub ja mis on selles kirjutuskaitstud. Mälupiiride summa on umbes 2 GB ja on valitud control'i mälu järgi. Tootmisserveris mõõdad need `docker stats`-iga koormuse all.
 
 ??? note "Tabel 3.4. Prod-faili sisu teenuste kaupa"
 
@@ -1706,7 +1706,7 @@ Tabel 3.4 on prod-faili sisu ühe pildina. Iga rida vastab küsimustele: kui pal
 
 ### 5.1 Prod-fail ja ressursipiirangud
 
-Prod-fail on teine Compose'i fail, mis liidetakse põhifaili peale. Alustad ressursipiirangutest, sest need on kõige lihtsamad ja nende mõju näed kohe `docker stats`-is. Ilma piiranguteta võib üks teenus teised nälga jätta: Java võtab mälu, mida MariaDB vajaks puhvriteks, ja hosti OOM killer valib ohvri kogu masina seast.
+Prod-fail on teine Compose'i fail, mis liidetakse põhifaili peale. Alustad ressursipiirangutest, sest need on kõige lihtsamad ja nende mõju näed kohe `docker stats`-is. Ilma piiranguteta võib üks teenus teistelt ressursid ära võtta: Java võtab mälu, mida MariaDB vajaks puhvriteks, ja hosti OOM killer valib ohvri kogu masina seast.
 
 Tee kaustas `k03-docker/` fail `.gitignore` ridadega `secrets/`, `backup/`, `trivy.txt`, `sbom-*.json`, `intsident/data/`.
 
@@ -1744,7 +1744,7 @@ Tee kaustas `k03-docker/` fail `.gitignore` ridadega `secrets/`, `backup/`, `tri
             limits: {memory: 64m, cpus: "0.5", pids: 100}
     ```
 
-Vaata liidetud tulemust ja käivita stack mõlema failiga. `COMPOSE_FILE` kehtib selle shelli lõpuni, `--wait` ootab, kuni kõik healthcheck'id on rohelised.
+Vaata liidetud tulemust ja käivita stack mõlema failiga. `COMPOSE_FILE` kehtib selle shelli lõpuni, `--wait` ootab, kuni kõik teenused on `healthy`.
 
 ```bash
 export COMPOSE_FILE=compose.yaml:compose.prod.yaml
@@ -1765,7 +1765,7 @@ Lisa app01-le `environment`-i `CATALINA_OPTS: "-XX:MaxRAMPercentage=75"`, uuenda
 
 ### 5.2 Piir peab vastu: protsesside arv
 
-Mälupiiri nägid juba `docker run -m`-iga. Protsesside piir kaitseb teise vea eest: fork-pomm või lekkiv skript, mis käivitab protsesse lõputult. Ilma `pids`-piiranguta täidab üks konteiner hosti protsessitabeli. Siis ei saa ka `sshd` uut sessiooni avada ja masinat saad parandada ainult konsoolist. Proovid seda web01-s, mille piir on 100.
+Mälupiiri nägid juba `docker run -m`-iga. Protsesside piir kaitseb teise vea eest: fork-pomm või skript, mis käivitab protsesse lõputult. Ilma `pids`-piiranguta täidab üks konteiner hosti protsessitabeli. Siis ei saa ka `sshd` uut sessiooni avada ja masinat saad parandada ainult konsoolist. Proovid seda web01-s, mille piir on 100.
 
 **Küsimus enne käsku:** mitu protsessi käivitub ja kas `/health` vastab sel ajal?
 
@@ -1778,7 +1778,7 @@ sleep 30; docker stats --no-stream --format '{{.Name}} {{.PIDs}}' labori-seis-we
 
 ??? success "Oodatav tulemus"
 
-    Osa `sleep`-e andis `can't fork`, PIDs jõudis 100-ni, `/health` andis 200 ja pärast ootamist on PIDs jälle tavalisel tasemel. Kui piir täis sai, keeldus tuum uut protsessi loomast. Ülejäänud host seda ei tundnud. Nginx teenindas päringuid edasi, sest olemasolevad workerid ei vaja uusi protsesse. Konteinerit polnud vaja taaskäivitada.
+    Osa `sleep`-e andis `can't fork`, PIDs jõudis 100-ni, `/health` andis 200 ja pärast ootamist on PIDs jälle tavalisel tasemel. Kui piir täis sai, keeldus tuum uut protsessi loomast. Hosti ülejäänud protsessid ei saanud sellest mõju. Nginx teenindas päringuid edasi, sest olemasolevad workerid ei vaja uusi protsesse. Konteinerit polnud vaja taaskäivitada.
 
 **TOEND.md:** üks lause: mis oleks juhtunud sama katsega ilma `pids`-piiranguta.
 
@@ -1798,7 +1798,7 @@ chmod 644 secrets/*; ls -la secrets; git status --short
 
 ??? example "Ülesanne: saladused prod-faili"
 
-    Faili lõppu tipptaseme `secrets:` neli kirjet:
+    Lisa faili lõppu tipptaseme jaotis `secrets:` nelja kirjega:
 
     ```yaml
     secrets:
@@ -1841,7 +1841,7 @@ docker compose exec app01 ls -l /run/secrets; curl -s localhost:8080/health; ech
 
     `git status` ei näita kausta `secrets/`. `config` ei näita db01 ja app01 all ühtegi `MARIADB_PASSWORD:` ega `DB_PASSWORD:` rida, `inspect` ei leia app01 keskkonnast parooli ja `/health` on `UP`. Pärast `!override`-i on keskkonnas ainult failide teed ja configtree import. `/health` UP tõestab, et rakendus luges paroolid failidest ja need klappisid volume'i omadega. Kui parool oleks failis reavahetusega, oleks `db` DOWN.
 
-    Failid on 644, sest konteiner näeb faili hosti omaniku ja õigustega ja app01 töötab UID 10001-na. Kaitse annab kaust 700: hostis ei pääse teised kasutajad failideni.
+    Failide õigused on `644`, sest konteiner näeb faili hosti omaniku ja õigustega ja app01 töötab UID 10001-na. Kaitse annab kausta õigus `700`: hostis ei pääse teised kasutajad failideni.
 
 **TOEND.md:** milline teenus hoiab parooli veel keskkonnas ja miks (vt „Miks see nii töötab“, lõik „RabbitMQ parool“).
 
@@ -1886,7 +1886,7 @@ sudo ss -tlnp | grep -E ':(8080|15672) '
 docker run --rm --network labori-seis_back labseis-kontroll:test; echo
 ```
 
-Ava oma arvutist SSH-tunnel ja brauseris `http://localhost:15672`:
+Ava oma arvutist SSH-tunnel ja seejärel brauseris `http://localhost:15672`:
 
 ```bash
 ssh -L 15672:127.0.0.1:15672 kasutaja@<control'i IP>
@@ -1898,7 +1898,7 @@ ssh -L 15672:127.0.0.1:15672 kasutaja@<control'i IP>
 
 ### 5.5 Kirjutuskaitstud konteinerid
 
-Kirjutuskaitstud juurfailisüsteem tähendab, et konteineris ei saa ükski protsess faile muuta väljaspool kaustu, mille sa eraldi lubad. Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisamine või konfiguratsiooni muutmine. `read_only` lõpetab selle failisüsteemi tasandil, sõltumata sellest, mis kasutajana ründaja protsess töötab. Teed seda kahele teenusele, mis seda kergesti taluvad.
+Kirjutuskaitstud juurfailisüsteem tähendab, et konteineris ei saa ükski protsess faile muuta väljaspool kaustu, mille sa eraldi lubad. Veebiserveri kompromiteerimise tavaline järgmine samm on veebijuurde faili lisamine või konfiguratsiooni muutmine. `read_only` lõpetab selle failisüsteemi tasandil, sõltumata sellest, mis kasutajana ründaja protsess töötab. Kirjutuskaitse saavad kaks teenust, mis seda kergesti taluvad.
 
 ??? example "Ülesanne: `read_only`"
 
@@ -1919,7 +1919,7 @@ docker inspect -f '{{.HostConfig.ReadonlyRootfs}} {{json .HostConfig.Tmpfs}}' la
 curl -s localhost:8080/health; echo
 ```
 
-Eemalda ajutiselt `/etc/nginx/conf.d` `tmpfs`-i nimekirjast, uuenda stacki ning vaata `docker compose logs web01 | head -15` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/health`. Pane rida tagasi.
+Eemalda ajutiselt `/etc/nginx/conf.d` `tmpfs`-i nimekirjast, uuenda stacki ning vaata `docker compose logs web01 | head -15` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/health`. Taasta eemaldatud rida.
 
 ??? success "Oodatav tulemus"
 
@@ -1929,7 +1929,7 @@ Eemalda ajutiselt `/etc/nginx/conf.d` `tmpfs`-i nimekirjast, uuenda stacki ning 
 
 ### 5.6 Logid: rotatsioon ja journald
 
-Logidega on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks jõuavad. `json-file` draiveri vaikeseade on `max-size: -1`: `*-json.log` kasvab piiramatult ja seda ei pööra ka hosti `logrotate`, mis neid faile ei tunne. Compose'i `logging` kaitseb ainult Compose'i teenuseid. Daemoni vaikeseade kaitseb ka konteinereid, mida keegi Compose'iga ei käivita. Lisa logide piirid faili `/etc/docker/daemon.json`, mille 1.6-s lõid.
+Logide puhul on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks jõuavad. `json-file` draiveri vaikeseade on `max-size: -1`: `*-json.log` kasvab piiramatult ja seda ei pööra ka hosti `logrotate`, mis neid faile ei tunne. Compose'i `logging` kaitseb ainult Compose'i teenuseid. Daemoni vaikeseade kaitseb ka konteinereid, mida keegi Compose'iga ei käivita. Lisa logide piirid faili `/etc/docker/daemon.json`, mille 1.6-s lõid.
 
 ??? example "Ülesanne: `/etc/docker/daemon.json`"
 
@@ -1960,7 +1960,7 @@ docker compose ps
 
     Taaskäivitus peatas kõik konteinerid ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. `logtest` sai rotatsiooniseaded daemonilt, mitte käsurealt. `daemon.json`-i `log-opts` kehtib ainult pärast seda loodud konteineritele.
 
-Saada app01 logid hosti journal'isse. Logikoguja, mis juba journal'it loeb, saab need kaasa ilma lisaseadistuseta.
+Saada app01 logid hosti journal'isse. Kui logikoguja juba loeb journal'it, kogub see ka need logid ilma lisaseadistuseta.
 
 ??? example "Ülesanne: app01 journald"
 
@@ -1991,7 +1991,7 @@ docker compose logs app01 | tail -3
 
 ### 5.7 Volume'i varundus ja taastamine
 
-Volume ilma varukoopiata on ühe `docker compose down -v` kaugusel andmete kaotusest. See käsk on Compose'i veaotsingus soovitatud, ja keegi kasutab seda varem või hiljem valel masinal. Varundad andmebaasi volume'i abikonteineriga peatatud teenusest ja taastad selle uude volume'isse. Andmebaasis on tulemus, mille lisasid 4. osas POST-iga, nii et taastamist kontrollid selle reaga.
+Volume ilma varukoopiata on ühe `docker compose down -v` kaugusel andmete kaotusest. See käsk on Compose'i veaotsingus soovitatud, ja keegi kasutab seda varem või hiljem valel masinal. Peatad andmebaasi teenuse ja varundad selle volume'i abikonteineriga ja taastad selle uude volume'isse. Andmebaasis on tulemus, mille lisasid 4. osas POST-iga, nii et taastamist kontrollid selle reaga.
 
 ```bash
 mkdir -p backup && docker compose stop app01 db01
@@ -2000,7 +2000,7 @@ docker run --rm -v labori-seis_dbdata:/data:ro -v "$PWD/backup:/backup" $HUB/ubu
 docker compose start db01 app01; ls -lh backup
 ```
 
-Taasta arhiiv uude volume'isse, omanikud numbritena:
+Taasta arhiiv uude volume'isse nii, et omanikud jäävad numbritena alles:
 
 ```bash
 docker volume create dbdata-taaste
@@ -2009,7 +2009,7 @@ docker run --rm -v dbdata-taaste:/data -v "$PWD/backup:/backup:ro" $HUB/ubuntu:2
 docker run --rm -v dbdata-taaste:/data $HUB/ubuntu:24.04 ls -ln /data | head -4
 ```
 
-Käivita taastatud volume'i peal eraldi MariaDB ja küsi oma tulemust:
+Käivita taastatud volume'iga eraldi MariaDB konteiner ja küsi oma tulemust:
 
 ```bash
 docker run -d --name dbtaaste -v dbdata-taaste:/var/lib/mysql $HUB/mariadb:11.4
@@ -2020,7 +2020,7 @@ docker rm -f dbtaaste && docker volume rm dbdata-taaste
 
 ??? success "Oodatav tulemus"
 
-    `backup/` all on arhiiv, taastatud failide omanik on `999`, taastatud baas näitab rida `lab-03 compose OK` ja stack on jälle `healthy`. Koopia on kasutatav, mitte ainult olemas. Taastamine ei vajanud root-parooli ega init-skripte: andmekataloog oli valmis ja entrypoint jättis algseadistuse vahele. Seisak kestis `stop`-ist `start`-ini. Suurema baasi puhul see kasvab ja siis on õige valik `mariadb-dump` (vt „Miks see nii töötab“).
+    `backup/` all on arhiiv, taastatud failide omanik on `999`, taastatud baas näitab rida `lab-03 compose OK` ja stack on jälle `healthy`. Koopia on kasutatav, mitte ainult olemas. Taastamine ei vajanud root-parooli ega init-skripte: andmekataloog oli valmis ja entrypoint jättis algseadistuse vahele. Seisak kestis `stop`-ist `start`-ini. Suurema baasi puhul seisak pikeneb ja siis on õige valik `mariadb-dump` (vt „Miks see nii töötab“).
 
     Failikoopia on järjepidev ainult peatatud andmebaasist.
 
@@ -2091,7 +2091,7 @@ sudo journalctl -t labseis-prune -n 1 --no-pager
 
 ??? success "Oodatav tulemus"
 
-    ShellCheck vaikib, `-n` ei muutnud midagi, `RECLAIMABLE` vähenes, `labori-seis_dbdata` ja `labori-seis_rmqdata` on alles ja journal'is on `labseis-prune` rida. `-n` näitas plaani, mitte tegevust: nii testid koristust tootmises enne tegelikku käivitust. Journal'i rida on jälg, mida saad hiljem vaadata, kui keegi küsib, kuhu image kadus.
+    ShellCheck ei anna hoiatusi, `-n` ei muutnud midagi, `RECLAIMABLE` vähenes, `labori-seis_dbdata` ja `labori-seis_rmqdata` on alles ja journal'is on `labseis-prune` rida. `-n` näitas plaani, mitte tegevust: nii testid koristust tootmises enne tegelikku käivitust. Journal'i rida on jälg, mida saad hiljem vaadata, kui keegi küsib, kuhu image kadus.
 
 ### 5.9 Tagasi põhistacki peale ja commit
 
@@ -2107,7 +2107,7 @@ git ls-files | grep -E 'secrets|backup'
 
 ??? success "Oodatav tulemus"
 
-    Viis teenust on põhistackiga `healthy`, `compose` ja `deps` annavad `OK` ja viimane käsk ei väljasta midagi. Prod-fail on Gitis ja valideerub, aga töötab ainult siis, kui keegi selle teadlikult peale paneb. Nii jääb `compose.yaml` kõigile ühiseks aluseks ja tootmise erisused on ühes failis üle vaadatavad.
+    Viis teenust on põhistackiga `healthy`, `compose` ja `deps` annavad `OK` ja viimane käsk ei väljasta midagi. Prod-fail on Gitis ja valideerub, aga see kehtib ainult siis, kui see käivitamisel teadlikult kaasa võetakse. Nii jääb `compose.yaml` kõigile ühiseks aluseks ja tootmise erisused on ühes failis üle vaadatavad.
 
 ??? info "Miks see nii töötab"
 
@@ -2134,11 +2134,11 @@ git ls-files | grep -E 'secrets|backup'
     docker exec dbt mariadb -uroot -px labseis -e "SELECT COUNT(*) FROM result"; docker rm -f dbt
     ```
 
-    Põhistackiga (ilma prod-failita) on root-parool keskkonnas ja käsus on `-p"$MARIADB_ROOT_PASSWORD"`. Parool `-p` järel on konteineri protsessinimekirjas nähtav, `--defaults-extra-file` failiga väldib seda. Konteineri eripära on see, kust käsk käivitub: `docker compose exec` töötab db01 sees, nii et dump'i tööriist ja serveri versioon on alati samast image'ist. Ilma seisakuta füüsilise koopia annab `mariadb-backup`, mis on samuti MariaDB image'is olemas.
+    Põhistackiga (ilma prod-failita) on root-parool keskkonnas ja käsus on `-p"$MARIADB_ROOT_PASSWORD"`. Parool `-p` järel on konteineri protsessinimekirjas nähtav, Seda väldib võtmega `--defaults-extra-file` antud fail. Konteineri eripära on see, kust käsk käivitub: `docker compose exec` töötab db01 sees, nii et dump'i tööriist ja serveri versioon on alati samast image'ist. Ilma seisakuta füüsilise koopia annab `mariadb-backup`, mis on samuti MariaDB image'is olemas.
 
 ## Osa 6 · Harbor, Trivy ja SBOM
 
-**Probleem:** image, mis on ainult sinu masinas, ei jõua kunagi tootmisse ja tagasipööramise (rollback) hetkel pole seda kusagilt võtta. 5. kohtumise konveier ja 7. kohtumise Kubernetese klaster tõmbavad image'i registry'st, kus sellel on nimi, versioon ja ligipääs igale masinale, kellel on õigus.
+**Probleem:** image, mis on ainult sinu masinas, ei jõua kunagi tootmisse ja tagasipööramise (rollback) hetkel pole seda kusagilt võtta. 5. kohtumise konveier ja 7. kohtumise Kubernetese klaster tõmbavad image'i registry'st, kus sellel on nimi, versioon ja kuhu pääsevad ligi kõik masinad, millel on õigus.
 
 **Eesmärk:** sinu kolm image'it on Harboris git-SHA tag'iga, stack käivitub sealt ilma kohaliku ehituseta ja Trivy raporti põhjal on otsus kirja pandud. Oma Harbori projektis seadistad ise robotkonto, muutumatud tag'id ja reegli, mis ei lase haavatavat image'it tõmmata. App-image'ist on SBOM, millega vastad auditis või intsidendi järel küsimusele, mis selles image'is on, ja mille vastu saab hiljem skannida ilma image'it tõmbamata. Käsud käivitad kaustas `k03-docker/` põhistackiga (`COMPOSE_FILE` seadmata).
 
@@ -2151,7 +2151,7 @@ git ls-files | grep -E 'secrets|backup'
 
 Tag'iks saab commit'i lühike SHA, et iga image'i saaks seostada koodiga. Tag `latest` või `dev` ei ütle, mis kood image'is on. Kui midagi läheb katki, ei tea sa, millise versiooni juurde tagasi minna, ega saa tõestada, mis tootmises töötas.
 
-1.5-s logisid Harborisse sisse. Pane `.env`-i tag'iks commit'i SHA, ehita ja lükka:
+1.5-s logisid Harborisse sisse. Pane `.env`-is tag'iks commit'i SHA, seejärel ehita image'id ja lükka need Harborisse:
 
 ```bash
 TAG=$(git rev-parse --short HEAD) && sed -i "s/^TAG=.*/TAG=$TAG/" .env
@@ -2159,7 +2159,7 @@ grep -E '^(REGISTRY|OWNER|TAG)=' .env
 docker compose build && docker compose push
 ```
 
-Anna web-image'ile teine nimi ja lükka see:
+Anna web-image'ile teine nimi ja lükka see ka selle nimega:
 
 ```bash
 W=harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-web
@@ -2188,7 +2188,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 ??? note "Kui Harbor ei vasta: GHCR"
 
-    GitHubi registry GHCR sobib sama tööks. Loo GitHubis **Settings → Developer settings → Personal access tokens → Tokens (classic)** token õigusega `write:packages` ([juhend](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
+    GitHubi registry GHCR sobib samaks tööks. Loo GitHubis **Settings → Developer settings → Personal access tokens → Tokens (classic)** token õigusega `write:packages` ([juhend](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
 
     ```bash
     sed -i -e 's/^REGISTRY=.*/REGISTRY=ghcr.io/' .env
@@ -2202,7 +2202,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 Harbori projektis on seade **Automatically scan images on push**. Iga uus image skannitakse Trivy'ga kohe pärast push'i ja tulemus on image'i juures. Nii näeb iga image'i kasutaja leide enne tõmbamist, ka siis, kui ise Trivy't käivitama ei hakka.
 
-Ava Harboris `labori-seis-app`. Veerg **Vulnerabilities** näitab leidude arvu raskusastme kaupa. Klõpsa sellel, et näha pakettide kaupa.
+Ava Harboris `labori-seis-app`. Veerg **Vulnerabilities** näitab leidude arvu raskusastme kaupa. Klõpsa sellel, et näha leide pakettide kaupa.
 
 <figure markdown="span">
   ![Harbori artefakti vaade, Vulnerabilities veerg näitab Critical, High ja Medium leidude arvu](assets/k03_harbor_scan.png)
@@ -2221,7 +2221,7 @@ Ava Harboris `labori-seis-app`. Veerg **Vulnerabilities** näitab leidude arvu r
 
 ### 6.3 Oma projekti seaded
 
-Oma projektis oled **projectAdmin**: saad seadistada samu asju, mida ettevõtte registry administraator teeb iga meeskonna projektile. Kõik kolm seadet on üks klõps, aga igaühel on tagajärg. Harbori juhend: [Project configuration](https://goharbor.io/docs/2.14.0/working-with-projects/project-configuration/).
+Oma projektis oled **projectAdmin**: saad seadistada samu asju, mida ettevõtte registry administraator teeb iga meeskonna projektile. Iga seade on üks klõps, aga igal neist on tagajärg. Harbori juhend: [Project configuration](https://goharbor.io/docs/2.14.0/working-with-projects/project-configuration/).
 
 **Muutumatud tag'id.** Ava projekt, **Policy → Tag Immutability → Add Rule**, repositooriumid `**`, tag'id `k03`. Proovi siis sama tag'i üle kirjutada:
 
@@ -2231,7 +2231,7 @@ docker push "$W:k03"
 docker tag "$W:$TAG" "$W:k03"
 ```
 
-Esimene `docker tag` paneb nimele `k03` teise image'i (tavalise Nginx'i). Viimane rida tõstab kohaliku nime tagasi sinu web-image'ile.
+Esimene `docker tag` seob nime `k03` teise image'iga (tavalise Nginxiga). Viimane rida tõstab kohaliku nime tagasi sinu web-image'ile.
 
 ??? success "Oodatav tulemus"
 
@@ -2250,11 +2250,11 @@ docker pull "harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-app:$TAG"
 
     Tõmme ebaõnnestub, sest image'il on CRITICAL leide. Harbor keeldub andmast image'it, mida ta peab ohtlikuks, ükskõik kes seda küsib: arendaja, konveier või klaster. Lülita seade välja, muidu ei käivitu stack 6.5-s registry'st. Tootmises lisatakse aktsepteeritud leiud projekti **CVE allowlist**'i koos põhjendusega.
 
-**Robotkonto.** **Robot Accounts → New Robot Account**: nimi `podman`, aegumine 30 päeva, õigus **Repository: Pull**. Salvesta saladus kohe, Harbor näitab seda ainult üks kord. Seda kontot kasutad 7. osas: AlmaLinuxi server vajab ainult image'i tõmbamist, mitte lükkamist ega kustutamist.
+**Robotkonto.** **Robot Accounts → New Robot Account**: nimi `podman`, aegumine 30 päeva, õigus **Repository: Pull**. Salvesta saladus kohe: Harbor näitab seda ainult ühe korra. Seda kontot kasutad 7. osas: AlmaLinuxi server vajab ainult image'i tõmbamist, mitte lükkamist ega kustutamist.
 
 ??? success "Oodatav tulemus"
 
-    Kontol on nimi kujul `robot$<github-kasutaja>+podman`. Robotkonto ei saa veebiliidesesse sisse logida ja tal on ainult need õigused, mis andsid.
+    Kontol on nimi kujul `robot$<github-kasutaja>+podman`. Robotkonto ei saa veebiliidesesse sisse logida ja sellel on ainult need õigused, mis talle andsid.
 
 **TOEND.md:** üks lause iga seade kohta: mida see tootmises ära hoiab.
 
@@ -2319,7 +2319,7 @@ trivy --version
 
 Samad sammud lisad 8. osas rolli.
 
-Skanni kõik kolm image'it faili:
+Skanni kõik kolm image'it ja salvesta tulemus faili:
 
 ```bash
 R=harbor.lab.hkhk.lan/<github-kasutaja>
@@ -2330,7 +2330,7 @@ grep -E '^Total|labori-seis' trivy.txt
 trivy image -q --severity HIGH,CRITICAL --ignore-unfixed "$R/labori-seis-app:$TAG" | grep -E '^Total'
 ```
 
-Ava `trivy.txt` ja vasta TOEND.md-s: millises image'is on kõige rohkem leide ja kas need on OS-paketid või Java teegid? Vali üks CRITICAL või HIGH leid: mis pakett ja millises versioonis on parandus (`Fixed Version`)? Mida teed: uuendad baasimage'it, teeki `pom.xml`-is või aktsepteerid? Miks?
+Ava `trivy.txt` ja vasta TOEND.md-s: millises image'is on kõige rohkem leide ja kas need on OS-paketid või Java teegid? Vali üks CRITICAL või HIGH leid: millist paketti leid puudutab ja millises versioonis on parandus (`Fixed Version`)? Mida teed: uuendad baasimage'it, teeki `pom.xml`-is või aktsepteerid riski? Miks?
 
 ??? success "Oodatav tulemus"
 
@@ -2338,7 +2338,7 @@ Ava `trivy.txt` ja vasta TOEND.md-s: millises image'is on kõige rohkem leide ja
 
 ### 6.7 Trivy lähtekoodile ja konfiguratsioonile
 
-Image'i skannimine tuleb pärast ehitust. `fs` ja `config` töötavad lähtekoodi peal ja sobivad seepärast konveieri algusesse, enne kui keegi minuteid ehitusele kulutab. Root'ina töötav image või liiga laialt avatud port on seadistusviga, mida CVE-skannimine ei näe. Selle leiab ainult konfiguratsiooni kontroll, ja just sellised vead teevad haavatavuse ärakasutamise lihtsaks.
+Image'it skannitakse pärast ehitust. `fs` ja `config` kontrollivad lähtekoodi ja sobivad seepärast konveieri algusesse, enne kui keegi minuteid ehitusele kulutab. Root'ina töötav image või liiga laialt avatud port on seadistusviga, mida CVE-skannimine ei näe. Selle leiab ainult konfiguratsiooni kontroll, ja just sellised vead teevad haavatavuse ärakasutamise lihtsaks.
 
 ```bash
 trivy fs --severity HIGH,CRITICAL ..
@@ -2377,7 +2377,7 @@ Harboris saad SBOM-i teha ka veebiliidesest: artefakti juures **Generate SBOM**.
 
 ??? success "Oodatav tulemus"
 
-    `bomFormat` on `CycloneDX`, komponente on sadu, Spring'i ja Tomcati versioonid on nähtavad ja `trivy sbom` annab leide samas suurusjärgus kui image'i skannimine. Sama suurusjärk tõestab, et SBOM sisaldab kõike, mida Trivy image'ist leiab. Homme saad sama faili uuesti skannida uuema andmebaasiga. Litsentside päring näitab, et enamik komponente on Apache 2.0 või MIT litsentsiga: SBOM vastab ka küsimusele, kas tohid image'it levitada.
+    `bomFormat` on `CycloneDX`, komponente on sadu, Springi ja Tomcati versioonid on nähtavad ja `trivy sbom` annab leide samas suurusjärgus kui image'i skannimine. Sama suurusjärk tõestab, et SBOM sisaldab kõike, mida Trivy image'ist leiab. Homme saad sama faili uuesti skannida uuema andmebaasiga. Litsentside päring näitab, et enamik komponente on Apache 2.0 või MIT litsentsiga: SBOM vastab ka küsimusele, kas tohid image'it levitada.
 
 **TOEND.md:** kuidas kasutaksid SBOM-i, kui homme avaldatakse uus CVE.
 
@@ -2399,7 +2399,7 @@ Harboris saad SBOM-i teha ka veebiliidesest: artefakti juures **Generate SBOM**.
 
     **Registry prügikoristus.** Kustutatud tag ei vabasta kohe kettaruumi. Kihid jäävad registry's alles, kuni registry prügikoristus (garbage collection) need eemaldab. Harboris käivitab selle süsteemiadministraator ajakava järgi.
 
-    **Robotkonto ja CI.** Inimese parool konveieris tähendab, et konveieril on kõik inimese õigused ja parooli vahetus lõhub konveieri. Robotkontol on ainult vajalik õigus (pull või push), aegumisaeg ja see ei saa veebiliidesesse sisse logida. Seepärast antakse CI-le eraldi robotkonto ja seda ei jagata kasutajate vahel.
+    **Robotkonto ja CI.** Inimese parool konveieris tähendab, et konveieril on kõik inimese õigused ja parooli vahetus katkestab konveieri töö. Robotkontol on ainult vajalik õigus (pull või push), aegumisaeg ja see ei saa veebiliidesesse sisse logida. Seepärast antakse CI-le eraldi robotkonto ja seda ei jagata kasutajate vahel.
 
     **Pull-through cache ja replikatsioon.** Harbori vahemälu projekt `dockerhub` tõmbab image'i esimesel küsimisel ja hoiab seda. Replikatsioon kopeerib image'eid ajakava järgi kahe registry vahel. Mõlemad on süsteemiadministraatori seaded, sest need puudutavad kogu registry't.
 
@@ -2411,7 +2411,7 @@ Harboris saad SBOM-i teha ka veebiliidesest: artefakti juures **Generate SBOM**.
 
 ## Osa 7 · Sama teenus Podmaniga
 
-**Probleem:** AlmaLinuxi ja RHEL-i serveris Dockerit vaikimisi pole. `dnf install docker` paigaldab paketi `podman-docker` ja turvanõue keelab tihti root-daemoni, mille socket'i omanik on hostis sisuliselt root. Kui meeskond tahab sinna konteinerit, pead oskama teenust käivitada ilma daemonita, systemd all ja SELinuxi sees.
+**Probleem:** AlmaLinuxi ja RHEL-i serveris Dockerit vaikimisi pole. `dnf install docker` paigaldab paketi `podman-docker` ja turvanõue keelab tihti root-daemoni, mille socket'i omanik on hostis sisuliselt root. Kui meeskond tahab sinna konteinerit, pead oskama teenust käivitada ilma daemonita, systemd teenusena ja SELinuxiga.
 
 **Eesmärk:** viid Labori seisu mc01 ja db01 teenused samades AlmaLinuxi masinates rootless Podmani konteineritesse. Image'id tulevad Harborist robotkontoga ja app01 jõuab neisse ilma taaskäivituseta. Kõik käsud käivitad control'ist kasutajana `kasutaja`, `sudo` ainult seal, kus see on kirjas.
 
@@ -2443,7 +2443,7 @@ Tabel 3.5 seob Podmani mõisted sellega, mida tegid Dockeriga control'is.
 
 ### 7.1 Podman hostis
 
-Enne muudatust teed mõlemast VM-ist snapshot'i ja vaatad, millise Podmaniga sul tegu on. Quadleti võtmed `Notify=healthy` ja `HealthOnFailure=` vajavad Podmani 5. põhiversiooni. Vanem versioon annab `daemon-reload`-il vea, mis ei ütle, et põhjus on versioonis.
+Enne muudatust teed mõlemast VM-ist snapshot'i ja kontrollid, milline Podman on paigaldatud. Quadleti võtmed `Notify=healthy` ja `HealthOnFailure=` vajavad Podmani 5. põhiversiooni. Vanem versioon annab `daemon-reload`-il vea, mis ei ütle, et põhjus on versioonis.
 
 Proxmoxis tee mc01-st ja db01-st snapshot `enne-podman` ilma RAM-ita. Seejärel paigalda Podman ja kontrolli versiooni, rootless-režiimi, cgroup'i versiooni, võrgu taustaprogrammi ja `subuid` vahemikku:
 
@@ -2487,7 +2487,7 @@ Podman oskab seda, mida Docker ei oska: peegel võib olla registry projekti all.
 
     `[[registry]]` kirjeldab registry't, mille nime image kasutab. `[[registry.mirror]]` on koht, kust Podman proovib esimesena tõmmata. Kui peegel ei vasta, proovib Podman `docker.io`-d ennast. CA läheb kausta `certs.d`, mitte `--tls-verify=false`.
 
-Tõmba mc01-s `docker.io/library/memcached:1.6-alpine` ja db01-s oma `labori-seis-db` sama tag'iga, mis Harboris. Robotkonto nimes on `$`, seepärast on see ühekordsetes jutumärkides. Login salvestub faili, mis säilib ka pärast taaskäivitust (`--authfile ~/.config/containers/auth.json`).
+Tõmba mc01-s `docker.io/library/memcached:1.6-alpine` ja db01-s oma `labori-seis-db` sama tag'iga, mis Harboris. Robotkonto nimes on `$`, seepärast on nimi ülakomade vahel. Sisselogimise andmed salvestuvad faili, mis säilib ka pärast taaskäivitust (`--authfile ~/.config/containers/auth.json`).
 
 ```bash
 R=harbor.lab.hkhk.lan/<github-kasutaja>; TAG=<Harbori TAG>
@@ -2511,7 +2511,7 @@ ssh mc01 'podman --log-level=debug pull docker.io/library/memcached:1.6-alpine 2
 
 ### 7.3 mc01: teenus konteineriks
 
-Alustad lihtsamast teenusest, mille olek ei pea alles jääma. Peatad native Memcachedi, käivitad sama pordiga konteineri ja vaatad hostist, kes kellele vanem on. Kontroll tuleb sealt, kust teenust kasutatakse: app01 `/health` web01 kaudu.
+Alustad lihtsamast teenusest, mille olek ei pea alles jääma. Peatad native Memcachedi, käivitad sama pordiga konteineri ja vaatad hostist, milline protsess on millise vanemprotsess. Kontrolli teenust sealt, kust seda kasutatakse: app01 `/health` web01 kaudu.
 
 ```bash
 ssh mc01 'sudo systemctl disable --now memcached
@@ -2571,7 +2571,7 @@ ssh mc01 '/usr/libexec/podman/quadlet -dryrun -user | grep -E "^ExecStart|^Memor
     systemctl --user status labseis-mc --no-pager | head -5; podman healthcheck run labseis-mc && echo healthy'
 ```
 
-Luba kasutaja teenustel käivituda ilma sisselogimiseta ja tee taaskäivituse test. Kontroll tuleb väljast enne SSH-sisselogimist, sest sisselogimine ise käivitab kasutaja systemd ja peidaks vea.
+Luba kasutaja teenustel käivituda ilma sisselogimiseta ja tee taaskäivituse test. Kontrolli väljast enne SSH-sisselogimist, sest sisselogimine ise käivitab kasutaja systemd ja peidaks vea.
 
 ```bash
 ssh mc01 'sudo loginctl enable-linger kasutaja && sudo systemctl reboot'; sleep 90
@@ -2593,7 +2593,7 @@ ssh mc01 'systemctl --user is-active labseis-mc; loginctl show-user kasutaja -p 
 
 ### 7.5 db01 SELinuxiga
 
-Muudatus käib tootmise reeglitega: andmebaas kolib native teenusest konteinerisse hooldusaknas, ükski tulemus ei kao, parool ei satu üheski kohas keskkonnamuutujasse ega käsureale ja SELinux jääb `Enforcing`. Andmed tulevad native MariaDB dump'ist, mille konteiner impordib esimesel käivitusel.
+Muudatus tehakse tootmise reeglite järgi: andmebaas kolib native teenusest konteinerisse hooldusaknas, ükski tulemus ei kao, parool ei satu üheski kohas keskkonnamuutujasse ega käsureale ja SELinux jääb režiimi `Enforcing`. Andmed tulevad native MariaDB dump'ist, mille konteiner impordib esimesel käivitusel.
 
 Ava hooldusaken: peata app01 Tomcat, et dump'i ja vahetuse vahel ei tuleks kirjeid juurde, ning salvesta algseis.
 
@@ -2604,7 +2604,7 @@ ssh db01 'mkdir -p ~/labseis && sudo mariadb-dump --single-transaction labseis >
     chmod 644 ~/labseis/03-dump.sql && ls -Z ~/labseis/03-dump.sql'
 ```
 
-Loo kaks `podman secret`-it: `labseis-db-pass` 2. kohtumise Vaulti väärtusega `vault_db_password` (app01 kasutab sama parooli) ja `labseis-db-root` uue juhusliku väärtusega. Väärtus läheb `podman secret create <nimi> -` sisendisse (stdin), mitte käsurea argumendiks, ja shelli muutuja kustutatakse kohe pärast.
+Loo kaks `podman secret`-it: `labseis-db-pass` 2. kohtumise Vaulti väärtusega `vault_db_password` (app01 kasutab sama parooli) ja `labseis-db-root` uue juhusliku väärtusega. Väärtus läheb `podman secret create <nimi> -` sisendisse (stdin), mitte käsurea argumendiks, ja shelli muutuja kustutatakse kohe pärast kasutamist.
 
 ??? example "Lahendus: saladused"
 
@@ -2660,7 +2660,7 @@ Nõuded failidele db01-s `labseis-db.volume` ja `labseis-db.container`: image si
     WantedBy=default.target
     ```
 
-    `labseis-db.volume:` viitab teisele Quadleti failile: generaator loob volume'i enne konteinerit. `%h` on kasutaja kodukaust. `TimeoutStartSec` peab olema pikem kui algseadistus, sest `Notify=healthy` hoiab teenuse olekus `activating`, kuni healthcheck läbib.
+    `labseis-db.volume:` viitab teisele Quadleti failile: generaator loob volume'i enne konteinerit. `%h` on kasutaja kodukaust. `TimeoutStartSec` peab olema pikem kui algseadistus, sest `Notify=healthy` hoiab teenuse olekus `activating`, kuni healthcheck õnnestub.
 
     ```bash
     for f in labseis-db.volume labseis-db.container; do
@@ -2714,7 +2714,7 @@ ssh app01 sudo systemctl start tomcat10; sleep 30; curl -s http://web01/health; 
 
     Failil on pärast parandust silt `container_file_t`, ridade arv konteineris võrdub algseisuga, `podman inspect` ei näita ühtegi parooli väärtust (ainult `_FILE` teed), `systemctl --user cat` näitab ainult `Secret=` ja `_FILE` ridu, `getenforce` on endiselt `Enforcing` ja `/health` annab `"db":"UP"`.
 
-    Teine katse oli `active`, sest MariaDB entrypoint algseadistab ainult tühja andmekataloogi. Teenus oli terve, andmed mitte, ja seda näitas ainult ridade arv.
+    Teine katse oli `active`, sest MariaDB entrypoint algseadistab ainult tühja andmekataloogi. Teenus töötas, aga andmed polnud täielikud, ja seda näitas ainult ridade arv.
 
 ??? warning "Kui app01-s pole teenust `tomcat10`"
 
@@ -2745,7 +2745,7 @@ ssh mc01 'cg=$(systemctl --user show -p ControlGroup --value labseis-mc)
 
 Osa tööriistu (Trivy, Testcontainers, CI agendid) eeldab Dockeri socket'it. Podman pakub sama REST API-t kasutaja socket'il ilma root-daemonita. Proovid, kui kaugele see ühilduvus ulatub, ja teed töötavast konteinerist Kubernetese manifesti.
 
-Lülita mc01-s sisse API socket ja küsi seda otse, siis control'i `docker` CLI-ga üle SSH-tunneli:
+Lülita mc01-s sisse API socket ja saada päring otse sellele, siis control'i `docker` CLI-ga üle SSH-tunneli:
 
 ```bash
 ssh mc01 'systemctl --user enable --now podman.socket
@@ -2768,7 +2768,7 @@ ssh mc01 'podman kube generate labseis-mc > ~/labseis-mc-kube.yaml && grep -E "k
 
 ??? success "Oodatav tulemus"
 
-    `/version` näitas Podmani komponenti ja API versiooni, pod pordil 11212 vastas `VERSION 1.6…` ja on maha võetud. `docker` CLI ei tea, et teisel pool on Podman: see räägib sama HTTP API-ga ja leppis kokku vanema API versiooni, mida server toetab. Mis ei tööta, on peaaegu alati Dockeri-spetsiifiline lisa (Swarm, BuildKit'i võtmed, pluginad). `kube generate` andis `Pod` objekti, mille sees on sama image ja port. Healthcheck ja `MemoryMax` sinna ei jõua, sest need on systemd poolel.
+    `/version` näitas Podmani komponenti ja API versiooni, pod vastas pordil 11212 `VERSION 1.6…`-ga ja on maha võetud. `docker` CLI ei tea, et teisel pool on Podman: see räägib sama HTTP API-ga ja leppis kokku vanema API versiooni, mida server toetab. Mis ei tööta, on peaaegu alati Dockeri-spetsiifiline lisa (Swarm, BuildKit'i võtmed, pluginad). `kube generate` andis `Pod` objekti, mille sees on sama image ja port. Healthcheck ja `MemoryMax` sinna ei jõua, sest need on systemd poolel.
 
 **TOEND.md:** kaks rida: mis töötas ja mis mitte.
 
@@ -2781,7 +2781,7 @@ mkdir -p quadlet
 scp mc01:.config/containers/systemd/labseis-mc.container 'db01:.config/containers/systemd/labseis-db.*' quadlet/
 ```
 
-Vii masinad tagasi algseisu ühel kahest viisist: Proxmoxi snapshot'i `enne-podman` rollback või käsitsi (teenused peatatud, Quadleti failid kaustast `~/.config/containers/systemd/` välja, `daemon-reload`, `podman.socket` välja, native teenused `enable --now`). Seejärel tõesta, et algseis klapib:
+Vii masinad tagasi algseisu ühel kahest viisist: Proxmoxi snapshot'i `enne-podman` rollback või käsitsi (teenused peatatud, Quadleti failid kaustast `~/.config/containers/systemd/` välja, `daemon-reload`, `podman.socket` välja, native teenused `enable --now`). Seejärel kontrolli, et seis vastab algseisule:
 
 ```bash
 for h in mc01 db01; do ssh "$h" 'systemctl --user list-units "labseis-*" --no-legend; sudo ss -tlnp | grep -E ":(3306|11211) "'; done
@@ -2792,7 +2792,7 @@ curl -s http://web01/health; echo
 
 ??? success "Oodatav tulemus"
 
-    Kummaski masinas pole `labseis-*` unit'eid, 3306 ja 11211 kuulavad native teenused, `ansible-playbook` andis `changed=0`, `/health` on `UP` ja commit on GitHubis. Kui 2. kohtumise rollid on tegemata, käivita `site.yml` asemel `labseis.yml`.
+    Kummaski masinas pole `labseis-*` unit'eid, porte 3306 ja 11211 kuulavad otse masinasse paigaldatud teenused, `ansible-playbook` andis `changed=0`, `/health` on `UP` ja commit on GitHubis. Kui 2. kohtumise rollid on tegemata, käivita `site.yml` asemel `labseis.yml`.
 
 ??? info "Miks see nii töötab"
 
@@ -2802,7 +2802,7 @@ curl -s http://web01/health; echo
 
     **Linger.** Kasutaja systemd (`user@<UID>.service`) käivitub tavaliselt esimese sisselogimisega ja lõpetab viimase väljalogimisega. `loginctl enable-linger` loob faili `/var/lib/systemd/linger/<kasutaja>`, ja siis käivitub kasutaja systemd masina käivitumisel ning `default.target` käivitab Quadleti teenused.
 
-    **SELinuxi sildid.** AlmaLinuxi poliitikas tohib `container_t` lugeda ja kirjutada ainult `container_file_t` silti. Podman paneb `:Z` sildi iga konteineri käivitusel uuesti, `:z` annab ühise sildi ilma MCS kategooriateta. Kodukausta või `/etc` alla ei panda `:Z`-ga laia kausta: silt muutub kogu puul ja hosti teised teenused võivad ligipääsu kaotada. Kui dump'i hiljem kustutad, eemalda ka `Volume=` rida, muidu ei käivitu konteiner, sest bind mount'i allikas puudub.
+    **SELinuxi sildid.** AlmaLinuxi poliitikas tohib `container_t` protsess lugeda ja kirjutada ainult sildiga `container_file_t` faile. Podman paneb `:Z` sildi iga konteineri käivitusel uuesti, `:z` annab ühise sildi ilma MCS kategooriateta. Kodukaustale või `/etc`-le ega nende suurtele alamkaustadele `:Z`-d ei panda: silt muutub kogu puul ja hosti teised teenused võivad ligipääsu kaotada. Kui dump'i hiljem kustutad, eemalda ka `Volume=` rida, muidu ei käivitu konteiner, sest bind mount'i allikas puudub.
 
     **Registry peegel projekti all.** Podmani `registries.conf` lubab peeglil olla tee (`harbor.lab.hkhk.lan/dockerhub`). Image'i nimi jääb `docker.io/library/…` ja sama Quadleti fail töötab nii peegliga kui ilma. Dockeri `registry-mirrors` toetab ainult registry juurt.
 
@@ -3051,9 +3051,9 @@ trivy --version | head -1
 
 ## Osa 9 · Kolm riket
 
-**Probleem:** kaskaadis kaotab kõige rohkem aega see, kes parandab esimest nähtud sümptomit. `dependency failed to start` ütleb, et midagi ahelas on katki, aga mitte, mis.
+**Probleem:** kaskaadis kaotab kõige rohkem aega see, kes parandab esimest nähtud sümptomit. `dependency failed to start` ütleb, et midagi ahelas on katki, aga mitte seda, mis.
 
-**Eesmärk:** failis `intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident` pordil 8090, sinu image'itega, ja selles on kolm viga eri kohtades. Liigu väljast sisse nagu tootmisintsidendis: sümptomist põhjuseni, parandus failis, mitte töötavas konteineris, ja uuesti luuakse ainult need teenused, mida parandus puudutab. Iga järeldus peab põhinema käsu väljundil, mitte oletusel. Osa lõpus on kolm parandust koodis ja tõend, et need peavad vastu ka uuel masinal ja daemoni taaskäivitusel.
+**Eesmärk:** fail `intsident/compose.yaml` kirjeldab sama Labori seisu eraldi projektina `labori-seis-intsident`. Projekt kasutab sinu image'eid ja porti 8090 ning failis on kolm viga eri kohtades. Liigu väljast sisse nagu tootmisintsidendis: sümptomist põhjuseni, parandus failis, mitte töötavas konteineris, ja uuesti luuakse ainult need teenused, mida parandus puudutab. Iga järeldus peab põhinema käsu väljundil, mitte oletusel. Osa lõpus on kolm parandust koodis ja tõend, et need peavad vastu ka uuel masinal ja daemoni taaskäivitusel.
 
 Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (kirjuta K3 issue kommentaariks enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.6 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
 
@@ -3069,7 +3069,7 @@ Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** 
 
 ### 9.1 Algseis
 
-Kahe stacki jaoks pole control'is mälu. Kahe stacki samaaegne käivitamine annab OOM-kille, mis näevad välja nagu intsidendi vead, aga ei ole. Peata põhistack (volume'id jäävad alles) ja käivita intsidendistack. Salvestad esimese `up`-i väljundi, sest see on intsidendi algne sümptom ja kokkuvõttes viitad sellele.
+Control'is pole kahe stacki jaoks piisavalt mälu. Kahe stacki samaaegne käivitamine annab OOM-kille, mis näevad välja nagu intsidendi vead, aga ei ole. Peata põhistack (volume'id jäävad alles) ja käivita intsidendistack. Salvestad esimese `up`-i väljundi, sest see on intsidendi algne sümptom ja kokkuvõttes viitad sellele.
 
 ```bash
 docker compose down
@@ -3084,11 +3084,11 @@ Alias `dci` kehtib selles shellis kogu ülesande ajal. Projekti nimi `labori-sei
 
 ??? success "Oodatav tulemus"
 
-    `up` lõppes veaga `dependency failed to start`, `up-1.log` on salvestatud ja tead, millised teenused on `Exited` ja millised `unhealthy`. `dependency failed to start` ütleb ainult, et keegi ahelas ei jõudnud `healthy` olekusse. Kaskaad peidab algpõhjuse: teenused, mis ootavad, ei käivitunudki ja nende logid on tühjad. Alusta sellest, kes on `Exited` või `unhealthy`, mitte sellest, kes on ahela lõpus.
+    `up` lõppes veaga `dependency failed to start`, `up-1.log` on salvestatud ja tead, millised teenused on `Exited` ja millised `unhealthy`. `dependency failed to start` ütleb ainult, et keegi ahelas ei jõudnud `healthy` olekusse. Kaskaad peidab algpõhjuse: teenused, mis ootavad, ei käivitunudki ja nende logid on tühjad. Alusta teenusest, mis on `Exited` või `unhealthy`, mitte ahela viimasest teenusest.
 
 ### 9.2 Viga 1: andmebaas ei käivitu
 
-**Sümptom:** db01 lõpetab kohe pärast käivitust. Alusta temast, sest kõik teised ootavad teda.
+**Sümptom:** db01 lõpetab kohe pärast käivitust. Alusta sellest teenusest, sest kõik teised ootavad selle käivitumist.
 
 **Hüpotees:** kirjuta issue'sse, miks db01 lõpetab kohe pärast käivitust.
 
@@ -3102,7 +3102,7 @@ Alias `dci` kehtib selles shellis kogu ülesande ajal. Projekti nimi `labori-sei
 
     Võrdle, mis kasutajana MariaDB töötab ja kellele kuulub kataloog, kuhu ta kirjutab. Kes selle kataloogi lõi?
 
-Paranda põhjus failis. `user: "999:999"` jääb alles: andmebaas ei tohi töötada root'ina. Lahendus ei tohi nõuda käsitsi `chown`-i igal uuel masinal. Hea parandus töötab ka uuel masinal, kus keegi pole midagi käsitsi ette valmistanud. Kui sinu parandus vajab enne `up`-i mõnda käsku, mida failis pole, on see ajutine lahendus, mitte parandus.
+Paranda põhjus Compose'i failis. `user: "999:999"` jääb alles: andmebaas ei tohi töötada root'ina. Lahendus ei tohi nõuda käsitsi `chown`-i igal uuel masinal. Hea parandus töötab ka uuel masinal, kus keegi pole midagi käsitsi ette valmistanud. Kui sinu parandus vajab enne `up`-i mõnda käsku, mida failis pole, on see ajutine lahendus, mitte parandus.
 
 ??? example "Paranda"
 
@@ -3132,7 +3132,7 @@ dci exec db01 id
 
 ### 9.3 Viga 2: vahemälu on unhealthy
 
-**Sümptom:** mc01 protsess töötab, aga Docker peab teda haigeks ja app01 ei käivitu tema pärast.
+**Sümptom:** mc01 protsess töötab, aga Docker märgib selle `unhealthy`-ks ja seepärast app01 ei käivitu.
 
 **Hüpotees:** kirjuta issue'sse, miks töötav mc01 on `unhealthy`.
 
@@ -3146,7 +3146,7 @@ dci exec db01 id
 
     Memcached kuulab pordil 11211 ja vastab. Healthcheck küsib teist porti.
 
-Healthcheck on kood nagu iga teine. Kui see kontrollib vale asja, annab see vale vastuse, ja iga `depends_on` sõltuvus usaldab seda vastust. Teenuse enda logis pole siin midagi: viga on selles, kuidas teda väljast vaadatakse.
+Healthcheck on kood nagu iga teine programm. Kui see kontrollib vale asja, annab see vale vastuse, ja iga `depends_on` sõltuvus usaldab seda vastust. Teenuse enda logis pole siin midagi: viga on selles, kuidas teda väljast vaadatakse.
 
 ??? example "Paranda"
 
@@ -3207,9 +3207,9 @@ curl -s localhost:8090/health; echo
 
 ### 9.5 Hooldusjärgne taaskäivitus: stack käivitub ise
 
-Kolm riket on parandatud, aga stack töötab ainult seni, kuni keegi daemonit ei puutu. Hooldusaknas taaskäivitatakse Docker või kogu VM. Kontrolli, kas intsidendistack tuleb sellest tagasi ilma sinu sekkumiseta. Samal ajal peab hoolduseks käsitsi peatatud teenus jääma seisma. `live-restore` on vaikimisi välja lülitatud, nii et `systemctl restart docker` peatab kõik hosti konteinerid. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i: see kehtib ainult `docker compose up`-i ajal. Konteinerid käivituvad seega korraga ja suvalises järjekorras.
+Kolm riket on parandatud, aga stack töötab ainult seni, kuni keegi daemonit ei puutu. Hooldusaknas taaskäivitatakse Docker või kogu VM. Kontrolli, kas intsidendistack käivitub pärast seda uuesti ilma sinu sekkumiseta. Samal ajal peab hoolduseks käsitsi peatatud teenus jääma seisma. `live-restore` on vaikimisi välja lülitatud, nii et `systemctl restart docker` peatab kõik hosti konteinerid. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i: see kehtib ainult `docker compose up`-i ajal. Konteinerid käivituvad seega korraga ja suvalises järjekorras.
 
-Peata mc01 nagu hoolduseks ja taaskäivita daemon. Pärast seda ära anna ühtegi `dci` käsku peale `ps`-i.
+Peata mc01, nagu teeksid seda hoolduseks ja taaskäivita daemon. Pärast seda ära anna ühtegi `dci` käsku peale `ps`-i.
 
 ```bash
 dci stop mc01 && sudo systemctl restart docker
@@ -3234,7 +3234,7 @@ Paranda fail nende nõuete järgi: pärast daemoni taaskäivitust on db01, rmq01
 
     ja iga teenuse esimeseks reaks `<<: *common`. `always` käivitaks ka käsitsi peatatud mc01.
 
-Uuenda stacki (`dci up -d --wait`), korda sammu käske ja lõpuks käivita mc01: `dci start mc01`.
+Uuenda stacki (`dci up -d --wait`), korda selle sammu käske ja lõpuks käivita mc01: `dci start mc01`.
 
 ??? success "Oodatav tulemus"
 
@@ -3251,7 +3251,7 @@ curl -s localhost:8090/health; echo
 git log --oneline -4 -- intsident/compose.yaml
 ```
 
-Korista intsidendistack ja käivita põhistack tagasi. `down -v` ja `rm -rf` kustutavad intsidendistacki andmed, mis loodi ainult rikete jaoks.
+Eemalda intsidendistack ja käivita põhistack uuesti. `down -v` ja `rm -rf` kustutavad intsidendistacki andmed, mis loodi ainult rikete jaoks.
 
 ```bash
 dci down -v && sudo rm -rf intsident/data
@@ -3278,7 +3278,7 @@ grep -A25 '^## Intsident' TOEND.md | head -30
 
 ??? success "Oodatav tulemus"
 
-    Jaotises on tabel, rikete kohad ja järjekord, kaskaadi lõik ja iga rikke kohta üks ennetav kontroll. Kui iga rikke juures on kontroll, mis oleks selle varem leidnud, on sul 5. kohtumise konveieri jaoks kolm testi ideed.
+    Jaotises on tabel, rikete kohad ja järjekord, kaskaadi lõik ja iga rikke kohta üks ennetav kontroll. Kui iga rikke juures on kontroll, mis oleks selle varem leidnud, on sul 5. kohtumise konveieri jaoks kolme testi ideed.
 
 ??? info "Miks see nii töötab"
 
@@ -3298,13 +3298,13 @@ grep -A25 '^## Intsident' TOEND.md | head -30
 
 ## Osa 10 · Enne esitamist
 
-**Probleem:** image, mis ehitub ainult sinu töökaustas, ebaõnnestub konveieri esimesel käivitusel. 5. kohtumisel võtab konveier sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on.
+**Probleem:** kui image ehitub ainult sinu töökaustas, ebaõnnestub ehitus konveieri esimesel käivitusel. 5. kohtumisel võtab konveier sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on.
 
 **Eesmärk:** käivitad samad kontrollid ise ja vaatad, et stack töötab nii, nagu konveier seda ootab.
 
 ### 10.1 Failide kontroll
 
-Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i failid ja Dockerfile'id, siis automaatkontrolli testid, saladused ja idempotentsus:
+Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i faile ja Dockerfile'e, seejärel käivita automaatkontrolli testid ning kontrolli saladusi ja idempotentsust:
 
 ```bash
 docker compose -f compose.yaml config -q && echo compose OK
@@ -3320,11 +3320,11 @@ git status --short
 
 ??? success "Oodatav tulemus"
 
-    `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või vale suurtähtedega `AS`) ilma ehitamata. Tühi `grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud.
+    `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud.
 
 ### 10.2 Puhta klooni test
 
-Kohalik kontroll käivitub sinu töökaustas, kus on ka commit'imata failid. Automaatkontroll alustab puhtast kloonist. Klassikaline „minu masinas töötab“: Dockerfile kopeerib faili, mis on töökaustas, aga mitte Gitis, ja GitHubis ebaõnnestub ehitus, kuigi sinu juures läks kõik läbi.
+Kohalik kontroll käivitub sinu töökaustas, kus on ka commit'imata failid. Automaatkontroll alustab puhtast kloonist. See on klassikaline „minu masinas töötab“ olukord: Dockerfile kopeerib faili, mis on töökaustas, aga mitte Gitis, ja GitHubis ebaõnnestub ehitus, kuigi sinu juures läks kõik läbi.
 
 ```bash
 (cd ~/kursus && git push)
@@ -3341,7 +3341,7 @@ rm -rf /tmp/k03-proov
 
 ### 10.3 Lõppkontroll
 
-Kontrolli stacki olekut, mida automaatkontroll ei näe: täielik taaskäivitus, versioon, rikkele reageerimine ja kontroll seestpoolt.
+Kontrolli seda, mida automaatkontroll ei näe: stacki täielikku taaskäivitust, versiooni, rikkele reageerimist ja vastust stacki seest tehtud päringule.
 
 ```bash
 docker compose down && docker compose up -d --wait && docker compose ps
@@ -4214,7 +4214,7 @@ Iga ülesanne on samas projektis ja lõpeb kontrolliga. Failid lähevad kausta `
     - esimene kontroll annab `OK` ja koodi 0;
     - pärast baasi uut build'i annab sama image `VANA` ja koodi 1, pärast app01 uut build'i jälle `OK`;
     - label'is on `sha256:…`;
-    - ShellCheck vaikib.
+    - ShellCheck ei anna hoiatusi.
 
     ??? success "Lahendus"
         ```dockerfile
@@ -4321,7 +4321,7 @@ Iga ülesanne on samas projektis ja lõpeb kontrolliga. Failid lähevad kausta `
     - `rollout.sh <tag>` kontrollib enne muudatust, et image on registry's; kui ei ole, stack jääb puutumata;
     - uus app01 koopia töötab vana kõrval ja liiklus jõuab uuele alles siis, kui see on `healthy`; vana peatatakse alles siis, kui web01 teab uue koopia aadressi;
     - kui uus koopia ei jõua `healthy` olekusse, eemaldatakse ainult tema ja vana teenindab edasi;
-    - pärast õnnestunud uuendust ei vii `docker compose up -d` app01-te vanale image'ile tagasi; ShellCheck vaikib;
+    - pärast õnnestunud uuendust ei vii `docker compose up -d` app01-te vanale image'ile tagasi; ShellCheck ei anna hoiatusi;
     - käivita teises terminalis mõõtmine ja tee kaks uuendust: uus tag ja `katki`.
 
     **Kontroll:**
@@ -4358,7 +4358,7 @@ Iga ülesanne on samas projektis ja lõpeb kontrolliga. Failid lähevad kausta `
             | docker build -t "$R/labori-seis-app:katki" - && docker push "$R/labori-seis-app:katki"
         ```
 
-    - `uuenda.sh <tag>` annab ilma argumendita kasutusjuhendi ja koodi 2; `set -euo pipefail`, ShellCheck vaikib; image'i täisnimi tuleb `.env`-i `REGISTRY` ja `OWNER` väärtustest;
+    - `uuenda.sh <tag>` annab ilma argumendita kasutusjuhendi ja koodi 2; `set -euo pipefail`, ShellCheck ei anna hoiatusi; image'i täisnimi tuleb `.env`-i `REGISTRY` ja `OWNER` väärtustest;
     - enne muudatust kontrollib, et image on registry's (`docker pull`); kui ei ole, stack jääb puutumata;
     - salvestab praeguse image'i ja uuendab ainult app01-te: `APP_IMAGE=… docker compose up -d --no-deps --no-build --wait app01`;
     - pärast uuendust küsib `/health`-i web01 kaudu;
