@@ -1569,6 +1569,18 @@ git push origin k02
 
 Tulemuse näed Classroom 50-s.
 
+??? warning "K2 tulemus on 0, kuigi töö on tehtud"
+
+    Tag `k02` osutab siis harus `main` olevatele algfailidele, sest pull request jäi tegemata või haru `k02-ansible` ei jõudnud GitHubi. Kontrolli GitHubis, kas haru `k02-ansible` on olemas. Kui ei ole, saada see: `git push -u origin k02-ansible`. Tee pull request ja ühenda see, seejärel tõsta tag uuele kohale:
+
+    ```bash
+    cd ~/kursus
+    git switch main
+    git pull
+    git tag -f k02
+    git push -f origin k02
+    ```
+
 ## Rikkeotsing
 
 Sama meetod nagu loengus: **sümptom → hüpotees → tõend → parandus → korduskontroll**. Kõige parem paaristööna: paariline käivitab „Tekita rike“ käsu, kui sa ei vaata, ja sina leiad põhjuse. Siis vahetage. Üksi tehes ära vaata käsku, käivita see ja alusta sümptomist. Iga rikke lõpus peab `ssh web01 curl -s localhost/health` näitama kõigil väljadel `UP` ja `ansible-playbook site.yml` andma `changed=0`.
