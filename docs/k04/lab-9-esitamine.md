@@ -64,20 +64,6 @@ Sinu töökaustas on faile, mida Gitis pole: `terraform.tfvars`, `.terraform/`, 
 
 **Edasi saad minna, kui** värskes kloonis annavad `init`, `validate` ja `tofu test` `Success!` ja ajutine kaust on kustutatud.
 
-## Seo oma töökohaga
-
-Labori seisus on kõik VM-id koodis, sinu töökohal tõenäoliselt mitte kõik. Kirjuta see üles enne PR-i, et see jõuaks esitatud commit'i.
-
-Lisa `NOTES.md` lõppu jaotis `## Minu töökohal` ja vasta 3–5 lausega: kus sinu töökohal VM-ide, võrgu või salvestuse loomine ja muutmine täna käsitsi käib (UI, template'i kloon, pilet, skript), mis on sellest kõige sagedasem või riskantsem ja mis oleks esimene samm selle automatiseerimiseks. Hea esimene samm on väike ja ohutult tagasi võetav, näiteks olemasolevate VM-ide `import` ühte state'i ja öine `tofu plan -refresh-only -detailed-exitcode`, mitte "kõik koodi".
-
-```bash
-cd ~/labori-seis
-sed -n '/^## Minu töökohal/,$p' k04-tofu/NOTES.md
-git add k04-tofu/NOTES.md && git commit -m "k04: NOTES, minu töökohal" && git push
-```
-
-**Edasi saad minna, kui** `sed` näitab jaotist 3–5 lausega, milles on nimetatud üks konkreetne käsitsi protsess ja üks esimene samm, ja commit on harus.
-
 ## PR, merge ja tag
 
 Nüüd viid haru `main`-i ja märgid esitatava versiooni tag'iga. Tag peab olema `main`-i peal pärast merge'i. Kui see on vales kohas, hindab automaatne hindaja koodi, mida sa ei tahtnud esitada.

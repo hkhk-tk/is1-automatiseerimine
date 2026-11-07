@@ -43,6 +43,6 @@ Iga osa lõpus on rida **Selle osa tõend**: need väljundid lisad oma repositoo
 5. [Neli riket](lab-5-neli-riket.md): neli koolitaja tehtud riket, mille põhjus on leitud väljast sisse liikudes, ajajoon ja parandus Gitist.
 6. [Helm alused](lab-6-helm.md): `helm template`, values-fail, install, upgrade, rollback, käsitsi muudatus Helmi all ja ebaõnnestunud upgrade, mis võtab end ise tagasi.
 7. [GitOps Argo CD-ga](lab-7-argocd.md): Application, CI kirjutab tag'i, selfHeal, prune, katkine YAML, halb commit ja revert, vigane kood main'is ilma katkestuseta tagasi.
-8. [Esitamine](lab-8-esitamine.md): kontroll enne tag'i, tag `k07`, automaatse hindaja tulemus, lõputest HK6 ja üks samm oma töökohale.
+8. [Esitamine](lab-8-esitamine.md): kontroll enne tag'i, tag `k07`, automaatse hindaja tulemus ja lõputest HK6.
 
 Veaotsing: [Abi](abi.md).

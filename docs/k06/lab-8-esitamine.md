@@ -42,17 +42,6 @@ Etappide järjekord Jenkinsfile'is on Build → Test → Checkstyle → SonarQub
 
 **Edasi saad minna, kui** kaks järjestikust buildi on rohelised, agendil on kuni 3 `labori-seis` image'it ja uusim on sama mis Nexuses ning `git status` on puhas.
 
-## Vii see oma töökohale
-
-Kirjuta faili `k06-jenkins/NOTES.md` 3–5 lauset vastuseks küsimusele: kus sinu töökohal käib build, kvaliteedikontroll, artefakti avaldamine või CI-serveri haldus täna käsitsi ja mis oleks esimene samm seda automatiseerida? Nimeta konkreetne süsteem ja samm, mitte üldine soov. Näiteks: "WAR-i kopeerib Tomcatisse `scp`-ga see, kes parasjagu valves on; esimene samm on Nexuse hosted repositoorium ja versioon kujul `<pom>-<build>-<sha>`".
-
-```bash
-wc -w k06-jenkins/NOTES.md
-git add k06-jenkins/NOTES.md && git commit -m "k06: ülekanne töökohale" && git push
-```
-
-**Edasi saad minna, kui** `k06-jenkins/NOTES.md`-s on 3–5 lauset, neis on üks sinu töökoha süsteem ja üks konkreetne esimene samm ning fail on commit'itud.
-
 ## PR, merge ja tag
 
 Automaatne hindaja otsib tag'i `k06` `main`-i commit'il pärast merge'i, mitte haru commit'il.
@@ -92,11 +81,11 @@ Märgi iga rida alles siis, kui tõend on PR-i kirjelduses, mitte siis, kui tö�
 - [ ] 5. Jenkins koodina: `casc/plugins.txt`, `casc/jenkins.yaml`, `Cannot run program "mvn"`, Maveni logiread, `Git client` sõltuvused, uuendatavad pluginad, viis vastust `klass-jenkins.yaml` kohta, triivi lause, vigase faili logirida
 - [ ] 6. Õigused, varundus ja taaste: naabri 403, `vaatleja` vaade, `du` + `ls -l` enne ja pärast `chmod`-i, `plugins.txt` diff, taastatud Jenkinsi `credential loetav`, võtmeta taaste tulemus, sandbox ja arhiiv kustutatud
 - [ ] 7. Neli punast buildi: `fix(...)` commit'id, logiread, agendi restart'i kontroll, kaks Nexuse versiooni, intsidendi tabel
-- [ ] 8. Esitamine: tühi `diff`, `NOTES.md` ülekande lausetega, tag `k06`, Releases tulemus
+- [ ] 8. Esitamine: tühi `diff`, tag `k06`, Releases tulemus
 
 **Edasi saad minna, kui** kõik linnukesed on tehtud ja PR-i kirjelduses on iga mooduli tõend.
 
-**Selle mooduli tõend:** commit `k06: ülekanne töökohale`, tag `k06` `main`-i peal, PR tõenditega ja automaatse hindaja tulemus GitHubi Releases all.
+**Selle mooduli tõend:** tag `k06` `main`-i peal, PR tõenditega ja automaatse hindaja tulemus GitHubi Releases all.
 
 ## Pärast esitamist: agent ja testkonteiner maha
 

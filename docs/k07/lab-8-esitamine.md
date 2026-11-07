@@ -8,19 +8,7 @@ tags:
 
 Release'i tag, mille commit'is midagi puudub või midagi üleliigset on, jõuab tootmisse ja seda märkab alles see, kes kuu aja pärast kloonib. Kõik muudatused on juba main'il: Labori seis ja rikete parandus PR-iga, `gitops.yml` PR-iga, Application, values-fail ja revert otse. Tag `k07` läheb main'i HEAD-ile, kus on ka boti viimane commit, ja nagu release'i tag tootmises lubab ta, et selles commit'is on kõik vajalik ja mitte midagi, mida seal olla ei tohi. Enne tag'i käivitad samad kontrollid ise, ka värskes kloonis.
 
-**Kui teed seda tööl iga päev:** enne release'i tag'i käivitad testid CI-s puhtast kloonist. Kui see on sul juba korras, kirjuta `NOTES.md` jaotis, tee etapi „Enne esitamist“ kontrollid ja mine otse etappi „[Tag](#tag)“.
-
-## Oma töökohale
-
-Kirjuta repo `NOTES.md`-sse jaotis `## K7 tööl`, 3–5 lauset: kus sinu töökohal käib täna käsitsi midagi, mida see päev automatiseeris (deploy, konfiguratsiooni muudatus, rollback, saladuse vahetus, teenuse kolimine konteinerisse), ja mis oleks esimene samm selle automatiseerimiseks. Esimene samm on üks konkreetne töö, mille saad järgmisel nädalal ära teha, näiteks "üks teenus Helmi values-failiga Giti" või "staging'i namespace Argo CD alla".
-
-```bash
-grep -A6 '^## K7 tööl' NOTES.md
-git switch main && git pull
-git add NOTES.md && git commit -m "K7 tööl [skip ci]" && git push
-```
-
-**Edasi saad minna, kui** `NOTES.md`-s on jaotis `## K7 tööl` 3–5 lausega ja see on main'il.
+**Kui teed seda tööl iga päev:** enne release'i tag'i käivitad testid CI-s puhtast kloonist. Kui see on sul juba korras, tee etapi „Enne esitamist“ kontrollid ja mine otse etappi „[Tag](#tag)“.
 
 ## Enne esitamist
 
@@ -105,13 +93,13 @@ Kontrolli, et K7 issue's on iga osa tõend. Nimekiri on sama, mida koolitaja vaa
 - [ ] 5. Neli riket: neli rida "sümptom → käsk → põhjus → parandus", ajajoon, `kubectl diff` tühi, PR main'is
 - [ ] 6. Helm alused: `helm history` kolme revisjoniga, käsitsi muudatuse `diff`, ebaõnnestunud upgrade ja automaatne rollback logis ainult `200`-ga, values-fail Gitis, podinfo eemaldatud
 - [ ] 7. GitOps: boti commit, `/version` SHA = boti commit'i SHA, drift'i kestus, `OutOfSync` ilma selfHeal'ita, prune, `ComparisonError`, halb commit + revert, halva koodi kolm kellaaega ja logis ainult `200`
-- [ ] 8. Esitamine: tag `k07`, Releases tulemus, Labori seisus `lab-07`, `NOTES.md` jaotis `## K7 tööl`
+- [ ] 8. Esitamine: tag `k07`, Releases tulemus, Labori seisus `lab-07`
 
 Kui mõni linnuke jääb tegemata, kirjuta issue'sse, mis jäi ja miks. Koolitaja hindab ka seda, kas sa tead, mis puudu on.
 
 **Edasi saad minna, kui** kõik linnukesed on tehtud ja iga mooduli issue on suletud.
 
-**Selle osa tõend:** tag `k07` main'i peal, automaatse hindaja tulemus GitHubi Releases all, Labori seisus rida `lab-07` ja link `NOTES.md` jaotisele `## K7 tööl`.
+**Selle osa tõend:** tag `k07` main'i peal, automaatse hindaja tulemus GitHubi Releases all, Labori seisus rida `lab-07`.
 
 ## Miks see nii töötab
 

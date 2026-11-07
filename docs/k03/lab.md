@@ -3162,16 +3162,6 @@ docker run --rm --network labori-seis_default labseis-kontroll:test; echo
 
     Viis teenust on `(healthy)` pärast `down` ja `up`-i, `/version` näitab sama SHA-d mis Harbori image'i tag, `/health` annab rmq01 peatamisel 503 ja pärast käivitust 200 ilma app01 taaskäivituseta ning kontroll-image annab `/health` JSON-i.
 
-### 9.4 Sinu töökohal
-
-Labori seisus töötab iga teenus image'ist, mille sisu ja versioon on teada. Sinu töökohal on osa teenuseid tõenäoliselt käsitsi paigaldatud või käsitsi uuendatavad.
-
-Lisa faili `NOTES.md` jaotis `## Minu töökohal` ja vasta 3–5 lausega: kus sinu töökohal käib teenuse paigaldus, uuendus või konteineri käivitus täna käsitsi (`docker run` ajaloos, käsitsi `systemctl`, tootja juhend, pilet) ja mis oleks esimene samm seda automatiseerida? Nimeta konkreetne süsteem ja samm. Hea esimene samm on väike ja tagasi võetav, näiteks üks olemasolev `docker run` Compose'i faili või Quadleti unit'iks koos versiooni tag'iga, mitte „kõik Kubernetesesse“.
-
-```bash
-sed -n '/^## Minu töökohal/,$p' NOTES.md
-```
-
 ??? note "Kontrollnimekiri"
 
     - [ ] Docker on paigaldatud rolliga, teine käivitus `changed=0`

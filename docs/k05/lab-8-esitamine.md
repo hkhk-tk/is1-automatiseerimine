@@ -8,7 +8,7 @@ tags:
 
 Ülevaataja näeb ainult repot ja Actionsi ajalugu. Kui kontroll käis ainult sinu masinas või parool jäi faili, ei tea ta sellest enne, kui see kuskil välja tuleb.
 
-Lõpus on töö `main`-is, `NOTES.md`-s on kirjas, kus sinu töökohal sama töö täna käsitsi käib, tag `k05` on käivitanud automaatse hindaja ja tulemus on GitHubi Releases all.
+Lõpus on töö `main`-is, tag `k05` on käivitanud automaatse hindaja ja tulemus on GitHubi Releases all.
 
 **Kui teed seda tööl iga päev:** `for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done` annab kuus `OK`-d ja `gh secret list --env proxmox` näitab nelja nime. Kui see on sul juba korras, mine otse etappi „[Esimene Dependaboti PR](#esimene-dependaboti-pr)“.
 
@@ -64,19 +64,6 @@ Automaatne uuendus, mida keegi ei vaata, on sama risk kui uuendus, mida ei tehta
 Action'i PR-is muutub SHA ja kommentaar koos, Maveni PR-is versiooninumber pom'is. Deploy PR-il ei käivitunud, sest `if:` lubab ainult push'i main'i, seega ei saanud Dependaboti kood sinu serverisse ilma sinu merge'ita. Major-versiooni hüpe on koht, kus loed muudatuste logi, isegi kui CI on roheline, sest testid ei kata kogu käitumist. Kui ükski PR ei tulnud ka pärast käsitsi kontrolli, on kõik juba uusimad või on `dependabot.yml` vigane: sama lehe viga ütleb, kumb.
 
 **Edasi saad minna, kui** ühel Dependaboti PR-il on sinu kommentaar otsusega või Dependabot kontrollis ja uuendusi polnud.
-
-## Sinu töökohal
-
-Täna ehitasid ahela, kus commit jõuab testide, skänni ja kontrolliga tootmisse ning ebaõnnestunud deploy teeb ise rollback'i.
-
-Kirjuta repo juurkausta `NOTES.md`-sse pealkirja `## K5: sinu töökohal` alla 3–5 lauset: kus sinu töökohal see täna käsitsi käib ja mis oleks esimene samm automatiseerida? Nimeta protsess (näiteks rakenduse uuendus, konfiguratsiooni muudatus, sertifikaadi vahetus), kes seda praegu teeb ja millise kontrolliga, ning esimene job või workflow, mille sa teeks. Hostinimesid, IP-sid ja saladusi sinna ei kirjuta.
-
-```bash
-awk '/^## K5: sinu töökohal/{f=1;next} /^## /{f=0} f' NOTES.md | grep -o '[.?!]\( \|$\)' | wc -l
-git add NOTES.md && git commit -m "notes: K5 sinu töökohal" && git push
-```
-
-**Edasi saad minna, kui** `wc -l` annab 3–5 ja commit on harus `k05-actions`.
 
 ## PR, merge ja tag
 
