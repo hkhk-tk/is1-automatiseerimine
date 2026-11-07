@@ -25,8 +25,6 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     7. Kirjutad käsitsi tehtud Dockeri paigalduse rolliks, mis annab teisel käivitusel `changed=0`.
     8. Leiad stackist rikked sammudega sümptom, hüpotees, tõend, parandus ja korduskontroll.
 
-Tõendid kogud faili `k03-docker/TOEND.md`, iga osa lõpus on kirjas, mida sinna lisada.
-
 ??? info "Testitud versioonid"
 
     Docker Engine 29 (vähemalt 28), Compose v5 (vähemalt v2.24.4), ansible-core 2.16, Harbor 2.15, `mariadb:11.4`, `rabbitmq:4.1-management-alpine`, `memcached:1.6-alpine`, `nginx:1.30-alpine`, `tomcat:10.1-jre21-temurin`, `maven:3-eclipse-temurin-21`, `alpine:3.22`, Podman 5 (AlmaLinux 9.8), Trivy 0.76. Vanem Compose ei toeta silte nagu `!override`. Prod-faili lugemisel annab see süntaksivea, mille teade ei viita versioonile.
@@ -49,7 +47,6 @@ git switch main
 git pull
 git switch -c k03-docker
 cd k03-docker
-touch TOEND.md
 ls -R
 git check-ignore -v .env
 ```
@@ -300,8 +297,6 @@ sudo journalctl -u docker --since '30 min ago' --no-pager | grep -iE 'starting u
 
     `Driver` väärtus `overlay2` tähendab klassikalist kihisalvestust `/var/lib/docker/overlay2` all. `overlayfs` tähendab containerd'i image store'i, kus kihid on `/var/lib/containerd` all. Kursuse käsud töötavad mõlemaga.
 
-**TOEND.md:** `docker info` rida ja loetelu sammudest, millega osades 1.2, 1.5 ja 1.6 masinat käsitsi muutsid. 8. osas kirjutad samad sammud rolli.
-
 ### 1.7 Elutsükkel ja PID 1
 
 Sama Nginx paistab hostis tavalise protsessina, konteineris on ta PID 1. Elutsükli käsud `run`, `stop`, `start` ja `rm` muudavad eri asju: protsessi, kirjutatavat kihti või mõlemat. Konteiner lõpeb koos PID 1-ga. Kui sa seda ei tea, otsid valest kohast: teenus „ebaõnnestub“, aga tegelikult lõpetas entrypoint'i skript oma töö ja konteiner tegi täpselt seda, mida pidi.
@@ -339,8 +334,6 @@ Viimase käsuga avanenud konteineris käivita `cat /proc/1/comm` ja `ps`, siis `
     `fg` on pärast Ctrl+C olekus `Exited`, `w` tuli `start`-iga tagasi sama ID-ga. Hostis on Nginx'il tavaline PID, konteineris PID 1. `rmi` annab vea `conflict` konteineri ID-ga. Ubuntu ilma `-it`-ita lõpetas kohe koodiga 0.
 
     `lsns` näitas, et konteiner on hulk namespace'e ühe hostiprotsessi ümber, mitte eraldi masin. `rmi` viga tõestab, et konteiner kasutab image'i kihte otse ka peatatuna. Ubuntu ilma `-it`-ita lõpetas, sest bash ilma terminalita sai stdin'ist kohe faililõpu ja väljus koodiga 0. Ubuntu image'is pole `ps`-i: image'is on ainult see, mida peaprotsess vajab.
-
-**TOEND.md:** `docker ps -a` väljund ja `lsns` read.
 
 ### 1.8 Pordid ja konteineri IP
 
@@ -407,8 +400,6 @@ docker rm -f hostnet
 
     `docker logs hostnet` näitab `Address in use`: port 80 oli hõivatud. Host-võrgus tekib pordikonflikt, kui sama porti kasutab hosti teenus.
 
-**TOEND.md:** üks lause: millise teenuse paneksid host-võrku ja mis selle hind on.
-
 ### 1.10 Mälu, CPU ja protsessid
 
 Piiranguid vaikimisi pole. Konteiner ilma piiranguta näeb kogu hosti mälu ja CPU-d nagu iga teine protsess. Mälulekkega teenus ilma piiranguta käivitab hosti OOM killeri, mis võib tappa hoopis `sshd` või andmebaasi.
@@ -444,8 +435,6 @@ docker rm -f oom cpu
 
     Kood 137 on 128 + 9: protsess sai SIGKILL-i. `OOMKilled: true` ütleb, et tappis tuum mälupiiri tõttu, mitte keegi `docker kill`-iga. `docker update` muutis faili töötaval konteineril protsessi taaskäivitamata: piir on lihtsalt cgroup'i fail. `docker exec` näeb konteineri enda cgroup'i juurena (cgroup namespace). Hostis on sama fail kaustas `/sys/fs/cgroup/system.slice/docker-<id>.scope/`.
 
-**TOEND.md:** kolm väärtust ja üks lause: mis juhtuks samas olukorras ilma `-m`-ita.
-
 ### 1.11 Restart-poliitika: kes konteineri uuesti käivitab
 
 Konteineris pole systemd'd, aga pärast tõrget või masina taaskäivitust peab konteineri keegi uuesti käivitama. Seda teeb `dockerd` restart-poliitika järgi. Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hooldusjärgset taaskäivitust või käivitub teenus, mille sa meelega peatasid.
@@ -480,8 +469,6 @@ docker rm rf
 ??? success "Oodatav tulemus"
 
     `rs` käivitus pärast `kill -9`-i ise uuesti: `RestartCount` 1 ja olek `running`. Daemon märkas PID 1 lõppemist ja käivitas sama konteineri uuesti, sama ID ja kirjutatava kihiga. Pärast daemoni taaskäivitust on `ra` üleval ja `rs` `Exited`: `always` ei arvesta sinu käsitsi peatamist, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` `unless-stopped`-i. `rf` näitab `3 exited 1`: `on-failure:3` proovis kolm korda ja jättis siis konteineri seisma. Nii ei taaskäivitu katkine konteiner lõputult ning logi ja väljumiskood jäävad uurimiseks alles.
-
-**TOEND.md:** üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
 
 ### 1.12 Käivitusvõtmed, mida admin vajab
 
@@ -543,8 +530,6 @@ docker rm ngx
 
     `docker exec ngx` ütles `is not running` ja `nginx -t` näitas vigast rida. Ebaõnnestunud konteinerisse `exec` ei pääse, aga sama image sama mount'iga ja teise ENTRYPOINT-iga näitab viga otse. `--rm` kustutab koos konteineriga ka tema logi: kui konteiner ebaõnnestub ja tahad teada, miks, käivita see ilma `--rm`-ita.
 
-**TOEND.md:** kaks `stop` aega ja üks lause: millal kasutad `--mount`-i `-v` asemel.
-
 ### 1.13 Oma võrk ja kolm backend'i teenust
 
 Labori seis otsib teenuseid nimede järgi `db01`, `mc01` ja `rmq01`. Vaikimisi bridge-võrgus nimelahendust pole, seega teed oma võrgu. Teenuste IP-d muutuvad iga uue konteineriga: rakendus, mis viitab IP-le, läheb katki esimesel uuesti loomisel, nimi jääb samaks. Samal ajal näed kõige tavalisemat käivitusviga: andmebaas lõpetab kohe, sest kohustuslik muutuja puudub.
@@ -604,8 +589,6 @@ docker network inspect -f '{{.Internal}}' sisemine
 
     `wget` internetti ebaõnnestub, `mc01` vastab sisemises võrgus `STAT pid`-iga ja `mc01`-l on kaks võrku. Kaks võrku ühel konteineril tähendab kaht liidest ja kaht IP-d. Samamoodi on prod-failis teenusel web01 kaks liidest: üks välimises võrgus, teine sisemises. `wget` ebaõnnestus, sest sisemises võrgus pole vaikemarsruuti, mitte sellepärast, et DNS oleks katki.
 
-**TOEND.md:** üks lause: millisesse võrku paneksid andmebaasi ja miks.
-
 ### 1.15 Andmed volume'is ja bind mount'is
 
 Konteineri kirjutatav kiht kaob `rm`-iga. Andmebaas kirjutatavas kihis kaotab kõik andmed esimesel image'i uuendusel, sest uuendus tähendab alati uut konteinerit. Volume ja bind mount jäävad alles, aga käituvad õiguste poolest erinevalt.
@@ -653,8 +636,6 @@ docker ps -aq | wc -l
     Rida `42` jäi pärast `docker rm -f`-i alles. `Mounts` näitab tüüpi `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`. Bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
 
     UID 999 on konteineri `mysql` kasutaja. Hostis ei pruugi sellel numbril nime olla, aga tuum kontrollib õigusi numbri järgi. Seepärast ei saanud sinu tavakasutaja faile kustutada.
-
-**TOEND.md:** `Mounts` väljund ja bind mount'i failide UID.
 
 ### 1.16 Commit
 
@@ -806,8 +787,6 @@ docker rm -f dbt && docker volume rm dbt
 
     Esimesel käivitusel oli `TEST` tabelis, teisel `TEST2` ei olnud. Teine käivitus leidis volume'ist valmis andmekataloogi ja jättis kogu `/docker-entrypoint-initdb.d/` vahele. Image oli uus, andmed vanad. Sama juhtub parooliga: muudetud `MARIADB_PASSWORD` ei muuda olemasoleva kasutaja parooli. Compose'i stackis on see kõige sagedasem `Access denied` põhjus.
 
-**TOEND.md:** üks lause: millal init-skriptid käivituvad ja mida teed, kui skeem muutub.
-
 ### 2.4 web/Dockerfile ja Nginx'i mall
 
 web01 on app01 ees pöördproksi. Nginx lahendab `upstream` nime ainult käivitusel. Kui app01 konteiner luuakse uuesti uue IP-ga, vastab web01 502-ga, ja 5. kohtumise GitHub Actionsi konveier uuendab app01 iga commit'iga. [Ametlik Nginx'i image](https://hub.docker.com/_/nginx) oskab konfiguratsioonifaili mallist genereerida ja konteineri DNS-serveri sinna kirjutada.
@@ -862,8 +841,6 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
     `ENV` jäi puudu või fail pole kaustas `templates/`.
 
-**TOEND.md:** miks jäid `$host` ja `$app_upstream` `envsubst`'ist puutumata, aga `${NGINX_LOCAL_RESOLVERS}` asendati.
-
 ### 2.5 Mis juhtub, kui app01 puudub
 
 Sinu web-image peab käivituma ka siis, kui app01 veel pole. Staatilise upstream'iga Nginx keeldub käivitumast, kui nimi ei lahendu. Compose'is tähendaks see, et web01 ebaõnnestub iga kord, kui app01 alles käivitub, ja restart-poliitika taaskäivitab seda tsüklis. Proovid seda testvõrgus ilma app01-ta ja võrdled tavalise staatilise `proxy_pass`-iga, mida enamik veebinäiteid kasutab.
@@ -913,8 +890,6 @@ docker build --no-cache --build-arg HUB -f db/Dockerfile .. 2>&1 | grep -i 'tran
 ??? success "Oodatav tulemus"
 
     Kontekst langes megabaitidelt mõnesaja kilobaidini, db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole. Väiksem kontekst tähendab kiiremat ehitust, aga peamine võit on turvalisus. Lubamisnimekirjaga ei jõua uus fail image'isse enne, kui sa selle ise lubad. Keelunimekirja (`.env`, `.git`) tuleb iga uue saladusefailiga täiendada, ja see ununeb.
-
-**TOEND.md:** konteksti suurus enne ja pärast.
 
 ### 2.7 Commit
 
@@ -1041,8 +1016,6 @@ docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 
     `multi` on mitusada MB väiksem kui `naive`. `history` ülemistes ridades on WAR (umbes 50–60 MB) ja curl'i kiht, Maveni kihte pole, ja label'is on sinu SHA. Suuruse vahe tuleb JDK-st, Mavenist ja kaustast `~/.m2`. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
-**TOEND.md:** mõlema image'i suurus.
-
 ### 3.3 Mis lõppimage'isse jõudis
 
 Lisaks suurusele vaata image'i sisu: mis programmid on image'is olemas ja mida ründaja konteineris kasutada saaks. Kompilaator ja ehitustööriistad tootmise image'is on ründajale tööriistakast: nendega saab konteineris koodi ehitada, sõltuvusi alla laadida ja oma tööriistu kokku panna.
@@ -1057,8 +1030,6 @@ docker run --rm --entrypoint sh labseis-app:multi -c 'ls /src 2>&1; find / -name
 ??? success "Oodatav tulemus"
 
     `naive` näitab kolme teed, `multi` ainult `java` teed (JRE). `webapps` all on ainult `ROOT.war`, Tomcati näiterakendusi pole. `/src` puudub: lähtekood jäi ehitusastmesse, mida registry'sse ei lükata.
-
-**TOEND.md:** üks lause: mida ründaja `naive` image'is teha saaks, mida `multi`-s ei saa.
 
 ### 3.4 Cache töötab ja läheb katki
 
@@ -1113,8 +1084,6 @@ echo "$U"; sudo ls -l "$U/tmp"; docker rm -f kiht
 
     `overlay2` draiveriga näitab `GraphDriver.Data` kihtide kaustu (`LowerDir`, `UpperDir`) otse. containerd'i image store'iga (`overlayfs`) välja `GraphDriver` pole ja kausta leiad konteineri mount'ide andmetest, nagu viimases plokis. See töötab mõlemaga.
 
-**TOEND.md:** `kihtproov` suurus ja üks lause: kuidas saladuse image'ist tegelikult välja saad.
-
 ### 3.6 Kes on PID 1
 
 `docker stop` saadab PID 1-le SIGTERM-i ja ootab 10 sekundit. Kas Tomcat selle kätte saab, sõltub CMD vormist. Tomcat, mis ei saa SIGTERM-i, ei lõpeta pooleliolevaid päringuid ega sulge andmebaasi ühendusi. Iga uuendus katkestab siis kasutajate päringuid ja lisab 10 sekundit seisakut.
@@ -1133,8 +1102,6 @@ Muuda viimane rida ajutiselt shell-vormi `CMD catalina.sh run`, ehita, käivita 
     Exec-vormiga on PID 1 `java` ja `stop` võtab paar sekundit. Shell-vormiga on PID 1 `/bin/sh -c …` ja `stop` kestab umbes 10 s. Shell ei andnud signaali edasi ja 10 sekundi pärast lõpetas Docker protsessi SIGKILL-iga. Exec-vormis sai Java signaali ja lõpetas paari sekundiga. Kui `docker logs appt` näitab pärast peatamist `Stopping service [Catalina]`, jõudis signaal kohale.
 
     Olek `unhealthy` on siin ootuspärane: andmebaasi pole ja `/health` annab 503. Rakendus ise vastab: `docker exec appt curl -s localhost:8080/health/live`.
-
-**TOEND.md:** mõlemad ajad.
 
 ### 3.7 Mitte-root kasutaja
 
@@ -1219,8 +1186,6 @@ docker rm -f appt && docker network rm k03test
 ??? success "Oodatav tulemus"
 
     Esimene annab `Could not resolve host: web01` ja `exit=6`: töötas vaike-CMD. Teine annab `{"status":"UP"}`: argument asendas CMD-i. Kolmas annab `uid=65534(nobody)`: asendati programm ise. Kood 6 on curl'i kood „nime ei lahendatud“, nii et skript saab eristada nimeviga ühendusveast (7) või HTTP veast (22).
-
-**TOEND.md:** kolm väljundit.
 
 ### 3.9 Commit
 
@@ -1561,8 +1526,6 @@ diff web/nginx.conf /tmp/web01-default.conf
 
     `docker cp` töötab ka teises suunas, hostist konteinerisse. See sobib silumiseks, aga mitte parandamiseks: järgmine `up -d` loob konteineri uuesti ja sinu fail kaob.
 
-**TOEND.md:** `inspect` väljundid ja üks lause: mida vaataksid esimesena, kui app01 `RestartCount` kasvab.
-
 ### 4.6 Muudatus ja idempotentsus
 
 Ansible'i playbook andis teisel käivitusel `changed=0`. Compose'i `up -d` võrdleb iga teenuse seadistuse räsi konteineri sildiga `com.docker.compose.config-hash` ja loob uuesti ainult selle, mis erineb. Kui sa ei tea, mida `up -d` puudutab, kardad seda tootmises käivitada ja hakkad konteinereid käsitsi parandama. Nii tekib erinevus faili ja tegeliku oleku vahel (triiv), ja järgmine `up -d` kirjutab sinu käsitsi parandused üle.
@@ -1613,8 +1576,6 @@ docker compose exec mc01 sh -c 'echo stats | nc -w 1 127.0.0.1 11211' | grep -E 
 ??? success "Oodatav tulemus"
 
     Kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. 0 sõnumit ja 1 consumer tähendab, et sõnum läbis järjekorra: consumer võttis selle ja kirjutas baasi. Kui sõnumeid oleks 1 ja consumer'eid 0, töötaks API, aga andmed oleksid järjekorras kinni. `get_hits` üle nulli näitab, et korduv GET tuli vahemälust ega koormanud andmebaasi.
-
-**TOEND.md:** POST, `list_queues` ja `get_hits` väljund.
 
 ### 4.8 Riku ja vaata
 
@@ -1780,8 +1741,6 @@ sleep 30; docker stats --no-stream --format '{{.Name}} {{.PIDs}}' labori-seis-we
 
     Osa `sleep`-e andis `can't fork`, PIDs jõudis 100-ni, `/health` andis 200 ja pärast ootamist on PIDs jälle tavalisel tasemel. Kui piir täis sai, keeldus tuum uut protsessi loomast. Hosti ülejäänud protsessid ei saanud sellest mõju. Nginx teenindas päringuid edasi, sest olemasolevad workerid ei vaja uusi protsesse. Konteinerit polnud vaja taaskäivitada.
 
-**TOEND.md:** üks lause: mis oleks juhtunud sama katsega ilma `pids`-piiranguta.
-
 ### 5.3 Saladused failidest
 
 `docker inspect` näitab praegu paroole igaühele, kes pääseb socket'i juurde. Keskkonnamuutuja lekib mitmest kohast: `docker inspect`, `/proc/<pid>/environ`, rakenduse veateade, mis väljastab keskkonna, ja iga alamprotsess, mis selle pärib. Faili sisu ei jõua neist ühtegi. Tee paroolidest failid ja anna need teenustele [`secrets:`](https://docs.docker.com/compose/how-tos/use-secrets/) kaudu. Konteiner näeb faili kaustas `/run/secrets/` ja keskkonda jääb ainult faili tee.
@@ -1842,8 +1801,6 @@ docker compose exec app01 ls -l /run/secrets; curl -s localhost:8080/health; ech
     `git status` ei näita kausta `secrets/`. `config` ei näita db01 ja app01 all ühtegi `MARIADB_PASSWORD:` ega `DB_PASSWORD:` rida, `inspect` ei leia app01 keskkonnast parooli ja `/health` on `UP`. Pärast `!override`-i on keskkonnas ainult failide teed ja configtree import. `/health` UP tõestab, et rakendus luges paroolid failidest ja need klappisid volume'i omadega. Kui parool oleks failis reavahetusega, oleks `db` DOWN.
 
     Failide õigused on `644`, sest konteiner näeb faili hosti omaniku ja õigustega ja app01 töötab UID 10001-na. Kaitse annab kausta õigus `700`: hostis ei pääse teised kasutajad failideni.
-
-**TOEND.md:** milline teenus hoiab parooli veel keskkonnas ja miks (vt „Miks see nii töötab“, lõik „RabbitMQ parool“).
 
 ### 5.4 Sisemine võrk ja halduse UI loopback'il
 
@@ -1925,8 +1882,6 @@ Eemalda ajutiselt `/etc/nginx/conf.d` `tmpfs`-i nimekirjast, uuenda stacki ning 
 
     `touch` veebijuurde annab `Read-only file system`, `/tmp` on kirjutatav, `ReadonlyRootfs` on `true` ja `/health` on `UP`. Viga tuli tuumalt, mitte Nginx'ilt. Ilma `conf.d` tmpfs'ita ei saanud entrypoint mallist konfiguratsiooni kirjutada ja Nginx näitas vaikelehte. See on tüüpiline viga, kui `read_only` lisatakse ilma teenuse kirjutuskohti uurimata.
 
-**TOEND.md:** mis juhtus ilma `conf.d` tmpfs'ita ja miks.
-
 ### 5.6 Logid: rotatsioon ja journald
 
 Logide puhul on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks jõuavad. `json-file` draiveri vaikeseade on `max-size: -1`: `*-json.log` kasvab piiramatult ja seda ei pööra ka hosti `logrotate`, mis neid faile ei tunne. Compose'i `logging` kaitseb ainult Compose'i teenuseid. Daemoni vaikeseade kaitseb ka konteinereid, mida keegi Compose'iga ei käivita. Lisa logide piirid faili `/etc/docker/daemon.json`, mille 1.6-s lõid.
@@ -1987,8 +1942,6 @@ docker compose logs app01 | tail -3
 
     `journalctl` leiab app01 read mõlemal viisil ja `docker compose logs` töötab edasi. app01 read on journal'is koos hosti teiste logidega ja filtreeritavad konteineri nime või tag'i järgi.
 
-**TOEND.md:** `logtest` konteineri `LogConfig` väljund.
-
 ### 5.7 Volume'i varundus ja taastamine
 
 Volume ilma varukoopiata on ühe `docker compose down -v` kaugusel andmete kaotusest. See käsk on Compose'i veaotsingus soovitatud, ja keegi kasutab seda varem või hiljem valel masinal. Peatad andmebaasi teenuse ja varundad selle volume'i abikonteineriga ja taastad selle uude volume'isse. Andmebaasis on tulemus, mille lisasid 4. osas POST-iga, nii et taastamist kontrollid selle reaga.
@@ -2023,8 +1976,6 @@ docker rm -f dbtaaste && docker volume rm dbdata-taaste
     `backup/` all on arhiiv, taastatud failide omanik on `999`, taastatud baas näitab rida `lab-03 compose OK` ja stack on jälle `healthy`. Koopia on kasutatav, mitte ainult olemas. Taastamine ei vajanud root-parooli ega init-skripte: andmekataloog oli valmis ja entrypoint jättis algseadistuse vahele. Seisak kestis `stop`-ist `start`-ini. Suurema baasi puhul seisak pikeneb ja siis on õige valik `mariadb-dump` (vt „Miks see nii töötab“).
 
     Failikoopia on järjepidev ainult peatatud andmebaasist.
-
-**TOEND.md:** arhiivi suurus ja seisaku pikkus.
 
 ### 5.8 Kettaruum ja koristuspoliitika
 
@@ -2262,8 +2213,6 @@ docker pull "harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-app:$TAG"
 
     Kontol on nimi kujul `robot$<github-kasutaja>+podman`. Robotkonto ei saa veebiliidesesse sisse logida ja sellel on ainult need õigused, mis talle andsid.
 
-**TOEND.md:** üks lause iga seade kohta: mida see tootmises ära hoiab.
-
 ### 6.4 Tag ja digest
 
 Tag on silt, mida saab ümber tõsta. Digest on manifesti räsi ja ei muutu kunagi. Digest'iga viide tagab, et tootmises töötab täpselt see, mida testisid. Vaatad, et sinu kaks web-tag'i viitavad samale digest'ile, ja tõmbad image'i digest'i järgi.
@@ -2279,8 +2228,6 @@ docker compose images
 ??? success "Oodatav tulemus"
 
     `RepoDigests` näitab mõlemal tag'il sama `sha256:` väärtust, `pull "$D"` ütles `Image is up to date` ja `image ls --digests` näitab kaht rida sama digest'iga. Nimi on erinev, sisu sama. `pull` digest'i järgi ei laadinud midagi alla, sest kõik kihid olid olemas. Compose'is ja Kubernetes'es saab image'i kirjutada kujul `nimi@sha256:…`, ja siis ei muuda ükski uus push seda, mis töötab. Harboris näed sama digest'i artefakti real.
-
-**TOEND.md:** digest ja üks lause: millal kasutaksid tootmises digest'i, millal tag'i.
 
 ### 6.5 Stack registry'st
 
@@ -2301,8 +2248,6 @@ curl -s http://localhost:8080/version; echo
 ??? warning "Kui `pull` ebaõnnestub teatega `current image with … vulnerabilities cannot be pulled`"
 
     6.3 tõmbamise keeld on sees. Lülita see projekti **Configuration** all välja.
-
-**TOEND.md:** `docker compose images` väljund.
 
 ### 6.6 Trivy käsurealt
 
@@ -2336,7 +2281,7 @@ grep -E '^Total|labori-seis' trivy.txt
 trivy image -q --severity HIGH,CRITICAL --ignore-unfixed "$R/labori-seis-app:$TAG" | grep -E '^Total'
 ```
 
-Ava `trivy.txt` ja vasta TOEND.md-s: millises image'is on kõige rohkem leide ja kas need on OS-paketid või Java teegid? Vali üks CRITICAL või HIGH leid: millist paketti leid puudutab ja millises versioonis on parandus (`Fixed Version`)? Mida teed: uuendad baasimage'it, teeki `pom.xml`-is või aktsepteerid riski? Miks?
+Ava `trivy.txt` ja leia: millises image'is on kõige rohkem leide ja kas need on OS-paketid või Java teegid? Vali üks CRITICAL või HIGH leid: millist paketti leid puudutab ja millises versioonis on parandus (`Fixed Version`)? Mida teed: uuendad baasimage'it, teeki `pom.xml`-is või aktsepteerid riski? Miks?
 
 ??? success "Oodatav tulemus"
 
@@ -2364,8 +2309,6 @@ docker run --rm --entrypoint "" harbor.lab.hkhk.lan/dockerhub/aquasec/trivy:"$V"
 
     `fs` leidis `pom.xml`-ist Java teegid ilma OS-pakettideta, sest lähtekoodis pole OS-pakette. Image'i skannimine näeb mõlemat. `config` ei märgi app-Dockerfile'i root-kasutaja pärast (db ja web võivad olla märgitud). Konteinerist töötasid esimene ja kolmas käsk, teine andis `unknown command "trivy"`: programm on juba ENTRYPOINT ja teine `trivy` sai argumendiks, sama muster nagu sinu kontroll-image'il. Konveier kasutab Trivy't just konteinerina. `aquasec/trivy` ei ole ametlik image, seepärast on nimes `library` asemel `aquasec`.
 
-**TOEND.md:** üks lause `fs` ja `image` vahe kohta ning üks `config` leid koos otsusega.
-
 ### 6.8 SBOM
 
 SBOM (Software Bill of Materials) on image'i komponentide nimekiri. Haavatavuste andmebaas muutub iga päev, image mitte: SBOM-i vastu skannimine ei vaja image'it. Kui avaldatakse uus kriitiline CVE laialt kasutatud teegis (nagu Log4Shell), on esimene küsimus „kus meil see teek on“. SBOM-idega vastad minutitega, ilma kõiki image'eid tõmbamata ja lahti pakkimata.
@@ -2384,8 +2327,6 @@ Harboris saad SBOM-i teha ka veebiliidesest: artefakti juures **Generate SBOM**.
 ??? success "Oodatav tulemus"
 
     `bomFormat` on `CycloneDX`, komponente on sadu, Springi ja Tomcati versioonid on nähtavad ja `trivy sbom` annab leide samas suurusjärgus kui image'i skannimine. Sama suurusjärk tõestab, et SBOM sisaldab kõike, mida Trivy image'ist leiab. Homme saad sama faili uuesti skannida uuema andmebaasiga. Litsentside päring näitab, et enamik komponente on Apache 2.0 või MIT litsentsiga: SBOM vastab ka küsimusele, kas tohid image'it levitada.
-
-**TOEND.md:** kuidas kasutaksid SBOM-i, kui homme avaldatakse uus CVE.
 
 ### 6.9 Commit
 
@@ -2471,8 +2412,6 @@ done
 
     Käsk käivitus `sudo`-ga või `su`-ga. Rootless vajab kasutaja sessiooni (`/run/user/<UID>`), mille loob ainult SSH- või konsoolisisselogimine (`pam_systemd`). `sudo -u` seda ei tee.
 
-**TOEND.md:** jaotis `## Podman` ja sinna `podman info` rida.
-
 ### 7.2 Image Harborist
 
 AlmaLinuxi host tõmbab samad image'id samast registry'st kui control, aga Podmani seadistus on teises kohas. Docker Hubi image'id tulevad Harbori vahemälu kaudu ja sinu image'id 6.3-s loodud robotkontoga, millel on ainult tõmbamise õigus: server ei vaja õigust image'eid lükata ega kustutada.
@@ -2513,8 +2452,6 @@ ssh mc01 'podman --log-level=debug pull docker.io/library/memcached:1.6-alpine 2
 
     Kirjuta image täisnimega `docker.io/library/memcached:1.6-alpine`. `short-name-mode = "enforcing"` ei luba ilma terminalita registry't valida ja systemd teenusel terminali pole.
 
-**TOEND.md:** kaks digest'i kõrvuti.
-
 ### 7.3 mc01: teenus konteineriks
 
 Alustad lihtsamast teenusest, mille olek ei pea alles jääma. Peatad native Memcachedi, käivitad sama pordiga konteineri ja vaatad hostist, milline protsess on millise vanemprotsess. Kontrolli teenust sealt, kust seda kasutatakse: app01 `/health` web01 kaudu.
@@ -2530,8 +2467,6 @@ ssh mc01 'podman rm -f mc-proov'
 ??? success "Oodatav tulemus"
 
     `/health` näitas `"cache":"UP"` ilma app01 taaskäivituseta. `ps` näitas kolme protsessi. `memcached` töötab UID-ga `subuid` vahemikust, mitte root'ina ega `kasutaja`-na. Selle vanem on `conmon`, mis hoiab konteineri stdio't ja väljumiskoodi. Porti hoiab `pasta`, mis kuulab hostis kasutaja õigustega ja suunab ühendused konteineri võrgu namespace'i. `podman` protsessi ennast enam pole: käsk lõpetas töö pärast käivitamist ja ühtegi daemonit, mille taaskäivitus konteineri peataks, ei ole. Seepärast ei käivita seda konteinerit pärast masina taaskäivitust ka keegi uuesti.
-
-**TOEND.md:** `/health` ja `ps` väljund.
 
 ### 7.4 Quadlet: konteiner systemd teenusena
 
@@ -2594,8 +2529,6 @@ ssh mc01 'systemctl --user is-active labseis-mc; loginctl show-user kasutaja -p 
 ??? warning "Kui `daemon-reload` järel `Unit labseis-mc.service not found`"
 
     Fail on vales kaustas, vale laiendiga või tundmatu võtmega (vanem Podman). Generaator jätab vigase faili vahele ja kirjutab põhjuse ainult `-dryrun` väljundisse ja journal'isse.
-
-**TOEND.md:** `is-active` väljund pärast taaskäivitust ja üks lause, miks `enable` ei tööta.
 
 ### 7.5 db01 SELinuxiga
 
@@ -2726,8 +2659,6 @@ ssh app01 sudo systemctl start tomcat10; sleep 30; curl -s http://web01/health; 
 
     Vaata nime: `ssh app01 systemctl list-units 'tomcat*'`.
 
-**TOEND.md:** AVC rida, parandus ja kaks ridade arvu.
-
 ### 7.6 Piirangud cgroup'is
 
 Rootless-režiimis kehtib piirang ainult siis, kui systemd on kasutaja teenusele vastava cgroup'i kontrolleri delegeerinud. Vaatad, kus `MemoryMax` tegelikult kehtib ja milliseid piiranguid sa sellel hostil üldse seada saad.
@@ -2744,8 +2675,6 @@ ssh mc01 'cg=$(systemctl --user show -p ControlGroup --value labseis-mc)
 ??? success "Oodatav tulemus"
 
     `memory.max` on `134217728`, `--memory 64m` konteiner näitas `67108864`. `systemd-cgls` näitas, et `conmon` ja konteineri protsess on mõlemad unit'i `labseis-mc.service` cgroup'is: Quadlet käivitab konteineri `--cgroups=split`-iga, nii et unit'i `MemoryMax` piirab kogu teenust koos `conmon`-iga. `--memory` ja `--cpus` töötavad ainult siis, kui `cgroup.controllers` loetelus on `memory` ja `cpu`.
-
-**TOEND.md:** `memory.max` väärtus, `cgroup.controllers` rida ja üks lause: mis juhtus `--cpus`-iga ja miks.
 
 ### 7.7 Docker API ja Kubernetese YAML
 
@@ -2775,8 +2704,6 @@ ssh mc01 'podman kube generate labseis-mc > ~/labseis-mc-kube.yaml && grep -E "k
 ??? success "Oodatav tulemus"
 
     `/version` näitas Podmani komponenti ja API versiooni, pod vastas pordil 11212 `VERSION 1.6…`-ga ja on maha võetud. `docker` CLI ei tea, et teisel pool on Podman: see räägib sama HTTP API-ga ja leppis kokku vanema API versiooni, mida server toetab. Mis ei tööta, on peaaegu alati Dockeri-spetsiifiline lisa (Swarm, BuildKit'i võtmed, pluginad). `kube generate` andis `Pod` objekti, mille sees on sama image ja port. Healthcheck ja `MemoryMax` sinna ei jõua, sest need on systemd poolel.
-
-**TOEND.md:** kaks rida: mis töötas ja mis mitte.
 
 ### 7.8 Tagasi algseisu ja commit
 
@@ -2841,7 +2768,7 @@ Fail `docker.yml` on starteris olemas. See käivitab rolli control'is endas:
 
 `hosts: localhost` koos `connection: local`-iga tähendab, et Ansible ei ühendu SSH-ga ja käivitab moodulid samas masinas. Inventory't pole vaja.
 
-Võta ette oma TOEND.md loetelu 1.6-st ja kirjuta iga käsitsi samm rolli ülesandeks. Roll teeb samad sammud moodulitega. Starteris on ainult kaust `roles/docker/files`, ülejäänud kaustad loo ise:
+Vaata üle sammud, mida tegid käsitsi osades 1.2, 1.5, 1.6, 5.6 ja 6.6, ja kirjuta iga samm rolli ülesandeks. Roll teeb samad sammud moodulitega. Starteris on ainult kaust `roles/docker/files`, ülejäänud kaustad loo ise:
 
 ```bash
 mkdir -p roles/docker/{defaults,tasks,templates,handlers}
@@ -3042,8 +2969,6 @@ trivy --version | head -1
 ??? warning "Kui esimene käivitus peatus vea tõttu ja `daemon.json` on muutunud, aga Docker kasutab vana seadet"
 
     Handler käivitub play lõpus. Kui play peatus enne lõppu, jäi handler käivitamata, kuigi fail muutus. Teisel käivitusel faili enam ei muudeta ja handler'it ei teavitata. Kontrolli faili (`sudo dockerd --validate --config-file /etc/docker/daemon.json`) ja käivita üks kord `sudo systemctl restart docker`. `--force-handlers` aitab ainult samas käivituses: see käivitab teavitatud handler'id ka siis, kui play peatub vea tõttu.
-
-**TOEND.md:** üks erinevus `--check --diff` väljundist koos põhjusega ja teise käivituse `PLAY RECAP` rida.
 
 ### 8.3 Commit
 
@@ -3272,23 +3197,11 @@ docker compose up -d --wait && curl -s localhost:8080/health; echo
 
     Pärast `down` ja `up`-i on viis teenust `healthy` ilma käsitsi sekkumiseta, `/health` pordil 8090 on `UP`, Gitis on neli `fix(intsident)` commit'i ja põhistack on jälle üleval. Neli commit'i nelja põhjusega on intsidendi ajalugu, mida järgmine administraator saab lugeda ilma sinult küsimata. `down` ja uus `up` tõestasid, et ükski parandus ei sõltunud varem loodud kaustast.
 
-### 9.7 Intsidendi kokkuvõte
-
-Kokkuvõte vastab küsimusele, miks `docker compose config -q` kõik kolm viga läbi laskis ja milline kontroll oleks iga vea leidnud enne `up`-i. Kirjuta TOEND.md-sse jaotis `## Intsident`:
-
-- tabel kolme reaga: sümptom, käsk, mis põhjuse näitas, põhjus, parandus;
-- iga rikke koht (andmed, healthcheck, võrk) ja järjekord, milles rikked nähtavaks said;
-- üks lõik: kuidas üks viga peitis teisi ja miks app01 ning web01 logid alguses midagi ei näidanud;
-- iga rikke kohta üks kontroll, mis oleks selle leidnud enne `up`-i (staatiline kontroll, test või monitooring).
+### 9.7 Commit
 
 ```bash
-grep -A25 '^## Intsident' TOEND.md | head -30
-(cd ~/kursus && git add k03-docker && git commit -m "k03: intsidendi kokkuvõte" && git push)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: intsidendi parandused" && git push)
 ```
-
-??? success "Oodatav tulemus"
-
-    Jaotises on tabel, rikete kohad ja järjekord, kaskaadi lõik ja iga rikke kohta üks ennetav kontroll. Kui iga rikke juures on kontroll, mis oleks selle varem leidnud, on sul 5. kohtumise konveieri jaoks kolme testi ideed.
 
 ??? info "Miks see nii töötab"
 
@@ -3372,16 +3285,15 @@ docker run --rm --network labori-seis_default labseis-kontroll:test; echo
     - [ ] kolm image'it on Harboris SHA-tag'iga
     - [ ] `quadlet/` kaustas on kolm faili
     - [ ] `intsident/compose.yaml` on parandatud neljas commit'is
-    - [ ] TOEND.md-s on iga osa tõendid ja jaotis `## Intsident`
     - [ ] mc01 ja db01 on algseisus
 
 ## Töö esitamine
 
-Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k03`. Pull request'i kirjeldus tuleb failist TOEND.md.
+Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k03`.
 
 ```bash
-(cd ~/kursus && git add -A k03-docker && git commit -m "k03: NOTES ja TOEND" && git push)
-gh pr create --base main --head k03-docker --title "K3 Docker" --body-file ~/kursus/k03-docker/TOEND.md
+(cd ~/kursus && git add -A k03-docker && git commit -m "k03: valmis" && git push)
+gh pr create --base main --head k03-docker --title "K3 Docker" --body "3. kohtumise praktikum"
 ```
 
 Vaata pull request GitHubis üle ja ühenda (**Merge pull request**). Seejärel:
@@ -3593,7 +3505,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
 
 ## Lisaülesanded
 
-Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid lähevad kausta `k03-docker/` (ülesanne 15 kausta `vorgukogu/`) ja põhjendused TOEND.md-sse. Docker Hubi image'id kirjuta kujul `$HUB/<image>` (näiteks `$HUB/nginx:1.30-alpine`), mitteametlikud kujul `harbor.lab.hkhk.lan/dockerhub/<omanik>/<image>` (näiteks `louislam/uptime-kuma:2`).
+Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid lähevad kausta `k03-docker/` (ülesanne 15 kausta `vorgukogu/`). Docker Hubi image'id kirjuta kujul `$HUB/<image>` (näiteks `$HUB/nginx:1.30-alpine`), mitteametlikud kujul `harbor.lab.hkhk.lan/dockerhub/<omanik>/<image>` (näiteks `louislam/uptime-kuma:2`).
 
 ??? example "1 · Swarm ühel node'il"
 
@@ -3653,14 +3565,13 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "2 · BuildKit cache mount"
 
-    **Esita:** `k03-docker/app/Dockerfile`, TOEND.md
+    **Esita:** `k03-docker/app/Dockerfile`
 
     Praegu laaditakse iga `pom.xml`-i muudatuse järel kõik Maveni sõltuvused uuesti alla, sest kiht tühistatakse tervikuna. Cache mount hoiab Maveni hoidla build'ide vahel alles ja laeb alla ainult muutunud osa.
 
     - build-astme mõlemal Maveni `RUN`-il on `--mount=type=cache,target=/root/.m2`;
     - kustuta `pom.xml`-ist ajutiselt üks sõltuvus, ehita, pane tagasi ja ehita uuesti;
     - mõõda, mitu MB teisel korral alla laeti;
-    - vasta TOEND.md-s: miks see GitHub Actionsi CI-s ilma lisaseadistuseta ei aita?
 
     **Kontroll:**
 
@@ -3673,7 +3584,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
     - `docker buildx du --verbose` näitab cache mount'i kirjet;
     - build pärast sõltuvuse tagasipanekut laeb alla paar MB, mitte kogu hoidla;
-    - allalaaditud MB arv ja vastus CI küsimusele on TOEND.md-s.
 
     Vihje: Maven näitab allalaadimisi ainult siis, kui `go-offline` real pole `-q`-d.
 
@@ -3788,14 +3698,13 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "5 · Skeemi muudatus olemasolevas baasis"
 
-    **Esita:** `k03-docker/db/migr/001-result-note.sql`, TOEND.md
+    **Esita:** `k03-docker/db/migr/001-result-note.sql`
 
     db-image'i juures nägid, et init-skript ei käivitu olemasoleva volume'iga. Tootmisbaasis muudetakse skeemi migratsiooniga, mis on korduvalt käivitatav ja jõuab ka baasi, mis on juba ammu kasutusel.
 
     - `001-result-note.sql` lisab tabelisse `result` veeru `note VARCHAR(200) NULL` nii, et teine käivitus ei anna viga;
     - käivita see põhistacki db01-s kaks korda;
     - rakendus töötab edasi: `/health` on `UP` ja POST tulemus jõuab baasi;
-    - vasta TOEND.md-s: kas vana app-image talub uut veergu, ja miks ei saa sama faili lihtsalt `/docker-entrypoint-initdb.d/` alla kopeerida (vaata failinimede järjekorda)?
 
     **Kontroll:**
 
@@ -3813,7 +3722,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
     - mõlemad käivitused lõpevad koodiga 0;
     - `DESCRIBE` näitab rida `note varchar(200) YES`;
     - `/health` on `UP` ja POST jõuab `GET /api/results` vastusesse;
-    - mõlemad vastused on TOEND.md-s.
 
     Vihje: `ADD COLUMN IF NOT EXISTS`.
 
@@ -3836,9 +3744,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
         **Miks nii.** `ADD COLUMN IF NOT EXISTS` on MariaDB laiendus (MySQL-is seda pole), nii et teine käivitus annab ainult märkuse. Vana image talub veergu, sest `ResultRepository` kirjutab `INSERT`-is veergude nimed välja ja uus veerg lubab väärtust `NULL`: see on expand/contract'i esimene pool.
 
 ??? example "6 · Healthcheck'i ajastus"
-
-    **Esita:** TOEND.md
-
     app01 healthcheck'i väärtused on praegu Dockerfile'ist võetud, mitte mõõdetud. Vale ajastusega healthcheck teeb deploy aeglaseks või annab valehäireid. Mõõda, kui kaua app01 tegelikult käivitub, ja vali väärtused selle järgi.
 
     - jälgi teises terminalis olekumuutusi `docker events`-iga (käsk on plokis Kontroll);
@@ -3856,8 +3761,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
     **Valmis, kui:**
 
-    - TOEND.md-s on tabel kolme seadistuse, `healthy`-ni kulunud aja ja valehäirete arvuga;
-    - tabeli all on üks lause, milliseid väärtusi kasutaksid tootmises;
     - `git diff --stat compose.yaml` on tühi ja app01 on `healthy`.
 
     ??? success "Lahendus"
@@ -3896,14 +3799,13 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "7 · Väiksem image ilma Tomcatita"
 
-    **Esita:** `k03-docker/app/Dockerfile.jre`, TOEND.md
+    **Esita:** `k03-docker/app/Dockerfile.jre`
 
     Tomcati image kannab kaasas terve rakendusserveri, kuigi WAR on käivitatav ja Tomcat on selle sees. Väiksem image tähendab kiiremat tõmbamist ja vähem Trivy leide.
 
     - `Dockerfile.jre` käitusaste on `eclipse-temurin:21-jre-alpine`, oma kasutaja UID-ga 10001 ja `USER`;
     - `ENTRYPOINT` on exec-vormis: `java -XX:MaxRAMPercentage=75 -jar …`, healthcheck `wget`-iga;
     - võrdle suurust ja HIGH/CRITICAL Trivy leidude arvu Tomcati variandiga;
-    - kirjuta TOEND.md-sse, mis selle muudatusega kaob: kas 1. ja 2. kohtumisel paigaldatud app01 Tomcat ja see image käituvad samamoodi?
 
     **Kontroll:**
 
@@ -3917,7 +3819,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
     - `docker exec … id` näitab UID 10001;
     - konteiner on `healthy`;
-    - suuruse ja leidude võrdlus ning vastus Tomcati küsimusele on TOEND.md-s.
 
     ??? success "Lahendus"
         ```dockerfile
@@ -3947,7 +3848,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "8 · Linuxi capability'd maha"
 
-    **Esita:** `k03-docker/compose.prod.yaml`, TOEND.md
+    **Esita:** `k03-docker/compose.prod.yaml`
 
     Konteineri root'il on vaikimisi kümmekond Linuxi capability't, mida enamik teenuseid ei vaja. Iga ülearune capability on ründajale tööriist, kui ta konteinerisse pääseb.
 
@@ -3968,7 +3869,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
     - mc01 ja web01 on `healthy`;
     - web01 `cap_add` nimekirjast ei saa ühtegi capability't eemaldada, ilma et nginx ebaõnnestuks;
-    - TOEND.md-s on iga capability kohta üks lause, milleks nginx seda vajab.
 
     Vihje: alusta logist, `docker compose logs web01`.
 
@@ -3997,7 +3897,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "9 · Mikroteenused: tulemuste consumer eraldi konteineriks"
 
-    **Esita:** `k03-docker/compose.micro.yaml`, TOEND.md
+    **Esita:** `k03-docker/compose.micro.yaml`
 
     API ja järjekorra consumer on praegu üks protsess: neid ei saa eraldi skaleerida ega uuendada, ja consumer'i rike peatab ka API. Jaga need kaheks teenuseks koodi muutmata; kõik peab mahtuma 4 GB VM-i.
 
@@ -4017,8 +3917,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
     **Valmis, kui:**
 
     - kolme workeriga näitab `list_queues` järjekorral `results` kolme consumer'it;
-    - TOEND.md-s on `list_queues` väljund ajal, mil workerid on peatatud, ja pärast `start`-i;
-    - TOEND.md-s on kirjas, mis juhtus järjekorraga ja kas midagi läks kaotsi;
     - põhistack on lõpus jälle üleval.
 
     ??? success "Lahendus"
@@ -4070,7 +3968,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "10 · Docker socket'i audit"
 
-    **Esita:** `k03-docker/audit.sh`, TOEND.md
+    **Esita:** `k03-docker/audit.sh`
 
     Konteiner, millele on mount'itud `/var/run/docker.sock`, saab käivitada uue konteineri hosti `/`-ga ja on seega sisuliselt root hostis. Monitooringu- ja CI-tööriistad küsivad socket'it sageli, ja serveris tuleb need üles leida.
 
@@ -4091,7 +3989,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
     - esimene käivitus märgib ainult `sockproov`-i;
     - teine käivitus ei märgi midagi;
     - `shellcheck audit.sh` vaikib;
-    - TOEND.md-s on üks lause: kuidas annaksid monitooringutööriistale vajaliku info ilma socket'ita.
 
     Vihje: alusta käsust `docker inspect -f '{{.Name}} {{.HostConfig.Privileged}} {{.HostConfig.NetworkMode}} {{range .Mounts}}{{.Source}} {{end}}'`.
 
@@ -4199,7 +4096,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "12 · Oma baas-image ja selle elutsükkel"
 
-    **Esita:** `k03-docker/base/Dockerfile`, `base-build.sh`, `base-stale.sh`, `app/Dockerfile.base`, TOEND.md
+    **Esita:** `k03-docker/base/Dockerfile`, `base-build.sh`, `base-stale.sh`, `app/Dockerfile.base`
 
     app01 image'i käitusaste paigaldab ise curl'i, loob kasutaja 10001 ja kustutab Tomcati näiterakendused. Kui sama teeb kümme meeskonda, on kümme veidi erinevat baasi ja pärast üht turvaparandust pole selge, millised image'id on veel vana Tomcati peal.
 
@@ -4207,7 +4104,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
     - `base-build.sh` skannib baasi (CRITICAL nurjab) ja lükkab registry'sse tag'id `labseis-base-tomcat:<YYYYMMDD>` ja liikuva `labseis-base-tomcat:10.1-jre21`;
     - `app/Dockerfile.base`: build-aste sama mis `app/Dockerfile`-is, käitusaste `FROM ${BASE}` ilma oma `apt-get`-ita; põhilabori `app/Dockerfile` jääb muutmata;
     - `base-stale.sh <baas> <image>...` väljastab iga image'i kohta `OK` või `VANA` ja lõpetab koodiga 1, kui mõni image on ehitatud baasi varasema versiooni peale; ära usalda image'i nime ega label'it, kontrolli sisu;
-    - TOEND.md-s on 3–5 lauset elutsükli reeglitest: kui tihti baas uuesti ehitatakse, kui kaua kuupäevaga tag'e hoitakse ja kes vastutab rakenduse uue build'i eest.
 
     **Kontroll:**
 
@@ -4285,7 +4181,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "13 · Saladuse rotatsioon töötavas stackis"
 
-    **Esita:** `k03-docker/rotate-db-password.sh`, TOEND.md
+    **Esita:** `k03-docker/rotate-db-password.sh`
 
     Prod-failis on andmebaasi parool failis `secrets/DB_PASSWORD`. Auditi järel tuleb kasutaja `labseis` parool vahetada töötavas stackis: andmed ei kao, katkestus on ainult app01 uuesti loomise aeg ja ebaõnnestumisel taastatakse eelmine olek. MariaDB-l pole topeltparooli (MySQL 8 `RETAIN CURRENT PASSWORD`), nii et vana ja uus parool ei kehti korraga.
 
@@ -4294,7 +4190,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
     - uus parool genereeritakse skriptis ega ole üheski käsurea argumendis (hosti `ps`, shelli ajalugu);
     - pärast käivitust on uus parool baasis, `secrets/DB_PASSWORD`-is ja `.env`-is, ja uuesti luuakse ainult app01;
     - kui mõni samm pärast baasi muutmist ebaõnnestub, taastab skript baasi parooli ja failid ning lõpetab koodiga ≠ 0;
-    - proovi ebaõnnestumist `APP_IMAGE=<lisaprojekti katki image> ./rotate-db-password.sh`-iga, loo siis app01 tavalise image'iga uuesti; TOEND.md-s põhjenda sammude järjekorda.
+    - proovi ebaõnnestumist `APP_IMAGE=<lisaprojekti katki image> ./rotate-db-password.sh`-iga, loo siis app01 tavalise image'iga uuesti.
 
     **Kontroll:**
 
@@ -4404,7 +4300,7 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
 ??? example "Lisaprojekt · oma registry control'is"
 
-    **Esita:** `k03-docker/registry/compose.yaml`, `k03-docker/.gitignore`, TOEND.md
+    **Esita:** `k03-docker/registry/compose.yaml`, `k03-docker/.gitignore`
 
     Harbor on valmis teenus ja selle sisemust sa ei näe. Paned control'is käima oma `registry:2` TLS-i ja parooliga ning lükkad sinna Labori seisu web-image'i.
 
@@ -4450,7 +4346,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
         ```
 
     - garbage collection'i ajal on registry read-only režiimis (`REGISTRY_STORAGE_MAINTENANCE_READONLY`), pärast tavarežiimis;
-    - TOEND.md-s on kolm lauset: mis juhtus esimesel `login`-il, miks `certs.d`, mitte `insecure-registries`, ning mitu MB garbage collection vabastas ja miks vabanes lapsmanifestideta vähem ruumi.
 
     **Kontroll:**
 
@@ -4486,9 +4381,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
         Harbori projekt `dockerhub` teeb sama, mida `registry:2` teeb teises režiimis: `REGISTRY_PROXY_REMOTEURL` teeb registry'st pull-through cache'i, mis tõmbab puuduva image'i Docker Hubist ja hoiab seda alles. Uuem põhiversioon on `registry:3`, mille seadistus on suures osas sama. Tootmises on lihtsal registry'l üks puudus: ühe parooliga saab igaüks push'ida igasse repositooriumi. Harbor, Gitea ja pilveregistrid lisavad kasutajad, õigused repositooriumi kaupa, säilituspoliitika ja skannimise, ja seepärast kasutab kursus Harborit.
 
 ??? example "Lisaprojekt · rootless Docker"
-
-    **Esita:** TOEND.md
-
     Turvanõue „konteinerid ilma root-daemonita“ ei tähenda alati Podmani: osa tiime vajab Compose'i ja Dockeri socket'it muutmata. Käivitad control'is sama db-image'i tavalise ja rootless Dockeriga kõrvuti ning võrdled tulemust sellega, mida Podman mc01-s ja db01-s näitas. `labori-seis-db` image on Harboris, control'is on paketid `uidmap` ja `docker-ce-rootless-extras` ([rootless Docker](https://docs.docker.com/engine/security/rootless/)) ja `grep "$USER" /etc/subuid` annab rea.
 
     - rootless Docker on control'is teine kontekst `rootless`, rootful Docker töötab edasi:
@@ -4500,7 +4392,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
         ```
 
     - sama image töötab kaks korda, `docker run` (rootful) ja `docker --context rootless run`, mõlemal nimega volume'iga;
-    - TOEND.md-s on tabel kolme veeruga (rootful Docker, rootless Docker, rootless Podman mc01-st ja db01-st) ja kuue reaga: protsessi UID hostis, `uid_map`, volume'i asukoht hostis, `-p 80:80` tulemus, `--memory 256m` tulemus, mis juhtub konteineriga daemoni restardil ja reboot'il;
     - rootless daemon ja selle konteiner käivituvad pärast control'i taaskäivitust ilma sisselogimiseta.
 
     **Kontroll:**
@@ -4517,7 +4408,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
 
     - `docker context ls` näitab mõlemat konteksti ja mõlema variandi `SHOW TABLES` annab neli tabelit;
     - rootless `mariadbd` protsess hostis ei ole root ega UID 999;
-    - tabel kuue reaga ja kolme veeruga on TOEND.md-s;
     - pärast reboot'i enne sisselogimist vastab rootless konteineri port ja `Linger` on `yes`.
 
     ??? tip "Lahenduse suund"
@@ -4610,8 +4500,6 @@ Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid 
         **Miks nii.** `--user "$(id -u):$(id -g)"` käivitab konteineri sinu UID-iga: mount'itud võti on `0600` ja loetav ainult sinule ning `out/` failid jäävad sinu omaks. Image'i oma kasutaja 10001 on vaikimisi kasutaja juhuks, kui keegi käivitab ilma `--user`-ita: siis on protsess ikkagi mitte-root. `HOME=/tmp`, sest suvalise UID-iga protsessil pole kodukausta. Võti on mount, mitte `COPY` ega `ENV`: image'i kihid ja `docker inspect` näitavad kõike, mis ehituse ajal sisse läks. Kui annad konteinerile argumente, asendavad need kogu `CMD`-i, seepärast on proovis ka `--out /app/out`.
 
 ??? question "Arutelu"
-
-    Vasta `NOTES.md`-s.
 
     1. `docker exec w id` ütleb `uid=0`. Kas see on sama root mis hostis? Mida see tähendab, kui konteineris on turvaauk?
     2. Mälupiiri katses võttis `tail /dev/zero` 64 MB mälu ja tuum lõpetas protsessi. Mis oleks juhtunud ilma `--memory-swap`-ita ja kumb on tootmises hullem: OOM-kill või teenus, mis swap'i tõttu vaevu vastab?
