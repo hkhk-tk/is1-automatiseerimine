@@ -8,7 +8,7 @@ tags:
 
 # Praktikum: Labori seis konteinerites
 
-Kahel esimesel kohtumisel seadistasid Ansible'iga teenused otse virtuaalmasinatesse. Täna pakid sama rakenduse, Labori seisu, konteineritesse. Docker tuleb control'isse sinu Ansible'i rolliga. Viis teenust käivituvad ühe `compose.yaml`-iga, image'id ehitad oma Dockerfile'idest ja lükkad kursuse registry'sse Harbor. Lõpus käivitad kaks teenust AlmaLinuxi masinates Podmaniga ja leiad vigasest stackist kolm riket.
+Kahel esimesel kohtumisel seadistasid Ansible'iga teenused otse virtuaalmasinatesse. Täna pakid sama rakenduse, Labori seisu, konteineritesse. Kõigepealt paigaldad Dockeri käsitsi ja käivitad esimesed konteinerid Docker Hubi image'itest. Viis teenust käivituvad ühe `compose.yaml`-iga, image'id ehitad oma Dockerfile'idest ja lükkad kursuse registry'sse Harbor. Kaks teenust käivitad AlmaLinuxi masinates Podmaniga. Lõpus kirjutad käsitsi tehtud Dockeri paigalduse Ansible'i rolliks ja leiad vigasest stackist kolm riket.
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
@@ -16,13 +16,14 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 ??? abstract "Õpiväljundid"
 
-    1. Paigaldad Dockeri Ansible'i rolliga ja selgitad, kus konteiner hostis paistab: protsess, cgroup, port ja andmed.
+    1. Paigaldad Dockeri, tõmbad image'id Docker Hubist ja kursuse registry Harbori kaudu ning selgitad, kus konteiner hostis paistab: protsess, cgroup, port ja andmed.
     2. Kirjutad ametlike image'ite põhjal Dockerfile'id ja mitmeastmelise app-image'i, mis töötab mitte-root kasutajana.
     3. Kirjeldad viie teenusega stacki `compose.yaml`-is healthcheck'ide ja sõltuvustega ning tõestad, et `up -d` on idempotentne.
     4. Lisad tootmise erisused eraldi failina: ressursipiirangud, saladused failidest, sisemine võrk, kirjutuskaitse, logid ja varundus.
     5. Lükkad image'id Harborisse, loed Trivy raportit ja SBOM-i ning eristad tag'i ja digest'i.
     6. Käivitad sama teenuse rootless Podmaniga systemd teenusena SELinuxi all.
-    7. Leiad stackist rikked sammudega sümptom, hüpotees, tõend, parandus ja korduskontroll.
+    7. Kirjutad käsitsi tehtud Dockeri paigalduse rolliks, mis annab teisel käivitusel `changed=0`.
+    8. Leiad stackist rikked sammudega sümptom, hüpotees, tõend, parandus ja korduskontroll.
 
 Tõendid kogud faili `k03-docker/TOEND.md`, iga osa lõpus on kirjas, mida sinna lisada.
 
@@ -32,11 +33,11 @@ Tõendid kogud faili `k03-docker/TOEND.md`, iga osa lõpus on kirjas, mida sinna
 
     Dokumentatsioon: [Dockerfile](https://docs.docker.com/reference/dockerfile/), [Compose'i fail](https://docs.docker.com/reference/compose-file/), [Harbor](https://goharbor.io/docs/2.14.0/), [Podman](https://docs.podman.io/), [Trivy](https://trivy.dev/docs/latest/).
 
-## Osa 1 · Docker rolliga ja konteinerid käsitsi
+## Osa 1 · Docker ja esimesed konteinerid
 
-**Probleem:** kui konteiner tootmises seiskub, saab OOM-kill'i või avab pordi tulemüürist mööda, on põhjus hostis, mitte Dockeri väljundis. Docker ei too ühtegi uut tuuma mehhanismi. Ta paneb kokku protsessid, cgroup'id, nftables'i ja failiõigused, mida sa juba tunned.
+**Probleem:** Docker on serveris tavaline pakett ja systemd teenus. Kui konteiner seiskub, saab OOM-kill'i või avab pordi tulemüürist mööda, on põhjus hostis: protsessides, cgroup'ides, nftables'is või failiõigustes. Docker ei too uusi tuuma mehhanisme. Ta paneb kokku need, mida sa juba tunned.
 
-**Eesmärk:** Docker on control'is paigaldatud sinu rolliga `docker`, mitte käsitsi. Seejärel käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus asuvad protsess, piirangud, port ja andmed. Osa lõpus on iga rida, mille hiljem Compose'i faili kirjutad, sulle tuttav ühe `docker run` võtmena.
+**Eesmärk:** Docker on control'is paigaldatud Dockeri ametliku juhendi järgi ja esimene konteiner on käivitatud Docker Hubi image'ist. Image'id tulevad edaspidi kursuse registry Harbori kaudu. Seejärel käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus asuvad protsess, piirangud, port ja andmed. Iga rida, mille hiljem Compose'i faili kirjutad, on sulle tuttav ühe `docker run` võtmena. Käsitsi tehtud paigalduse kirjutad 8. osas Ansible'i rolliks.
 
 ### 1.1 Haru ja failid
 
@@ -69,193 +70,165 @@ git check-ignore -v .env
     curl -fsSLo intsident/compose.yaml "$B/intsident/compose.yaml"
     ```
 
-### 1.2 Roll `docker`
+### 1.2 Docker käsitsi
 
-2. kohtumisel koondasid iga teenuse ülesanded rolli. Docker on samasugune teenus: pakettide repositoorium, paketid, konfiguratsioonifail, teenus ja kasutaja õigused. Kõigis kursuse masinates peab Docker olema ühtemoodi seadistatud. Seepärast paigaldad selle rolliga ja saad sama rolli hiljem kasutada ka teistes masinates.
-
-Fail `docker.yml` on starteris olemas. See käivitab rolli control'is endas:
-
-```yaml
-- name: Docker control node'is
-  hosts: localhost
-  connection: local
-  become: true
-  roles:
-    - docker
-```
-
-`hosts: localhost` koos `connection: local`-iga tähendab, et Ansible ei ühendu SSH-ga, vaid käivitab moodulid samas masinas. Inventory't pole vaja.
-
-Paigalda Docker [ametlikust repositooriumist](https://docs.docker.com/engine/install/ubuntu/), mitte Ubuntu paketist `docker.io`. Ubuntu pakett on vanem ja Compose'i pluginat seal pole. Dokumentatsiooni käsitsi sammud on: vanad paketid eemale, GPG võti, repositoorium, paketid. Roll teeb samad sammud moodulitega.
-
-??? example "Ülesanne: `roles/docker/defaults/main.yml`"
-
-    Vaikeväärtused: kes saab grupi `docker` liikmeks, Harbori nimi ja logide piirid.
-
-    ```yaml
-    docker_kasutaja: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
-    harbor_nimi: harbor.lab.hkhk.lan
-    docker_log_max_size: 10m
-    docker_log_max_file: 3
-    ```
-
-    `become: true` korral käivitab Ansible moodulid `sudo` kaudu. `SUDO_USER` on kasutaja, kes playbook'i käivitas, mitte `root`.
-
-??? example "Ülesanne: repositoorium ja paketid (`roles/docker/tasks/main.yml`)"
-
-    Moodul [`deb822_repository`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/deb822_repository_module.html) kirjutab faili `/etc/apt/sources.list.d/docker.sources` samal kujul, nagu Dockeri juhend seda käsitsi teeb. `signed_by` seob repositooriumi võtmega, nii et sellest repositooriumist võetakse pakette ainult selle võtme allkirjaga.
-
-    ```yaml
-    - name: Ubuntu Dockeri paketid eemal
-      ansible.builtin.apt:
-        name: [docker.io, docker-compose, docker-compose-v2, podman-docker, containerd, runc]
-        state: absent
-
-    - name: Dockeri võtmete kaust
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
-    - name: Dockeri GPG võti
-      ansible.builtin.get_url:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /etc/apt/keyrings/docker.asc
-        mode: "0644"
-
-    - name: Dockeri apt-repositoorium
-      ansible.builtin.deb822_repository:
-        name: docker
-        types: [deb]
-        uris: https://download.docker.com/linux/ubuntu
-        suites: ["{{ ansible_distribution_release }}"]
-        components: [stable]
-        signed_by: /etc/apt/keyrings/docker.asc
-
-    - name: Docker Engine ja Compose
-      ansible.builtin.apt:
-        name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
-        state: present
-        update_cache: true
-    ```
-
-    `ansible-doc ansible.builtin.deb822_repository`: mis vahe on võtmetel `uris` ja `suites`?
-
-??? example "Ülesanne: daemoni seaded ja Harbori CA (jätka sama faili)"
-
-    `daemon.json` on Dockeri daemoni konfiguratsioonifail. Võti `validate` kontrollib uut faili enne, kui see õigesse kohta kopeeritakse: vigane fail ei jõua kunagi `/etc/docker` alla. Handler taaskäivitab Dockeri ainult siis, kui fail muutus.
-
-    Kursuse registry Harbor kasutab kursuse oma CA-ga allkirjastatud sertifikaati. Docker usaldab seda, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail selleks, et ka `curl` ja Trivy Harborit usaldaksid.
-
-    ```yaml
-    - name: Daemoni seaded
-      ansible.builtin.template:
-        src: daemon.json.j2
-        dest: /etc/docker/daemon.json
-        mode: "0644"
-        validate: dockerd --validate --config-file %s
-      notify: Docker uuesti
-
-    - name: Harbori sertifikaadi kaust Dockerile
-      ansible.builtin.file:
-        path: "/etc/docker/certs.d/{{ harbor_nimi }}"
-        state: directory
-        mode: "0755"
-
-    - name: Harbori CA Dockerile
-      ansible.builtin.copy:
-        src: harbor-ca.crt
-        dest: "/etc/docker/certs.d/{{ harbor_nimi }}/ca.crt"
-        mode: "0644"
-
-    - name: Harbori CA süsteemi usaldatud sertifikaatide hulka (curl, Trivy)
-      ansible.builtin.copy:
-        src: harbor-ca.crt
-        dest: /usr/local/share/ca-certificates/labori-ca.crt
-        mode: "0644"
-      notify: CA nimekiri uuesti
-    ```
-
-    Mall `roles/docker/templates/daemon.json.j2` on alguses lühike. Logide piirid lisad 5. osas:
-
-    ```json
-    {
-      "log-driver": "json-file"
-    }
-    ```
-
-??? example "Ülesanne: teenus, grupp ja handler'id"
-
-    Lisa `tasks/main.yml` lõppu:
-
-    ```yaml
-    - name: Teenus töötab ja käivitub koos masinaga
-      ansible.builtin.service:
-        name: docker
-        state: started
-        enabled: true
-
-    - name: Kasutaja on grupis docker
-      ansible.builtin.user:
-        name: "{{ docker_kasutaja }}"
-        groups: docker
-        append: true
-    ```
-
-    Fail `roles/docker/handlers/main.yml`:
-
-    ```yaml
-    - name: Docker uuesti
-      ansible.builtin.service:
-        name: docker
-        state: restarted
-
-    - name: CA nimekiri uuesti
-      ansible.builtin.command: update-ca-certificates
-      changed_when: true
-    ```
-
-    `append: true` lisab grupi juurde. Ilma selleta eemaldaks moodul kasutaja kõigist teistest lisagruppidest, ka grupist `sudo`.
-
-!!! warning "Grupp `docker` on root'i õigus"
-
-    [Grupi `docker`](https://docs.docker.com/engine/install/linux-postinstall/) liige saab käivitada konteineri, mis mount'ib hosti `/`. Näiteks `docker run -v /:/host alpine chroot /host` annab root-shelli hostis ilma paroolita ja `sudo` logisse sellest midagi ei jää. Kursuse VM-is on see teadlik valik, jagatud serveris mitte.
-
-### 1.3 Käivita roll
-
-**Küsimus enne käsku:** mitu ülesannet on teisel käivitusel `changed`?
+Docker Engine paigaldatakse Dockeri enda apt-repositooriumist. Ubuntu pakett `docker.io` on vanem ja Compose'i pluginat seal pole. Paigalda Docker [ametliku juhendi](https://docs.docker.com/engine/install/ubuntu/) järgi: eemalda vanad paketid, lisa repositooriumi võti ja repositoorium ning paigalda paketid.
 
 ```bash
-ansible-playbook docker.yml
-ansible-playbook docker.yml
+sudo apt-get remove -y docker.io docker-compose docker-compose-v2 podman-docker containerd runc
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
 
-Grupiliikmesus loetakse sisselogimisel. Logi välja ja uuesti sisse (VS Code'is **Remote-SSH: Kill VS Code Server on Host** ja ühendu uuesti), siis:
+Fail `docker.sources` seob repositooriumi võtmega: sellest repositooriumist võetakse pakette ainult selle võtme allkirjaga.
 
 ```bash
-docker version --format '{{.Server.Version}}'
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Ilma `sudo`-ta saab Dockerit kasutada grupi `docker` liige. Grupiliikmesus loetakse sisselogimisel, seega logi pärast järgmist käsku välja ja uuesti sisse (VS Code'is **Remote-SSH: Kill VS Code Server on Host** ja ühendu uuesti).
+
+```bash
+sudo usermod -aG docker "$USER"
+```
+
+Pärast uut sisselogimist kontrolli versioone ja teenust:
+
+```bash
+id
+docker version --format 'klient {{.Client.Version}}, server {{.Server.Version}}'
 docker compose version
-docker info --format '{{.Driver}} cgroup={{.CgroupVersion}}'
-curl -s https://harbor.lab.hkhk.lan/api/v2.0/ping; echo
+systemctl is-active docker containerd
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene käivitus lõpeb `failed=0`, teine `changed=0`. Server on 28 või uuem, `docker compose` vastab, cgroup'i versioon on `2`, Harbor vastab `Pong` ilma sertifikaadi veata ja `docker ps` töötab ilma `sudo`-ta.
-
-??? warning "Kui esimene käivitus peatus vea tõttu ja `daemon.json` on muutunud, aga Docker kasutab vana seadet"
-
-    Handler käivitub play lõpus. Kui play peatus enne lõppu, jäi handler käivitamata, kuigi fail muutus. Teisel käivitusel faili enam ei muudeta ja handler'it ei teavitata. Käivita üks kord `sudo systemctl restart docker` või järgmisel korral `ansible-playbook docker.yml --force-handlers`.
+    `id` näitab gruppi `docker`. Klient ja server on 28 või uuemad, `docker compose` vastab ja mõlemad teenused on `active`. `docker` käsud töötavad ilma `sudo`-ta.
 
 ??? warning "Kui `permission denied … docker.sock`"
 
     Kasutaja pole grupis `docker` või sessioon on vana. Kontrolli `id`. Vana shell ja VS Code'i server töötavad vanade gruppidega edasi, seepärast logi välja ja sisse.
 
-### 1.4 Harbor ja image'ite päritolu
+!!! warning "Grupp `docker` on root'i õigus"
 
-Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksul. Kogu klass on kooli ühe NAT-aadressi taga, seega ilma vahemäluta jõuab piir täis juba esimese tunni jooksul ja kõigi build'id ebaõnnestuvad korraga veaga `toomanyrequests`. Harbori projekt `dockerhub` on **pull-through cache**: esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tulevad Harborist.
+    [Grupi `docker`](https://docs.docker.com/engine/install/linux-postinstall/) liige saab käivitada konteineri, mis mount'ib hosti `/`. Näiteks `docker run -v /:/host alpine chroot /host` annab root-shelli hostis ilma paroolita ja `sudo` logisse sellest midagi ei jää. Kursuse VM-is on see teadlik valik, jagatud serveris mitte.
 
-Vahemälu kaudu on image'i nimi `harbor.lab.hkhk.lan/dockerhub/library/<image>`. Et seda pikka nime ei peaks iga kord kirjutama, pane eesliide muutujasse `HUB`. Kõik selle praktikumi käsud kasutavad seda muutujat.
+### 1.3 Esimene konteiner
+
+Image on pakitud failisüsteem koos käivitamise seadetega. Konteiner on image'ist käivitatud protsess. Image'i `hello-world` ainus programm prindib teate ja lõpetab.
+
+**Küsimus enne käsku:** image'it `hello-world` masinas ei ole. Kust Docker selle saab?
+
+```bash
+docker run hello-world
+```
+
+??? success "Oodatav tulemus"
+
+    Esimesed read on `Unable to find image 'hello-world:latest' locally` ja `Pulling from library/hello-world`. Docker tõmbas image'i registry'st **Docker Hub**, sest nime ees polnud muud registry't. Seejärel tuleb `Hello from Docker!` ja nelja sammu loetelu.
+
+Loe teate nelja sammu ja võrdle neid joonisega. Klient `docker` on käsurea programm, mis saadab päringu daemonile `dockerd`. Daemon tõmbab image'i, loob sellest konteineri ja saadab programmi väljundi kliendile tagasi.
+
+<figure markdown="span">
+  ![docker CLI saadab socket'i kaudu päringu dockerd-le, dockerd annab töö containerd-le, containerd käivitab runc-iga konteineri, mis on hostis tavaline protsess; dockerd tõmbab ja lükkab image'id registry'sse Harbor](assets/k03_docker_ahel.svg)
+  <figcaption>Joonis 3.1. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
+</figure>
+
+Käivita sama image teist korda ja vaata, mis masinasse jäi:
+
+```bash
+docker run hello-world | head -3
+docker ps
+docker ps -a
+docker image ls
+```
+
+??? success "Oodatav tulemus"
+
+    Teisel korral tõmmet ei olnud, sest image oli juba masinas. `docker ps` on tühi, `docker ps -a` näitab kaht konteinerit olekus `Exited (0)` ja `docker image ls` näitab ühte image'it `hello-world`. Konteiner lõpetas koos oma programmiga, aga jäi masinasse alles, kuni selle kustutad.
+
+### 1.4 Docker Hub
+
+**Docker Hub** (<https://hub.docker.com>) on Dockeri avalik registry. Kui image'i nimes pole registry aadressi, tõmbab Docker selle Docker Hubist. Lühike nimi `nginx` tähendab täisnime `docker.io/library/nginx:latest`: registry `docker.io`, ametlike image'ite nimeruum `library`, repositoorium `nginx` ja tag `latest`.
+
+Ava brauseris <https://hub.docker.com> ja otsi `nginx`. Tulemuste juures on märk, kes image'i teeb:
+
+- **Docker Official Image**: Dockeri hallatud image, mille Dockerfile on avalik ja mida uuendatakse turvaparandustega. Nimes pole kasutajanime (`nginx`, `mariadb`).
+- **Verified Publisher**: tarkvara tootja enda image, näiteks `grafana/grafana`.
+- Märgita image'i võib laadida üles igaüks. Enne kasutamist vaata, kas lehel on link lähtekoodile ja Dockerfile'ile ning millal image'it viimati uuendati.
+
+Ava ametliku image'i `nginx` leht ja vaheleht **Tags**. Tag `latest` liigub iga uue versiooniga edasi, seega sama käsk annab kuu aja pärast teise image'i. Selles praktikumis on igal image'il versioon nimes, näiteks `nginx:1.30-alpine`. `alpine` tähendab, et image on tehtud väikese Alpine Linuxi peale.
+
+Tõmba image lühinimega ja täisnimega:
+
+```bash
+docker pull nginx:1.30-alpine
+docker pull docker.io/library/nginx:1.30-alpine
+docker image ls nginx
+docker image inspect nginx:1.30-alpine --format '{{.Config.ExposedPorts}} {{.Config.Cmd}}'
+```
+
+??? success "Oodatav tulemus"
+
+    Teine `pull` ütleb `Image is up to date`: lühinimi ja täisnimi on sama image. `inspect` näitab porti `80/tcp` ja käsku, millega Nginx käivitub.
+
+Image'i lehe ülevaates on kirjas, mida image käivitamiseks vajab. Ava ametliku image'i [`mariadb`](https://hub.docker.com/_/mariadb) leht ja leia sealt vastused. Neid läheb vaja 1.13-s, kui käivitad andmebaasi konteinerina.
+
+??? question "Mida vajab MariaDB image?"
+
+    1. Milline keskkonnamuutuja peab olema määratud, et konteiner käivituks?
+    2. Millised muutujad loovad andmebaasi ja kasutaja?
+    3. Millises kataloogis hoiab MariaDB andmeid?
+    4. Millist porti server kuulab?
+
+    ??? success "Vastus"
+
+        1. Üks kolmest: `MARIADB_ROOT_PASSWORD`, `MARIADB_ALLOW_EMPTY_ROOT_PASSWORD` või `MARIADB_RANDOM_ROOT_PASSWORD`. Ilma nendeta konteiner lõpetab.
+        2. `MARIADB_DATABASE`, `MARIADB_USER` ja `MARIADB_PASSWORD`.
+        3. `/var/lib/mysql`.
+        4. `3306`.
+
+### 1.5 Harbor: kursuse registry
+
+Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksul. Kogu klass on kooli ühe NAT-aadressi taga ja ühe stacki ehitus tõmbab kümmekond image'it, nii et piir saab täis juba esimese tunni jooksul. Siis ebaõnnestuvad kõigi tõmbed korraga veaga `toomanyrequests`. Seepärast on kursusel oma registry **Harbor**.
+
+??? note "Tabel 3.1. Docker Hub ja Harbor"
+
+    | | Docker Hub | Harbor |
+    |---|---|---|
+    | Asukoht | internetis, haldab Docker Inc. | laborivõrgus, kursuse VM |
+    | Kes näeb | kõik | ainult kursus (VPN-iga) |
+    | Sisu | ametlikud ja kasutajate image'id | sinu image'id ja Docker Hubi image'ite koopiad |
+    | Tõmmete piir | 100 anonüümset tõmmet IP kohta 6 tunni jooksul | piirangut pole |
+    | Haavatavuste skänn | ainult tasulises paketis | Trivy skannib iga image'i |
+
+Harboris on kahte liiki projekte:
+
+- **`dockerhub`** on avalik **pull-through cache** (vahemälu). Esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tõmbed tulevad Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
+- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad 6. osas oma image'id.
+
+Harbori sertifikaadi on allkirjastanud kursuse oma CA, mida Ubuntu ei tunne. Docker usaldab registry't, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail, et ka `curl` ja Trivy Harborit usaldaksid. CA on starteris failina `roles/docker/files/harbor-ca.crt`.
+
+```bash
+sudo mkdir -p /etc/docker/certs.d/harbor.lab.hkhk.lan
+sudo cp roles/docker/files/harbor-ca.crt /etc/docker/certs.d/harbor.lab.hkhk.lan/ca.crt
+sudo cp roles/docker/files/harbor-ca.crt /usr/local/share/ca-certificates/labori-ca.crt
+sudo update-ca-certificates
+curl -s https://harbor.lab.hkhk.lan/api/v2.0/ping; echo
+```
+
+Et vahemälu pikka nime ei peaks iga kord kirjutama, pane eesliide muutujasse `HUB`. Kõik selle praktikumi käsud kasutavad seda muutujat.
 
 ```bash
 echo 'export HUB=harbor.lab.hkhk.lan/dockerhub/library' >> ~/.bashrc
@@ -264,7 +237,7 @@ docker pull $HUB/nginx:1.30-alpine
 docker image ls
 ```
 
-Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste tähtedega, parool `Passw0rd`. Logi sisse ja ava brauseris <https://harbor.lab.hkhk.lan>. Projekt sinu nimega on privaatne, sinna lükkad 6. osas oma image'id.
+Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste tähtedega, parool `Passw0rd`. Logi sisse käsurealt ja ava brauseris <https://harbor.lab.hkhk.lan>.
 
 ```bash
 docker login harbor.lab.hkhk.lan -u <github-kasutaja>
@@ -272,26 +245,23 @@ docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 
 ??? success "Oodatav tulemus"
 
-    `docker pull` tõmbas image'i ilma veata ja `docker image ls` näitab nime `harbor.lab.hkhk.lan/dockerhub/library/nginx`. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` (avalik) ja oma projekti.
+    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. IMAGE ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
+
+??? warning "Kui `x509: certificate signed by unknown authority`"
+
+    CA puudub kaustas `/etc/docker/certs.d/harbor.lab.hkhk.lan/` või kausta nimi ei ole täpselt registry nimi. Korda selle sammu kahte esimest käsku.
 
 ??? warning "Kui brauser hoiatab sertifikaadi eest"
 
-    Brauser ei tunne kursuse CA-d. Docker ja `curl` usaldavad seda, sest roll paigaldas CA. Brauseris võid hoiatuse kõrvale jätta või importida faili `roles/docker/files/harbor-ca.crt` oma arvutis usaldatud juursertifikaatide hulka (Windowsis topeltklõps, **Install Certificate**, **Local Machine**, **Trusted Root Certification Authorities**). Kui nimi `harbor.lab.hkhk.lan` sinu arvutis ei avane, kasuta aadressi <https://192.168.125.42>.
+    Brauser ei tunne kursuse CA-d. Brauseris võid hoiatuse kõrvale jätta või importida faili `roles/docker/files/harbor-ca.crt` oma arvutis usaldatud juursertifikaatide hulka (Windowsis topeltklõps, **Install Certificate**, **Local Machine**, **Trusted Root Certification Authorities**). Kui nimi `harbor.lab.hkhk.lan` sinu arvutis ei avane, kasuta aadressi <https://192.168.125.42>.
 
 ??? info "Miks mitte `registry-mirrors`?"
 
     Dockeri `daemon.json` võti `registry-mirrors` suunab Docker Hubi tõmbed teise serverisse, aga ainult sellisesse, kus image'id on juurtasemel (`/v2/library/nginx`). Harbori vahemälu on projekti all (`/dockerhub/library/nginx`), ja seda Docker ei toeta. Podman toetab, seda näed 7. osas. Seepärast on Dockeri image'ite nimes eesliide `$HUB`. GitHubi automaatkontroll Harborit ei näe (see on VPN-i taga) ja kasutab vaikimisi `docker.io/library`.
 
-### 1.5 Engine hostis: teenus, kataloog ja konfiguratsioonifail
+### 1.6 Engine hostis: teenus, kataloog ja konfiguratsioonifail
 
 Docker on tavaline systemd teenus oma kataloogi, konfiguratsioonifaili ja logiga, täpselt nagu Nginx või MariaDB, mida 2. kohtumisel seadistasid. Kui tead, kus need asuvad, parandad Dockerit samamoodi nagu iga teist teenust.
-
-Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daemon.json`. Vaikimisi on `live-restore` välja lülitatud, seega iga `systemctl restart docker` peatab kõik hosti konteinerid. Vigase konfiguratsiooniga need enam ei käivitu.
-
-<figure markdown="span">
-  ![docker CLI saadab socket'i kaudu päringu dockerd-le, dockerd annab töö containerd-le, containerd käivitab runc-iga konteineri, mis on hostis tavaline protsess; dockerd tõmbab ja lükkab image'id registry'sse Harbor](assets/k03_docker_ahel.svg)
-  <figcaption>Joonis 3.1. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
-</figure>
 
 Vaata, millised üksused Dockeri moodustavad ja kes socket'it kuulab:
 
@@ -309,33 +279,37 @@ docker info | grep -iE 'storage driver|driver-type|live restore'
 sudo du -sh /var/lib/docker/* 2>/dev/null | sort -h | tail -6
 ```
 
-Kontrolli konfiguratsioonifaili daemonit peatamata. Seejärel tee meelega vigane koopia ja kontrolli seda. Sama kontrolli teeb roll võtmega `validate`.
+Daemoni konfiguratsioonifail on `/etc/docker/daemon.json`. Paigaldus seda faili ei loo ja Docker töötab vaikeseadetega. Kõige sagedasem põhjus, miks `dockerd` ei käivitu, on käsitsi muudetud `daemon.json`. Vaikimisi on `live-restore` välja lülitatud, seega iga `systemctl restart docker` peatab kõik hosti konteinerid ja vigase konfiguratsiooniga need enam ei käivitu.
+
+Loo fail ühe seadega ja kontrolli seda daemonit peatamata. Seejärel tee meelega vigane koopia ja kontrolli seda. Alles siis taaskäivita daemon:
 
 ```bash
+echo '{ "log-driver": "json-file" }' | sudo tee /etc/docker/daemon.json
 sudo dockerd --validate --config-file /etc/docker/daemon.json
 printf '{ "log-driver": "json-file", }\n' > /tmp/vigane.json
 sudo dockerd --validate --config-file /tmp/vigane.json; echo "kood $?"
+sudo systemctl restart docker
 sudo journalctl -u docker --since '30 min ago' --no-pager | grep -iE 'starting up|daemon has completed' | tail -3
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kolm üksust on `active`. Kehtiv konfiguratsioon annab `configuration OK`, vigane koopia annab veateate ja koodi, mis pole 0. Journal'is on daemoni viimane käivitus (rolli handler).
+    Kolm üksust on `active`. Kehtiv konfiguratsioon annab `configuration OK`, vigane koopia annab veateate ja koodi, mis pole 0. Journal'is on daemoni viimane käivitus.
 
     `docker.socket` kuulab socket'it ka siis, kui `dockerd` seisab: esimene `docker` käsk käivitab daemoni. `containerd` on eraldi teenus, mis konteinereid tegelikult käitab, ja `dockerd` suhtleb temaga. `DockerRootDir` on kataloog, mida jälgid kettaruumi monitooringus, sest seal on konteinerite logid, volume'id ja build cache. `--validate` leidis vea ilma teenust peatamata, nagu `nginx -t` või `sshd -t`.
 
     `Driver` väärtus `overlay2` tähendab klassikalist kihisalvestust `/var/lib/docker/overlay2` all. `overlayfs` tähendab containerd'i image store'i, kus kihid on `/var/lib/containerd` all. Kursuse käsud töötavad mõlemaga.
 
-**TOEND.md:** `docker info` rida ja üks lause: miks muudad `daemon.json`-i rolliga, mitte serveris käsitsi.
+**TOEND.md:** `docker info` rida ja loetelu sammudest, millega osades 1.2, 1.5 ja 1.6 masinat käsitsi muutsid. 8. osas kirjutad samad sammud rolli.
 
-### 1.6 Elutsükkel ja PID 1
+### 1.7 Elutsükkel ja PID 1
 
 Sama Nginx paistab hostis tavalise protsessina, konteineris on ta PID 1. Elutsükli käsud `run`, `stop`, `start` ja `rm` muudavad eri asju: protsessi, kirjutatavat kihti või mõlemat. Konteiner lõpeb koos PID 1-ga. Kui sa seda ei tea, otsid valest kohast: teenus „ebaõnnestub“, aga tegelikult lõpetas entrypoint'i skript oma töö ja konteiner tegi täpselt seda, mida pidi.
 
-Käivita konteiner, mis lõpetab kohe, siis Nginx esiplaanil (lõpeta Ctrl+C-ga), taustal, peatatuna ja uuesti käivitatuna:
+Vaata 1.3 lõpetanud konteinereid, siis käivita Nginx esiplaanil (lõpeta Ctrl+C-ga), taustal, peatatuna ja uuesti käivitatuna:
 
 ```bash
-docker run $HUB/hello-world; docker ps -a --format '{{.Names}} {{.Status}}'
+docker ps -a --format '{{.Names}} {{.Status}}'
 docker run --name fg $HUB/nginx:1.30-alpine
 docker run -d --name w -p 8081:80 $HUB/nginx:1.30-alpine
 docker stop w && docker start w && docker ps --filter name=w
@@ -368,7 +342,7 @@ Viimases käsus käivita konteineris `cat /proc/1/comm` ja `ps`, siis `exit`.
 
 **TOEND.md:** `docker ps -a` väljund ja `lsns` read.
 
-### 1.7 Pordid ja konteineri IP
+### 1.8 Pordid ja konteineri IP
 
 Konteiner saab IP-aadressi sisemises sillas `docker0`. Selle aadressi poole saab pöörduda ainult hostist. Väljast jõuab konteinerini ainult avaldatud pordi kaudu, mille jaoks Docker kirjutab NAT-reegli.
 
@@ -398,7 +372,7 @@ docker rm -f w w2 fg && docker container prune -f
 
     Kui konteineri IP vastaks sinu arvutist, oleks võrgus marsruut hosti sisemisse silda ja see oleks võrgu seadistuse viga, mitte Dockeri omadus. `-P` valis juhusliku kõrge pordi. See sobib testiks, aga mitte teenusele, sest port muutub iga uue konteineriga.
 
-### 1.8 Võrgudraiverid: bridge, host ja none
+### 1.9 Võrgudraiverid: bridge, host ja none
 
 Siiani olid kõik konteinerid vaikevõrgus `bridge`. Dockeril on veel kaks sisseehitatud draiverit: `host`, kus konteiner kasutab otse hosti võrgupinu, ja `none`, kus võrku pole üldse. Tootmisserveris küsib `--network host`-i tavaliselt monitooringuagent või VPN-tööriist. Kui seda lubada mõtlemata, kaob konteineri võrguisolatsioon: konteiner näeb kõiki hosti liideseid ja võib kuulata mis tahes porti, ka seda, mida hosti enda teenus vajab.
 
@@ -435,7 +409,7 @@ docker rm -f hostnet
 
 **TOEND.md:** üks lause: millise teenuse paneksid host-võrku ja mis selle hind on.
 
-### 1.9 Mälu, CPU ja protsessid
+### 1.10 Mälu, CPU ja protsessid
 
 Piiranguid vaikimisi pole. Konteiner ilma piiranguta näeb kogu hosti mälu ja CPU-d nagu iga teine protsess. Üks lekkiv teenus ilma piiranguta käivitab hosti OOM killeri, mis võib tappa hoopis `sshd` või andmebaasi.
 
@@ -472,7 +446,7 @@ docker rm -f oom cpu
 
 **TOEND.md:** kolm väärtust ja üks lause: mis juhtuks samas olukorras ilma `-m`-ita.
 
-### 1.10 Restart-poliitika: kes konteineri uuesti käivitab
+### 1.11 Restart-poliitika: kes konteineri uuesti käivitab
 
 Konteineris pole systemd'i, aga keegi peab selle pärast viga või masina taaskäivitust uuesti käivitama. Seda teeb `dockerd` restart-poliitika järgi. Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hoolduse järgset taaskäivitust või käivitub teenus, mille sa meelega peatasid.
 
@@ -509,7 +483,7 @@ docker rm rf
 
 **TOEND.md:** üks lause: kumba poliitikat kasutaksid andmebaasile ja miks.
 
-### 1.11 Käivitusvõtmed, mida admin vajab
+### 1.12 Käivitusvõtmed, mida admin vajab
 
 `docker run`-il on sadu võtmeid, aga igapäevatöös kordub umbes kuus. Samad võtmed on Compose'i failis teiste nimedega: `env_file`, `user`, `init`, `volumes`, `entrypoint`. Iga katse näitab üht lõksu: mis jääb alles, kust tuleb keskkond, kellena protsess töötab, kes korjab signaalid, mis juhtub vale teega ja kuidas vaadata sisse konteinerisse, mis ebaõnnestub kohe.
 
@@ -571,7 +545,7 @@ docker rm ngx
 
 **TOEND.md:** kaks `stop` aega ja üks lause: millal kasutad `--mount`-i `-v` asemel.
 
-### 1.12 Oma võrk ja kolm backend'i teenust
+### 1.13 Oma võrk ja kolm backend'i teenust
 
 Labori seis otsib teenuseid nimede järgi `db01`, `mc01` ja `rmq01`. Vaikimisi bridge-võrgus nimelahendust pole, seega teed oma võrgu. Teenuste IP-d muutuvad iga uue konteineriga: rakendus, mis viitab IP-le, läheb katki esimesel uuesti loomisel, nimi jääb samaks. Samal ajal näed kõige tavalisemat käivitusviga: andmebaas lõpetab kohe, sest kohustuslik muutuja puudub.
 
@@ -611,7 +585,7 @@ docker run --rm $HUB/busybox:1.37 nslookup db01
 
     Server `127.0.0.11` tähendab, et nime lahendas Dockeri sisseehitatud DNS, mitte hosti resolver. Vaikevõrgus seda DNS-i pole. Seepärast töötab Labori seisu rakendus Compose'is muutmata: Compose loob igale projektile oma võrgu.
 
-### 1.13 Sisemine võrk
+### 1.14 Sisemine võrk
 
 Võrk `--internal` laseb konteineritel teineteist näha, aga väljapääsu ei anna. Seda kasutad 5. osas andmebaasi ja rakenduse võrgu jaoks. Kui andmebaasi konteineris on haavatavus, ei saa ründaja sisemisest võrgust ise koodi alla laadida ega andmeid otse välja saata.
 
@@ -632,11 +606,11 @@ docker network inspect -f '{{.Internal}}' sisemine
 
 **TOEND.md:** üks lause: millisesse võrku paneksid andmebaasi ja miks.
 
-### 1.14 Andmed volume'is ja bind mount'is
+### 1.15 Andmed volume'is ja bind mount'is
 
 Konteineri kirjutatav kiht kaob `rm`-iga. Andmebaas kirjutatavas kihis kaotab kõik andmed esimesel image'i uuendusel, sest uuendus tähendab alati uut konteinerit. Volume ja bind mount jäävad alles, aga käituvad õiguste poolest erinevalt.
 
-Kirjuta tabelisse rida, kustuta konteiner ja käivita see uuesti 1.12 lahenduse käsuga (sama volume `dbtest`):
+Kirjuta tabelisse rida, kustuta konteiner ja käivita see uuesti 1.13 lahenduse käsuga (sama volume `dbtest`):
 
 ```bash
 docker exec -it db01 mariadb -ulabseis -p labseis -e "CREATE TABLE proov (id INT); INSERT INTO proov VALUES (42);"
@@ -682,10 +656,10 @@ docker ps -aq | wc -l
 
 **TOEND.md:** `Mounts` väljund ja bind mount'i failide UID.
 
-### 1.15 Commit
+### 1.16 Commit
 
 ```bash
-(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker rolliga, konteinerid käsitsi" && git push -u origin k03-docker)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker käsitsi ja konteinerid" && git push -u origin k03-docker)
 ```
 
 ??? info "Miks see nii töötab"
@@ -1017,9 +991,9 @@ Kirjutad Dockerfile'i kahes astmes. Esimene aste ehitab WAR-i, teine käivitab s
   <figcaption>Joonis 3.4. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.1 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitust kustutatakse; teine läheb tootmisse; lõpu read on metaandmed, mis muutuvad iga commit'iga ja peavad seepärast olema viimased.
+Tabel 3.2 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitust kustutatakse; teine läheb tootmisse; lõpu read on metaandmed, mis muutuvad iga commit'iga ja peavad seepärast olema viimased.
 
-??? note "Tabel 3.1. App-Dockerfile'i plaan"
+??? note "Tabel 3.2. App-Dockerfile'i plaan"
 
     | Aste | Mida teeb |
     |---|---|
@@ -1291,9 +1265,9 @@ rm -f app/Dockerfile.naive
   <figcaption>Joonis 3.5. Labori seis Compose'i stackina (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.2 kirjeldab, milline stack peab olema. Read on käivitusjärjekorras. Veerg „Hostis avatud“ ütleb, kes on väljast nähtav. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
+Tabel 3.3 kirjeldab, milline stack peab olema. Read on käivitusjärjekorras. Veerg „Hostis avatud“ ütleb, kes on väljast nähtav. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
 
-??? note "Tabel 3.2. Stacki teenused"
+??? note "Tabel 3.3. Stacki teenused"
 
     | Teenus | Image | Hostis avatud | Healthcheck |
     |---|---|---|---|
@@ -1718,9 +1692,9 @@ git status --short
 
 **Eesmärk:** kirjutad prod-faili `compose.prod.yaml`, mis tuleb `compose.yaml` peale, varundad ja taastad andmebaasi volume'i ning paned paika koristuspoliitika. `compose.yaml` jääb muutmata, sest seda loevad automaatkontroll, 5. kohtumise konveier ja 7. kohtumise töö. Logide rotatsiooni lisad Dockeri rolli, et see kehtiks igas masinas, kuhu roll paigaldatakse.
 
-Tabel 3.3 on prod-faili sisu ühe pildina. Iga rida vastab küsimustele: kui palju see teenus tohib võtta, kuhu ta näeb ja mis on temas kirjutuskaitstud. Väärtused mahuvad kokku umbes 2 GB sisse ja on valitud control'i mälu järgi. Tootmisserveris mõõdad need `docker stats`-iga koormuse all.
+Tabel 3.4 on prod-faili sisu ühe pildina. Iga rida vastab küsimustele: kui palju see teenus tohib võtta, kuhu ta näeb ja mis on temas kirjutuskaitstud. Väärtused mahuvad kokku umbes 2 GB sisse ja on valitud control'i mälu järgi. Tootmisserveris mõõdad need `docker stats`-iga koormuse all.
 
-??? note "Tabel 3.3. Prod-faili sisu teenuste kaupa"
+??? note "Tabel 3.4. Prod-faili sisu teenuste kaupa"
 
     | Teenus | Mälu | CPU | PID-id | Võrgud | Muu |
     |---|---|---|---|---|---|
@@ -1953,28 +1927,29 @@ Eemalda ajutiselt `/etc/nginx/conf.d` `tmpfs`-i nimekirjast, uuenda stacki ning 
 
 **TOEND.md:** mis juhtus ilma `conf.d` tmpfs'ita ja miks.
 
-### 5.6 Logid: rotatsioon rolliga ja journald
+### 5.6 Logid: rotatsioon ja journald
 
-Logidega on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks jõuavad. `json-file` draiveri vaikeseade on `max-size: -1`: `*-json.log` kasvab piiramatult ja seda ei pööra ka hosti `logrotate`, mis neid faile ei tunne. Compose'i `logging` kaitseb ainult Compose'i teenuseid. Daemoni vaikeseade kaitseb ka konteinereid, mida keegi Compose'iga ei käivita. Daemoni seaded tulevad sinu rollist, seega muudad malli ja käivitad rolli uuesti.
+Logidega on kaks küsimust: kui suureks logifail kasvab ja kuhu logid lõpuks jõuavad. `json-file` draiveri vaikeseade on `max-size: -1`: `*-json.log` kasvab piiramatult ja seda ei pööra ka hosti `logrotate`, mis neid faile ei tunne. Compose'i `logging` kaitseb ainult Compose'i teenuseid. Daemoni vaikeseade kaitseb ka konteinereid, mida keegi Compose'iga ei käivita. Lisa logide piirid faili `/etc/docker/daemon.json`, mille 1.6-s lõid.
 
-??? example "Ülesanne: `roles/docker/templates/daemon.json.j2`"
+??? example "Ülesanne: `/etc/docker/daemon.json`"
 
     ```json
     {
       "log-driver": "json-file",
       "log-opts": {
-        "max-size": "{{ docker_log_max_size }}",
-        "max-file": "{{ docker_log_max_file }}"
+        "max-size": "10m",
+        "max-file": "3"
       }
     }
     ```
 
-    `max-file` on JSON-is tekst, mitte number. Väärtused tulevad rolli vaikeväärtustest.
+    `max-file` on JSON-is tekst, mitte number.
 
-**Küsimus enne käsku:** mitu ülesannet on `changed` ja mis juhtub töötavate konteineritega?
+**Küsimus enne käsku:** mis juhtub töötavate konteineritega, kui daemon taaskäivitub?
 
 ```bash
-ansible-playbook docker.yml
+sudo dockerd --validate --config-file /etc/docker/daemon.json
+sudo systemctl restart docker
 docker info --format '{{.LoggingDriver}}'
 docker run --rm -d --name logtest $HUB/alpine:3.22 sleep 30
 docker inspect -f '{{json .HostConfig.LogConfig}}' logtest
@@ -1983,7 +1958,7 @@ docker compose ps
 
 ??? success "Oodatav tulemus"
 
-    `changed=2`: mall ja handler. Handler taaskäivitas Dockeri ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. `logtest` sai rotatsiooniseaded daemonilt, mitte käsurealt. `daemon.json`-i `log-opts` kehtib ainult pärast seda loodud konteineritele.
+    Taaskäivitus peatas kõik konteinerid ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. `logtest` sai rotatsiooniseaded daemonilt, mitte käsurealt. `daemon.json`-i `log-opts` kehtib ainult pärast seda loodud konteineritele.
 
 Saada app01 logid hosti journal'isse. Logikoguja, mis juba journal'it loeb, saab need kaasa ilma lisaseadistuseta.
 
@@ -2012,7 +1987,7 @@ docker compose logs app01 | tail -3
 
     `journalctl` leiab app01 read mõlemal viisil ja `docker compose logs` töötab edasi. app01 read on journal'is koos hosti teiste logidega ja filtreeritavad konteineri nime või tag'i järgi.
 
-**TOEND.md:** miks muudad logide vaikeseadet rollis, mitte serveris `daemon.json`-i käsitsi.
+**TOEND.md:** `logtest` konteineri `LogConfig` väljund.
 
 ### 5.7 Volume'i varundus ja taastamine
 
@@ -2126,7 +2101,7 @@ sudo journalctl -t labseis-prune -n 1 --no-pager
 docker compose config -q && echo "prod OK"
 unset COMPOSE_FILE && docker compose up -d --wait && docker compose ps
 (cd .. && bash autograde/check.sh k03 compose && bash autograde/check.sh k03 deps)
-(cd ~/kursus && git add k03-docker && git commit -m "k03: tootmise erisused, logid rolliga, prune.sh" && git push)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: tootmise erisused, logid, prune.sh" && git push)
 git ls-files | grep -E 'secrets|backup'
 ```
 
@@ -2176,7 +2151,7 @@ git ls-files | grep -E 'secrets|backup'
 
 Tag'iks saab commit'i lühike SHA, et iga image'i saaks seostada koodiga. Tag `latest` või `dev` ei ütle, mis kood image'is on. Kui midagi läheb katki, ei tea sa, millise versiooni juurde tagasi minna, ega saa tõestada, mis tootmises töötas.
 
-1.4-s logisid Harborisse sisse. Pane `.env`-i tag'iks commit'i SHA, ehita ja lükka:
+1.5-s logisid Harborisse sisse. Pane `.env`-i tag'iks commit'i SHA, ehita ja lükka:
 
 ```bash
 TAG=$(git rev-parse --short HEAD) && sed -i "s/^TAG=.*/TAG=$TAG/" .env
@@ -2209,7 +2184,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 ??? warning "Kui `x509: certificate signed by unknown authority`"
 
-    CA puudub kaustas `/etc/docker/certs.d/harbor.lab.hkhk.lan/`. Käivita roll uuesti. `insecure-registries` ei ole lahendus: see lülitab sertifikaadi kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
+    CA puudub kaustas `/etc/docker/certs.d/harbor.lab.hkhk.lan/`. Korda 1.5 sertifikaadi samme. `insecure-registries` ei ole lahendus: see lülitab sertifikaadi kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
 
 ??? note "Kui Harbor ei vasta: GHCR"
 
@@ -2329,35 +2304,20 @@ Harbor skannib push'i ajal. Sama Trivy töötab ka käsurealt ja konveieris. Tri
 
 Paigalda Trivy [ametliku juhendi](https://trivy.dev/docs/latest/getting-started/installation/) järgi (Ubuntu apt repositoorium). Esimene käivitus laeb haavatavuste andmebaasi alla.
 
-??? example "Ülesanne: Trivy rolli"
+```bash
+sudo curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key -o /etc/apt/keyrings/trivy.asc
+sudo tee /etc/apt/sources.list.d/trivy.sources <<EOF
+Types: deb
+URIs: https://aquasecurity.github.io/trivy-repo/deb
+Suites: generic
+Components: main
+Signed-By: /etc/apt/keyrings/trivy.asc
+EOF
+sudo apt-get update && sudo apt-get install -y trivy
+trivy --version
+```
 
-    Käsitsi paigaldust ei pea kordama: lisa rolli `docker` lõppu samad sammud moodulitega nagu Dockeri repositooriumil.
-
-    ```yaml
-    - name: Trivy GPG võti
-      ansible.builtin.get_url:
-        url: https://aquasecurity.github.io/trivy-repo/deb/public.key
-        dest: /etc/apt/keyrings/trivy.asc
-        mode: "0644"
-
-    - name: Trivy apt-repositoorium
-      ansible.builtin.deb822_repository:
-        name: trivy
-        types: [deb]
-        uris: https://aquasecurity.github.io/trivy-repo/deb
-        suites: [generic]
-        components: [main]
-        signed_by: /etc/apt/keyrings/trivy.asc
-
-    - name: Trivy
-      ansible.builtin.apt:
-        name: trivy
-        update_cache: true
-    ```
-
-    ```bash
-    ansible-playbook docker.yml && trivy --version
-    ```
+Samad sammud lisad 8. osas rolli.
 
 Skanni kõik kolm image'it faili:
 
@@ -2466,9 +2426,9 @@ Osa eeldab, et mc01-s ja db01-s töötavad 2. kohtumise teenused `memcached` ja 
   <figcaption>Joonis 3.12. Docker klient-serverina ja Podman systemd teenusena (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.4 seob Podmani mõisted sellega, mida tegid Dockeriga control'is.
+Tabel 3.5 seob Podmani mõisted sellega, mida tegid Dockeriga control'is.
 
-??? note "Tabel 3.4. Docker ja Podman sama töö juures"
+??? note "Tabel 3.5. Docker ja Podman sama töö juures"
 
     | Docker control'is | Podman mc01-s ja db01-s |
     |---|---|
@@ -2852,15 +2812,246 @@ curl -s http://web01/health; echo
 
     **Kahe tööriista hind.** Podman sobib serverisse, kus töötab üks või paar teenust ja AlmaLinux/RHEL on standard: systemd, journald, SELinux ja auditilogi on samad mis teistel teenustel. Docker jääb arendusmasinasse, CI-sse ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it. Kubernetes võtab mõlemast sama OCI image'i.
 
-## Osa 8 · Kolm riket
+## Osa 8 · Docker rolliga
+
+**Probleem:** control'is on Docker seadistatud käsitsi: repositoorium, paketid, grupp, Harbori CA, `daemon.json` koos logide piiridega ja Trivy. Teises masinas tuleb kõik need sammud samas järjekorras korrata. Üks unustatud samm, näiteks CA, annab vea alles esimesel `docker pull`-il ja logide piiri puudumist ei märka keegi enne, kui ketas on täis.
+
+**Eesmärk:** kõik osades 1, 5 ja 6 käsitsi tehtud sammud on rollis `docker`. Rakendad rolli masinale, kus Docker juba töötab. `--check --diff` näitab, kus käsitsi seadistus rollist erineb, ja teine käivitus annab `changed=0`. Sama rolliga saab Dockeri paigaldada igasse Ubuntu masinasse.
+
+### 8.1 Roll `docker`
+
+2. kohtumisel koondasid iga teenuse ülesanded rolli. Docker on samasugune teenus: pakettide repositoorium, paketid, konfiguratsioonifail, teenus ja kasutaja õigused.
+
+Fail `docker.yml` on starteris olemas. See käivitab rolli control'is endas:
+
+```yaml
+- name: Docker control node'is
+  hosts: localhost
+  connection: local
+  become: true
+  roles:
+    - docker
+```
+
+`hosts: localhost` koos `connection: local`-iga tähendab, et Ansible ei ühendu SSH-ga ja käivitab moodulid samas masinas. Inventory't pole vaja.
+
+Võta ette oma TOEND.md loetelu 1.6-st ja kirjuta iga käsitsi samm rolli ülesandeks. Roll teeb samad sammud moodulitega.
+
+??? example "Ülesanne: `roles/docker/defaults/main.yml`"
+
+    Vaikeväärtused: kes saab grupi `docker` liikmeks, Harbori nimi ja logide piirid.
+
+    ```yaml
+    docker_kasutaja: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    harbor_nimi: harbor.lab.hkhk.lan
+    docker_log_max_size: 10m
+    docker_log_max_file: 3
+    ```
+
+    `become: true` korral käivitab Ansible moodulid `sudo` kaudu. `SUDO_USER` on kasutaja, kes playbook'i käivitas, mitte `root`.
+
+??? example "Ülesanne: repositoorium ja paketid (`roles/docker/tasks/main.yml`)"
+
+    Moodul [`deb822_repository`](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/deb822_repository_module.html) kirjutab faili `/etc/apt/sources.list.d/docker.sources`, sama faili, mille 1.2-s käsitsi tegid.
+
+    ```yaml
+    - name: Ubuntu Dockeri paketid eemal
+      ansible.builtin.apt:
+        name: [docker.io, docker-compose, docker-compose-v2, podman-docker, containerd, runc]
+        state: absent
+
+    - name: Dockeri võtmete kaust
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Dockeri GPG võti
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Dockeri apt-repositoorium
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: [deb]
+        uris: https://download.docker.com/linux/ubuntu
+        suites: ["{{ ansible_distribution_release }}"]
+        components: [stable]
+        signed_by: /etc/apt/keyrings/docker.asc
+
+    - name: Docker Engine ja Compose
+      ansible.builtin.apt:
+        name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+        state: present
+        update_cache: true
+    ```
+
+    `ansible-doc ansible.builtin.deb822_repository`: mis vahe on võtmetel `uris` ja `suites`?
+
+??? example "Ülesanne: daemoni seaded ja Harbori CA (jätka sama faili)"
+
+    Võti `validate` kontrollib uut faili enne, kui see õigesse kohta kopeeritakse, nagu `dockerd --validate` 1.6-s: vigane fail ei jõua kunagi `/etc/docker` alla. Handler taaskäivitab Dockeri ainult siis, kui fail muutus.
+
+    ```yaml
+    - name: Daemoni seaded
+      ansible.builtin.template:
+        src: daemon.json.j2
+        dest: /etc/docker/daemon.json
+        mode: "0644"
+        validate: dockerd --validate --config-file %s
+      notify: Docker uuesti
+
+    - name: Harbori sertifikaadi kaust Dockerile
+      ansible.builtin.file:
+        path: "/etc/docker/certs.d/{{ harbor_nimi }}"
+        state: directory
+        mode: "0755"
+
+    - name: Harbori CA Dockerile
+      ansible.builtin.copy:
+        src: harbor-ca.crt
+        dest: "/etc/docker/certs.d/{{ harbor_nimi }}/ca.crt"
+        mode: "0644"
+
+    - name: Harbori CA süsteemi usaldatud sertifikaatide hulka (curl, Trivy)
+      ansible.builtin.copy:
+        src: harbor-ca.crt
+        dest: /usr/local/share/ca-certificates/labori-ca.crt
+        mode: "0644"
+      notify: CA nimekiri uuesti
+    ```
+
+    Mall `roles/docker/templates/daemon.json.j2` sisaldab samu logide piire, mis 5.6-s käsitsi lisasid. Väärtused tulevad rolli vaikeväärtustest. `max-file` on JSON-is tekst, mitte number.
+
+    ```json
+    {
+      "log-driver": "json-file",
+      "log-opts": {
+        "max-size": "{{ docker_log_max_size }}",
+        "max-file": "{{ docker_log_max_file }}"
+      }
+    }
+    ```
+
+??? example "Ülesanne: Trivy (jätka sama faili)"
+
+    Samad sammud, millega 6.6-s Trivy käsitsi paigaldasid.
+
+    ```yaml
+    - name: Trivy GPG võti
+      ansible.builtin.get_url:
+        url: https://aquasecurity.github.io/trivy-repo/deb/public.key
+        dest: /etc/apt/keyrings/trivy.asc
+        mode: "0644"
+
+    - name: Trivy apt-repositoorium
+      ansible.builtin.deb822_repository:
+        name: trivy
+        types: [deb]
+        uris: https://aquasecurity.github.io/trivy-repo/deb
+        suites: [generic]
+        components: [main]
+        signed_by: /etc/apt/keyrings/trivy.asc
+
+    - name: Trivy
+      ansible.builtin.apt:
+        name: trivy
+        update_cache: true
+    ```
+
+??? example "Ülesanne: teenus, grupp ja handler'id"
+
+    Lisa `tasks/main.yml` lõppu:
+
+    ```yaml
+    - name: Teenus töötab ja käivitub koos masinaga
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Kasutaja on grupis docker
+      ansible.builtin.user:
+        name: "{{ docker_kasutaja }}"
+        groups: docker
+        append: true
+    ```
+
+    Fail `roles/docker/handlers/main.yml`:
+
+    ```yaml
+    - name: Docker uuesti
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+    - name: CA nimekiri uuesti
+      ansible.builtin.command: update-ca-certificates
+      changed_when: true
+    ```
+
+    `append: true` lisab grupi juurde. Ilma selleta eemaldaks moodul kasutaja kõigist teistest lisagruppidest, ka grupist `sudo`.
+
+### 8.2 Käivita roll
+
+Docker on control'is juba olemas. Enne muudatust vaata, mida roll muudaks.
+
+**Küsimus enne käsku:** mitu ülesannet on `changed`, kui sama seadistus on juba käsitsi tehtud?
+
+```bash
+ansible-playbook docker.yml --check --diff
+```
+
+??? success "Oodatav tulemus"
+
+    Paketid, teenus, grupp ja CA failid on juba soovitud olekus ja jäävad `ok`. `changed` on ainult failid, mille sisu erineb käsitsi tehtust, näiteks `daemon.json`-i vorming (tühikud ja reavahetused) või repositooriumi faili võtmete järjekord. `--diff` näitab iga erinevuse rida.
+
+Rakenda roll kaks korda ja kontrolli tulemust:
+
+```bash
+ansible-playbook docker.yml
+ansible-playbook docker.yml
+docker compose ps
+docker info --format '{{.LoggingDriver}}'
+curl -s https://harbor.lab.hkhk.lan/api/v2.0/ping; echo
+trivy --version | head -1
+```
+
+??? success "Oodatav tulemus"
+
+    Esimene käivitus lõpeb `failed=0`, teine `changed=0`. Kui `daemon.json` muutus, taaskäivitas handler Dockeri ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. Harbor vastab `Pong` ja Trivy versioon on alles.
+
+??? warning "Kui esimene käivitus peatus vea tõttu ja `daemon.json` on muutunud, aga Docker kasutab vana seadet"
+
+    Handler käivitub play lõpus. Kui play peatus enne lõppu, jäi handler käivitamata, kuigi fail muutus. Teisel käivitusel faili enam ei muudeta ja handler'it ei teavitata. Käivita üks kord `sudo systemctl restart docker` või järgmisel korral `ansible-playbook docker.yml --force-handlers`.
+
+**TOEND.md:** üks erinevus `--check --diff` väljundist koos põhjusega ja teise käivituse `PLAY RECAP` rida.
+
+### 8.3 Commit
+
+```bash
+(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker rolliga" && git push)
+```
+
+??? info "Miks see nii töötab"
+
+    **Käsitsi ja rolliga.** Roll teeb samad sammud nagu käsitsi paigaldus, aga iga moodul kontrollib enne muutmist, kas masin on juba soovitud olekus. Seepärast saab rolli rakendada nii tühjale masinale kui ka masinale, kus Docker juba töötab, ja teine käivitus ei muuda midagi.
+
+    **Erinevused käsitsi seadistusest.** `--check --diff` näitab faile, mille sisu erineb mallist või rolli kirjutatud kujust. Kui serveris on keegi `daemon.json`-i käsitsi muutnud, näitab sama käsk seda erinevust. Nii leiab triivi (drift): olukorra, kus masina tegelik olek on soovitud olekust eemaldunud.
+
+    **Handler ja `validate`.** `validate` kontrollib uut faili enne asendamist. Vigane mall annab vea ja vana fail jääb alles. Handler taaskäivitab Dockeri ainult siis, kui fail muutus, sest iga taaskäivitus peatab hosti konteinerid.
+
+## Osa 9 · Kolm riket
 
 **Probleem:** kaskaadis kaotab kõige rohkem aega see, kes parandab esimest nähtud sümptomit. `dependency failed to start` ütleb, et midagi ahelas on katki, aga mitte, mis.
 
 **Eesmärk:** failis `intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident` pordil 8090, sinu image'itega, ja selles on kolm viga eri kohtades. Liigu väljast sisse nagu tootmisintsidendis: sümptomist põhjuseni, parandus failis, mitte töötavas konteineris, ja uuesti luuakse ainult need teenused, mida parandus puudutab. Iga järeldus peab põhinema käsu väljundil, mitte oletusel. Osa lõpus on kolm parandust koodis ja tõend, et need peavad vastu ka uuel masinal ja daemoni taaskäivitusel.
 
-Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (kirjuta K3 issue kommentaariks enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.5 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
+Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (kirjuta K3 issue kommentaariks enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.6 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
 
-??? note "Tabel 3.5. Compose'i stacki veaotsing"
+??? note "Tabel 3.6. Compose'i stacki veaotsing"
 
     | Sümptom | Vaata esimesena | Tõenäoline koht |
     |---|---|---|
@@ -2870,7 +3061,7 @@ Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** 
     | web01 `unhealthy`, `curl` annab 502 | `docker compose exec web01 nslookup app01` | võrgud: kes on millises võrgus |
     | kõik `healthy`, aga `/health` ütleb `DOWN` | `docker compose exec app01 curl -s localhost:8080/health` | parool või volume, mis algseadistati varem |
 
-### 8.1 Algseis
+### 9.1 Algseis
 
 Kahe stacki jaoks pole control'is mälu. Kahe stacki samaaegne käivitamine annab OOM-kille, mis näevad välja nagu intsidendi vead, aga ei ole. Peata põhistack (volume'id jäävad alles) ja käivita intsidendistack. Salvestad esimese `up`-i väljundi, sest see on intsidendi algne sümptom ja kokkuvõttes viitad sellele.
 
@@ -2889,7 +3080,7 @@ Alias `dci` kehtib selles shellis kogu ülesande ajal. Projekti nimi `labori-sei
 
     `up` lõppes veaga `dependency failed to start`, `up-1.log` on salvestatud ja tead, millised teenused on `Exited` ja millised `unhealthy`. `dependency failed to start` ütleb ainult, et keegi ahelas ei jõudnud `healthy` olekusse. Kaskaad peidab algpõhjuse: teenused, mis ootavad, ei käivitunudki ja nende logid on tühjad. Alusta sellest, kes on `Exited` või `unhealthy`, mitte sellest, kes on ahela lõpus.
 
-### 8.2 Viga 1: andmebaas ei käivitu
+### 9.2 Viga 1: andmebaas ei käivitu
 
 **Sümptom:** db01 lõpetab kohe pärast käivitust. Alusta temast, sest kõik teised ootavad teda.
 
@@ -2933,7 +3124,7 @@ dci exec db01 id
 
     db01 on `(healthy)` ja `id` näitab `uid=999`. Tee commit: `git commit -am "fix(intsident): db01 nimega volume, bind mount'i kaust kuulus root'ile"`. Sõnumis on põhjus.
 
-### 8.3 Viga 2: vahemälu on unhealthy
+### 9.3 Viga 2: vahemälu on unhealthy
 
 **Sümptom:** mc01 protsess töötab, aga Docker peab teda haigeks ja app01 ei käivitu tema pärast.
 
@@ -2969,7 +3160,7 @@ dci up -d --wait app01
 
     mc01 on `(healthy)` ja app01 jõuab `(healthy)` olekusse. Commit: `fix(intsident): mc01 healthcheck vale pordiga`.
 
-### 8.4 Viga 3: web01 annab 502
+### 9.4 Viga 3: web01 annab 502
 
 **Sümptom:** app01 on `healthy`, web01 töötab, aga web01 on `unhealthy` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8090/` annab 502. Kolmas viga ei ole üheski konteineris eraldi.
 
@@ -3008,7 +3199,7 @@ curl -s localhost:8090/health; echo
 
     web01 on `(healthy)` ja `/health` annab `"status":"UP"`. Commit: `fix(intsident): web01 ka back-võrku`.
 
-### 8.5 Hoolduse järgne taaskäivitus: stack käivitub ise
+### 9.5 Hoolduse järgne taaskäivitus: stack käivitub ise
 
 Kolm riket on parandatud, aga stack töötab ainult seni, kuni keegi daemonit ei puutu. Hooldusaknas taaskäivitatakse Docker või kogu VM. Kontrolli, kas intsidendistack tuleb sellest tagasi ilma sinu sekkumiseta. Samal ajal peab hoolduseks käsitsi peatatud teenus jääma seisma. `live-restore` on vaikimisi välja lülitatud, nii et `systemctl restart docker` peatab kõik hosti konteinerid. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i: see kehtib ainult `docker compose up`-i ajal. Konteinerid käivituvad seega korraga ja suvalises järjekorras.
 
@@ -3043,7 +3234,7 @@ Uuenda stacki (`dci up -d --wait`), korda sammu käske ja lõpuks käivita mc01:
 
     Teine taaskäivitus andis 120 s pärast neli `healthy` teenust ja mc01 olekuga `Exited`. `/health` pordil 8090 andis HTTP 200 ja `"cache":"DOWN"`, pärast `dci start mc01` `"cache":"UP"`. Commit: `fix(intsident): restart-poliitika unless-stopped …`, sõnumis põhjus, miks just see poliitika.
 
-### 8.6 Stack nullist
+### 9.6 Stack nullist
 
 Viimane kontroll kustutab konteinerid ja käivitab stacki nullist. Kui stack käivitub ilma sinu sekkumiseta, on parandused failis, mitte töötavates konteinerites.
 
@@ -3065,7 +3256,7 @@ docker compose up -d --wait && curl -s localhost:8080/health; echo
 
     Pärast `down` ja `up`-i on viis teenust `healthy` ilma käsitsi sekkumiseta, `/health` pordil 8090 on `UP`, Gitis on neli `fix(intsident)` commit'i ja põhistack on jälle üleval. Neli commit'i nelja põhjusega on intsidendi ajalugu, mida järgmine administraator saab lugeda ilma sinult küsimata. `down` ja uus `up` tõestasid, et ükski parandus ei sõltunud varem loodud kaustast.
 
-### 8.7 Intsidendi kokkuvõte
+### 9.7 Intsidendi kokkuvõte
 
 Kokkuvõte vastab küsimusele, miks `docker compose config -q` kõik kolm viga läbi laskis ja milline kontroll oleks iga vea leidnud enne `up`-i. Kirjuta TOEND.md-sse jaotis `## Intsident`:
 
@@ -3099,13 +3290,13 @@ grep -A25 '^## Intsident' TOEND.md | head -30
 
     **Ennetav kontroll.** Intsidendi järel lisatakse kontroll, mis püüab sama vea järgmine kord varem kinni, juba enne käivitamist.
 
-## Osa 9 · Enne esitamist
+## Osa 10 · Enne esitamist
 
 **Probleem:** image, mis ehitub ainult sinu töökaustas, ebaõnnestub konveieri esimesel käivitusel. 5. kohtumisel võtab konveier sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on.
 
 **Eesmärk:** käivitad samad kontrollid ise ja vaatad, et stack töötab nii, nagu konveier seda ootab.
 
-### 9.1 Failide kontroll
+### 10.1 Failide kontroll
 
 Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i failid ja Dockerfile'id, siis automaatkontrolli testid, saladused ja idempotentsus:
 
@@ -3125,7 +3316,7 @@ git status --short
 
     `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või vale suurtähtedega `AS`) ilma ehitamata. Tühi `grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud.
 
-### 9.2 Puhta klooni test
+### 10.2 Puhta klooni test
 
 Kohalik kontroll käivitub sinu töökaustas, kus on ka commit'imata failid. Automaatkontroll alustab puhtast kloonist. Klassikaline „minu masinas töötab“: Dockerfile kopeerib faili, mis on töökaustas, aga mitte Gitis, ja GitHubis ebaõnnestub ehitus, kuigi sinu juures läks kõik läbi.
 
@@ -3142,7 +3333,7 @@ rm -rf /tmp/k03-proov
 
     Kloonis puuduvad `.env` ja `secrets/`, `files` ja `build` annavad `OK`. See on õige: automaatkontroll töötab `.env.example`-iga. Kui klooni ehitus õnnestus, ei sõltu image ühestki failist, mis on ainult sinu töökaustas. Kui see ebaõnnestus, näitab veateade puuduvat faili: lisa see Giti või `.dockerignore` lubamisnimekirja.
 
-### 9.3 Lõppkontroll
+### 10.3 Lõppkontroll
 
 Kontrolli stacki olekut, mida automaatkontroll ei näe: täielik taaskäivitus, versioon, rikkele reageerimine ja kontroll seestpoolt.
 
@@ -3212,7 +3403,7 @@ Pärast esitamist lülita Proxmoxis välja mc01 ja db01 (**VM → Shutdown**): P
 
 Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk, mis põhjuse kinnitab. Sama meetod nagu loengus: **sümptom → hüpotees → tõend → parandus → korduskontroll**.
 
-??? note "Tabel 3.6. Osa 1 · Docker rolliga ja konteinerid käsitsi"
+??? note "Tabel 3.7. Osa 1 · Docker ja esimesed konteinerid"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3232,7 +3423,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | konteineri IP ei vasta sülearvutist | `docker port <konteiner>` | konteineri IP on ainult hostis: kasuta avaldatud porti | `docker0` sild on hosti sisevõrk ja väljast sinna marsruuti pole |
     | `wget` sisemisest võrgust ootab kaua ja ebaõnnestub | `docker network inspect -f '{{.Internal}}' <võrk>` | ootuspärane: `internal` võrgul pole väljapääsu | sisemisel võrgul pole vaikemarsruuti ega NAT-i välja |
     | `rm -rf ~/k03-bind`: `Permission denied` | `ls -ln ~/k03-bind` | failid kuuluvad UID 999-le: `sudo rm -rf` | konteiner kirjutas bind mount'i oma UID-ga ja tuum kontrollib hostis sama numbrit |
-    | `dockerd --validate`: `unknown flag: --validate` | `dockerd --version` | Docker on vanem kui 23; paigalda rolliga ametlikust repositooriumist | konfiguratsiooni kontrollimise võti lisati daemonile versioonis 23 |
+    | `dockerd --validate`: `unknown flag: --validate` | `dockerd --version` | Docker on vanem kui 23; paigalda ametlikust repositooriumist (1.2) | konfiguratsiooni kontrollimise võti lisati daemonile versioonis 23 |
     | `systemctl restart docker` järel `failed`, `docker ps` ei vasta | `sudo journalctl -u docker -n 20`, `sudo dockerd --validate --config-file /etc/docker/daemon.json` | `daemon.json` on vigane või sama võti on ka unit'i `ExecStart` real | daemon loeb faili ainult käivitusel ja keeldub startimast, kui JSON on vigane või võti on kahes kohas |
     | `docker info` näitab `overlayfs`, juhend räägib `overlay2`-st | `docker info \| grep -A1 'Storage Driver'` | ootuspärane: uus paigaldus kasutab containerd'i image store'i | Docker 29 vaikimisi salvestus on containerd'i snapshotter, uuendatud masinad jäävad `overlay2` peale |
     | `--network host`: `Published ports are discarded` | `docker inspect -f '{{.HostConfig.NetworkMode}}' <k>` | ootuspärane: host-võrgus `-p` ei kehti | konteiner kuulab otse hosti liidestel, NAT-i ja pordi suunamist pole |
@@ -3243,11 +3434,8 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `--mount`: `bind source path does not exist` | `ls -ld <tee>` | tee on vale või kaust loomata | `--mount` ei loo puuduvat allikat, `-v` lõi selle vaikselt root'i omanikuna |
     | `-v` järel on konteineris tühi kaust ootuspärase faili asemel | `ls -ld <hosti tee>` | hosti tee oli vale ja Docker lõi tühja kausta | `-v` loob puuduva allika kaustana; kasuta `--mount`-i, mis annab vea |
     | `docker exec`: `container … is not running` | `docker ps -a`, `docker logs <k>` | konteiner ebaõnnestus: vaata logi või käivita sama image `--entrypoint sh` | `exec` vajab töötavat PID 1-te, kelle namespace'idesse siseneda |
-    | roll: `Destination directory /etc/docker/certs.d/… does not exist` | `ls /etc/docker/certs.d` | ülesanne „Harbori sertifikaadi kaust“ puudub või on pärast `copy`-t | `copy` ei loo puuduvat sihtkausta, kui `dest` on faili tee |
-    | roll muutis `daemon.json`-i, aga Docker kasutab vana seadet | `sudo journalctl -u docker -n 5` | play peatus enne lõppu ja handler jäi käivitamata: `sudo systemctl restart docker` või `--force-handlers` | handler käivitub play lõpus ainult siis, kui play jõuab lõpuni |
-    | `deb822_repository`: `unsupported parameter` | `ansible --version` | ansible-core on vanem kui 2.15 | moodul lisati versioonis 2.15 |
 
-??? note "Tabel 3.7. Osa 2 · db ja web image"
+??? note "Tabel 3.8. Osa 2 · db ja web image"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3260,7 +3448,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `transferring context` on ikka MB-d | `head -3 .dockerignore` | `.dockerignore` pole repo juures või esimene rida pole `*` | builder loeb `.dockerignore` ainult konteksti juurest |
     | `k03 files`: `.dockerignore ei jäta .env faili välja` | `grep -n env .dockerignore` | denylist'is puudub `**/.env`; allowlist'iga (`*`) seda viga ei tule | ilma `**/` eesliiteta kehtib muster ainult konteksti juures, mitte `k03-docker/.env`-ile |
 
-??? note "Tabel 3.8. Osa 3 · App image"
+??? note "Tabel 3.9. Osa 3 · App image"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3278,7 +3466,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `grep upperdir … mountinfo`: `Permission denied` või tühi | `docker inspect -f '{{.State.Pid}}' <k>` | `sudo` puudu või konteiner ei tööta | teise protsessi `mountinfo` on loetav ainult root'ile ja ainult töötava protsessi kohta |
     | `kihtproov` on suur, kuigi fail kustutati | `docker history kihtproov` | ootuspärane: kustutamine hilisemas kihis ei vähenda image'it | alumine kiht on muutumatu; `rm` lisab ainult whiteout-kirje |
 
-??? note "Tabel 3.9. Osa 4 · Kogu stack Compose'iga"
+??? note "Tabel 3.10. Osa 4 · Kogu stack Compose'iga"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3299,7 +3487,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `docker top … -eo`: `error: unsupported option` | `docker top <k>` ilma võtmeteta | võtmed antakse hosti `ps`-ile: kasuta `ps` süntaksit | `docker top` käivitab hostis `ps` ja filtreerib konteineri protsessid |
     | `docker compose cp`: `Could not find the file` | `docker compose exec web01 ls /etc/nginx/conf.d` | tee on vale või fail on tmpfs'is, mis kadus | `cp` loeb konteineri failisüsteemist praegust olekut |
 
-??? note "Tabel 3.10. Osa 5 · Tootmiskeskkonda sobiv stack"
+??? note "Tabel 3.11. Osa 5 · Tootmiskeskkonda sobiv stack"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3325,11 +3513,11 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | GitHub Actionsi deploy järel app01 ei leia db01 | `docker network ls \| grep labori-seis` | stack töötas prod-failiga; 5. osa lõpus `unset COMPOSE_FILE && docker compose up -d` | ainult `compose.yaml`-iga loodud app01 on vaikevõrgus, db01 jäi `back`-võrku |
     | Kuma ei jõua web01-ni prod-failiga | `docker compose --profile monitoring config \| grep -A3 kuma` | kuma on vaikevõrgus; lisa talle `networks: [front, back]` või käivita põhistackiga | prod-fail viis teised teenused vaikevõrgust ära, kuma jäi sinna üksi |
 
-??? note "Tabel 3.11. Osa 6 · Harbor, Trivy ja SBOM"
+??? note "Tabel 3.12. Osa 6 · Harbor, Trivy ja SBOM"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
-    | `x509: certificate signed by unknown authority` | `ls /etc/docker/certs.d/harbor.lab.hkhk.lan/` | kursuse CA puudub: käivita roll `docker` uuesti; `insecure-registries` ei ole lahendus | Docker usaldab registry sertifikaati ainult süsteemi või `certs.d` CA põhjal |
+    | `x509: certificate signed by unknown authority` | `ls /etc/docker/certs.d/harbor.lab.hkhk.lan/` | kursuse CA puudub: korda 1.5 sertifikaadi samme; `insecure-registries` ei ole lahendus | Docker usaldab registry sertifikaati ainult süsteemi või `certs.d` CA põhjal |
     | `denied: requested access to the resource is denied` | `grep OWNER .env` | `OWNER` pole sinu Harbori kasutajanimi (GitHubi nimi väikeste tähtedega) või logisid sisse teise kasutajana | registry lubab push'i ainult oma namespace'i ja õigusega tokenile |
     | `unauthorized` pärast `docker login` | `cat ~/.docker/config.json \| jq '.auths \| keys'` | login vale registry nimega või robotkonto on aegunud | volitused on salvestatud registry hostinime kaupa |
     | `docker pull <nimi>@sha256:…`: `manifest unknown` | `docker image inspect -f '{{json .RepoDigests}}' <image>` | digest on lokaalse image'i ID, mitte registry digest | image ID ja manifesti digest on eri räsid; registry tunneb ainult manifesti oma |
@@ -3341,7 +3529,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `current image with … vulnerabilities cannot be pulled` | projekt → **Configuration** | haavatava image'i tõmbamise keeld on sees | Harbor kontrollib enne tõmbamist Trivy tulemust |
     | push: `… configured as immutable` | projekt → **Policy → Tag Immutability** | tag on muutumatu: kasuta uut tag'i | muutumatut tag'i ei saa üle kirjutada ega kustutada |
 
-??? note "Tabel 3.12. Osa 7 · Sama teenus Podmaniga"
+??? note "Tabel 3.13. Osa 7 · Sama teenus Podmaniga"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3359,7 +3547,15 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | `--cpus` või `--memory`: `controller … is not available` | `cat /sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers` | kontroller pole kasutajale delegeeritud: drop-in `user@.service.d/` `Delegate=` | rootless saab piirata ainult neid kontrollereid, mille systemd kasutaja teenusele delegeeris |
     | `docker ps` tunneli kaudu: `Cannot connect to the Docker daemon` | `ssh mc01 systemctl --user is-active podman.socket`, `ls -l /tmp/mc01-podman.sock` | socket väljas või vana tunnel: `rm` socket, tunnel uuesti | `ssh -L` ei kirjuta olemasoleva socket'i faili üle |
 
-??? note "Tabel 3.13. Osa 8 · Kolm riket"
+??? note "Tabel 3.14. Osa 8 · Docker rolliga"
+
+    | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
+    |---|---|---|---|
+    | roll: `Destination directory /etc/docker/certs.d/… does not exist` | `ls /etc/docker/certs.d` | ülesanne „Harbori sertifikaadi kaust“ puudub või on pärast `copy`-t | `copy` ei loo puuduvat sihtkausta, kui `dest` on faili tee |
+    | roll muutis `daemon.json`-i, aga Docker kasutab vana seadet | `sudo journalctl -u docker -n 5` | play peatus enne lõppu ja handler jäi käivitamata: `sudo systemctl restart docker` või `--force-handlers` | handler käivitub play lõpus ainult siis, kui play jõuab lõpuni |
+    | `deb822_repository`: `unsupported parameter` | `ansible --version` | ansible-core on vanem kui 2.15 | moodul lisati versioonis 2.15 |
+
+??? note "Tabel 3.15. Osa 9 · Kolm riket"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -3369,7 +3565,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | pärast `systemctl restart docker` on intsidendistack `Exited` | `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)` | poliitika on `no`: lisa see ühisesse plokki ja `dci up -d` | `depends_on` kehtib ainult `compose up`-i ajal, daemon käivitab ainult poliitikaga konteinerid |
     | `intsident/data` ei kustu | `ls -ln intsident/data` | kaust kuulub root'ile või 999-le: `sudo rm -rf` | kausta lõi Docker või konteiner, mitte sinu kasutaja |
 
-??? note "Tabel 3.14. Osa 9 · Enne esitamist ja töö esitamine"
+??? note "Tabel 3.16. Osa 10 · Enne esitamist ja töö esitamine"
 
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|

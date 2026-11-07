@@ -193,7 +193,7 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 Baas on tarneahela esimene lüli, järgnevad build'i ajal alla laaditud paketid, build ise, registry ja deploy. 2024. aasta [xz backdoor](https://nvd.nist.gov/vuln/detail/CVE-2024-3094) jõudis laialt kasutatud paketti hooldaja kaudu. Märtsis 2026 jõudis ründaja Trivy enda GitHub Actioni tag'idesse ([Microsoft](https://www.microsoft.com/en-us/security/blog/2026/03/24/detecting-investigating-defending-against-trivy-supply-chain-compromise/)); digest'i või commit'i SHA järgi viidanud pipeline'e see ei puudutanud.
 
 <figure markdown="span">
-  ![Control node tõmbab Docker Hubi image'id kooli peegli kaudu, pushib oma image'id Giteasse, kust need tõmbavad pipeline'id ja Kubernetes; trivy image annab CVE raporti](assets/k03_image_teekond.svg)
+  ![Control node tõmbab Docker Hubi image'id Harbori vahemälu kaudu, pushib oma image'id Harborisse, kust need tõmbavad pipeline'id ja Kubernetes; trivy image annab CVE raporti](assets/k03_image_teekond.svg)
   <figcaption>Joonis 3.5. Image'i teekond pärast build'i: registry on keskpunkt, kust kõik edasised keskkonnad image'i võtavad.</figcaption>
 </figure>
 
