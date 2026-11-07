@@ -13,7 +13,7 @@ tags:
     - **Failid:** kursuse repositooriumi kaust `~/kursus/k01/`
     - **Esitamine:** tag `k01` GitHubis
     - **Ülesanded:** issue `K1 · Linuxi haldusest automatiseerimiseni` sinu repositooriumis, märkeruut iga osa kohta
-    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga) näitab iga sammu, kui see on sinu masinates tehtud
+    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga) näitab iga sammu, kui see on sinu masinates tehtud
 
 Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi. Seejärel käivita käsk ja võrdle tulemust oma ennustusega. Kui need erinevad, uuri, miks.
 

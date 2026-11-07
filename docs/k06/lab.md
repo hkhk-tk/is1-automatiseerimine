@@ -12,7 +12,7 @@ tags:
     - **Masin:** control node, repositoorium `~/labori-seis`, töökaust `k06-jenkins/`, tõendid PR-i kirjeldusse
     - **Sihtmasinad:** `jenkins.lab.hkhk.ee:8080`, `sonar.lab.hkhk.ee:9000`, `nexus.lab.hkhk.ee:8081` (VPN); administraatori osas oma sandbox-Jenkins control node'il (`:8090`)
     - **Esitamine:** haru `k06-jenkins` → PR → merge → tag `k06`
-    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga)
+    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga)
     - **Vaja koolitajalt:** neli parooli (Jenkins, agendi saladus, Sonar, Nexus); kasutajanimi = GitHubi nimi väiketähtedega, allpool `<gh>`
     - **Eelmisest korrast:** `main` sellisena, nagu see oli GitHub Actionsi kohtumise lõpus (`pom.xml`, `src/`, `autograde/`), 3. kohtumisest `k03-docker/compose.yaml` ja `k03-docker/app/Dockerfile`, control node'il töötav VPN ja Docker
     - **Testitud:** Jenkins LTS 2.580.x, Java 21, Maven 3.9.16, SonarQube Community Build 26.9 (andmebaas PostgreSQL 17), SonarScanner for Maven 5.8.0.7211, Nexus CE 3.96.4, Tomcat 10.1 (`tomcat:10.1-jre21-temurin`), sandboxi image `jenkins/jenkins:lts-jdk21`, Docker 29, Ubuntu 24.04

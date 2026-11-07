@@ -8,7 +8,7 @@ tags:
 
 1. kohtumisel kirjutasid playbook'e, kus kõik oli ühes failis: masin, väärtused ja failide sisu. Täna saad viie teenusega playbook'i `labseis.yml`, parandad selle vead ja võtad sellest sammhaaval kõik välja: masinad inventory'sse, väärtused muutujatesse, tekstid mallidesse, paroolid Vaulti ja lõpuks iga teenuse rolli.
 
-**Edenemine:** laboritahvel <http://192.168.125.187:8093> (VPN-iga).
+**Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
 Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
 
@@ -20,9 +20,6 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     4. Koondad ühe teenuse ülesanded, malli, handler'i ja vaikeväärtused rolliks.
     5. Tõestad iga sammu järel `--check --diff`, korduva käivituse ja `/health`-iga, et süsteem töötab samamoodi.
 
-Iga etapp on üles ehitatud samamoodi: **probleem** (mis praeguses failis on ebamugav), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee etapp eesmärgi järgi ise ja ava plokid ainult kontrolliks. Iga sammu juures on näidatud ainult read, mis muutuvad, ja etapi lõpus failipuu. Uus võte tehakse esimest korda koos, täielikult näidatuna. Teisel korral täiendad etteantud põhja ja kolmandal korral teed sama eesmärgi järgi. Kokkuvolditud plokid on kontrolliks.
-
-Rida **Küsimus enne käsku** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
 
 ## Osa 1 · Algne playbook
 

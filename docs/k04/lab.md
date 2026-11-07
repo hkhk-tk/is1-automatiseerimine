@@ -15,7 +15,7 @@ Kolmel eelmisel kohtumisel seadistasid masinaid, mille loomine polnud kuskil kir
     - **Sihtmasinad:** web01, app01, rmq01, mc01, db01 (lood ise koodist), Proxmoxi UI `https://<koolitaja antud aadress>:8006` (`<github>@pve`)
     - **Esitamine:** haru `k04-tofu` → PR → merge → tag `k04`
     - **Ülesanded:** issue `K4` sinu repositooriumis, märkeruut iga osa kohta
-    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga)
+    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga)
     - **Eelmisest korrast vaja:** `main`-is 2. kohtumise kaust `k02-ansible/` (`site.yml`, `ansible.cfg`, rollid, roll `common` ootab cloud-init'i), Vault'i parool
     - **Koolitajalt:** `~/.config/is1/proxmox.env` (ajutine API token, kehtib 5. kohtumise eelõhtuni) ja `~/.config/is1/s3.env` control node'il
     - **Packer:** paigaldad golden image'i osas control node'ile (HashiCorpi apt-paketihoidla), pluginad `hashicorp/proxmox` ja `hashicorp/ansible`

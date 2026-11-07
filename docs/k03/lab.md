@@ -10,7 +10,7 @@ tags:
 
 Kahel esimesel kohtumisel seadistasid Ansible'iga teenused otse virtuaalmasinatesse. Täna pakid sama rakenduse, Labori seisu, konteineritesse. Docker tuleb control'isse sinu Ansible'i rolliga. Viis teenust käivituvad ühe `compose.yaml`-iga, image'id ehitad oma Dockerfile'idest ja lükkad kursuse registry'sse Harbor. Lõpus käivitad kaks teenust AlmaLinuxi masinates Podmaniga ja leiad vigasest stackist kolm riket.
 
-**Edenemine:** laboritahvel <http://192.168.125.187:8093> (VPN-iga).
+**Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
 Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Kirjuta käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
 
@@ -24,11 +24,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     6. Käivitad sama teenuse rootless Podmaniga systemd teenusena SELinuxi all.
     7. Leiad stackist rikked sammudega sümptom, hüpotees, tõend, parandus ja korduskontroll.
 
-Iga osa on üles ehitatud samamoodi nagu 2. kohtumisel: **probleem** (miks seda vaja on), **eesmärk**, lahendus kokkuvolditud plokkides ja **kontroll**. Kui oskad, tee osa eesmärgi järgi ise ja ava plokid ainult kontrolliks. Faili tükid on plokkides eraldi: lisa need järjest, loe selgitus ja käivita. Iga osa lõpus on kokkuvolditud „Miks see nii töötab“. Veaotsingu tabelid on osade kaupa lehe lõpus jaotises „Rikkeotsing“.
-
-Rida **Küsimus enne käsku** tähendab, et enne käsku mõtled läbi, mis juhtub. Vastus on kokkuvolditud plokis.
-
-Tõendid kogud faili `k03-docker/TOEND.md`. Iga osa lõpus on kirjas, mida sinna lisada. Töö lõpus saab sellest failist pull request'i kirjeldus.
+Tõendid kogud faili `k03-docker/TOEND.md`, iga osa lõpus on kirjas, mida sinna lisada.
 
 ??? info "Testitud versioonid"
 

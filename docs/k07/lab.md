@@ -17,7 +17,7 @@ tags:
     - **Koolitajalt:** fail `<github>.kubeconfig`, Argo CD konto ja nelja rikke käivitamine
     - **Varasematest kordadest:** 3. kohtumise `k03-docker/.env` (paroolid), 5. kohtumise workflow `ci` ja app01 image GHCR-is
     - **Esitamine:** haru `k07-k8s` → PR → merge pärast nelja rikke parandamist, siis haru `k07-gitops` → PR → merge → tag `k07`
-    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga)
+    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga)
     - **Testitud:** k3s `v1.35.9+k3s1` (Traefik 3.7, containerd 2.2), kubectl `v1.35.0`, Helm `v4.2.4`, podinfo chart `6.15.0`, Argo CD ja `argocd` CLI `v3.5.2`
 
 Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi. Seejärel käivita käsk ja võrdle tulemust oma ennustusega.

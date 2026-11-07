@@ -14,7 +14,7 @@ tags:
     - **Masin:** control node (VPN), repositooriumi juurkaust, workflow'd kaustas `.github/workflows/`
     - **Eelmisest korrast vaja:** `k03-docker/` (`compose.yaml`, `app/Dockerfile`) on main'is, `k03-docker/.env` on control node'is (mitte Gitis), stack töötab, Trivy on paigaldatud, `gh auth status` on roheline ja sul on repositooriumis admin-õigus
     - **Ülesanded:** kohtumise issue sinu repositooriumis, märkeruut iga osa kohta
-    - **Edenemine:** [laboritahvel](http://192.168.125.187:8093) (VPN-iga) ja Actionsi vahekaart
+    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga) ja Actionsi vahekaart
     - **Esitamine:** haru `k05-actions` → PR → merge → tag `k05`
 
 Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi. Seejärel võrdle tulemust oma ennustusega ja kui need erinevad, uuri, miks.
