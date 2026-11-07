@@ -388,13 +388,13 @@ Kontrolli, kas port 80 on hostis vaba, ja käivita Nginx hosti võrgus koos pord
 sudo ss -tlnp | grep -E ':80 ' || echo "80 vaba"
 docker run -d --name hostnet --network host -p 9999:80 $HUB/nginx:1.30-alpine
 sleep 2; sudo ss -tlnp | grep -E ':(80|9999) '; docker port hostnet
-docker exec hostnet ip -br addr | head -4
+docker exec hostnet ip addr | grep -E '^[0-9]+:|inet '
 ```
 
 Käivita konteiner ilma võrguta ja proovi sellest internetti jõuda. Seejärel eemalda konteiner `hostnet`:
 
 ```bash
-docker run --rm --network none $HUB/alpine:3.22 ip -br addr
+docker run --rm --network none $HUB/alpine:3.22 ip addr
 docker run --rm --network none $HUB/alpine:3.22 wget -qO- -T 3 http://example.com; echo "kood $?"
 docker rm -f hostnet
 ```
@@ -2084,7 +2084,13 @@ Nõuded failile `prune.sh`: `set -euo pipefail`; võti `-n` näitab ainult, mida
 ```bash
 sudo apt-get install -y shellcheck
 chmod +x prune.sh && shellcheck -S warning prune.sh
-./prune.sh -n; ./prune.sh
+./prune.sh -n
+```
+
+Vaata kuivkäigu nimekiri üle. Kui seal pole midagi, mida tahad alles hoida, käivita koristus:
+
+```bash
+./prune.sh
 docker volume ls | grep labori-seis
 sudo journalctl -t labseis-prune -n 1 --no-pager
 ```
@@ -2835,7 +2841,11 @@ Fail `docker.yml` on starteris olemas. See käivitab rolli control'is endas:
 
 `hosts: localhost` koos `connection: local`-iga tähendab, et Ansible ei ühendu SSH-ga ja käivitab moodulid samas masinas. Inventory't pole vaja.
 
-Võta ette oma TOEND.md loetelu 1.6-st ja kirjuta iga käsitsi samm rolli ülesandeks. Roll teeb samad sammud moodulitega.
+Võta ette oma TOEND.md loetelu 1.6-st ja kirjuta iga käsitsi samm rolli ülesandeks. Roll teeb samad sammud moodulitega. Starteris on ainult kaust `roles/docker/files`, ülejäänud kaustad loo ise:
+
+```bash
+mkdir -p roles/docker/{defaults,tasks,templates,handlers}
+```
 
 ??? example "Ülesanne: `roles/docker/defaults/main.yml`"
 
@@ -3031,7 +3041,7 @@ trivy --version | head -1
 
 ??? warning "Kui esimene käivitus peatus vea tõttu ja `daemon.json` on muutunud, aga Docker kasutab vana seadet"
 
-    Handler käivitub play lõpus. Kui play peatus enne lõppu, jäi handler käivitamata, kuigi fail muutus. Teisel käivitusel faili enam ei muudeta ja handler'it ei teavitata. Käivita üks kord `sudo systemctl restart docker` või järgmisel korral `ansible-playbook docker.yml --force-handlers`.
+    Handler käivitub play lõpus. Kui play peatus enne lõppu, jäi handler käivitamata, kuigi fail muutus. Teisel käivitusel faili enam ei muudeta ja handler'it ei teavitata. Kontrolli faili (`sudo dockerd --validate --config-file /etc/docker/daemon.json`) ja käivita üks kord `sudo systemctl restart docker`. `--force-handlers` aitab ainult samas käivituses: see käivitab teavitatud handler'id ka siis, kui play peatub vea tõttu.
 
 **TOEND.md:** üks erinevus `--check --diff` väljundist koos põhjusega ja teise käivituse `PLAY RECAP` rida.
 
@@ -3558,7 +3568,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
     | roll: `Destination directory /etc/docker/certs.d/… does not exist` | `ls /etc/docker/certs.d` | ülesanne „Harbori sertifikaadi kaust“ puudub või on pärast `copy`-t | `copy` ei loo puuduvat sihtkausta, kui `dest` on faili tee |
-    | roll muutis `daemon.json`-i, aga Docker kasutab vana seadet | `sudo journalctl -u docker -n 5` | play peatus enne lõppu ja handler jäi käivitamata: `sudo systemctl restart docker` või `--force-handlers` | handler käivitub play lõpus ainult siis, kui play jõuab lõpuni |
+    | roll muutis `daemon.json`-i, aga Docker kasutab vana seadet | `sudo journalctl -u docker -n 5` | play peatus enne lõppu ja handler jäi käivitamata: `sudo systemctl restart docker` | handler käivitub play lõpus ainult siis, kui play jõuab lõpuni |
     | `deb822_repository`: `unsupported parameter` | `ansible --version` | ansible-core on vanem kui 2.15 | moodul lisati versioonis 2.15 |
 
 ??? note "Tabel 3.15. Osa 9 · Kolm riket"
