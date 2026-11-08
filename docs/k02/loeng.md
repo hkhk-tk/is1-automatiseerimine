@@ -6,7 +6,7 @@ tags:
 
 # Loeng: Labori seis rollidega
 
-1. kohtumisel kirjutasid playbook'e, mis teevad viies masinas sama, ja panid distributsioonide erinevused grupimuutujatesse. Täna paigaldad viide masinasse rakenduse koos kõigi teenustega ja muudad ühe suure playbook'i rollidega projektiks. Loengu läbiv näide on üks teenus, Nginx web01-s: vaatame, kuidas see liigub ühest failist rolli ja kuidas igal sammul kontrollida, et tulemus jäi samaks.
+1\. kohtumisel kirjutasid playbook'e, mis teevad viies masinas sama, ja panid distributsioonide erinevused grupimuutujatesse. Täna paigaldad viide masinasse rakenduse koos kõigi teenustega ja muudad ühe suure playbook'i rollidega projektiks. Loengu läbiv näide on üks teenus, Nginx web01-s: vaatame, kuidas see liigub ühest failist rolli ja kuidas igal sammul kontrollida, et tulemus jäi samaks.
 
 ??? abstract "Õpiväljundid"
 
@@ -119,7 +119,7 @@ Teine sage viga on playbook, mis muudab masinat igal käivitusel. Moodulid `shel
 
 ## 3. Grupid ja muutujad
 
-1. kohtumise inventory's olid grupid distributsiooni järgi. Labori seisus lisanduvad grupid teenuse järgi ja distributsioonigrupid koostatakse nendest. Järelliide `:children` tähendab, et grupi liikmed on teised grupid. Muutuja `ansible_host` on masina IP-aadress: kui see on inventory's, on aadress kirjas ainult ühes kohas.
+1\. kohtumise inventory's olid grupid distributsiooni järgi. Labori seisus lisanduvad grupid teenuse järgi ja distributsioonigrupid koostatakse nendest. Järelliide `:children` tähendab, et grupi liikmed on teised grupid. Muutuja `ansible_host` on masina IP-aadress: kui see on inventory's, on aadress kirjas ainult ühes kohas.
 
 ??? example "Labori seisu inventory `inventory.ini`"
 

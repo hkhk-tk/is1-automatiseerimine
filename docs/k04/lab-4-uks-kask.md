@@ -46,7 +46,7 @@ resource "local_file" "inventory" {
     ansible-inventory --graph
     ```
 
-1. kohtumise grupp `[webhosts]` kadus failist: see on ootuspärane, `web.yml`-i käivitad vajadusel `-i`-ga eraldi.
+1\. kohtumise grupp `[webhosts]` kadus failist: see on ootuspärane, `web.yml`-i käivitad vajadusel `-i`-ga eraldi.
 
 Kuna `local.groups` tuleb mooduli väljunditest, sõltub `local_file` kõigist viiest VM-ist. Tofu kirjutab inventory alles siis, kui masinad on olemas, ja kirjutab selle uuesti, kui mõni IP muutub. `git diff` näitab, kui palju käsitsi faili ja genereeritud faili vahel tegelikult erines.
 

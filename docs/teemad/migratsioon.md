@@ -49,7 +49,7 @@ flowchart LR
 
 Ülelülituse aken sõltub andmete mahust ja muutumise kiirusest. Plokitasemel replikatsiooni korral on see minutid, `pg_dump` ja taastamine suure andmebaasi puhul võib olla tunde. Enne ülelülitust lühendatakse DNS-kirjete TTL-i, et vahetus jõuaks klientideni kiiresti. Allikas jääb pärast ülelülitust kokkulepitud ajaks alles ja kirjutuskaitstuks, et tagasi minna oleks kuhu.
 
-1. kohtumisel öeldi, et ühekordne töö vajab runbook'i, mitte koodi ([1. kohtumise loeng](../k01/loeng.md)). Migratsioonis kehtib see ühe VM-i kohta. 180 VM-i puhul on iga samm sama ja seda korratakse 180 korda: inventuuri päring, eelkontroll (vaba ruum, agent, ligipääs), replikatsiooni käivitus, ülelülituse runbook, järelkontroll. Neid automatiseeritakse nagu iga korduvat tööd. Sihtkoha võrk, tulemüürid ja õigused (landing zone) tehakse koodiga, sest neid kasutavad kõik lained. Järelkontroll on sama suitsutest, mis töötas enne kolimist; kui seda polnud, kirjutatakse see enne esimest lainet.
+1\. kohtumisel öeldi, et ühekordne töö vajab runbook'i, mitte koodi ([1. kohtumise loeng](../k01/loeng.md)). Migratsioonis kehtib see ühe VM-i kohta. 180 VM-i puhul on iga samm sama ja seda korratakse 180 korda: inventuuri päring, eelkontroll (vaba ruum, agent, ligipääs), replikatsiooni käivitus, ülelülituse runbook, järelkontroll. Neid automatiseeritakse nagu iga korduvat tööd. Sihtkoha võrk, tulemüürid ja õigused (landing zone) tehakse koodiga, sest neid kasutavad kõik lained. Järelkontroll on sama suitsutest, mis töötas enne kolimist; kui seda polnud, kirjutatakse see enne esimest lainet.
 
 ## virt-v2v, Proxmoxi import ja AWS-i teenused
 

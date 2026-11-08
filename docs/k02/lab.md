@@ -6,7 +6,7 @@ tags:
 
 # Praktikum: Labori seis rollidega
 
-1. kohtumisel kirjutasid playbook'e, kus kõik oli ühes failis: masin, väärtused ja failide sisu. Täna saad viie teenusega playbook'i `labseis.yml`, parandad selle vead ja võtad sellest sammhaaval kõik välja: masinad inventory'sse, väärtused muutujatesse, tekstid mallidesse, paroolid Vaulti ja lõpuks iga teenuse rolli.
+1\. kohtumisel kirjutasid playbook'e, kus kõik oli ühes failis: masin, väärtused ja failide sisu. Täna saad viie teenusega playbook'i `labseis.yml`, parandad selle vead ja võtad sellest sammhaaval kõik välja: masinad inventory'sse, väärtused muutujatesse, tekstid mallidesse, paroolid Vaulti ja lõpuks iga teenuse rolli.
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
@@ -287,7 +287,7 @@ Asendad play'de päises masinanimed (`hosts: db01`) inventory gruppidega. Siis e
 
 ### 3.1 Inventory gruppideks
 
-1. kohtumisel olid grupid distributsiooni järgi. Nüüd lisandub grupp iga teenuse kohta ja distributsioonigrupid koostatakse teenusegruppidest. Järelliide `:children` tähendab, et grupi liikmed on teised grupid. Muutuja `ansible_host` on masina IP-aadress.
+1\. kohtumisel olid grupid distributsiooni järgi. Nüüd lisandub grupp iga teenuse kohta ja distributsioonigrupid koostatakse teenusegruppidest. Järelliide `:children` tähendab, et grupi liikmed on teised grupid. Muutuja `ansible_host` on masina IP-aadress.
 
 Asenda faili `inventory.ini` sisu ja pane `<web01-IP>` jt asemele oma masinate aadressid (Proxmox, Summary → IPs või `~/.ssh/config`). Fail `inventory.ini`:
 

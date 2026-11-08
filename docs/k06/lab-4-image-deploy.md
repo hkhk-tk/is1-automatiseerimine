@@ -13,7 +13,7 @@ Kui testkeskkonda läheb teine fail kui see, mis läbis kontrollid, või paigald
 
 ## Kirjuta build once Dockerfile
 
-3. kohtumise mitmeastmeline Dockerfile (`k03-docker/app/Dockerfile`) kompileerib WAR-i uuesti ja see pole enam sama WAR, mis läbis quality gate'i. Teine kompileerimine võib saada teise sõltuvuse versiooni või teise JDK ja siis testisid üht faili, aga paigaldad teist. Loo `k06-jenkins/Dockerfile`, mis ise midagi ei kompileeri. Nõuded:
+3\. kohtumise mitmeastmeline Dockerfile (`k03-docker/app/Dockerfile`) kompileerib WAR-i uuesti ja see pole enam sama WAR, mis läbis quality gate'i. Teine kompileerimine võib saada teise sõltuvuse versiooni või teise JDK ja siis testisid üht faili, aga paigaldad teist. Loo `k06-jenkins/Dockerfile`, mis ise midagi ei kompileeri. Nõuded:
 
 - alus `tomcat:10.1-jre21-temurin`, `curl` HEALTHCHECK'i jaoks
 - `COPY labori-seis.war /usr/local/tomcat/webapps/ROOT.war`

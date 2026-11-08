@@ -9,7 +9,7 @@ tags:
 
 # 7. kohtumine · Praktikum: Labori seis Kubernetese klastris ja GitOps
 
-6. kohtumisel jõudis testitud image registry'sse. Täna viid Labori seisu Kubernetese klastrisse ja annad selle oleku hoidmise Argo CD-le. Kohtumise lõpuks töötab Labori seis koolitaja klastris sinu namespace'is: neli Deployment'i probe'ide ja ressursipiiridega, andmebaas püsikettal ja NetworkPolicy taga ning rakendus Ingress'i kaudu väljast kättesaadav. Uue image'i tag'i kirjutab Giti pipeline ja klastrisse viib selle Argo CD. Vahepeal paigaldad oma ühe node'iga k3s-i klastri, leiad neli koolitaja tehtud riket ja paigaldad Helmiga valmis chart'i.
+6\. kohtumisel jõudis testitud image registry'sse. Täna viid Labori seisu Kubernetese klastrisse ja annad selle oleku hoidmise Argo CD-le. Kohtumise lõpuks töötab Labori seis koolitaja klastris sinu namespace'is: neli Deployment'i probe'ide ja ressursipiiridega, andmebaas püsikettal ja NetworkPolicy taga ning rakendus Ingress'i kaudu väljast kättesaadav. Uue image'i tag'i kirjutab Giti pipeline ja klastrisse viib selle Argo CD. Vahepeal paigaldad oma ühe node'iga k3s-i klastri, leiad neli koolitaja tehtud riket ja paigaldad Helmiga valmis chart'i.
 
 !!! info "Selle korra töö"
     - **Masin:** control node VPN-i kaudu, repositooriumi kaust `k07-k8s/`, katsefailid `~/k07-katse`

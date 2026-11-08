@@ -7,7 +7,7 @@ tags:
 
 # 5. kohtumine · Pidev integratsioon ja tarne: loeng
 
-3. kohtumisest on rakendus image'ina olemas ja 4. kohtumisel lõid OpenTofu'ga taristu koodist. Seni on iga tööriist oodanud, et keegi selle käivitaks. Täna paneme ahela tööle ilma käsitsi käivitamiseta: commit'ist saab artefakt ja artefaktist töötav teenus. **Pipeline on tarneahel**: iga lüli selles, alates sõltuvusest ja action'ist kuni runner'i, deploy'ni ja muudatuse kirjeni, on otsus selle kohta, keda ja mida sa usaldad.
+3\. kohtumisest on rakendus image'ina olemas ja 4. kohtumisel lõid OpenTofu'ga taristu koodist. Seni on iga tööriist oodanud, et keegi selle käivitaks. Täna paneme ahela tööle ilma käsitsi käivitamiseta: commit'ist saab artefakt ja artefaktist töötav teenus. **Pipeline on tarneahel**: iga lüli selles, alates sõltuvusest ja action'ist kuni runner'i, deploy'ni ja muudatuse kirjeni, on otsus selle kohta, keda ja mida sa usaldad.
 
 ## Õpiväljundid
 

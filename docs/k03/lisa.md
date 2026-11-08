@@ -1029,7 +1029,7 @@ Iga ülesanne on samas projektis ja lõpeb kontrolliga. Failid lähevad kausta `
 
     Vasta `NOTES.md`-s.
 
-    1. `docker exec w id` ütleb `uid=0`. Kas see on sama root mis hostis? Mida see tähendab, kui konteineris on turvaauk?
+    1. `docker exec veeb id` ütleb `uid=0`. Kas see on sama root mis hostis? Mida see tähendab, kui konteineris on turvaauk?
     2. Mälupiiri katses sõi `tail /dev/zero` 64 MB ja tuum tappis ta. Mis oleks juhtunud ilma `--memory-swap`-ita ja kumb on tootmises hullem: OOM-kill või teenus, mis swap'i tõttu vaevu vastab?
     3. Saladus on failis `/run/secrets/DB_PASSWORD`. Kes control'is saab seda ikkagi lugeda ja kas see on parem kui `.env`?
     4. Trivy ütles täna "0 CRITICAL". Kas see image on kuu aja pärast ka puhas, kui sa midagi ei muuda, ja kuidas SBOM sellele küsimusele vastata aitab?

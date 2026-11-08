@@ -7,7 +7,7 @@ tags:
 
 # 5. kohtumine · Praktikum: Maven ja GitHub Actions
 
-3. kohtumisel panid rakenduse konteineritesse ja 4. kohtumisel lõid OpenTofu'ga taristu. Seni käivitasid iga sammu ise. Täna paned ehitamise, kontrollimise ja paigaldamise käima automaatselt: iga push ehitab ja testib rakenduse, Trivy kontrollib sõltuvusi ning main'i commit jõuab image'ina ghcr.io-sse ja sealt self-hosted runner'i kaudu sinu stack'i. Ebaõnnestunud deploy teeb ise rollback'i.
+3\. kohtumisel panid rakenduse konteineritesse ja 4. kohtumisel lõid OpenTofu'ga taristu. Seni käivitasid iga sammu ise. Täna paned ehitamise, kontrollimise ja paigaldamise käima automaatselt: iga push ehitab ja testib rakenduse, Trivy kontrollib sõltuvusi ning main'i commit jõuab image'ina ghcr.io-sse ja sealt self-hosted runner'i kaudu sinu stack'i. Ebaõnnestunud deploy teeb ise rollback'i.
 
 !!! info "Selle korra töö"
 

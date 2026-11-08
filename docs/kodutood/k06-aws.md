@@ -9,7 +9,7 @@ tags:
 
 **Eeldus:** 6. kohtumise labor (`k06-jenkins/Jenkinsfile`, sinu control node on Jenkinsi agent label'iga = GitHubi kasutajanimi), [3.](k03-aws.md) ja [5. kohtumise kodutöö](k05-aws.md) (ECR repo, push-only IAM kasutaja, EC2 Compose'iga) · **Esita:** `k06-jenkins/Jenkinsfile` (uued etapid), `cloud/k06-aws/`
 
-5. kohtumise kodutöös laadis GitHub Actions image'i registrisse ja tegi deploy. Nüüd teeb sama töö koolitaja jagatud Jenkins, mille kettale ei tohi sinu
+5\. kohtumise kodutöös laadis GitHub Actions image'i registrisse ja tegi deploy. Nüüd teeb sama töö koolitaja jagatud Jenkins, mille kettale ei tohi sinu
 AWS-i võti sattuda.
 
 **Enne alustamist:**

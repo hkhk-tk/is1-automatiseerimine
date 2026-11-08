@@ -5,7 +5,7 @@
 <text class="b" x="246" y="46">control node</text>
 <rect class="p" x="250" y="120" width="170" height="70" rx="8"/><text class="b c" x="335" y="150">hostiport 8081</text><text class="c s" x="335" y="170">NAT → konteineri 80</text>
 <rect class="p" x="470" y="60" width="290" height="50" rx="8"/><text class="c" x="615" y="90">sild docker0, 172.17.0.1</text>
-<rect class="o" x="470" y="180" width="290" height="70" rx="8"/><text class="b c" x="615" y="210">konteiner w</text><text class="c s" x="615" y="230">172.17.0.x, port 80</text>
+<rect class="o" x="470" y="180" width="290" height="70" rx="8"/><text class="b c" x="615" y="210">konteiner veeb</text><text class="c s" x="615" y="230">172.17.0.x, port 80</text>
 <line class="l" x1="170" y1="155" x2="248" y2="155" marker-end="url(#a)"/>
 <text class="c s" x="200" y="145">vastab</text>
 <line class="l" x1="420" y1="170" x2="468" y2="205" marker-end="url(#a)"/>

@@ -95,7 +95,7 @@ Kui tulemus erineb sellest, mida said lokaalselt, on peaaegu alati põhjus selle
 
 ## Pärast esitamist: stack maha
 
-6. kohtumisel on control node Jenkinsi agent: seal käivad Maven, `docker build`, testkonteiner ja sinu sandbox-Jenkins. Control node'i mälu on 4 GB ja 3. kohtumise stack võtab sellest üle gigabaidi. 6. ja 7. kohtumine stacki ei vaja.
+6\. kohtumisel on control node Jenkinsi agent: seal käivad Maven, `docker build`, testkonteiner ja sinu sandbox-Jenkins. Control node'i mälu on 4 GB ja 3. kohtumise stack võtab sellest üle gigabaidi. 6. ja 7. kohtumine stacki ei vaja.
 
 Kui Releases on roheline ja `main`-i viimane deploy on roheline, võta stack maha. `down` ilma `-v`-ta eemaldab konteinerid, aga jätab volume'id ja image'id alles, nii et `up -d` toob sama oleku tagasi. `stop`-ist ei piisa: `restart`-poliitikaga konteinerid käivituvad control node'i taaskäivitusel uuesti.
 

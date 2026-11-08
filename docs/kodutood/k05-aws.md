@@ -9,7 +9,7 @@ tags:
 
 **Eeldus:** 5. kohtumise labor (`ci.yml`: jobid, `needs`, secrets, `environment`), [3. kohtumise kodutöö](k03-aws.md) (ECR repo `labori-seis`, IAM roll `labseis-ec2-ecr`, Compose EC2-l) · **Esita:** `.github/workflows/deploy-aws.yml`, `cloud/k05-aws/ecr-push.json`
 
-3. kohtumise kodutöös laadisid image'i ECR-i käsitsi ja käivitasid Compose'i EC2-s ise. Nüüd teeb sama töö pipeline, mis vajab AWS-i
+3\. kohtumise kodutöös laadisid image'i ECR-i käsitsi ja käivitasid Compose'i EC2-s ise. Nüüd teeb sama töö pipeline, mis vajab AWS-i
 pääsuvõtit väljaspool sinu masinat. Võtme õigused peavad olema nii kitsad, et selle lekkimine ei tekitaks kahju, ja deploy peab ootama sinu
 kinnitust.
 

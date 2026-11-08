@@ -10,7 +10,7 @@ tags:
 
 # 7. kohtumine · Orkestreerimine, GitOps ja töökindlus: loeng
 
-6. kohtumisel ehitasid tarneahela, mille lõpus on testitud image registry's. Nüüd viid sama Labori seisu Kubernetese klastrisse. Kubernetes hoiab soovitud olekut pidevalt: kontrollerid võrdlevad kirjeldust tegeliku olekuga ja kõrvaldavad vahe. Sama mõte kandub GitOps'i (soovitud olek on Gitis) ja töökindlusse (SLO ütleb, milline on soovitud olek kasutaja vaates).
+6\. kohtumisel ehitasid tarneahela, mille lõpus on testitud image registry's. Nüüd viid sama Labori seisu Kubernetese klastrisse. Kubernetes hoiab soovitud olekut pidevalt: kontrollerid võrdlevad kirjeldust tegeliku olekuga ja kõrvaldavad vahe. Sama mõte kandub GitOps'i (soovitud olek on Gitis) ja töökindlusse (SLO ütleb, milline on soovitud olek kasutaja vaates).
 
 ??? abstract "Õpiväljundid"
 
