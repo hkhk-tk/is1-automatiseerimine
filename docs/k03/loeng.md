@@ -766,9 +766,31 @@ Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on 
 
 **Ühilduvus.** `podman.socket` pakub Dockeri REST API-t, nii et `docker` CLI töötab `DOCKER_HOST`-iga, Swarm mitte. `podman kube generate` teeb konteinerist Kubernetese `Pod` manifesti.
 
-**AI-agendid konteineris.** Uuem kasutusviis on koodi kirjutavate AI-agentide eraldamine. Agent käivitab käske, paigaldab pakette ja ehitab image'eid, ja tal ei tohi olla ligipääsu hosti Dockerile ega failidele väljaspool projekti. [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab agendi microVM-is, millel on oma tuum ja oma Docker Engine. See on sama põhimõte nagu Kata Containers (osa 1): kui koodi ei usaldata, ei piisa namespace'idest. See on konteinerite kõrval uus haru, mitte tavalise rakenduste käitamise asendus. Kohalik Docker Sandboxes on tasuta ka äriliseks kasutuseks ega vaja Docker Desktopi. Pilves käitamine (Cloud Sandboxes) ja organisatsiooni keskne haldus (AI Governance) on tasulised ning AI-mudeli kasutamise kulud arvestatakse eraldi ([tingimused](https://www.docker.com/products/docker-sandboxes/), kontrollitud 8. novembril 2026).
-
 **Millal mida.** Podman koos Quadletiga sobib RHEL-i pere serverisse, kus töötab üks või paar teenust: haldus, logid ja audit käivad samade tööriistadega mis teistel teenustel. Docker sobib näiteks arendaja masinasse, CI agendile ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it.
+
+### AI-agendid eraldatud keskkonnas
+
+Koodi kirjutav AI-agent (näiteks Claude Code või Codex) ei piirdu teksti soovitamisega. See muudab ja kustutab projektifaile, paigaldab sõltuvusi, käivitab teste ja ehitusskripte, käivitab andmebaasi ja ehitab image'eid. Kui agent töötab otse sinu terminalis, teeb ta seda kõike sinu kasutaja õigustes ja ka sinu Dockeri kaudu.
+
+[Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) annab agendile eraldi keskkonna: väikese virtuaalmasina (microVM), millel on oma tuum ja oma Docker Engine. Agent näeb projektikausta, mille talle annad, ning võrgusihtkohti ja tööriistu, mis on lubatud. Hosti Docker, teised projektid ja isiklikud failid ei ole vaikimisi tema keskkonna osa. Sama põhimõte oli osas 1 Kata Containersi juures: kui koodi ei usaldata, ei piisa namespace'idest.
+
+Näiteks annad agendile ülesande parandada Labori seisu andmebaasiühendus ja kontrollida, et testid õnnestuvad. Sandbox'is loeb ja muudab agent projekti koodi, käivitab Maveni, ehitab app-image'i, käivitab oma Docker Engine'is MariaDB ja rakenduse, loeb logisid ja parandab vigu. Kõik see käib sandbox'i privaatse Docker Engine'i kaudu, mitte hosti socket'i kaudu.
+
+```text
+Sinu arvuti
+├── projektikaust ── lubatud ligipääs ──► sandbox (microVM, oma tuum)
+│                                         ├── AI-agent
+│                                         ├── ehitus- ja testitööriistad
+│                                         └── privaatne Docker Engine
+│                                             ├── rakenduse konteiner
+│                                             └── testandmebaasi konteiner
+└── hosti Docker, muud projektid, isiklikud failid: agendi keskkonnast väljas
+```
+
+Sandbox piirab tegevuse ulatust, aga ei kontrolli, kas agendi muudatus on sisuliselt õige. Kui projektikaust on kirjutatav, saab agent selle faile muuta. Kui annad ligipääsu välisele teenusele, tuleb selle teenuse õigused eraldi läbi mõelda. Koodi ülevaatus ja testid jäävad vajalikuks. Kui küsid AI-lt ainult selgitust või koodinäidet ja käivitad kõik ise, ei ole sandbox'i vaja.
+
+Kohalik Docker Sandboxes on tasuta ka äriliseks kasutuseks ega vaja Docker Desktopi. Pilves käitamine (Cloud Sandboxes) ja organisatsiooni keskne haldus (AI Governance) on tasulised ning AI-mudeli kasutamise kulud arvestatakse eraldi ([tingimused](https://www.docker.com/products/docker-sandboxes/), kontrollitud 8. novembril 2026).
+
 
 ??? question "Kontrolli ennast"
 
