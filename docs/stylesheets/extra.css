@@ -160,3 +160,12 @@ img.logo { height: 14px; max-height: 14px; width: auto; vertical-align: -0.18em;
   .md-typeset :is(.admonition, details) { box-shadow: none; border-width: 1px; border-style: solid; }
   .md-typeset figcaption { break-before: avoid; page-break-before: avoid; }
 }
+
+/* Kood kursiivi sees (tabeli allkiri): püstine kiri, muidu jääb trükis nähtamatuks */
+.md-typeset em code { font-style: normal; }
+/* Trükis ei lõigata laia tabelit ära */
+@media print {
+  .md-typeset__scrollwrap, .md-typeset__table { overflow: visible !important; }
+  .md-typeset table:not([class]) { display: table; width: 100%; table-layout: fixed; font-size: 7pt; }
+  .md-typeset table:not([class]) :is(td, th) { padding: .3em .45em; overflow-wrap: anywhere; }
+}
