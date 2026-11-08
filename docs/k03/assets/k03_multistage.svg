@@ -12,7 +12,7 @@
 <text class="s" x="40" y="142">jääb lõppimage'ist välja: JDK, Maven, ~/.m2, target/</text>
 <rect class="f" x="20" y="205" width="760" height="125" rx="8"/>
 <text class="b" x="40" y="231">Aste 2 (käitus): FROM tomcat:10.1-jre21-temurin</text>
-<rect class="p" x="40" y="252" width="225" height="56" rx="8"/><text class="c" x="152" y="285">curl, webapps tühjaks</text>
+<rect class="p" x="40" y="252" width="225" height="56" rx="8"/><text class="c" x="152" y="285">kasutaja ja õigused</text>
 <rect class="o" x="287" y="252" width="225" height="56" rx="8"/><text class="c" x="399" y="276">COPY --from=build</text><text class="c" x="399" y="296">ROOT.war</text>
 <rect class="p" x="535" y="252" width="225" height="56" rx="8"/><text class="c" x="647" y="276">ARG/ENV GIT_SHA</text><text class="c s" x="647" y="296">viimasena</text>
 <line class="l" x1="265" y1="280" x2="285" y2="280" marker-end="url(#a)"/>

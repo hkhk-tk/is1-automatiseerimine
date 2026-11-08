@@ -5,7 +5,7 @@
 <rect class="o" x="410" y="40" width="190" height="56" rx="8"/>
 <text class="b c" x="505" y="64">teine konteiner</text><text class="c s" x="505" y="84">kirjutatav kiht</text>
 <rect class="p" x="200" y="130" width="400" height="44" rx="8"/><text class="c" x="400" y="157">ROOT.war</text>
-<rect class="p" x="200" y="180" width="400" height="44" rx="8"/><text class="c" x="400" y="207">curl, webapps tühjaks</text>
+<rect class="p" x="200" y="180" width="400" height="44" rx="8"/><text class="c" x="400" y="207">kasutaja ja õigused</text>
 <rect class="p" x="200" y="230" width="400" height="44" rx="8"/><text class="c" x="400" y="257">Tomcat 10.1</text>
 <rect class="p" x="200" y="280" width="400" height="44" rx="8"/><text class="c" x="400" y="307">JRE 21</text>
 <rect class="p" x="200" y="330" width="400" height="44" rx="8"/><text class="c" x="400" y="357">ubuntu noble baaskiht</text>
