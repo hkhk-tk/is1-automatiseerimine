@@ -470,63 +470,103 @@ docker rm rf
 
 ### 1.12 Käivitusvõtmed, mida admin vajab
 
-`docker run`-il on sadu võtmeid, aga igapäevatöös kordub umbes kuus. Samad võtmed on Compose'i failis teiste nimedega: `env_file`, `user`, `init`, `volumes`, `entrypoint`. Iga katse näitab üht lõksu: mis jääb alles, kust tuleb keskkond, kellena protsess töötab, kuidas signaal protsessini jõuab, mis juhtub vale teega ja kuidas vaadata sisse konteinerisse, mis ebaõnnestub kohe.
+`docker run`-il on sadu võtmeid, aga igapäevatöös kordub umbes viis. Need samad võtmed kirjutad hiljem Compose'i faili teiste nimedega: `env_file`, `user`, `init`, `volumes` ja `entrypoint`. Iga katse näitab ühte lõksu.
 
-`--rm`, `--env-file` ja `-e`: tee keskkonnafail ja vaata, mida konteiner saab.
+**Keskkonnamuutujad failist.** Teenused loevad paroole ja aadresse keskkonnamuutujatest. Tee fail kahe muutujaga:
 
 ```bash
 printf 'A=yks\nB="kaks"\n' > /tmp/k03.env
-D=neli docker run --rm --env-file /tmp/k03.env -e D -e E=viis $HUB/alpine:3.22 env | grep -E '^[A-E]='
-docker ps -aq --filter ancestor=$HUB/alpine:3.22 | wc -l
+cat /tmp/k03.env
 ```
 
-`--user`: kirjuta bind mount'i root'ina ja oma UID-ga.
+Käivita konteiner, mis prindib oma keskkonnamuutujad. `--env-file` loeb muutujad failist, `-e` annab ühe muutuja käsureal ja `--rm` kustutab konteineri kohe pärast lõppu:
 
 ```bash
-mkdir -p /tmp/k03-user && cd /tmp/k03-user
-docker run --rm -v "$PWD:/w" $HUB/alpine:3.22 touch /w/root.txt
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" $HUB/alpine:3.22 touch /w/mina.txt
-ls -ln; cd - && sudo rm -rf /tmp/k03-user
+docker run --rm --env-file /tmp/k03.env -e C=kolm $HUB/alpine:3.22 env
+docker ps -a
 ```
 
-`--init`: mõõda, kui kaua `stop` kestab ilma selleta ja koos sellega.
+??? success "Oodatav tulemus"
+
+    `env` näitab ridu `A=yks`, `B="kaks"` ja `C=kolm`. `B` väärtus on koos jutumärkidega: `--env-file` ei tõlgenda jutumärke, Compose'i `.env` tõlgendab. `docker ps -a` seda konteinerit ei näita, sest `--rm` kustutas selle.
+
+**Kasutaja.** Konteineri protsess töötab vaikimisi root'ina. Kui see kirjutab hosti kausta, kuulub fail hostis root'ile. Tee kaust ja kirjuta sinna üks fail root'ina ja teine oma kasutajana:
+
+```bash
+mkdir /tmp/k03-user
+docker run --rm -v /tmp/k03-user:/w $HUB/alpine:3.22 touch /w/root.txt
+docker run --rm --user "$(id -u):$(id -g)" -v /tmp/k03-user:/w $HUB/alpine:3.22 touch /w/mina.txt
+ls -l /tmp/k03-user
+sudo rm -rf /tmp/k03-user
+```
+
+??? success "Oodatav tulemus"
+
+    `root.txt` kuulub root'ile ja `mina.txt` sulle. Seepärast käivitad tööriista-konteineri, mis kirjutab sinu kausta, alati `--user`-iga.
+
+**Peatamine.** `docker stop` saadab konteineri PID 1-le signaali SIGTERM ja ootab 10 sekundit. Kui protsess selle ajaga ei lõpeta, tapab Docker selle. Käivita kaks konteinerit, teine võtmega `--init`:
 
 ```bash
 docker run -d --name noinit $HUB/alpine:3.22 sleep 300
-docker run -d --name init --init $HUB/alpine:3.22 sleep 300 && docker top init
-time docker stop noinit; time docker stop init
+docker run -d --name init --init $HUB/alpine:3.22 sleep 300
+docker top init
+```
+
+Peata mõlemad ja vaata, kui kaua kumbki aega võttis:
+
+```bash
+time docker stop noinit
+time docker stop init
 docker rm noinit init
 ```
 
-`-v` ja `--mount` olematu hostiteega:
+??? success "Oodatav tulemus"
+
+    `docker top init` näitab kaht protsessi, `docker-init` ja selle all `sleep`. `noinit` peatus umbes 10 sekundiga, sest `sleep` PID 1-na ei käsitle SIGTERM-i. `--init` pani PID 1-ks väikese init'i, mis andis signaali edasi, ja `init` peatus alla sekundi.
+
+**Hosti kaust, mida pole olemas.** Proovi ühendada konteinerisse hosti kaust, mida pole olemas. Esimene käsk kasutab lühikest võtit `-v`:
 
 ```bash
-docker run --rm -v /tmp/k03-puudub:/data $HUB/alpine:3.22 ls -la /data
-ls -ld /tmp/k03-puudub && sudo rmdir /tmp/k03-puudub
+docker run --rm -v /tmp/k03-puudub:/data $HUB/alpine:3.22 ls /data
+ls -ld /tmp/k03-puudub
+sudo rmdir /tmp/k03-puudub
+```
+
+Sama katse pika võtmega `--mount`:
+
+```bash
 docker run --rm --mount type=bind,src=/tmp/k03-puudub,dst=/data $HUB/alpine:3.22 ls /data
 ```
 
-`--entrypoint`: käivita Nginx vigase konfiguratsiooniga, mis lõpeb kohe, ja uuri konteinerit seestpoolt.
+??? success "Oodatav tulemus"
+
+    `-v` lõi puuduva kausta hoiatuseta ja omanikuks sai root. `--mount` keeldus veaga `bind source path does not exist`. Vale tee jääb `--mount`-iga kohe silma, mitte alles siis, kui teenus käivitub tühja konfiguratsiooniga.
+
+**Konteiner, mis lõpetab kohe.** Tee Nginxile vigane konfiguratsioonifail ja käivita Nginx sellega:
 
 ```bash
 printf 'server { listen 80 }\n' > /tmp/k03-ngx.conf
 docker run -d --name ngx -v /tmp/k03-ngx.conf:/etc/nginx/conf.d/default.conf:ro $HUB/nginx:1.30-alpine
-sleep 2; docker exec ngx true; docker logs ngx 2>&1 | tail -1
-docker run --rm --entrypoint sh -v /tmp/k03-ngx.conf:/etc/nginx/conf.d/default.conf:ro $HUB/nginx:1.30-alpine -c 'nginx -t; ls /etc/nginx/conf.d'
+docker ps -a --filter name=ngx
+docker logs ngx
+docker exec ngx sh
+```
+
+Konteiner lõpetas ja `exec` sinna enam ei pääse. Käivita sama image teise käivituskäsuga: `--entrypoint sh` avab Nginxi asemel shelli.
+
+```bash
+docker run --rm -it --entrypoint sh -v /tmp/k03-ngx.conf:/etc/nginx/conf.d/default.conf:ro $HUB/nginx:1.30-alpine
+```
+
+Konteineris käivita `nginx -t`, siis `exit`. Lõpuks kustuta katse konteiner:
+
+```bash
 docker rm ngx
 ```
 
 ??? success "Oodatav tulemus"
 
-    `env` näitab `A=yks`, `B="kaks"`, `D=neli`, `E=viis` ja alles jäänud konteinereid on 0. `B` sai väärtuseks `"kaks"` koos jutumärkidega: `--env-file` ei tõlgenda jutumärke, Compose'i `.env` tõlgendab. `-e D` ilma väärtuseta võttis väärtuse sinu shellist.
-
-    `root.txt` kuulub UID 0-le ja `mina.txt` sulle. Seepärast käivitad tööriista-konteineri, mis kirjutab sinu kausta, alati `--user`-iga.
-
-    `docker top init` näitab kaht protsessi, `docker-init` ja selle all `sleep`. `noinit` peatus umbes 10 sekundiga, sest `sleep` PID 1-na ei käsitle SIGTERM-i ja tuum ei rakenda PID 1-le vaikekäitumist. `--init` pani PID 1-ks väikese init'i, mis andis signaali edasi ja korjab ka zombie-protsessid. `init` peatus alla sekundi.
-
-    `-v` lõi puuduva kausta vaikselt root'i omanikuna, `--mount` keeldus veaga `bind source path does not exist`: vale tee jääb nii kohe silma, mitte siis, kui teenus käivitub tühja konfiguratsiooniga.
-
-    `docker exec ngx` ütles `is not running` ja `nginx -t` näitas vigast rida. Ebaõnnestunud konteinerisse `exec` ei pääse, aga sama image sama mount'iga ja teise ENTRYPOINT-iga näitab viga otse. `--rm` kustutab koos konteineriga ka tema logi: kui konteiner ebaõnnestub ja tahad teada, miks, käivita see ilma `--rm`-ita.
+    `docker ps -a` näitab `ngx` olekuga `Exited (1)`, logis on vigane rida ja `docker exec` ütleb `is not running`. Shelliga konteineris näitab `nginx -t` sama viga koos rea numbriga. `--rm` kustutab koos konteineriga ka selle logi: kui konteiner ebaõnnestub ja tahad teada, miks, käivita see ilma `--rm`-ita.
 
 ### 1.13 Oma võrk ja kolm backend'i teenust
 
