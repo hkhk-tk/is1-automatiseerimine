@@ -98,8 +98,8 @@ Konteinerite taga on kaks vana probleemi. Rakendus töötas arendaja masinas, ag
 Konteinerit on kõige lihtsam mõista virtuaalmasinaga võrreldes. **Virtualiseerimisel** jagab tarkvarakiht ehk **hüperviisor** ühe füüsilise serveri protsessori, mälu ja ketta mitme virtuaalmasina vahel. Kursuse masinad on Proxmoxi hüperviisoril töötavad VM-id. Igas VM-is on oma operatsioonisüsteem koos oma tuumaga, mis tuleb käivitada ja hooldada nagu eraldi serveris. Konteineril oma tuuma ei ole: selle protsessid töötavad hosti tuumal ja image sisaldab ainult rakendust ja selle sõltuvusi. Konteineri käivitamisel ei käivitata uut tuuma, seetõttu on käivituskulu üldjuhul väiksem kui virtuaalmasinal. Image'i suurus ja see, millal rakendus on valmis, sõltuvad siiski pakitud tarkvarast.
 
 <figure markdown="span">
-  ![Vasakul kaks VM-i, kummalgi oma tuum ja OS hüperviisori peal; paremal viis konteinerit, mis jagavad ühte hosti tuuma](assets/k03_vm_vs_konteiner.svg)
-  <figcaption>Joonis 3.4. VM-il on oma tuum ja OS, konteiner jagab hosti tuuma ja kannab kaasas ainult oma failipuud (Talvik, 2026).</figcaption>
+  ![Vasakul kaks virtuaalmasinat, kummalgi rakendus, teegid ning oma OS ja tuum hüperviisori peal; paremal kolm konteinerit, igaühes rakendus ja teegid, kõik ühise hosti Linuxi tuuma peal; Docker Engine on kõrval ja loob konteinereid](assets/k03_vm_vs_konteiner.svg)
+  <figcaption>Joonis 3.4. Virtuaalmasinal on oma tuum, konteinerid jagavad hosti tuuma (Talvik, 2026).</figcaption>
 </figure>
 
 Igal konteineril on oma rakendus ja teegid, nii et app01 Java ja db01 teegid ei sega teineteist. Tuum on aga ühine: konteinerite protsessid teevad süsteemikutsed otse hosti tuumale. Docker Engine loob ja haldab konteinereid, aga ei asu nende ja tuuma vahel.
@@ -697,6 +697,11 @@ Healthcheck ainult märgib oleku. Compose ei taaskäivita `unhealthy` konteineri
 
     Iga uus võrk saab alamvõrgu vaikimisi aadressivarudest `172.17.0.0/16`–`172.31.0.0/16` ja `192.168.0.0/16`. Kui ettevõtte VPN või serverivõrk kasutab samu vahemikke, kaob hostist marsruut nendesse ja SSH-sessioon katkeb esimese `docker compose up`-iga. Selle vältimiseks saab `daemon.json`-is määrata `default-address-pools` vahemikuga, mis on võrguosakonnaga kokku lepitud.
 
+    **Süvenemisküsimused**
+
+    1. `compose.yaml` ei muutunud, aga `docker compose up -d` lõi app01 uuesti. Milliseid sisendeid ja varasemaid tegevusi kontrollid?
+    2. db01 on `healthy`, aga app01 ei käivitunud pärast masina taaskäivitust õiges järjekorras. Miks `depends_on` siin ei aidanud?
+
 Mitu koopiat, katkestuseta uuendus ja mitu hosti on juba orkestraatori töö (7. kohtumine).
 
 ### Kui stack ei tööta
@@ -712,8 +717,8 @@ Loe juurde: [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md)
 
 ??? question "Kontrolli ennast"
 
-    1. `compose.yaml` ei muutunud, aga `docker compose up -d` lõi app01 uuesti. Milliseid sisendeid ja varasemaid tegevusi kontrollid?
-    2. db01 on `healthy`, aga app01 ei käivitunud pärast masina taaskäivitust õiges järjekorras. Miks `depends_on` siin ei aidanud?
+    1. Kuidas leiab app01 andmebaasi ja miks mitte IP-aadressi järgi?
+    2. Mis vahe on sellel, et konteiner töötab, ja sellel, et teenus on valmis?
 
 ## 5. Ansible ja Docker koos
 
