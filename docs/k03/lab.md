@@ -1587,7 +1587,7 @@ diff web/nginx.conf /tmp/web01-default.conf
 
 ??? success "Oodatav tulemus"
 
-    Logis tekkisid read samal hetkel, kui tegid päringu, ja `/olematu` andis 404 rea, mida saad otsida ilma kogu logi kerimata. Inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud, üks teine number vahel näitab ajutist tõrget. `stats` näitab, et suurima mäluga on app01 ja db01. `top` näitab Java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` erineb ainult `resolver` real: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
+    Logis tekkisid read samal hetkel, kui tegid päringu, ja `/olematu` andis 404 rea, mida saad otsida ilma kogu logi kerimata. Inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud. `-1` või `1` alguses tähendab, et kontroll ei õnnestunud käivitusajal, kui Tomcat alles käivitus. `stats` näitab, et suurima mäluga on app01 ja db01. `top` näitab Java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` erineb ainult `resolver` real: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
 
     `docker cp` töötab ka teises suunas, hostist konteinerisse. See sobib silumiseks, aga mitte parandamiseks: järgmine `up -d` loob konteineri uuesti ja sinu fail kaob.
 
@@ -1608,7 +1608,7 @@ Muuda `.env`-is `WEB_PORT` väärtuseks `8088` ja uuenda stacki.
 **Küsimus enne käsku:** millised teenused pordi muutus uuesti loob?
 
 ```bash
-sed -i 's/^WEB_PORT=.*/WEB_PORT=8088/' .env && docker compose up -d
+sed -i 's/^WEB_PORT=.*/WEB_PORT=8088/' .env && docker compose up -d --wait
 docker compose ps --format '{{.Service}} {{.RunningFor}} {{.Ports}}'
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8088/health
 sed -i 's/^WEB_PORT=.*/WEB_PORT=8080/' .env && docker compose up -d
@@ -1636,13 +1636,14 @@ curl -s -X POST http://localhost:8080/api/results \
   -d '{"lab":"lab-03","check":"compose","status":"OK","host":"'"$(hostname)"'"}'; echo
 sleep 2; docker compose exec rmq01 rabbitmqctl list_queues name messages consumers
 curl -s -H 'Authorization: Bearer demo-kati-token' http://localhost:8080/api/results | jq '.[] | {lab, check, status}'
-for i in 1 2 3; do curl -s -o /dev/null http://localhost:8080/; done
+T=$(grep '^TEACHER_TOKEN=' .env | cut -d= -f2)
+for i in 1 2 3; do curl -s -o /dev/null "http://localhost:8080/?token=$T"; done
 docker compose exec mc01 sh -c 'echo stats | nc -w 1 127.0.0.1 11211' | grep -E 'get_(hits|misses)'
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. 0 sõnumit ja 1 consumer tähendab, et sõnum läbis järjekorra: consumer võttis selle ja kirjutas baasi. Kui sõnumeid oleks 1 ja consumer'eid 0, töötaks API, aga andmed oleksid järjekorras kinni. `get_hits` üle nulli näitab, et korduv GET tuli vahemälust ega koormanud andmebaasi.
+    Kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. 0 sõnumit ja 1 consumer tähendab, et sõnum läbis järjekorra: consumer võttis selle ja kirjutas baasi. Kui sõnumeid oleks 1 ja consumer'eid 0, töötaks API, aga andmed oleksid järjekorras kinni. `get_hits` üle nulli näitab, et korduv õpetaja vaate päring tuli vahemälust ega koormanud andmebaasi.
 
 **TOEND.md:** POST, `list_queues` ja `get_hits` väljund.
 

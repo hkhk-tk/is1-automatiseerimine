@@ -38,6 +38,33 @@ Loengu keskne mõte on üks lause: konteiner on ühekordne, image on muutumatu, 
     - valida, kus image'eid hoida (avalik registry, oma registry, pull-through cache), ning hinnata SBOM-i ja skannimise abil, mida uuesti ehitada;
     - võrrelda Dockeri ja Podmani käitusmudelit ning teada, millised tööriistad on tasuta ja millised mitte.
 
+## Docker ei ole ainult üks programm
+
+Sõna „Docker“ kasutatakse mitme eri asja kohta. Selles loengus töötame peamiselt Docker Engine'i, käsurea ja Compose'iga, aga need kuuluvad laiemasse tööriistade ja teenuste ökosüsteemi.
+
+| Tööetapp | Tööriist või teenus | Roll |
+|---|---|---|
+| arenda ja testi | Docker Desktop, CLI, IDE laiendused | rakenduse ehitamine, käivitamine ja uurimine arendaja masinas |
+| kirjelda mitu teenust | Docker Compose | rakenduse teenused, võrgud ja volume'id ühes failis |
+| ehita ja käita | Docker Engine ja BuildKit | image'ite ehitamine ja konteinerite käitamine |
+| avalda ja tõmba | Docker Hub või muu registry | image'ite hoidmine ja levitamine |
+| kontrolli ja hoolda | Docker Scout, Docker Hardened Images | komponentide ja haavatavuste analüüs, hooldatud baas-image'id |
+| käita AI-agente eraldatult | Docker Sandboxes | agendi käitamine eraldi microVM-is |
+
+*Tabel 3.2. Dockeri ökosüsteem tööetappide järgi.*
+
+Kõik need ei ole kohustuslikud. Serveris ei ole Docker Engine'i kasutamiseks vaja Docker Desktopi, ja image'eid võib Docker Hubi asemel hoida asutuse registry's. Docker Desktop on arendaja töökeskkond, Docker Engine käitab konteinereid, Docker Hub hoiab image'eid ja Compose kirjeldab mitmest teenusest koosnevat rakendust: need ei ole sama asja neli nime.
+
+Loengu läbiv töövoog on: rakenduse lähtekood → image'i ehitamine → registry → konteineri käivitamine. Compose kirjeldab, kuidas rakenduse konteinerid koos töötavad. Andmed ja käivitamisel antav konfiguratsioon on image'i ehitamisest eraldi. Põhjalikumalt käsitleme Engine'it, CLI-d, Compose'i ja registry rolli. Turvatööriistade ja AI-agentide juurde tuleme tagasi osades 8 ja 9.
+
+??? info "Süvenemiseks: veel Dockeri tooteid"
+
+    - [Docker Desktop](https://docs.docker.com/desktop/) ühendab Windowsis ja macOS-is Engine'i (Linuxi VM-is), CLI, Compose'i ja ehitustööriistad. Laiendused (Extensions) lisavad näiteks kettakasutuse, logide ja turvakontrolli vaate.
+    - [Docker Scout](https://docs.docker.com/scout/) analüüsib image'i komponente ja CVE-sid ning soovitab parandusi (osa 8).
+    - [Docker Hardened Images](https://docs.docker.com/dhi/) on minimaalsed hooldatud baas-image'id koos SBOM-i ja päritolutõenditega (osa 8).
+    - [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab AI-agendi microVM-is, millel on oma tuum ja oma Docker Engine (osa 9).
+    - AI Governance ja MCP Gateway piiravad tsentraalselt agentide võrgu- ja faililigipääsu ning tööriistakutseid ja koguvad auditilogi.
+
 ## 1. Konteiner on isoleeritud protsess
 
 Kaks Java versiooni samas serveris tähendasid seni kahte käsitsi hallatud JDK-d või teist VM-i.
@@ -52,7 +79,7 @@ Konteinerit ei käivita käsureaprogramm ise, vaid root'ina töötav daemon:
 docker CLI ──API──► /var/run/docker.sock ──► dockerd (root) ──► containerd ──► runc ──► konteineri protsess
 ```
 
-??? note "Tabel 3.2. Docker Engine'i osad"
+??? note "Tabel 3.3. Docker Engine'i osad"
 
     | Osa | Ülesanne |
     |---|---|
@@ -86,7 +113,7 @@ docker stop veeb
 docker rm veeb
 ```
 
-??? note "Tabel 3.3. Käsu `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine` osad"
+??? note "Tabel 3.4. Käsu `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine` osad"
 
     | Osa | Tähendus |
     |---|---|
@@ -96,7 +123,7 @@ docker rm veeb
     | `-p 8080:80` | hosti port 8080 suunatakse konteineri pordile 80; ilma selleta pole konteiner väljast nähtav |
     | `nginx:1.30-alpine` | image'i nimi ja tag; kui image'it hostis pole, tõmmatakse see registry'st |
 
-??? note "Tabel 3.4. Elutsükli ja uurimise käsud"
+??? note "Tabel 3.5. Elutsükli ja uurimise käsud"
 
     | Käsk | Vastab küsimusele |
     |---|---|
@@ -198,7 +225,7 @@ EXPOSE 8000
 CMD ["python", "app.py"]
 ```
 
-??? note "Tabel 3.5. Dockerfile'i juhised"
+??? note "Tabel 3.6. Dockerfile'i juhised"
 
     | Juhis | Mida teeb | Kiht? |
     |---|---|---|
@@ -211,7 +238,7 @@ CMD ["python", "app.py"]
     | `EXPOSE` | dokumenteerib pordi; porti ei avalda, selleks on `-p` | metaandmed |
     | `CMD` | vaikimisi käivituskäsk | metaandmed |
 
-`requirements.txt` kopeeritakse enne koodi: kui muutub ainult `app.py`, kasutab ehitus sõltuvuste kihti vahemälust. Ehituskontekst on kaust, mis saadetakse builder'ile (`docker build -t minu-app:1.0 .`, punkt lõpus). Fail `.dockerignore` jätab sealt välja selle, mida image ei vaja, eriti `.env`-i ja `.git`-i.
+`requirements.txt` kopeeritakse enne koodi: kui muutub ainult `app.py`, kasutab ehitus sõltuvuste kihti vahemälust. Sama töö käib arendaja masinas sageli redaktorist: VS Code'i ja IntelliJ laiendused näitavad Dockerfile'i vigu, ehitavad image'i, käivitavad Compose'i stacki ja avavad konteineri logi. Taustal on samad käsud. Ehituskontekst on kaust, mis saadetakse builder'ile (`docker build -t minu-app:1.0 .`, punkt lõpus). Fail `.dockerignore` jätab sealt välja selle, mida image ei vaja, eriti `.env`-i ja `.git`-i.
 
 **`CMD` ja `ENTRYPOINT`.** `ENTRYPOINT` on programm, `CMD` on selle vaikeargumendid. `docker run image arg` asendab `CMD`-i, `--entrypoint` asendab programmi. Tööriista-image'ites (Trivy, curl) on programm `ENTRYPOINT`-is, nii et `docker run aquasec/trivy image nginx` annab argumendid otse Trivy'le. Teenuse image'ites on tavaliselt ainult `CMD`. Mõlemad kirjutatakse exec-vormis (`["python", "app.py"]`): shell-vormis (`CMD python app.py`) on PID 1 shell ja `SIGTERM` rakenduseni ei jõua.
 
@@ -254,7 +281,7 @@ MariaDB uuendus on `docker rm` ja `docker run`: mis oli kirjutatavas kihis, on k
 
 Olekut on kolme liiki. **Andmed** lähevad volume'isse või bind mount'i. **Volume** on Dockeri hallatav kataloog (`local` draiveriga `/var/lib/docker/volumes/<nimi>/_data`), mille elutsükkel on konteinerist lahus. Bind mount'ist erineb volume failide omaniku poolest. Kui tühi volume ühendatakse kataloogi, kus image'is on juba failid, kopeerib Docker vaikimisi selle kataloogi sisu koos omaniku ja õigustega volume'isse, nii et andmekataloog saab kohe õige UID. Tähtis on, et volume oleks tühi, nimi ei mängi rolli. Kopeerimise saab keelata valikuga `volume-nocopy`. Bind mount on hosti kataloog hosti õigustega. Puuduva kataloogi loob `-v` root'i omanikuna ja mitte-root teenus ei saa sinna kirjutada. Bind mount sobib konfiguratsioonifailile, volume andmebaasile.
 
-??? note "Tabel 3.6. Volume ja bind mount"
+??? note "Tabel 3.7. Volume ja bind mount"
 
     | | Volume | Bind mount |
     |---|---|---|
@@ -272,7 +299,7 @@ Olekut on kolme liiki. **Andmed** lähevad volume'isse või bind mount'i. **Volu
 
 Volume'i juures on peamine elutsükkel, mitte kataloogi asukoht. Iga rakenduse osa puhul küsi, mis peab juhtuma, kui konteiner asendatakse uuega.
 
-??? note "Tabel 3.7. Mis juhtub konteineri asendamisel"
+??? note "Tabel 3.8. Mis juhtub konteineri asendamisel"
 
     | Mis | Kust tuleb | Konteineri asendamisel |
     |---|---|---|
@@ -330,7 +357,7 @@ volumes:
   dbdata:
 ```
 
-??? note "Tabel 3.8. Compose'i faili võtmed"
+??? note "Tabel 3.9. Compose'i faili võtmed"
 
     | Võti | Mida õppija peab oskama |
     |---|---|
@@ -343,7 +370,7 @@ volumes:
     | `healthcheck`, `depends_on` | siduda sõltuvuste käivitamine valmisoleku kontrolliga |
     | `restart` | taaskäivitada teenus pärast viga või masina taaskäivitust |
 
-??? note "Tabel 3.9. Compose'i käsud"
+??? note "Tabel 3.10. Compose'i käsud"
 
     | Käsk | Mida teeb |
     |---|---|
@@ -489,7 +516,7 @@ Image, mis on ainult ehitaja masinas, ei jõua tootmisse. **Registry** on server
   <figcaption>Joonis 3.6. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
 </figure>
 
-**Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`ghcr.io`) on seotud GitHubi repositooriumide ja õigustega ning sobib, kui kood ja konveier on GitHubis. [Quay](https://quay.io/) on Red Hati registry, kus on paljud Kubernetese ja Red Hati projektide image'id. Pilvede registry'd (AWS ECR, Azure ACR, Google Artifact Registry) on mõeldud samas pilves töötavatele teenustele. Avalik registry sobib avatud tarkvarale ja väikesele meeskonnale. Piiranguks on tõmbepiirid, sõltuvus internetiühendusest ja see, et asutuse image'id on kellegi teise serveris.
+**Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. Hubis on igaühe image'id, ja päritolu järgi on neil märgised: **Docker Official Images** (`library/`, Dockeri hallatud kogumik, näiteks `nginx`, `mariadb`), **Verified Publisher** (tarkvaratootja enda image'id) ja **Docker-Sponsored Open Source** (avatud lähtekoodiga projektide image'id). Märgiseta image võib olla ükskõik kelle oma. [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`ghcr.io`) on seotud GitHubi repositooriumide ja õigustega ning sobib, kui kood ja konveier on GitHubis. [Quay](https://quay.io/) on Red Hati registry, kus on paljud Kubernetese ja Red Hati projektide image'id. Pilvede registry'd (AWS ECR, Azure ACR, Google Artifact Registry) on mõeldud samas pilves töötavatele teenustele. Avalik registry sobib avatud tarkvarale ja väikesele meeskonnale. Piiranguks on tõmbepiirid, sõltuvus internetiühendusest ja see, et asutuse image'id on kellegi teise serveris.
 
 **Oma registry** (on-prem) töötab asutuse võrgus. [Harbor](https://goharbor.io/) on CNCF-i projekt: projektid ja õigused, robotkontod konveierite jaoks, Trivy skannimine, säilitus- ja muutumatuse reeglid, replikatsioon teise registry'sse. Sonatype [Nexus Repository](https://www.sonatype.com/products/sonatype-nexus-repository) ja JFrog [Artifactory](https://jfrog.com/artifactory/) hoiavad image'ite kõrval ka Maveni, npm-i, PyPI ja apt-i pakette, mis on mugav, kui asutusel on juba üks artefaktide hoidla. GitLab ja Gitea pakuvad registry't koodihoidla juures. Kõige lihtsam on [`registry:2`](https://distribution.github.io/distribution/) ehk CNCF Distribution: üks konteiner ilma kasutajaliidese, õiguste ja skannimiseta. See on teiste registry'de alus, aga tootmisse sobib üksi harva.
 
@@ -499,7 +526,7 @@ Kursuse Harboris on kõik kolm rolli: projekt `dockerhub` on Docker Hubi vahemä
 
 Registry usaldus käib TLS-i kaudu. Asutuse oma CA-ga allkirjastatud sertifikaadi jaoks pannakse CA fail kausta `/etc/docker/certs.d/<registry>/ca.crt` (Podmanis `/etc/containers/certs.d/`). `insecure-registries` lülitab kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
 
-??? note "Tabel 3.10. Registry valik"
+??? note "Tabel 3.11. Registry valik"
 
     | Vajadus | Valik |
     |---|---|
@@ -524,7 +551,7 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 
 `FROM` kopeerib baasi kihid rakenduse image'isse ja hosti `apt upgrade` neid ei puuduta. Parandatud baas ei paranda ühtegi rakendust enne, kui need on uuesti ehitatud ja uuendatud. Sellest tuleneb image'i elutsükkel.
 
-??? note "Tabel 3.11. Baas-image'i elutsükkel"
+??? note "Tabel 3.12. Baas-image'i elutsükkel"
 
     | Etapp | Mis juhtub | Kes |
     |---|---|---|
@@ -539,6 +566,10 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 Baas on tarneahela esimene lüli, järgnevad ehituse ajal alla laaditud paketid, ehitus ise, registry ja deploy. 2024. aasta [xz tagauks](https://nvd.nist.gov/vuln/detail/CVE-2024-3094) jõudis laialt kasutatud paketti hooldaja kaudu. Märtsis 2026 jõudis ründaja Trivy enda GitHub Actioni tag'idesse ([Microsoft](https://www.microsoft.com/en-us/security/blog/2026/03/24/detecting-investigating-defending-against-trivy-supply-chain-compromise/)). Digest'i või commit'i SHA järgi viidanud konveiereid see ei puudutanud.
 
 Sisu teadmine algab **SBOM**-ist (software bill of materials, komponentide nimekiri standardvormingus, näiteks [CycloneDX](https://cyclonedx.org/)). [Trivy](https://trivy.dev/docs/latest/) loeb image'i kihtidest paketihalduri andmebaasi (`/var/lib/dpkg/status`, `/lib/apk/db/installed`) ja rakenduse teegid (JAR-ide `pom.properties`) ning võrdleb neid CVE-andmebaasiga, mis uueneb mitu korda päevas. Salvestatud SBOM-i uus skannimine vastab küsimusele „kas meil on see teek kuskil“ sekunditega, image'eid alla laadimata. Leiu korral uuendad baasi, uuendad teeki või aktsepteerid riski kirjaliku otsusena koos aegumiskuupäevaga (Trivy `.trivyignore` toetab `exp:` välja). Harbor teeb sama skannimise iga push'i ajal ja võib keelata image'i tõmbamise, kui leidudes on kriitiline haavatavus.
+
+Trivy ei ole ainus skanner. [Docker Scout](https://docs.docker.com/scout/) kasutab samuti image'i komponentide nimekirja ja haavatavuste andmebaasi, näitab leide Docker Desktopis ja Hubis ning soovitab, millisele baasile üle minna. Põhimõte on sama: SBOM, võrdlus CVE-andmebaasiga, otsus.
+
+Baas-image'ite hooldamiseks on kolm teed. Asutus ehitab ja hooldab oma baasid ise (SOE ülal). Asutus võtab aluseks välise pakkuja hooldatud baasid, näiteks [Docker Hardened Images](https://docs.docker.com/dhi/) või Red Hat UBI. Või ühendab mõlemad: võtab hooldatud baasi ja lisab sellele oma CA, ajavööndi ja kasutaja. Docker Hardened Images on alates detsembrist 2025 tasuta ja Apache 2.0 litsentsiga ([pressiteade](https://www.docker.com/press-release/docker-makes-hardened-images-free-open-and-transparent-for-everyone/)), tasulises tasemes on lisaks kiirem paikamise lubadus ja vastavusnõuded. Pakkuja väide „peaaegu null CVE-d“ ei ole garantii: rakenduse meeskond peab oma image'it ikka skannima, testima ja uuesti ehitama.
 
 Skanneri tulemus vajab tõlgendamist. Tüüpiline Debiani baasil image annab kümneid leide, millest enamik on teekides, mida rakendus ei kasuta, või haavatavustes, millele distributsioon pole veel paika avaldanud. Kui konveier nurjab iga `HIGH` leiu peale, õpivad meeskonnad ignoreerimisfaile pikendama. Toimivam reegel on nurjata ainult parandatavate (`--ignore-unfixed`) kriitiliste leidude peale ja jälgida ülejäänut raportina. Minimaalne baas (distroless, Alpine) vähendab leidude arvu, sest pakette on vähem, aga sellel pole shelli ega paketihaldurit, nii et tavalised veaotsingu võtted konteineri sees ei tööta.
 
@@ -570,7 +601,7 @@ Podman:  podman ──► crun ──► konteiner
 
 Podmani käsud on teadlikult Dockeri omadega samad (`podman pull`, `podman run -d --name veeb -p 8080:80 docker.io/library/nginx:alpine`, `podman ps`, `podman logs`). Podman ehitab image'eid, tõmbab ja lükkab neid registry'sse ning käivitab konteinereid. Vahe on taustal.
 
-??? note "Tabel 3.12. Docker ja Podman: juhtimine"
+??? note "Tabel 3.13. Docker ja Podman: juhtimine"
 
     | Aspekt | Docker | Podman |
     |---|---|---|
@@ -581,9 +612,9 @@ Podmani käsud on teadlikult Dockeri omadega samad (`podman pull`, `podman run -
     | rootless | toetatud: kasutajal töötab oma `dockerd` | toetatud ilma kasutaja daemonita |
     | teenus pärast taaskäivitust | daemon ja restart-poliitika | systemd (Quadlet) |
 
-**Rootless.** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.13 näitab, kelleks konteineri root hostis muutub.
+**Rootless.** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.14 näitab, kelleks konteineri root hostis muutub.
 
-??? note "Tabel 3.13. Konteineri UID 0 hostis"
+??? note "Tabel 3.14. Konteineri UID 0 hostis"
 
     | Käitusrežiim | Konteineri UID 0 hostis |
     |---|---|
@@ -611,6 +642,8 @@ Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on 
 
 **Ühilduvus.** `podman.socket` pakub Dockeri REST API-t, nii et `docker` CLI töötab `DOCKER_HOST`-iga, Swarm mitte. `podman kube generate` teeb konteinerist Kubernetese `Pod` manifesti.
 
+**AI-agendid konteineris.** Uuem kasutusviis on koodi kirjutavate AI-agentide eraldamine. Agent käivitab käske, paigaldab pakette ja ehitab image'eid, ja tal ei tohi olla ligipääsu hosti Dockerile ega failidele väljaspool projekti. [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab agendi microVM-is, millel on oma tuum ja oma Docker Engine. See on sama põhimõte nagu Kata Containers (osa 1): kui koodi ei usaldata, ei piisa namespace'idest. See on konteinerite kõrval uus haru, mitte tavalise rakenduste käitamise asendus.
+
 **Millal mida.** Podman koos Quadletiga sobib RHEL-i pere serverisse, kus töötab üks või paar teenust: haldus, logid ja audit käivad samade tööriistadega mis teistel teenustel. Docker jääb arendusmasinasse, CI agendile ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it.
 
 ??? question "Kontrolli ennast"
@@ -635,7 +668,7 @@ jq -r '[.components[].licenses[]?.license | (.id // .name)] | group_by(.) | map(
 
 Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 2023. aastal Terraformi ja Vaulti BSL-i litsentsile, mis piirab konkureerivat kasutust. Kogukond tegi neist avatud harud OpenTofu ja OpenBao, mida kasutame 4. kohtumisel. Sama küsimus kehtib iga tööriista kohta, mille ümber meeskond oma automaatika ehitab: kes projekti omab ja mis juhtub, kui litsents muutub.
 
-??? note "Tabel 3.14. Tööriistad ja litsentsid"
+??? note "Tabel 3.15. Tööriistad ja litsentsid"
 
     | Tööriist | Litsents | Tasu |
     |---|---|---|
@@ -647,6 +680,8 @@ Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 20
     | Docker Hub | teenus | tasuta piirangutega, tasulised tellimused |
     | Nexus, Artifactory | tasuta põhiversioon, kommertsversioon | täisfunktsioonid tasulised |
     | Trivy | Apache 2.0 | tasuta |
+    | Docker Hardened Images | Apache 2.0 (alates 12.2025) | tasuta; paikamise lubadus ja vastavusnõuded tasulised |
+    | Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
 
 ??? question "Kontrolli ennast"
 
