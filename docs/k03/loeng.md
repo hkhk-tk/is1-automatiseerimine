@@ -83,6 +83,8 @@ Kaks Java versiooni samas serveris tähendasid seni kahte käsitsi hallatud JDK-
 
 [Konteiner](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) on hosti tuumas töötav tavaline protsess, mida tuum isoleerib kahe mehhanismiga. [Namespace'id](https://man7.org/linux/man-pages/man7/namespaces.7.html) muudavad seda, mida protsess näeb: oma PID-puu, kus ta on PID 1, oma võrguliidesed, mount'id ja hostinimi. [cgroup'id](https://man7.org/linux/man-pages/man7/cgroups.7.html) piiravad mälu, CPU-aega ja protsesside arvu. systemd kasutab samu mehhanisme (`PrivateTmp=`, `MemoryMax=`).
 
+Järgmistes näidetes kasutame Linuxi serveris tavapärast rootful Docker Engine'it, mille daemon töötab root'ina. Rootless-käitust käsitleb osa 9.
+
 ### Esimene konteiner
 
 Käivitame Nginxi konteineri ja vaatame, kuidas kontrollida selle olekut, lugeda logisid ning konteiner peatada ja eemaldada.
@@ -130,7 +132,7 @@ Veaotsing algab samadest küsimustest:
 3. Seadistus: millise image'i, võrgu ja mount'idega see käivitati (`docker inspect`)?
 4. Sisemine kontroll: mida on vaja konteineri sees uurida (`docker exec`)?
 
-Järgmistes näidetes kasutame Linuxi serveris tavapärast rootful Docker Engine'it, mille daemon töötab root'ina. Rootless-käitust käsitleb osa 9.
+### Kes konteineri käivitab
 
 Hostis ja konteineris ei tööta kaks Nginx'i koopiat. Allolev näide vaatab sama protsessi kahe vaate kaudu: hostis on see tavaline protsess oma PID-iga, konteineris on sama protsess PID 1. Namespace muudab seda, mida protsess näeb, mitte ei loo talle eraldi masinat.
 
