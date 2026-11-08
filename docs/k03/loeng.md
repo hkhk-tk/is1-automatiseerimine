@@ -193,6 +193,17 @@ konteineris saab hosti faile muuta
 
 cgroup'id kaitsevad naabreid siis, kui piir on seatud, ja vaikimisi seda pole. Lekkiv Java protsess võtab kogu hosti mälu ja OOM killer valib ohvri kogu hosti seast, võib-olla andmebaasi. Piiriga tapab tuum protsessi ainult selles cgroup'is ja konteiner lõpeb koodiga 137 (128 + `SIGKILL`).
 
+Piire saab seada käivitusel (`-m 512m`, `--cpus 0.5`, `--pids-limit 100`) ja muuta töötaval konteineril käsuga `docker update`. Tegelikku kulu näitab `docker stats`: CPU, mälu koos piiriga ja protsesside arv konteineri kaupa.
+
+### Kes konteineri uuesti käivitab
+
+Konteineris pole systemd'i. Pärast protsessi lõppu või masina taaskäivitust otsustab **restart-poliitika**, kas daemon konteineri uuesti käivitab. `no` (vaikimisi) ei käivita kunagi. `on-failure:3` käivitab ainult veakoodiga lõpu korral ja kuni kolm korda, nii et katkine konteiner ei käivitu lõputult ning logi jääb uurimiseks alles. `always` käivitab alati, ka siis, kui administraator konteineri käsitsi peatas ja seejärel daemon taaskäivitus. `unless-stopped` jätab meelde käsitsi peatamise ja sobib seepärast teenustele. Kuna konteineris pole init-süsteemi, ei käsitle näiteks shelliskript PID 1-na signaale ega korja lõpetanud alamprotsesse. Võti `--init` paneb PID 1-ks väikese init-programmi, mis seda teeb.
+
+### Võrgud
+
+Vaikevõrgus `bridge` saab konteiner IP-aadressi hosti sisemises sillas `docker0` ja väljast jõuab selleni ainult avaldatud pordi (`-p 8080:80`) kaudu. Võrgus `host` kasutab konteiner otse hosti võrku: NAT-i pole, `-p` ei kehti ja konteiner võib sattuda pordikonflikti hosti teenustega. Seda küsivad tavaliselt monitooringuagendid. Võrgus `none` on ainult loopback ja see sobib tööle, mis ei tohi võrku puutuda. Kasutaja loodud võrgus (`docker network create`) lahendab Dockeri sisseehitatud DNS aadressil `127.0.0.11` teiste konteinerite nimed. Võrk `--internal` laseb konteineritel teineteist näha, aga väljapääsu ei anna.
+
+
 ??? info "Süvenemiseks: mida tuum veel piirab"
 
     Namespace'id ja cgroup'id ei ole ainsad piirangud. Docker käivitab protsessi kitsendatud capability'te komplektiga: root konteineris ei saa vaikimisi laadida tuumamooduleid, muuta süsteemiaega ega seadistada hosti võrguliideseid. Lisaks filtreerib [vaikimisi seccomp-profiil](https://docs.docker.com/engine/security/seccomp/) süsteemikutseid ja keelab kümneid neist, näiteks `mount`, `reboot` ja `kexec_load`. Lipp `--privileged` lülitab need kõik välja ja annab ligipääsu hosti seadmetele. Konteiner, mis vajab `--privileged`-i, on sisuliselt root-shell hostis ja vajab sama ülevaatust nagu uus `sudoers`-i rida.
@@ -300,6 +311,8 @@ Image'i nimel on kaks osa. **Tag** on liigutatav viide manifestile. `latest` on 
 
     Üks tag võib osutada mitmele image'ile korraga. Ametlike image'ite tag viitab tavaliselt image index'ile (Dockeri terminites manifest list), mis sisaldab eraldi manifesti `amd64`, `arm64` ja teiste arhitektuuride jaoks, ning klient valib hosti arhitektuuri järgi. Index'i digest ja platvormi manifesti digest on erinevad. Kui konveier kirjutab üles `amd64` manifesti digest'i ja ARM-iga host proovib sama digest'i tõmmata, saab ta vale arhitektuuri image'i ja protsess lõpeb veaga `exec format error`. Kui hostide arhitektuurid erinevad, viita index'i digest'ile.
 
+Kihte saab uurida ilma konteinerit käivitamata: `docker history <image>` näitab iga kihi suurust ja juhist, millest see tekkis. Töötava konteineri kirjutatavat kihti näitab `docker diff <konteiner>`: millised failid on lisatud (`A`), muudetud (`C`) või kustutatud (`D`).
+
 Muutumatus kehtib artefakti, mitte ehituse kohta. Sama Dockerfile kahe nädala pärast annab teise image'i, sest `FROM` tag ja `apt-get install` tõmbavad uuemad versioonid. Korratavus vajab fikseeritud baasi digest'i ja versioonidega paketinimekirja, värskus vajab vastupidist. Kumba eelistada, on poliitika küsimus.
 
 ??? question "Kontrolli ennast"
@@ -346,6 +359,12 @@ Volume'i juures on peamine elutsükkel, mitte kataloogi asukoht. Iga rakenduse o
 **Seadistus ja saladused** tulevad käivitamisel väljast: sama image töötab testis ja tootmises, vahe on keskkonnas ja mount'itud failides. Keskkonnamuutuja on saladuse jaoks halb koht. `docker inspect` näitab seda kõigile, kellel on socket'ile ligipääs, see on loetav failist `/proc/<pid>/environ` ja pärandub igale alamprotsessile. Fail ([Compose'is `secrets:`](https://docs.docker.com/compose/how-tos/use-secrets/), Kubernetesis Secret) jätab keskkonda ainult tee. **Logid** lähevad PID 1 stdout'i ja stderr'i. Vaikimisi [`json-file`](https://docs.docker.com/engine/logging/drivers/json-file/) draiver kirjutab need faili `/var/lib/docker/containers/<id>/<id>-json.log` ilma rotatsioonita, kuni `max-size` on seatud. Üks jutukas konteiner täidab partitsiooni ja peatab kõik teised.
 
 Ametlike andmebaasi-image'ite entrypoint algseadistab andmekataloogi ainult siis, kui see on tühi ([MariaDB image](https://hub.docker.com/_/mariadb)). Muudetud algne SQL või `MARIADB_PASSWORD` olemasolevat volume'it ei muuda. See on Compose'i stackides sage `Access denied` põhjus: image'i ja oleku elutsükkel on lahus ja skeemimuudatus vajab migratsiooni.
+
+Käsureal on mount'i jaoks kaks kuju. `-v /tee:/data` on lühivorm, mis loob puuduva hosti kausta vaikselt root'i omanikuna. `--mount type=bind,src=/tee,dst=/data` annab puuduva kausta korral vea, nii et vale tee jääb kohe silma. `--env-file` loeb keskkonnamuutujad failist sõna-sõnalt: jutumärgid jäävad väärtuse osaks. Compose'i `.env` tõlgendab jutumärke.
+
+Kui konteiner ei pea oma failisüsteemi kirjutama, saab selle muuta kirjutuskaitstuks (`read_only: true`). Kohad, kuhu teenus kirjutab ajutisi faile (näiteks Nginx'i vahemälu ja PID-fail), antakse `tmpfs`-ina, mis asub mälus ja kaob konteineri peatamisel. Nii ei saa konteinerisse sisse murdnud protsess veebijuurde faile lisada ega konfiguratsiooni muuta.
+
+Logide kasvu piiramiseks seatakse `json-file` draiverile `max-size` ja `max-file`, kas konteineri kaupa või kõigile uutele konteineritele daemoni konfiguratsioonifailis `daemon.json`. Praktikumis seab selle roll `docker`. Draiver `journald` saadab konteineri logi hosti journal'isse, kus see on teiste teenuste logide kõrval ja `journalctl`-iga filtreeritav.
 
 ??? info "Süvenemiseks: olek hostis"
 
@@ -464,6 +483,13 @@ Healthcheck ainult märgib oleku. Compose ei taaskäivita `unhealthy` konteineri
 
 Compose tunneb oma konteinerid ära projekti nime järgi, mis on vaikimisi `compose.yaml`-i kataloogi nimi ja satub iga konteineri sildile `com.docker.compose.project`. Kaks stacki samas hostis kataloogides `/srv/a/app` ja `/srv/b/app` saavad sama projekti nime ning teine `up` peab esimese teenuseid enda omadeks: loob need ümber või eemaldab `--remove-orphans`-iga. Tootmishostis antakse projekti nimi seepärast selgelt (`name:` faili alguses või `-p`).
 
+Mitmele teenusele ühised seaded (näiteks `restart` ja `logging`) kirjutatakse üks kord laiendusvälja alla (`x-common: &common`) ja igas teenuses viidatakse neile reaga `<<: *common`. See on YAML-i ankur: `&` annab plokile nime ja `*` viitab sellele.
+
+Tootmise erisused (ressursipiirid, saladused failidest, sisemine võrk) pannakse sageli eraldi faili, mis liidetakse põhifaili peale: `docker compose -f compose.yaml -f compose.prod.yaml up -d` või keskkonnamuutujaga `COMPOSE_FILE=compose.yaml:compose.prod.yaml`. Liitmisel lisatakse loendid ja mapping'ud kokku. Kui teise faili väärtus peab esimese asendama, märgitakse see sildiga `!override`. Nii jääb `compose.yaml` kõigile ühiseks ja tootmise erinevused on ühes failis.
+
+Teenuse nimi lahendub Dockeri DNS-is iga kord, kui keegi seda küsib. Nginx lahendab `proxy_pass` aadressi vaikimisi ainult käivitusel, nii et kui app01 luuakse uuesti uue IP-ga, vastab web01 kuni enda taaskäivituseni 502-ga. Praktikumis on Nginx'i seadistuses `resolver 127.0.0.11` ja aadress muutujas, nii et nimi lahendatakse uuesti.
+
+
 Mitu koopiat, katkestuseta uuendus ja mitu hosti on juba orkestraatori töö (7. kohtumine).
 
 ??? question "Kontrolli ennast"
@@ -518,6 +544,8 @@ Praktikumis paigaldab Ansible serverisse Dockeri, paneb paika daemoni seaded ja 
         wait: true
       register: stack
 ```
+
+Praktikumi roll `docker` teeb samad sammud, mis Dockeri paigaldusjuhend käsitsi: eemaldab Ubuntu paketid, lisab Dockeri GPG võtme ja ametliku repositooriumi (moodul `deb822_repository`), paigaldab paketid, kirjutab mallist `daemon.json`-i ja paneb paika kursuse CA. Handler taaskäivitab Dockeri ainult siis, kui `daemon.json` muutus.
 
 Moodul ei vaja `notify`-d ega handler'it: kui `compose.yaml` või `.env` muutus, näeb Compose seadistuse räsi muutust ja loob ainult puudutatud teenused uuesti. Teisel käivitusel on tulemus `changed=0`. `wait: true` ootab healthcheck'e nagu `docker compose up --wait`. Väärtus `pull: always` tõmbab igal käivitusel registry'st uue image'i: nii viib sama playbook uue versiooni hostidesse, kui tag'i järgi on registry's uus sisu.
 
@@ -688,6 +716,8 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 Baas on tarneahela esimene lüli, järgnevad ehituse ajal alla laaditud paketid, ehitus ise, registry ja deploy. 2024. aasta [xz tagauks](https://nvd.nist.gov/vuln/detail/CVE-2024-3094) jõudis laialt kasutatud paketti hooldaja kaudu. Märtsis 2026 jõudis ründaja Trivy enda GitHub Actioni tag'idesse ([Microsoft](https://www.microsoft.com/en-us/security/blog/2026/03/24/detecting-investigating-defending-against-trivy-supply-chain-compromise/)). Digest'i või commit'i SHA järgi viidanud konveiereid see ei puudutanud.
 
 **SBOM** (software bill of materials) kirjeldab image'ist tuvastatud tarkvarakomponente standardvormingus, näiteks [CycloneDX](https://cyclonedx.org/). [Trivy](https://trivy.dev/docs/latest/) loeb image'i kihtidest paketihalduri andmebaasi (`/var/lib/dpkg/status`, `/lib/apk/db/installed`) ja rakenduse teegid (JAR-ide `pom.properties`) ning võrdleb neid CVE-andmebaasiga, mis uueneb mitu korda päevas. Salvestatud SBOM-i uus skannimine vastab küsimusele „kas meil on see teek kuskil“ sekunditega, image'eid alla laadimata. Leiu korral uuendad baasi, uuendad teeki või aktsepteerid riski kirjaliku otsusena koos aegumiskuupäevaga (Trivy `.trivyignore` toetab `exp:` välja). Harbor teeb sama skannimise iga push'i ajal ja võib keelata image'i tõmbamise, kui leidudes on kriitiline haavatavus.
+
+Trivy skannib ka enne ehitust: `trivy fs .` otsib haavatavaid teeke lähtekoodi sõltuvustest (näiteks `pom.xml`) ja `trivy config .` leiab Dockerfile'ides ja Compose'i failides seadistusvigu, näiteks root'ina töötava image'i. Need sobivad konveieri algusesse, enne kui ehitusele kulub aega. Image'i skannimine (`trivy image`) näeb lisaks ka OS-pakette.
 
 Trivy ei ole ainus skanner. [Docker Scout](https://docs.docker.com/scout/) kasutab samuti image'i komponentide nimekirja ja haavatavuste andmebaasi, näitab leide Docker Desktopis ja Hubis ning soovitab, millisele baasile üle minna. Mõlemad koostavad image'i komponentide nimekirja, võrdlevad seda haavatavuste andmebaasiga, ja leiu põhjal otsustab inimene, mida teha.
 
