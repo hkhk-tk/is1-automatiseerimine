@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000">
+<style>text{font-family:Inter,Arial,sans-serif;fill:#212121;font-size:14px}.h{font-size:17px;font-weight:700}.b{font-weight:700}.s{font-size:12.5px;fill:#424242}.c{text-anchor:middle}.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px}</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker></defs>
+<rect width="1000" height="640" fill="#fff"/>
+<rect x="20" y="20" width="210" height="380" rx="12" fill="#e3f2fd" stroke="#1e88e5" stroke-width="2"/>
+<text class="h c" x="125" y="50">Klient</text>
+<text class="s c" x="125" y="70">sinu käsurida</text>
+<rect x="103" y="82" width="44" height="32" rx="5" fill="#263238"/><text x="110" y="103" style="fill:#80cbc4;font-family:monospace;font-size:15px;font-weight:700">&gt;_</text>
+<rect x="40" y="130" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="151">docker build</text>
+<rect x="40" y="172" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="193">docker pull</text>
+<rect x="40" y="214" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="235">docker run</text>
+<rect x="40" y="256" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="277">docker ps</text>
+<rect x="40" y="298" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="319">docker stop</text>
+<rect x="40" y="340" width="170" height="32" rx="7" fill="#fff" stroke="#90caf9" stroke-width="2"/>
+<text class="mono c" x="125" y="361">docker compose up</text>
+<rect x="280" y="20" width="450" height="380" rx="12" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2"/>
+<text class="h c" x="505" y="50">Dockeri host (server)</text>
+<rect x="300" y="64" width="410" height="70" rx="12" fill="#fff" stroke="#ab47bc" stroke-width="2"/>
+<polygon points="348.0,99.0 343.1,103.6 343.3,110.3 336.6,110.1 332.0,115.0 327.4,110.1 320.7,110.3 320.9,103.6 316.0,99.0 320.9,94.4 320.7,87.7 327.4,87.9 332.0,83.0 336.6,87.9 343.3,87.7 343.1,94.4" fill="#9575cd" stroke="#4527a0"/><circle cx="332" cy="99" r="5" fill="#fff"/>
+<text class="b" x="360" y="92">dockerd (daemon)</text>
+<text class="s" x="360" y="112">võtab käske vastu socket'i kaudu,</text>
+<text class="s" x="360" y="127">ehitab, tõmbab, käivitab ja jälgib</text>
+<rect x="300" y="150" width="200" height="88" rx="10" fill="#fff" stroke="#ce93d8" stroke-width="2"/>
+<path d="M318,190 l20,-8 l20,8 l-20,8 z" fill="#7e57c2" fill-opacity="0.45" stroke="#4527a0" stroke-width="1"/>
+<path d="M318,182 l20,-8 l20,8 l-20,8 z" fill="#7e57c2" fill-opacity="0.7" stroke="#4527a0" stroke-width="1"/>
+<path d="M318,174 l20,-8 l20,8 l-20,8 z" fill="#7e57c2" fill-opacity="0.95" stroke="#4527a0" stroke-width="1"/>
+<text class="b" x="366" y="178">Image'id</text>
+<text class="s" x="366" y="200">kirjutuskaitstud</text>
+<text class="s" x="366" y="216">pakend</text>
+<rect x="505" y="150" width="200" height="88" rx="10" fill="#fff" stroke="#ce93d8" stroke-width="2"/>
+<rect x="520" y="165" width="40" height="30" rx="3" fill="#29b6f6" stroke="#0277bd" stroke-width="1.5"/>
+<line x1="530" y1="168" x2="530" y2="192" stroke="#0277bd" stroke-width="1.2"/>
+<line x1="540" y1="168" x2="540" y2="192" stroke="#0277bd" stroke-width="1.2"/>
+<line x1="550" y1="168" x2="550" y2="192" stroke="#0277bd" stroke-width="1.2"/>
+<text class="b" x="571" y="178">Konteinerid</text>
+<text class="s" x="571" y="200">image'ist käivitatud</text>
+<text class="s" x="571" y="216">protsessid</text>
+<rect x="300" y="250" width="200" height="88" rx="10" fill="#fff" stroke="#ce93d8" stroke-width="2"/>
+<line x1="338" y1="274" x2="324" y2="296" stroke="#2e7d32" stroke-width="2"/><line x1="338" y1="274" x2="352" y2="296" stroke="#2e7d32" stroke-width="2"/><line x1="324" y1="296" x2="352" y2="296" stroke="#2e7d32" stroke-width="2"/>
+<circle cx="338" cy="274" r="6" fill="#66bb6a" stroke="#2e7d32"/>
+<circle cx="324" cy="296" r="6" fill="#66bb6a" stroke="#2e7d32"/>
+<circle cx="352" cy="296" r="6" fill="#66bb6a" stroke="#2e7d32"/>
+<text class="b" x="366" y="278">Võrgud</text>
+<text class="s" x="366" y="300">teenused leiavad</text>
+<text class="s" x="366" y="316">teineteist nimega</text>
+<rect x="505" y="250" width="200" height="88" rx="10" fill="#fff" stroke="#ce93d8" stroke-width="2"/>
+<path d="M520,268 v22 a18,6 0 0 0 36,0 v-22" fill="#ffb74d" stroke="#e65100" stroke-width="1.5"/><ellipse cx="538" cy="268" rx="18" ry="6" fill="#ffe0b2" stroke="#e65100" stroke-width="1.5"/>
+<text class="b" x="571" y="278">Volume'id</text>
+<text class="s" x="571" y="300">andmed jäävad alles</text>
+<text class="s" x="571" y="316">ka pärast rm-i</text>
+<line x1="505" y1="134" x2="505" y2="150" stroke="#8e24aa" stroke-width="2"/>
+<text class="s c" x="505" y="375">Linuxi tuum: namespace'id ja cgroup'id</text>
+<rect x="780" y="20" width="200" height="380" rx="12" fill="#fff3e0" stroke="#fb8c00" stroke-width="2"/>
+<text class="h c" x="880" y="50">Registry</text>
+<text class="s c" x="880" y="70">image'ite hoidla</text>
+<path d="M852,114 a14,14 0 0 1 4,-27 a18,18 0 0 1 32,-4 a13,13 0 0 1 20,13 a10,10 0 0 1 -2,18 z" fill="#ffcc80" stroke="#ef6c00" stroke-width="1.8"/>
+<rect x="800" y="140" width="160" height="56" rx="8" fill="#fff" stroke="#ffb74d" stroke-width="2"/>
+<text class="b c" x="880" y="163">Docker Hub</text>
+<text class="s c" x="880" y="182">avalik</text>
+<rect x="800" y="210" width="160" height="56" rx="8" fill="#fff" stroke="#ffb74d" stroke-width="2"/>
+<text class="b c" x="880" y="233">Harbor</text>
+<text class="s c" x="880" y="252">kursuse oma</text>
+<rect x="800" y="280" width="160" height="56" rx="8" fill="#fff" stroke="#ffb74d" stroke-width="2"/>
+<text class="b c" x="880" y="303">GHCR, ECR</text>
+<text class="s c" x="880" y="322">pilv ja GitHub</text>
+<line x1="232" y1="210" x2="278" y2="210" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+<text class="s c" x="255" y="200">API</text>
+<line x1="732" y1="210" x2="778" y2="210" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+<text class="s c" x="755" y="198">pull</text>
+<text class="s c" x="755" y="232">push</text>
+<rect x="20" y="420" width="960" height="200" rx="12" fill="#fafafa" stroke="#e53935" stroke-width="2" stroke-dasharray="7 5"/>
+<text class="h c" x="500" y="448">Mis juhtub käsu  docker run -d nginx  korral</text>
+<circle cx="60" cy="490" r="17" fill="#e53935"/><text class="b c" x="60" y="496" style="fill:#fff">1</text>
+<rect x="40" y="520" width="160" height="80" rx="10" fill="#fff" stroke="#ef9a9a" stroke-width="2"/>
+<text class="c" x="120" y="553">käsk läheb</text>
+<text class="s c" x="120" y="574">socket'iga dockerd-le</text>
+<line x1="203" y1="560" x2="228" y2="560" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)"/>
+<circle cx="250" cy="490" r="17" fill="#e53935"/><text class="b c" x="250" y="496" style="fill:#fff">2</text>
+<rect x="230" y="520" width="160" height="80" rx="10" fill="#fff" stroke="#ef9a9a" stroke-width="2"/>
+<text class="c" x="310" y="553">dockerd kontrollib,</text>
+<text class="s c" x="310" y="574">kas image on hostis</text>
+<line x1="393" y1="560" x2="418" y2="560" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)"/>
+<circle cx="440" cy="490" r="17" fill="#e53935"/><text class="b c" x="440" y="496" style="fill:#fff">3</text>
+<rect x="420" y="520" width="160" height="80" rx="10" fill="#fff" stroke="#ef9a9a" stroke-width="2"/>
+<text class="c" x="500" y="553">puuduva image'i</text>
+<text class="s c" x="500" y="574">tõmbab registry'st</text>
+<line x1="583" y1="560" x2="608" y2="560" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)"/>
+<circle cx="630" cy="490" r="17" fill="#e53935"/><text class="b c" x="630" y="496" style="fill:#fff">4</text>
+<rect x="610" y="520" width="160" height="80" rx="10" fill="#fff" stroke="#ef9a9a" stroke-width="2"/>
+<text class="c" x="690" y="553">loob konteineri:</text>
+<text class="s c" x="690" y="574">kiht, võrk, seadistus</text>
+<line x1="773" y1="560" x2="798" y2="560" stroke="#5e35b1" stroke-width="2.5" marker-end="url(#a)"/>
+<circle cx="820" cy="490" r="17" fill="#e53935"/><text class="b c" x="820" y="496" style="fill:#fff">5</text>
+<rect x="800" y="520" width="160" height="80" rx="10" fill="#fff" stroke="#ef9a9a" stroke-width="2"/>
+<text class="c" x="880" y="553">protsess töötab,</text>
+<text class="s c" x="880" y="574">käsurida lõpetab</text>
+</svg>
