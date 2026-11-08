@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 320" width="860"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700}.s{font-size:13px}.c{text-anchor:middle}.p{fill:#ede7f6;stroke:#5e35b1;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.f{fill:#fff;stroke:#7e57c2;stroke-width:1.5}.z{fill:#f5f5f5;stroke:#9e9e9e;stroke-width:1.2;stroke-dasharray:5 4}.l{stroke:#7e57c2;stroke-width:2;fill:none}.d{stroke:#ff9100;stroke-width:2;fill:none;stroke-dasharray:6 4}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/></marker></defs>
+<rect width="860" height="320" fill="#fff"/>
+<rect class="f" x="20" y="130" width="140" height="56" rx="8"/><text class="b c" x="90.0" y="155.0">Dockerfile</text><text class="c s" x="90.0" y="173.0">ehitusjuhis, osa 2</text>
+<line class="l" x1="160" y1="158" x2="210" y2="158" marker-end="url(#a)"/>
+<text class="c s" x="185" y="150">build</text>
+<rect class="o" x="210" y="130" width="140" height="56" rx="8"/><text class="b c" x="280.0" y="155.0">image</text><text class="c s" x="280.0" y="173.0">pakend, osa 2</text>
+<line class="l" x1="350" y1="158" x2="400" y2="158" marker-end="url(#a)"/>
+<text class="c s" x="375" y="150">push</text>
+<rect class="p" x="400" y="130" width="150" height="56" rx="8"/><text class="b c" x="475.0" y="155.0">registry</text><text class="c s" x="475.0" y="173.0">hoidla, osa 7</text>
+<line class="l" x1="550" y1="158" x2="620" y2="158" marker-end="url(#a)"/>
+<text class="c s" x="580" y="150">pull</text>
+<rect class="g" x="610" y="20" width="230" height="200" rx="10"/>
+<text class="c s" x="725" y="42">võrk: teenused leiavad</text>
+<text class="c s" x="725" y="58">teineteist nime järgi, osa 1, 4</text>
+<rect class="f" x="625" y="75" width="200" height="50" rx="8"/><text class="b c" x="725.0" y="105.0">konteiner app01</text>
+<rect class="f" x="625" y="150" width="200" height="50" rx="8"/><text class="b c" x="725.0" y="180.0">konteiner db01</text>
+<line class="l" x1="725" y1="200" x2="725" y2="250" marker-end="url(#a)"/>
+<rect class="z" x="625" y="250" width="200" height="56" rx="8"/><text class="b c" x="725.0" y="275.0">volume dbdata</text><text class="c s" x="725.0" y="293.0">andmed jäävad alles, osa 3</text>
+<rect class="o" x="400" y="30" width="150" height="56" rx="8"/><text class="b c" x="475.0" y="55.0">compose.yaml</text><text class="c s" x="475.0" y="73.0">kogu stack, osa 4</text>
+<line class="d" x1="550" y1="58" x2="610" y2="58" marker-end="url(#b)"/>
+<rect class="f" x="20" y="250" width="140" height="56" rx="8"/><text class="b c" x="90.0" y="275.0">docker CLI</text><text class="c s" x="90.0" y="293.0">käsud, osa 1</text>
+<line class="l" x1="160" y1="278" x2="210" y2="278" marker-end="url(#a)"/>
+<text class="c s" x="185" y="270">socket</text>
+<rect class="p" x="210" y="250" width="340" height="56" rx="8"/><text class="b c" x="380.0" y="275.0">dockerd</text><text class="c s" x="380.0" y="293.0">ehitab, tõmbab, käivitab ja jälgib</text>
+</svg>
