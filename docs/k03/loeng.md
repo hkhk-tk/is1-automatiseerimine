@@ -789,7 +789,7 @@ Compose'i käivitamiseks on kogus [`community.docker`](https://docs.ansible.com/
 
 ## 6. Deploy konteineritega
 
-Konteinerite puhul ei paigaldata uut versiooni olemasolevasse serverisse. Uus versioon on uus image ja uuendus tähendab vana konteineri asendamist uuega. Rakenduse uuendamisel tehakse järgmised toimingud:
+Konteineripõhise rakenduse uuendamisel ei muudeta tavaliselt vana konteineri sisu. Selle asemel luuakse uuest image'ist uus konteiner. Rakenduse uuendamisel tehakse järgmised toimingud:
 
 1. Määratakse kasutatav image (tag lahendatakse digest'iks) ja laaditakse see alla.
 2. Vana konteiner peatatakse ja sama seadistusega luuakse uus.
@@ -815,9 +815,13 @@ Konteinerite puhul ei paigaldata uut versiooni olemasolevasse serverisse. Uus ve
 
 Rakenduse versioon v1 töötab. Konveier muudab `.env`-failis image'i tag'i väärtuseks v2 ning käivitab `docker compose pull` ja `docker compose up -d`. Uus protsess käivitub, aga rakendus ei saa andmebaasiga ühendust ja `/health` vastab koodiga 503.
 
-**Küsimus:** mida vaatad ja mille põhjal otsustad tagasi minna? Kas v1 töötab pärast seda, kui v2 jõudis skeemi muuta?
+Uus konteiner võib töötada, kuigi rakendus ei ole veel kasutusvalmis. Pärast uuendust tuleb kontrollida rakenduse vastust ja logisid. Healthcheck näitab olekut, aga otsuse teeb konveier, playbook või administraator.
 
-Protsessi käivitumine ei tähenda valmisolekut: healthcheck näitab olekut, aga otsuse teeb konveier, playbook või administraator. Compose'i healthcheck üksi tagasi ei pööra. Tagasi saab minna ainult siis, kui v1 image on veel hostis või registry's. Tagasipööramisel ei pruugi piisata eelmise image'i käivitamisest. Kui v2 vajas uut keskkonnamuutujat või muudetud konfiguratsioonifaili, tuleb taastada ka v1-ga sobiv konfiguratsioon. Andmed jäävad volume'isse: kui v2 muutis skeemi nii, et v1 seda ei talu, ei aita ainult image'i vahetus. Siis on vaja skeemi tagasi muuta või andmed varukoopiast taastada, ja varukoopiast taastamine kaotab pärast koopia tegemist lisandunud andmed. Seepärast tehakse skeemimuudatused tagasiühilduvaks (allpool „Deploy suures skaalas“).
+Kui uus versioon ei tööta, saab käivitada eelmise image'i, kui see on veel hostis või registry's. Selleks peab alles olema ka eelmine seadistus. Andmed ei pöördu image'i vahetamisega varasemasse seisu.
+
+??? info "Süvenemiseks: miks tagasipööramine võib ebaõnnestuda"
+
+    Protsessi käivitumine ei tähenda valmisolekut: healthcheck näitab olekut, aga otsuse teeb konveier, playbook või administraator. Compose'i healthcheck üksi tagasi ei pööra. Tagasi saab minna ainult siis, kui v1 image on veel hostis või registry's. Tagasipööramisel ei pruugi piisata eelmise image'i käivitamisest. Kui v2 vajas uut keskkonnamuutujat või muudetud konfiguratsioonifaili, tuleb taastada ka v1-ga sobiv konfiguratsioon. Andmed jäävad volume'isse: kui v2 muutis skeemi nii, et v1 seda ei talu, ei aita ainult image'i vahetus. Siis on vaja skeemi tagasi muuta või andmed varukoopiast taastada, ja varukoopiast taastamine kaotab pärast koopia tegemist lisandunud andmed. Seepärast tehakse skeemimuudatused tagasiühilduvaks (allpool „Deploy suures skaalas“).
 
 <figure markdown="span">
   ![v1 töötab, v2 image tõmmatakse, konteiner asendatakse, valmisoleku kontroll; õnnestumisel jääb v2, ebaõnnestumisel pööratakse tagasi v1 image ja seadistus; volume dbdata jääb kogu aja samaks](assets/k03_uuendus_ajatelg.svg)
@@ -844,6 +848,7 @@ Viimane samm on koristus. Tagasipööramine on kiire ainult siis, kui eelmine im
 ??? question "Kontrolli ennast"
 
     1. Miks asendatakse uue versiooni korral konteiner, mitte ei muudeta vana konteineri sees faile?
+    2. Miks ei piisa uuenduse õnnestumise kinnitamiseks sellest, et `docker compose ps` näitab konteinerit töötavana?
 
 ## 7. Kus image'id hoitakse
 
@@ -851,7 +856,14 @@ Viimane samm on koristus. Tagasipööramine on kiire ainult siis, kui eelmine im
 
 Image, mis on ainult ehitaja masinas, ei jõua tootmisse. Kui control'is ehitatud app-image peab käivituma ka teises serveris, konveieris või klastris, peab see olema kohas, kust kõik need masinad selle kätte saavad. See koht on **registry**.
 
-Töö käib kahe käsuga. `docker push` laadib image'i registry'sse üles, `docker pull` laadib selle alla. `docker run` teeb `pull`-i ise, kui image'it masinas veel pole. Image'i nimes on registry aadress ees: `harbor.lab.hkhk.lan/maasikas/labori-seis-app:1.0` tähendab registry't `harbor.lab.hkhk.lan`, projekti `maasikas`, image'it `labori-seis-app` ja versiooni `1.0`. Kui registry aadressi pole (`nginx:alpine`), on see Docker Hub.
+Töö käib kahe käsuga. `docker push` laadib image'i registry'sse üles, `docker pull` laadib selle alla. `docker run` teeb `pull`-i ise, kui image'it masinas veel pole. Image'i nimes on registry aadress ees:
+
+```text
+harbor.lab.hkhk.lan / maasikas / labori-seis-app : 1.0
+└ registry            └ projekt  └ image           └ tag
+```
+
+Kui registry aadressi pole (`nginx:alpine`), on see Docker Hub.
 
 Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: kes tohib image'eid üles laadida, kes alla laadida ja mida enne kontrollitakse. Seepärast on registry valik ja seadistus administraatori töö samamoodi nagu apt-repositooriumide haldus.
 
@@ -875,7 +887,7 @@ Avalik registry sobib avatud tarkvarale ja väikesele meeskonnale. Piiranguks on
 
 **Pull-through cache** (vahemälu) on registry, mis küsib puuduva image'i ülesvoolu registry'st (näiteks Docker Hubist), annab selle kliendile ja hoiab alles. Järgmised tõmbed tulevad kohalikust võrgust. Docker Hubi [piir autentimata klientidele](https://docs.docker.com/docker-hub/usage/pulls/) on 100 tõmmet kuue tunni jooksul IPv4-aadressi kohta, tasuta kontoga 200. Klass või CI farm on ühe NAT-aadressi taga ja jõuab piirini tunniga. Vahemälu lahendab ka teise probleemi: kui Docker Hub on maas või image kustutatakse, on see asutuses alles.
 
-Kursuse Harbor on asutuse oma registry ja sellel on kolm rolli: projekt `dockerhub` on Docker Hubi vahemälu, igal õppijal on privaatne projekt, kuhu ta oma image'id üles laadib, ja iga üleslaadimine (push) skannitakse Trivy'ga. Docker ei oska Harbori vahemälu kasutada vaikimisi peeglina (`registry-mirrors` toetab ainult registry juurt), seepärast on Dockeri image'ite nimes eesliide `harbor.lab.hkhk.lan/dockerhub/library/`. Podman oskab: `registries.conf` lubab peegli projekti all ja image'i nimi jääb `docker.io/…`.
+Kursuse laboris kasutame Harborit. Sinna laaditakse oma rakenduse image, et teised masinad saaksid selle alla laadida. Harboris on igal õppijal oma projekt ja sinna laaditud image'eid kontrollitakse Trivy'ga.
 
 Joonis näitab, kuidas image'id kursuse laboris liiguvad.
 
@@ -942,17 +954,22 @@ Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi a
     1. Klassis on 20 õppijat ühe NAT-aadressi taga ja igaüks tõmbab kümme image'it. Mis juhtub ilma vahemäluta?
     2. Miks on `insecure-registries` halb lahendus ka siis, kui registry on sisevõrgus?
 
+    **Harbori vahemälu Dockeris ja Podmanis.** Kursuse Harboril on kolm rolli: projekt `dockerhub` on Docker Hubi vahemälu, igal õppijal on privaatne projekt, kuhu ta oma image'id üles laadib, ja iga üleslaadimine (push) skannitakse Trivy'ga. Docker ei oska Harbori vahemälu kasutada vaikimisi peeglina (`registry-mirrors` toetab ainult registry juurt), seepärast on Dockeri image'ite nimes eesliide `harbor.lab.hkhk.lan/dockerhub/library/`. Podman oskab: `registries.conf` lubab peegli projekti all ja image'i nimi jääb `docker.io/…`.
+
 ??? question "Kontrolli ennast"
 
-    1. Miks ei piisa sellest, et image on ainult ehitaja masinas?
+    1. Miks ei piisa sellest, et image on ainult arendaja arvutis?
+    2. Milline osa image'i aadressist näitab registry't ja milline versiooni?
 
 ## 8. Baas-image'id ja tarneahel
 
 ### Kust image'i sisu pärineb
 
-Iga image ehitatakse mõne teise image'i peale. `FROM tomcat:10.1-jre21-temurin` tähendab, et Labori seisu image'is on kõik Tomcati image'i failid: Ubuntu teegid, Java ja Tomcat. Kui mõnes neist leitakse turvaauk, on see ka rakenduse image'is seni, kuni image uuesti ehitatakse. Kõike, mis jõuab image'isse teistelt (baas-image, paketid, teegid, ehitustööriistad), nimetatakse **tarneahelaks**.
+Labori seisu Dockerfile algab Tomcati baas-image'ist. Seetõttu sisaldab rakenduse image lisaks WAR-failile ka Tomcati, Java käituskeskkonda ja baasi süsteemiteeke. Kõike, mis jõuab image'isse teistelt (baas-image, paketid, teegid, ehitustööriistad), nimetatakse **tarneahelaks**.
 
-Kursuse Harbor skannib iga üleslaaditud image'i Trivy'ga ja näitab selle komponentides teadaolevaid haavatavusi. Kui baasis leitakse turvaauk, ehitatakse image uue baasiga uuesti ja võetakse kasutusele nagu iga uus versioon (osa 6).
+Hosti uuendamine ei muuda juba ehitatud image'i sisu. Baasis oleva vea parandamiseks tuleb rakenduse image parandatud baasiga uuesti ehitada ja uus versioon kasutusele võtta.
+
+Kursuse Harbor skannib iga üleslaaditud image'i Trivy'ga ja näitab selle komponentides teadaolevaid haavatavusi.
 
 ??? info "Süvenemiseks: Log4Shell, baas-image'ite haldus, SBOM ja skannimine"
 
@@ -994,12 +1011,15 @@ Kursuse Harbor skannib iga üleslaaditud image'i Trivy'ga ja näitab selle kompo
 
     Skanneri tulemus vajab tõlgendamist. Debiani baasil image annab sageli kümneid leide, millest osa on teekides, mida rakendus ei kasuta, või haavatavustes, millele distributsioon pole veel paika avaldanud. Leiu juures vaata mõjutatud komponenti, paranduse olemasolu, rakenduse kasutusviisi ja ründe eeltingimusi. Kui konveier peatub iga `HIGH` leiu peale, hakkavad meeskonnad ignoreerimisfaile pikendama ja reegel kaotab mõtte. Üks võimalus on peatada konveier ainult parandatavate (`--ignore-unfixed`) kriitiliste leidude korral ja jälgida ülejäänut raportina. Sellise reegli korral ei peata ülejäänud leiud kasutuselevõttu. Nende jälgimiseks ja käsitlemiseks tuleb määrata vastutaja. Väiksem baas vähendab leidude arvu, sest pakette on vähem. Alpine sisaldab tavaliselt shelli (BusyBox) ja paketihaldurit `apk`. Distroless-tüüpi käitusimage'ites neid üldjuhul pole, nii et veaotsing tuleb kavandada teisiti, näiteks eraldi silumiskonteineriga.
 
+    **Süvenemisküsimus**
+
+    1. Täna näitas Trivy 0 CRITICAL leidu. Kas image on kuu aja pärast ka puhas, kui sa midagi ei muuda? Kuidas aitab SBOM?
+
 Loe juurde: [Standard Operating Environment ja IT-süsteemi elutsükkel](../teemad/soe-ja-elutsukkel.md), [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md)
 
 ??? question "Kontrolli ennast"
 
     1. Miks ei piisa hosti `apt upgrade`-ist, kui OpenSSL-is avaldatakse kriitiline haavatavus, ja mida teed konteinerite puhul selle asemel?
-    2. Täna näitas Trivy 0 CRITICAL leidu. Kas image on kuu aja pärast ka puhas, kui sa midagi ei muuda? Kuidas aitab SBOM?
 
 ## 9. Konteiner ilma daemonita: Podman ja systemd
 
@@ -1007,14 +1027,18 @@ AlmaLinuxi ja RHEL-i serveris on vaikimisi [Podman](https://docs.podman.io/), mi
 
 Podmani põhikäsud on teadlikult Dockeri omadega sarnased (`podman pull`, `podman run -d --name veeb -p 8080:80 docker.io/library/nginx:alpine`, `podman ps`, `podman logs`). Podman ehitab image'eid, laadib neid registry'st alla ja üles ning käivitab konteinereid. Erinevus on selles, kuidas konteinereid taustal juhitakse.
 
-<figure markdown="span">
-  ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
-  <figcaption>Joonis 3.22. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
-</figure>
+Kohaliku Dockeri kasutamisel saadab käsurida korraldused püsivalt töötavale Docker daemonile. Podmani kohalik kasutamine samasugust keskset daemonit ei vaja: käsk loob konteineri ise ja teenusena hoiab seda töös systemd.
 
-**Daemonita mudel.** Peamine arhitektuuri erinevus on juhtimismudel. Dockeris saadab CLI käsu kesksele daemonile, mis töötab kogu aeg. `podman run -d` loob konteineri ise `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja käsk ise lõpetab. Daemonita ei tähenda protsessideta: iga konteineri juures on `conmon`, nagu Dockeris `containerd-shim`. Puudub kõiki konteinereid juhtiv keskne teenus, mille taaskäivitus peataks kõik konteinerid. Selle hind: pärast masina taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
+Selle loengu põhimõisted ei sõltu tööriistast: image, konteiner, võrk ja püsisalvestus on samad ka Podmani kasutamisel.
 
 ??? info "Süvenemiseks: rootless, SELinux ja Podmani konteiner systemd teenusena"
+
+    <figure markdown="span">
+      ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
+      <figcaption>Joonis 3.22. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
+    </figure>
+
+    **Daemonita mudel.** Peamine arhitektuuri erinevus on juhtimismudel. Dockeris saadab CLI käsu kesksele daemonile, mis töötab kogu aeg. `podman run -d` loob konteineri ise `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja käsk ise lõpetab. Daemonita ei tähenda protsessideta: iga konteineri juures on `conmon`, nagu Dockeris `containerd-shim`. Puudub kõiki konteinereid juhtiv keskne teenus, mille taaskäivitus peataks kõik konteinerid. Selle hind: pärast masina taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
 
     *Tabel 3.16. Docker ja Podman: juhtimine*
 
@@ -1110,12 +1134,17 @@ Podmani põhikäsud on teadlikult Dockeri omadega sarnased (`podman pull`, `podm
 ??? question "Kontrolli ennast"
 
     1. Mis vahe on keskse daemoniga (Docker) ja daemonita (Podman) juhtimisel?
+    2. Kas Podmani kasutamiseks peab Labori seisu rakenduse koodi ümber kirjutama? Milline osa lahendusest muutub?
 
 ## 10. Litsentsid ja kulud
 
 Konteineritööriistade nimed on sarnased, aga litsentsid ja hinnad erinevad. Enne kui meeskond tööriista standardiks valib, tuleb teada, mis on tasuta ja mille eest makstakse.
 
-**Docker Engine** (Moby projekt, `dockerd`, CLI, Compose, BuildKit) on avatud lähtekoodiga [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) litsentsiga ja Linuxi serveris tasuta ka ettevõttele. **Podman**, **containerd**, **runc** ja **Harbor** on samuti Apache 2.0. **Docker Desktop** (Windowsi ja macOS-i rakendus, mis käivitab taustal Linuxi VM-i) on teine toode. Selle [tingimuste](https://docs.docker.com/subscription/desktop-license/) järgi on ärikasutus tasuta väikeettevõttele, kus on alla 250 töötaja ja aastakäive alla 10 miljoni USA dollari. Suuremate organisatsioonide professionaalne kasutus ja valitsusasutuste kasutus vajavad tasulist tellimust. Isiklikule, hariduslikule ja mitteärilisele avatud lähtekoodiga kasutusele kehtivad erandid. Arendaja sülearvutis on tasuta alternatiivid Podman Desktop, Rancher Desktop või Docker Engine WSL-is.
+Siin on kolm eristust:
+
+1. Docker Engine ja Docker Desktop ei ole sama toode. Docker Engine on Linuxi serveris tasuta, Docker Desktopi ärikasutus suures ettevõttes vajab tasulist tellimust.
+2. Tasuta tarkvara kasutamisel jäävad alles haldamise ja infrastruktuuri kulud.
+3. Image'i sees olevatel komponentidel on oma litsentsitingimused.
 
 ??? info "Süvenemiseks: Docker Hub, image'i sisu ja litsentsimuutused"
 
@@ -1150,10 +1179,39 @@ Konteineritööriistade nimed on sarnased, aga litsentsid ja hinnad erinevad. En
     | Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
     | Docker Sandboxes | Dockeri toode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
 
-??? question "Kontrolli ennast"
+    **Docker Engine'i ja Desktopi tingimused.** **Docker Engine** (Moby projekt, `dockerd`, CLI, Compose, BuildKit) on avatud lähtekoodiga [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) litsentsiga ja Linuxi serveris tasuta ka ettevõttele. **Podman**, **containerd**, **runc** ja **Harbor** on samuti Apache 2.0. **Docker Desktop** (Windowsi ja macOS-i rakendus, mis käivitab taustal Linuxi VM-i) on teine toode. Selle [tingimuste](https://docs.docker.com/subscription/desktop-license/) järgi on ärikasutus tasuta väikeettevõttele, kus on alla 250 töötaja ja aastakäive alla 10 miljoni USA dollari. Suuremate organisatsioonide professionaalne kasutus ja valitsusasutuste kasutus vajavad tasulist tellimust. Isiklikule, hariduslikule ja mitteärilisele avatud lähtekoodiga kasutusele kehtivad erandid. Arendaja sülearvutis on tasuta alternatiivid Podman Desktop, Rancher Desktop või Docker Engine WSL-is.
+
+    **Süvenemisküsimused**
 
     1. 400 töötajaga ettevõtte arendajad tahavad Windowsis konteinereid käivitada. Millised on valikud ja mis on nende hind?
     2. Kust leiad, millise litsentsiga paketid on sinu app-image'is?
+
+??? question "Kontrolli ennast"
+
+    1. Miks ei saa Docker Engine'i kasutustingimuste põhjal otsustada Docker Desktopi kasutustingimuste üle?
+
+## Kokkuvõte
+
+Dockerfile kirjeldab, kuidas rakenduse image ehitatakse. Image'i põhjal luuakse konteiner, milles rakendus töötab.
+
+Compose kirjeldab, kuidas rakenduse teenused koos käivitatakse: milliseid image'eid kasutatakse, kuidas teenused suhtlevad ning kust tulevad seadistus ja andmed.
+
+Konteineri võib asendada, aga püsivad andmed peavad säilima. Seetõttu hoitakse andmebaasi andmed väljaspool konteineri kirjutatavat kihti.
+
+Kui rakendus ei vasta, alusta konteinerite olekust ja logidest. Töötav konteiner ei tähenda veel, et rakendus on kasutusvalmis.
+
+Rakenduse uuendamisel kasutatakse uut image'it. Enne uuenduse õnnestunuks lugemist kontrollitakse teenust ja vajaduse korral võetakse kasutusele eelmine sobiv versioon.
+
+??? question "Kontrolli ennast: kogu loeng"
+
+    1. Mis vahe on image'il ja konteineril?
+    2. Miks `docker stop` ja `docker rm` ei ole sama? Mis jääb alles?
+    3. Kuhu pannakse andmebaasi andmed, et need säiliksid konteineri asendamisel?
+    4. Mida kirjeldab Dockerfile ja mida Compose'i fail?
+    5. Kuidas leiab rakendus andmebaasi, kui mõlemad on Compose'i stackis?
+    6. Kust alustad, kui rakendus ei vasta?
+    7. Mis vahe on tag'il ja digest'il? Kumba kasutad tootmise Compose'i failis?
+    8. Mis vahe on `.env` failil ja `environment` võtmel? Kumb jõuab konteinerisse?
 
 ## Lisamaterjal
 
@@ -1180,18 +1238,7 @@ Konteineritööriistade nimed on sarnased, aga litsentsid ja hinnad erinevad. En
 
     Kohalik Docker Sandboxes on tasuta ka äriliseks kasutuseks ega vaja Docker Desktopi. Pilves käitamine (Cloud Sandboxes) ja organisatsiooni keskne haldus (AI Governance) on tasulised ning AI-mudeli kasutamise kulud arvestatakse eraldi ([tingimused](https://www.docker.com/products/docker-sandboxes/), kontrollitud 8. novembril 2026).
 
-??? question "Kontrolli ennast: kogu loeng"
-
-    1. Mis vahe on image'il ja konteineril?
-    2. Miks `docker stop` ja `docker rm` ei ole sama? Mis jääb alles?
-    3. Kuhu pannakse andmebaasi andmed, et need säiliksid konteineri asendamisel?
-    4. Mida kirjeldab Dockerfile ja mida Compose'i fail?
-    5. Kuidas leiab rakendus andmebaasi, kui mõlemad on Compose'i stackis?
-    6. Kust alustad, kui rakendus ei vasta?
-    7. Mis vahe on tag'il ja digest'il? Kumba kasutad tootmise Compose'i failis?
-    8. Mis vahe on `.env` failil ja `environment` võtmel? Kumb jõuab konteinerisse?
-
-??? abstract "Kokkuvõte"
+??? note "Mõistete teatmik"
 
     | Mõiste | Lühidalt |
     |---|---|
