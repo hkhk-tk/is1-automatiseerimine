@@ -766,7 +766,7 @@ Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on 
 
 **Ühilduvus.** `podman.socket` pakub Dockeri REST API-t, nii et `docker` CLI töötab `DOCKER_HOST`-iga, Swarm mitte. `podman kube generate` teeb konteinerist Kubernetese `Pod` manifesti.
 
-**AI-agendid konteineris.** Uuem kasutusviis on koodi kirjutavate AI-agentide eraldamine. Agent käivitab käske, paigaldab pakette ja ehitab image'eid, ja tal ei tohi olla ligipääsu hosti Dockerile ega failidele väljaspool projekti. [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab agendi microVM-is, millel on oma tuum ja oma Docker Engine. See on sama põhimõte nagu Kata Containers (osa 1): kui koodi ei usaldata, ei piisa namespace'idest. See on konteinerite kõrval uus haru, mitte tavalise rakenduste käitamise asendus.
+**AI-agendid konteineris.** Uuem kasutusviis on koodi kirjutavate AI-agentide eraldamine. Agent käivitab käske, paigaldab pakette ja ehitab image'eid, ja tal ei tohi olla ligipääsu hosti Dockerile ega failidele väljaspool projekti. [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab agendi microVM-is, millel on oma tuum ja oma Docker Engine. See on sama põhimõte nagu Kata Containers (osa 1): kui koodi ei usaldata, ei piisa namespace'idest. See on konteinerite kõrval uus haru, mitte tavalise rakenduste käitamise asendus. Kohalik Docker Sandboxes on tasuta ka äriliseks kasutuseks ega vaja Docker Desktopi. Pilves käitamine (Cloud Sandboxes) ja organisatsiooni keskne haldus (AI Governance) on tasulised ning AI-mudeli kasutamise kulud arvestatakse eraldi ([tingimused](https://www.docker.com/products/docker-sandboxes/), kontrollitud 8. novembril 2026).
 
 **Millal mida.** Podman koos Quadletiga sobib RHEL-i pere serverisse, kus töötab üks või paar teenust: haldus, logid ja audit käivad samade tööriistadega mis teistel teenustel. Docker sobib näiteks arendaja masinasse, CI agendile ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it.
 
@@ -808,6 +808,7 @@ Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 20
     | ![](assets/logo/trivy.svg){ .logo }Trivy | Apache 2.0 | tasuta |
     | ![](assets/logo/docker.svg){ .logo }Docker Hardened Images | Apache 2.0 (alates 12.2025) | tasuta; paikamise lubadus ja vastavusnõuded tasulised |
     | ![](assets/logo/docker.svg){ .logo }Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
+    | ![](assets/logo/docker.svg){ .logo }Docker Sandboxes | kommertstoode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
 
 ??? question "Kontrolli ennast"
 
