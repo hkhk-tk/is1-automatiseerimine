@@ -70,7 +70,8 @@ Loengu läbiv töövoog on: rakenduse lähtekood → image'i ehitamine → regis
     - [Docker Scout](https://docs.docker.com/scout/) analüüsib image'i komponente ja CVE-sid ning soovitab parandusi (osa 8).
     - [Docker Hardened Images](https://docs.docker.com/dhi/) on minimaalsed hooldatud baas-image'id koos SBOM-i ja päritolutõenditega (osa 8).
     - [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) käivitab AI-agendi microVM-is, millel on oma tuum ja oma Docker Engine (osa 9).
-    - AI Governance ja MCP Gateway piiravad tsentraalselt agentide võrgu- ja faililigipääsu ning tööriistakutseid ja koguvad auditilogi.
+    - AI Governance võimaldab organisatsioonil kehtestada AI-agentidele keskseid käitus- ja ligipääsureegleid ning koguda poliitikaotsuste auditilogi.
+    - MCP Enterprise Gateway vahendab agentide ligipääsu heakskiidetud MCP-tööriistadele ja haldab nende kasutamiseks vajalikke autentimisandmeid.
 
 ## 1. Konteiner on isoleeritud protsess
 
