@@ -1028,7 +1028,7 @@ Tabel 3.1 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitu
     | Aste | Mida teeb |
     |---|---|
     | `FROM ${HUB}/maven:3-eclipse-temurin-21 AS build` | töökataloog `/src`; **ainult** `pom.xml`; `mvn -B -q dependency:go-offline`; siis `src/`; `mvn -B -q package -DskipTests` |
-    | `FROM ${HUB}/tomcat:10.1-jre21-temurin` | ühes `RUN`-is: `apt-get update`, `curl` (`--no-install-recommends`), apt nimekirjade ja `webapps/*` kustutamine; `COPY --from=build` WAR → `webapps/ROOT.war`; `EXPOSE 8080`; `HEALTHCHECK` `curl -fsS http://localhost:8080/health` (`--start-period=60s`) |
+    | `FROM ${HUB}/tomcat:10.1-jre21-temurin` | `RUN`-i pole vaja (`curl` on baasis olemas ja `webapps` on tühi); `COPY --from=build` WAR → `webapps/ROOT.war`; `EXPOSE 8080`; `HEALTHCHECK` `curl -fsS http://localhost:8080/health` (`--start-period=60s`) |
     | lõpp | `ARG GIT_SHA=unknown`, `ENV GIT_SHA=${GIT_SHA}`, `LABEL org.opencontainers.image.revision="${GIT_SHA}"`, `CMD ["catalina.sh", "run"]` |
 
 Kirjuta `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/multi-stage/) tabeli järgi. Kirjuta ise, ära kopeeri naiivset.
@@ -1045,9 +1045,6 @@ Kirjuta `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/m
     RUN mvn -B -q package -DskipTests
 
     FROM ${HUB}/tomcat:10.1-jre21-temurin
-    RUN apt-get update \
-     && apt-get install -y --no-install-recommends curl \
-     && rm -rf /var/lib/apt/lists/* /usr/local/tomcat/webapps/*
     COPY --from=build /src/target/labori-seis.war /usr/local/tomcat/webapps/ROOT.war
     EXPOSE 8080
     HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=3 \
@@ -1058,7 +1055,7 @@ Kirjuta `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/m
     CMD ["catalina.sh", "run"]
     ```
 
-    `pom.xml` eraldi ja enne `src`-i: sõltuvuste kiht muutub ainult siis, kui `pom.xml` muutub. `apt-get update`, paigaldus ja nimekirjade kustutamine on ühes `RUN`-is, sest iga `RUN` on eraldi kiht ja hilisem kustutamine kihti ei vähenda.
+    `pom.xml` eraldi ja enne `src`-i: sõltuvuste kiht muutub ainult siis, kui `pom.xml` muutub. Käitusaste ei vaja `RUN`-i: ametliku Tomcati image'i kaust `webapps` on tühi (näiterakendused on kaustas `webapps.dist`) ja healthcheck'i `curl` tuleb baasist (eclipse-temurin).
 
 ```bash
 docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t labseis-app:multi ..
@@ -1069,7 +1066,7 @@ docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 
 ??? success "Oodatav tulemus"
 
-    `multi` on mitusada MB väiksem kui `naive`. `history` ülemistes ridades on WAR (umbes 50–60 MB) ja curl'i kiht, Maveni kihte pole, ja label'is on sinu SHA. Suuruse vahe on JDK, Maven ja `~/.m2`. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
+    `multi` on mitusada MB väiksem kui `naive`. `history` ülemistes ridades on WAR (umbes 50–60 MB), Maveni kihte pole, ja label'is on sinu SHA. Suuruse vahe on JDK, Maven ja `~/.m2`. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
 **TOEND.md:** mõlema image'i suurus.
 
@@ -1092,22 +1089,22 @@ docker run --rm --entrypoint sh labseis-app:multi -c 'ls /src 2>&1; find / -name
 
 ### 3.4 Cache töötab ja läheb katki
 
-Cache teeb korduva ehituse sekunditeks, aga ainult siis, kui juhiste järjekord seda lubab. Esimene muutunud kiht tühistab kõik järgnevad. CI-s tähendab purunenud cache iga commit'iga minuteid lisaaega ja uut apt-kihti, mis tuleb igale masinale uuesti tõmmata.
+Cache teeb korduva ehituse sekunditeks, aga ainult siis, kui juhiste järjekord seda lubab. Esimene muutunud kiht tühistab kõik järgnevad. CI-s tähendab purunenud cache iga commit'iga minuteid lisaaega ja uusi kihte, mis tuleb igale masinale uuesti tõmmata.
 
 Muuda üht rida mõnes Java-failis (näiteks kommentaar failis `../src/main/java/…/VersionController.java`) ja ehita uuesti sama käsuga nagu 3.2-s. Seejärel tõsta ajutiselt `ARG GIT_SHA` ja `ENV GIT_SHA` käitusastme algusesse (kohe `FROM …tomcat…` järele) ja ehita kaks korda erineva väärtusega.
 
-**Küsimus enne käsku:** kas `apt-get` kiht ehitatakse teisel korral uuesti?
+**Küsimus enne käsku:** kas WAR-i kopeerimise kiht (`COPY --from=build`) ehitatakse teisel korral uuesti?
 
 ```bash
-docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=aaa -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|apt-get' | head -5
-docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=bbb -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|apt-get' | head -5
+docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=aaa -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|COPY --from' | head -5
+docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=bbb -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|COPY --from' | head -5
 ```
 
 Pane read tagasi lõppu ja võta Java-faili muudatus tagasi: `git restore ../src`.
 
 ??? success "Oodatav tulemus"
 
-    Esimesel katsel oli `dependency:go-offline` samm `CACHED` ja uuesti käivitusid ainult `COPY src` ja järgmised: `pom.xml`-i eraldi kopeerimine töötab. Teisel katsel töötas `apt-get` iga SHA-ga uuesti, kuigi midagi ei muutunud: ka üks `ARG` vales kohas ehitab kõik järgnevad kihid uuesti, sest muutuja väärtus on kihi sisendi osa. Mida sagedamini miski muutub, seda lõpus see peab olema.
+    Esimesel katsel oli `dependency:go-offline` samm `CACHED` ja uuesti käivitusid ainult `COPY src` ja järgmised: `pom.xml`-i eraldi kopeerimine töötab. Teisel katsel tehti `COPY --from=build` iga SHA-ga uuesti, kuigi WAR ei muutunud: ka üks `ARG` vales kohas ehitab kõik järgnevad kihid uuesti, sest muutuja väärtus on kihi sisendi osa. Mida sagedamini miski muutub, seda lõpus see peab olema.
 
 ### 3.5 Kihid kettal: history, GraphDriver ja kirjutatav kiht
 
@@ -1176,16 +1173,13 @@ Nõuded:
 - kasutajale kuuluvad ainult `logs`, `temp`, `work`, `webapps` ja `conf/Catalina` kaust `/usr/local/tomcat` all, ülejäänu jääb root'ile;
 - WAR kopeeritakse `COPY --from=build --chown=10001:10001`;
 - `USER 10001` numbrina, enne `CMD`-i;
-- kasutaja loomine on samas `RUN`-is mis apt, et kihte juurde ei tuleks.
+- kasutaja loomine, kausta loomine ja omanike muutmine on ühes `RUN`-is, et kihte juurde ei tuleks.
 
 ??? example "Lahendus: käitusaste"
 
     ```dockerfile
     FROM ${HUB}/tomcat:10.1-jre21-temurin
-    RUN apt-get update \
-     && apt-get install -y --no-install-recommends curl \
-     && rm -rf /var/lib/apt/lists/* /usr/local/tomcat/webapps/* \
-     && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin labseis \
+    RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin labseis \
      && mkdir -p /usr/local/tomcat/conf/Catalina \
      && chown -R 10001:10001 /usr/local/tomcat/logs /usr/local/tomcat/temp /usr/local/tomcat/work \
           /usr/local/tomcat/webapps /usr/local/tomcat/conf/Catalina
@@ -3280,7 +3274,7 @@ Iga osa tabelit loe ülevalt alla: esimene veerg on see, mida näed, teine käsk
     | Sümptom | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
     | `COPY . .` ei too lähtekoodi | `cat .dockerignore` | allowlist töötab: naiivne variant vajab `!pom.xml` ja `!src` | `COPY . .` kopeerib konteksti, ja kontekst on pärast `.dockerignore`-i peaaegu tühi |
-    | iga build käivitab `apt-get` uuesti | `grep -n GIT_SHA k03-docker/app/Dockerfile` | `ARG/ENV GIT_SHA` on käitusastme alguses, mitte lõpus | muutuja väärtus on järgmiste kihtide sisend; uus väärtus tühistab cache'i kõigile järgnevatele |
+    | iga build ehitab käitusastme kihid uuesti | `grep -n GIT_SHA k03-docker/app/Dockerfile` | `ARG/ENV GIT_SHA` on käitusastme alguses, mitte lõpus | muutuja väärtus on järgmiste kihtide sisend; uus väärtus tühistab cache'i kõigile järgnevatele |
     | Maven laeb iga build'iga kõik sõltuvused | `grep -n COPY k03-docker/app/Dockerfile` | `src` kopeeritakse enne `dependency:go-offline`-i | koodi muutus muudab `COPY src` kihi ja kõik järgnevad, sh sõltuvuste allalaadimine, käivituvad uuesti |
     | `docker stop` kestab 10 s | `docker exec <k> cat /proc/1/cmdline \| tr '\0' ' '` | CMD on shell-vormis, PID 1 on `sh` | `sh -c` ei edasta SIGTERM-i lapsele; Docker ootab 10 s ja saadab SIGKILL-i |
     | app konteiner `unhealthy` ilma andmebaasita | `docker exec <k> curl -s localhost:8080/health/live` | ootuspärane: `/health` annab 503, kui db pole | `/health` kontrollib sõltuvusi, `/health/live` ainult protsessi |
