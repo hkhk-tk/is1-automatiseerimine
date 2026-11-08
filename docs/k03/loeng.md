@@ -38,7 +38,7 @@ Joonis seob käsurea, Docker Engine'i ja registry üheks töövooks.
   <figcaption>Joonis 3.1. Docker tervikuna: klient, host ja registry (Talvik, 2026).</figcaption>
 </figure>
 
-??? note "Loengu mõistekaart"
+??? note "Loengu mõistekaart ja Dockeri tööriistad"
 
     Image, konteiner ja registry on osa suuremast tervikust. Dockerfile kirjeldab, kuidas image ehitatakse, ja konteinerid vajavad lisaks võrku, et teenused teineteist leiaksid, ning volume'it, et andmed säiliksid. Compose kirjeldab kogu stacki ühes failis. Konteineri käivitamise korralduse saadab käsurida Docker Engine'ile (`dockerd`).
 
@@ -47,7 +47,7 @@ Joonis seob käsurea, Docker Engine'i ja registry üheks töövooks.
       <figcaption>Joonis 3.2. Dockeri põhimõisted ja loengu osad, kus neid selgitatakse (Talvik, 2026).</figcaption>
     </figure>
 
-??? note "Tabel 3.1. Dockeri ökosüsteem ja tooted"
+    *Tabel 3.1. Dockeri ökosüsteem ja tooted*
 
     Sõna „Docker“ kasutatakse mitme eri asja kohta. Selles loengus töötame peamiselt Docker Engine'i, käsurea ja Compose'iga, aga need kuuluvad laiemasse tööriistade ja teenuste ökosüsteemi.
 
@@ -141,7 +141,9 @@ Näite kaks viimast käsku on erineva tagajärjega. `docker stop` ja `docker sta
   <figcaption>Joonis 3.6. Konteineri elutsükkel: stop jätab kirjutatava kihi alles, rm kustutab selle (Talvik, 2026).</figcaption>
 </figure>
 
-??? note "Tabel 3.2. Käsu `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine` osad"
+??? note "Käskude teatmik: docker run ja elutsükkel"
+
+    *Tabel 3.2. Käsu `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine` osad*
 
     | Osa | Tähendus |
     |---|---|
@@ -151,7 +153,7 @@ Näite kaks viimast käsku on erineva tagajärjega. `docker stop` ja `docker sta
     | `-p 8080:80` | hosti port 8080 suunatakse konteineri pordile 80; ilma selleta pole konteiner väljast nähtav |
     | `nginx:1.30-alpine` | image'i nimi ja tag; kui image'it hostis pole, tõmmatakse see registry'st |
 
-??? note "Tabel 3.3. Elutsükli ja uurimise käsud"
+    *Tabel 3.3. Elutsükli ja uurimise käsud*
 
     | Käsk | Vastab küsimusele |
     |---|---|
@@ -209,7 +211,9 @@ Konteinerit ei käivita käsureaprogramm ise. Käsk `docker run -d nginx:alpine`
   <figcaption>Joonis 3.8. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
 </figure>
 
-??? note "Tabel 3.4. Docker Engine'i osad"
+??? info "Süvenemiseks: Docker Engine'i osad ja daemoni taaskäivitus"
+
+    *Tabel 3.4. Docker Engine'i osad*
 
     | Osa | Ülesanne |
     |---|---|
@@ -218,8 +222,6 @@ Konteinerit ei käivita käsureaprogramm ise. Käsk `docker run -d nginx:alpine`
     | `containerd` | haldab konteinerite madalama taseme elutsüklit |
     | `containerd-shim` | jääb käivitatud konteineri juurde vahendajaks ja jälgijaks |
     | `runc` | loob namespace'id ja cgroup'i ning käivitab protsessi |
-
-??? info "Süvenemiseks: käivitusahel ja daemoni taaskäivitus"
 
     `dockerd` annab töö edasi `containerd`-le, see käivitab iga konteineri jaoks `containerd-shim`-i ja shim kutsub välja `runc`-i. `runc` loob namespace'id ja [cgroup'i](https://docs.docker.com/engine/containers/resource_constraints/), käivitab protsessi ja lõpetab ise töö. Konteineri protsessi vanem on shim, mitte `dockerd`. Kas daemoni taaskäivitus konteinerid peatab, sõltub seadest [`live-restore`](https://docs.docker.com/engine/daemon/live-restore/), mis on vaikimisi välja lülitatud. Tavaline `apt upgrade` paketiga `docker-ce` taaskäivitab seega kõik hosti konteinerid. Paikamise plaanis on see sama oluline kui tuumauuendus.
 
@@ -439,7 +441,9 @@ Image'ile saab viidata kahel viisil. **Tag** on liigutatav viide manifestile. `l
 
 Muutumatus kehtib artefakti, mitte ehituse kohta. Sama Dockerfile kahe nädala pärast annab teise image'i, sest `FROM` tag ja `apt-get install` tõmbavad uuemad versioonid. Korratavus vajab fikseeritud baasi digest'i ja versioonidega paketinimekirja, värskus vajab vastupidist. Kumba eelistada, on poliitika küsimus.
 
-??? note "Tabel 3.7. Dockerfile'i juhised"
+??? note "Teatmik: Dockerfile'i juhised, CMD ja ENTRYPOINT"
+
+    *Tabel 3.7. Dockerfile'i juhised*
 
     | Juhis | Mida teeb | Kiht? |
     |---|---|---|
@@ -453,7 +457,7 @@ Muutumatus kehtib artefakti, mitte ehituse kohta. Sama Dockerfile kahe nädala p
     | `EXPOSE` | dokumenteerib pordi; hostis porti ei avalda, selleks on `-p` | metaandmed |
     | `CMD` | vaikimisi käivituskäsk | metaandmed |
 
-??? info "Süvenemiseks: CMD ja ENTRYPOINT"
+    **CMD ja ENTRYPOINT**
 
     `CMD` määrab vaikimisi käivituskäsu. Kui on määratud ka `ENTRYPOINT`, määrab see käivitatava programmi ja `CMD` on selle vaikeargumendid. `docker run image arg` asendab `CMD`-i väärtuse, `--entrypoint` asendab programmi. Tööriista-image'ites (Trivy, curl) on programm `ENTRYPOINT`-is, nii et `docker run aquasec/trivy image nginx` annab argumendid otse Trivy'le. Mõlemad kirjutatakse exec-vormis (`["catalina.sh", "run"]`): shell-vormis (`CMD catalina.sh run`) on PID 1 shell ja `SIGTERM` rakenduseni ei jõua.
 
@@ -608,7 +612,9 @@ Fail `.env` projekti kaustas ei lähe konteinerisse: sealt võtab Compose väär
 
 Näite lihtsustamiseks antakse paroolid siin keskkonnamuutujatena. Failipõhist edastamist (`secrets:`) kirjeldab osa 3.
 
-??? note "Tabel 3.11. `docker run` võtmed Compose'is"
+??? note "Teatmik: docker run ja Compose, Compose'i käsud"
+
+    *Tabel 3.11. `docker run` võtmed Compose'is*
 
     | `docker run` | `compose.yaml` |
     |---|---|
@@ -620,7 +626,7 @@ Näite lihtsustamiseks antakse paroolid siin keskkonnamuutujatena. Failipõhist 
     | `--network` | `networks:` |
     | `--restart` | `restart:` |
 
-??? note "Tabel 3.12. Compose'i käsud"
+    *Tabel 3.12. Compose'i käsud*
 
     | Käsk | Mida teeb |
     |---|---|
@@ -679,14 +685,12 @@ Töötava stacki uurimine algab olekust ja logidest, seejärel kontrollitakse se
 3. `docker compose config`: mida Compose failist ja `.env`-ist tegelikult luges?
 4. `docker compose exec <teenus> sh`: mida on vaja konteineri sees uurida?
 
+Loe juurde: [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md)
+
 ??? question "Kontrolli ennast"
 
     1. `compose.yaml` ei muutunud, aga `docker compose up -d` lõi app01 uuesti. Milliseid sisendeid ja varasemaid tegevusi kontrollid?
     2. db01 on `healthy`, aga app01 ei käivitunud pärast masina taaskäivitust õiges järjekorras. Miks `depends_on` siin ei aidanud?
-
-??? info "Loe juurde"
-
-    [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md)
 
 ## 5. Ansible ja Docker koos
 
@@ -824,23 +828,21 @@ Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: 
 
     Registry pakub OCI distribution API-t (`/v2/`). Image on seal kihid ja manifest, mis on salvestatud räsi järgi failidena (blob'id). Tag on muudetav viide manifestile. `docker push` küsib iga kihi kohta, kas see on juba olemas, ja saadab ainult puuduvad. Seepärast on teine sama baasiga image kiire üles laadida.
 
-??? info "Süvenemiseks: avalik registry, oma registry ja vahemälu"
+### Pakkuja hallatav registry
 
-    **Pakkuja hallatav registry**
+**Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. Hubis on igaühe image'id, ja päritolu järgi on neil märgised: **Docker Official Images** (`library/`, Dockeri hallatud kogumik, näiteks `nginx`, `mariadb`), **Verified Publisher** (tarkvaratootja enda image'id) ja **Docker-Sponsored Open Source** (avatud lähtekoodiga projektide image'id). Märgiseta image võib olla ükskõik kelle oma.
 
-    **Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. Hubis on igaühe image'id, ja päritolu järgi on neil märgised: **Docker Official Images** (`library/`, Dockeri hallatud kogumik, näiteks `nginx`, `mariadb`), **Verified Publisher** (tarkvaratootja enda image'id) ja **Docker-Sponsored Open Source** (avatud lähtekoodiga projektide image'id). Märgiseta image võib olla ükskõik kelle oma.
+Teised avalikud registry'd on seotud konkreetse platvormiga. [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`ghcr.io`) on seotud GitHubi repositooriumide ja õigustega ning sobib, kui kood ja konveier on GitHubis. [Quay](https://quay.io/) on Red Hati registry, kus on paljud Kubernetese ja Red Hati projektide image'id. Pilvede registry'd (AWS ECR, Azure ACR, Google Artifact Registry) on seotud selle pilve õiguste ja teenustega, aga neid saab kasutada ka väljaspool pilve.
 
-    Teised avalikud registry'd on seotud konkreetse platvormiga. [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`ghcr.io`) on seotud GitHubi repositooriumide ja õigustega ning sobib, kui kood ja konveier on GitHubis. [Quay](https://quay.io/) on Red Hati registry, kus on paljud Kubernetese ja Red Hati projektide image'id. Pilvede registry'd (AWS ECR, Azure ACR, Google Artifact Registry) on seotud selle pilve õiguste ja teenustega, aga neid saab kasutada ka väljaspool pilve.
+Avalik registry sobib avatud tarkvarale ja väikesele meeskonnale. Piiranguks on tõmbepiirid, sõltuvus internetiühendusest ja see, et asutuse image'id on kellegi teise serveris.
 
-    Avalik registry sobib avatud tarkvarale ja väikesele meeskonnale. Piiranguks on tõmbepiirid, sõltuvus internetiühendusest ja see, et asutuse image'id on kellegi teise serveris.
+### Asutuse oma registry
 
-    **Asutuse oma registry**
+**Oma registry** (on-prem) töötab asutuse võrgus. [Harbor](https://goharbor.io/) on CNCF-i projekt: projektid ja õigused, robotkontod konveierite jaoks, Trivy skannimine, säilitus- ja muutumatuse reeglid, replikatsioon teise registry'sse. Sonatype [Nexus Repository](https://www.sonatype.com/products/sonatype-nexus-repository) ja JFrog [Artifactory](https://jfrog.com/artifactory/) hoiavad image'ite kõrval ka Maveni, npm-i, PyPI ja apt-i pakette, mis on mugav, kui asutusel on juba üks artefaktide hoidla. GitLab ja Gitea pakuvad registry't koodihoidla juures. Kõige lihtsam on [`registry:2`](https://distribution.github.io/distribution/) ehk CNCF Distribution: üks konteiner ilma kasutajaliidese, õiguste ja skannimiseta. See on teiste registry'de alus, aga tootmisse sobib üksi harva.
 
-    **Oma registry** (on-prem) töötab asutuse võrgus. [Harbor](https://goharbor.io/) on CNCF-i projekt: projektid ja õigused, robotkontod konveierite jaoks, Trivy skannimine, säilitus- ja muutumatuse reeglid, replikatsioon teise registry'sse. Sonatype [Nexus Repository](https://www.sonatype.com/products/sonatype-nexus-repository) ja JFrog [Artifactory](https://jfrog.com/artifactory/) hoiavad image'ite kõrval ka Maveni, npm-i, PyPI ja apt-i pakette, mis on mugav, kui asutusel on juba üks artefaktide hoidla. GitLab ja Gitea pakuvad registry't koodihoidla juures. Kõige lihtsam on [`registry:2`](https://distribution.github.io/distribution/) ehk CNCF Distribution: üks konteiner ilma kasutajaliidese, õiguste ja skannimiseta. See on teiste registry'de alus, aga tootmisse sobib üksi harva.
+### Pull-through cache
 
-    **Pull-through cache**
-
-    **Pull-through cache** (vahemälu) on registry, mis küsib puuduva image'i ülesvoolu registry'st (näiteks Docker Hubist), annab selle kliendile ja hoiab alles. Järgmised tõmbed tulevad kohalikust võrgust. Docker Hubi [piir autentimata klientidele](https://docs.docker.com/docker-hub/usage/pulls/) on 100 tõmmet kuue tunni jooksul IPv4-aadressi kohta, tasuta kontoga 200. Klass või CI farm on ühe NAT-aadressi taga ja jõuab piirini tunniga. Vahemälu lahendab ka teise probleemi: kui Docker Hub on maas või image kustutatakse, on see asutuses alles.
+**Pull-through cache** (vahemälu) on registry, mis küsib puuduva image'i ülesvoolu registry'st (näiteks Docker Hubist), annab selle kliendile ja hoiab alles. Järgmised tõmbed tulevad kohalikust võrgust. Docker Hubi [piir autentimata klientidele](https://docs.docker.com/docker-hub/usage/pulls/) on 100 tõmmet kuue tunni jooksul IPv4-aadressi kohta, tasuta kontoga 200. Klass või CI farm on ühe NAT-aadressi taga ja jõuab piirini tunniga. Vahemälu lahendab ka teise probleemi: kui Docker Hub on maas või image kustutatakse, on see asutuses alles.
 
 Kursuse Harbor on asutuse oma registry ja sellel on kolm rolli: projekt `dockerhub` on Docker Hubi vahemälu, igal õppijal on privaatne projekt, kuhu ta oma image'id üles laadib, ja iga üleslaadimine (push) skannitakse Trivy'ga. Docker ei oska Harbori vahemälu kasutada vaikimisi peeglina (`registry-mirrors` toetab ainult registry juurt), seepärast on Dockeri image'ite nimes eesliide `harbor.lab.hkhk.lan/dockerhub/library/`. Podman oskab: `registries.conf` lubab peegli projekti all ja image'i nimi jääb `docker.io/…`.
 
@@ -851,13 +853,13 @@ Joonis näitab, kuidas image'id kursuse laboris liiguvad.
   <figcaption>Joonis 3.20. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
 </figure>
 
-??? info "Süvenemiseks: TLS ja usaldus"
+### Ligipääs ja usaldus
 
-    **Ligipääs ja usaldus**
+Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi abil serveri identiteeti ja ühendus on krüpteeritud. Image'i päritolu (kes selle ehitas) see ei tõenda, selleks on allkirjad ja päritolutõendid. Asutuse oma CA-ga allkirjastatud sertifikaadi jaoks pannakse CA fail kausta `/etc/docker/certs.d/<registry>/ca.crt` (Podmanis `/etc/containers/certs.d/`). `insecure-registries` lülitab kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
 
-    Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi abil serveri identiteeti ja ühendus on krüpteeritud. Image'i päritolu (kes selle ehitas) see ei tõenda, selleks on allkirjad ja päritolutõendid. Asutuse oma CA-ga allkirjastatud sertifikaadi jaoks pannakse CA fail kausta `/etc/docker/certs.d/<registry>/ca.crt` (Podmanis `/etc/containers/certs.d/`). `insecure-registries` lülitab kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
+??? info "Süvenemiseks: registry valik, artefaktihoidlad ja AI-rakenduste hoidlad"
 
-??? info "Süvenemiseks: registry ja artefaktihoidla (Nexus, Artifactory)"
+    **Registry ja artefaktihoidla**
 
     Konteineriregistry hoiab ja levitab image'eid ning võib toetada ka teisi OCI-artefakte (näiteks Helm chart'e). **Artefaktihoidla** haldab mitut tüüpi tarkvarapakette ja ehitustulemeid. [Sonatype Nexus Repository](https://help.sonatype.com/en/formats.html) ja [JFrog Artifactory](https://jfrog.com/artifactory/) hoiavad eraldi repositooriumides näiteks Java `.jar`- ja `.war`-faile (Maven), npm- ja Pythoni pakette, konteineri image'eid, `.deb`- ja `.rpm`-pakette ning Helm chart'e. Sellepärast nimetab Google oma teenust Artifact Registry'ks, mitte ainult Container Registry'ks.
 
@@ -881,7 +883,7 @@ Joonis näitab, kuidas image'id kursuse laboris liiguvad.
 
     Tasuta tarkvara ei tähenda tasuta teenust: ise hallates jäävad asutuse kanda serverid, salvestus, varundus, uuendused ja rikete lahendamine.
 
-??? info "Süvenemiseks: AI-rakenduste hoidlad"
+    **AI-rakenduste hoidlad**
 
     AI-teenus võtab käituskeskkonna, mudeli ja sõltuvused sageli eri kohtadest. Image tuleb tavalisest registry'st (Harbor, Docker Hub, GHCR) või NVIDIA GPU-tarkvara puhul [NVIDIA NGC](https://catalog.ngc.nvidia.com/) registry'st `nvcr.io`. Mudeli kaalud, tokenizer ja seadistus tulevad mudelihoidlast, näiteks [Hugging Face Hubist](https://huggingface.co/docs/hub/index) või asutuse sisemisest hoidlast. Pythoni paketid tulevad PyPI-st või asutuse paketiproxy kaudu. Artifactory ja Nexus oskavad uuemates versioonides vahendada ka Hugging Face'i sisu, aga funktsioonid sõltuvad versioonist ja väljaandest.
 
@@ -892,7 +894,7 @@ Joonis näitab, kuidas image'id kursuse laboris liiguvad.
 
     Mudel ja image ei pea olema üks artefakt. Mõnikord pakitakse väike mudel ka image'isse; see on arhitektuurivalik. Mudelifailid on sageli gigabaitides ja muutuvad teises tempos kui rakendus. Seepärast laaditakse mudel eraldi ja ühendatakse konteinerisse käivitamisel, samamoodi nagu andmebaasi andmed volume'ist.
 
-??? note "Tabel 3.14. Registry valik"
+    *Tabel 3.14. Registry valik*
 
     | Vajadus | Valik |
     |---|---|
@@ -957,14 +959,12 @@ Kursuse Harbor skannib iga üleslaaditud image'i Trivy'ga ja näitab selle kompo
 
     Skanneri tulemus vajab tõlgendamist. Debiani baasil image annab sageli kümneid leide, millest osa on teekides, mida rakendus ei kasuta, või haavatavustes, millele distributsioon pole veel paika avaldanud. Leiu juures vaata mõjutatud komponenti, paranduse olemasolu, rakenduse kasutusviisi ja ründe eeltingimusi. Kui konveier peatub iga `HIGH` leiu peale, hakkavad meeskonnad ignoreerimisfaile pikendama ja reegel kaotab mõtte. Üks võimalus on peatada konveier ainult parandatavate (`--ignore-unfixed`) kriitiliste leidude korral ja jälgida ülejäänut raportina. Sellise reegli korral ei peata ülejäänud leiud kasutuselevõttu. Nende jälgimiseks ja käsitlemiseks tuleb määrata vastutaja. Väiksem baas vähendab leidude arvu, sest pakette on vähem. Alpine sisaldab tavaliselt shelli (BusyBox) ja paketihaldurit `apk`. Distroless-tüüpi käitusimage'ites neid üldjuhul pole, nii et veaotsing tuleb kavandada teisiti, näiteks eraldi silumiskonteineriga.
 
+Loe juurde: [Standard Operating Environment ja IT-süsteemi elutsükkel](../teemad/soe-ja-elutsukkel.md), [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md)
+
 ??? question "Kontrolli ennast"
 
     1. Miks ei piisa hosti `apt upgrade`-ist, kui OpenSSL-is avaldatakse kriitiline haavatavus, ja mida teed konteinerite puhul selle asemel?
     2. Täna näitas Trivy 0 CRITICAL leidu. Kas image on kuu aja pärast ka puhas, kui sa midagi ei muuda? Kuidas aitab SBOM?
-
-??? info "Loe juurde"
-
-    [Standard Operating Environment ja IT-süsteemi elutsükkel](../teemad/soe-ja-elutsukkel.md), [Turvaautomaatika, compliance ja riskihaldus](../teemad/turvaautomaatika.md)
 
 ## 9. Konteiner ilma daemonita: Podman ja systemd
 
