@@ -9,6 +9,8 @@ tags:
 
 2\. kohtumisel kirjeldasid Ansible'iga, millised paketid, failid ja teenused peavad viies serveris olemas olema. **Konteineriseerimisel** see töö ei kao, vaid jaguneb kaheks. Hosti seadistusse jäävad konteinerite käituskeskkond, salvestus, võrgud ja ligipääsud. Rakendus ja selle kasutajaruumi sõltuvused (JRE, Tomcat, WAR) pakitakse **image**'isse, mis ehitatakse enne paigaldust, mitte alles tootmisserveris. Image käivitatakse **konteinerina**, ja konfiguratsioon ning püsivad andmed antakse väljast. Docker ja Podman on tööriistad, millega seda tehakse, ja mõlemad kasutavad samu OCI image'eid.
 
+Loengu eesmärk on selgitada konteineriseeritud rakenduse elutsüklit: kuidas rakendus pakitakse image'isse, kuidas selle teenused Compose'iga käivitatakse ning kuidas korraldatakse andmete säilitamine, turvalisus, uuendamine ja image'ite levitamine. Labori seisu näitel seotakse konteinerite haldus 2. kohtumise Ansible'iga ning võrreldakse Dockeri ja Podmani käitusmudelit.
+
 Konteinerit saab igal ajal kustutada ja uuesti luua, image'it pärast ehitamist ei muudeta, ja kõik, mis peab alles jääma, hoitakse konteinerist väljaspool. Sellest jaotusest sõltub, kuidas seadistatakse võrgud ja Compose, kuidas käib rakenduse kasutuselevõtt ehk deploy ning kuidas hallatakse registry't ja baas-image'eid. Iga osa vastab ühele küsimusele sama viie teenusega komplekti ehk stacki kohta, mida 2. kohtumisel Ansible'iga seadistasid.
 
 ??? note "Tabel 3.1. Läbiv näide: Labori seis konteinerites"
@@ -208,6 +210,13 @@ cgroup'id kaitsevad naabreid siis, kui piir on seatud, ja vaikimisi seda pole. L
 
 **Labori seis:** Kuhu lähevad JRE, Tomcat ja rakenduse WAR?
 
+Tarkvaraarenduses nimetatakse **artefaktiks** ehitamise käigus loodud tulemit, mida saab säilitada, kontrollida ja järgmisse tööetappi edasi anda. Selles loengus on need ehitusartefaktid: kompileeritud Java rakendus, tarkvarapakett või konteineri image. Artefakt ei tähenda ainult image'it. Labori seisu ehitamisel tekib kõigepealt WAR-fail. Seejärel pakitakse WAR koos Tomcati ja JRE-ga image'isse. Nii WAR kui ka image on ehitusartefaktid.
+
+<figure markdown="span">
+  ![Lähtekood ehitatakse Maveniga WAR-failiks, WAR pakitakse image'isse, image laaditakse üles Harborisse ja sealt käivitatakse konteiner; WAR-i võib eraldi hoida artefaktihoidlas Nexus või Artifactory](assets/k03_artefakt.svg)
+  <figcaption>Joonis 3.2. Ehitusartefaktid Labori seisus: WAR ja image (Talvik, 2026).</figcaption>
+</figure>
+
 Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon. Image'i puhul on vastupidi: tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse.
 
 Dockerfile kirjeldab, kuidas image ehitatakse, image on see, mis käivitamiseks pakitakse, ja konteiner on image'i käivitatud eksemplar.
@@ -223,7 +232,7 @@ Dockerfile ja lähtekood ──build──► image ──run──► konteiner
 
 <figure markdown="span">
   ![Viis kirjutuskaitstud kihti üksteise peal ja nende peal kaks konteinerit, kummalgi oma kirjutatav kiht](assets/k03_kihid.svg)
-  <figcaption>Joonis 3.2. Kirjutuskaitstud kihid on ühised, igal konteineril on oma õhuke kirjutatav kiht (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.3. Kirjutuskaitstud kihid on ühised, igal konteineril on oma õhuke kirjutatav kiht (Talvik, 2026).</figcaption>
 </figure>
 
 Vastus küsimusele: ei jõua. Mõlemad konteinerid loevad samu kirjutuskaitstud kihte, aga kirjutavad igaüks oma kirjutatavasse kihti, mis kaob koos konteineriga.
@@ -280,7 +289,7 @@ USER 10001
 
 <figure markdown="span">
   ![Ehitusaste maven-image'iga teeb WAR-faili; käitusaste tomcat-image'iga saab ainult WAR-i COPY --from abil; lõppimage'is pole Maveni ega lähtekoodi](assets/k03_multistage.svg)
-  <figcaption>Joonis 3.3. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.4. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
 Ehituse vahemälu (build cache) kasutab kihi uuesti, kui juhis ja sisendi räsi pole muutunud, ja esimene muutunud kiht tühistab kõik järgmised ([head tavad](https://docs.docker.com/build/building/best-practices/)). Näites laeb Maven iga koodimuudatuse järel sõltuvused uuesti, seepärast kopeeritakse `pom.xml` eraldi ette.
@@ -319,7 +328,7 @@ Olekut on kolme liiki. **Andmed** lähevad volume'isse või bind mount'i. **Volu
 
 <figure markdown="span">
   ![Konteiner db01: kirjutatav kiht kaob docker rm-iga, volume /var/lib/docker/volumes all ja bind mount hosti kataloogis jäävad alles](assets/k03_l_andmed.svg)
-  <figcaption>Joonis 3.4. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.5. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist (Talvik, 2026).</figcaption>
 </figure>
 
 Volume'i juures on peamine elutsükkel, mitte kataloogi asukoht. Iga rakenduse osa puhul küsi, mis peab juhtuma, kui konteiner asendatakse uuega.
@@ -359,7 +368,7 @@ Viie `docker run` käsuga käivitatud stacki soovitud olek on kirjas ainult shel
 
 <figure markdown="span">
   ![Brauser pöördub pordil 8080 web01 poole, web01 app01 poole, app01 db01, mc01 ja rmq01 poole; numbrid näitavad käivitusjärjekorda](assets/k03_compose_stack.svg)
-  <figcaption>Joonis 3.5. Viie teenusega stack. Iga teenus ootab enne käivitumist, kuni sõltuvuste healthcheck annab oleku healthy (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.6. Viie teenusega stack. Iga teenus ootab enne käivitumist, kuni sõltuvuste healthcheck annab oleku healthy (Talvik, 2026).</figcaption>
 </figure>
 
 Allolevas näites on kaks teenust: app01 ehitatakse oma Dockerfile'ist ja db01 võetakse valmis image'ist.
@@ -549,6 +558,11 @@ Rakenduse versioon v1 töötab. Konveier muudab `.env`-failis image'i tag'i vä�
 
 Protsessi käivitumine ei tähenda valmisolekut: healthcheck näitab olekut, aga otsuse teeb konveier, playbook või administraator. Compose'i healthcheck üksi tagasi ei pööra. Tagasi saab minna ainult siis, kui v1 image on veel hostis või registry's. Tagasipööramisel ei pruugi piisata eelmise image'i käivitamisest. Kui v2 vajas uut keskkonnamuutujat või muudetud konfiguratsioonifaili, tuleb taastada ka v1-ga sobiv konfiguratsioon. Andmed jäävad volume'isse: kui v2 muutis skeemi nii, et v1 seda ei talu, ei aita image'i vahetus ja tuleb taastada varukoopiast. Seepärast tehakse skeemimuudatused tagasiühilduvaks (allpool „Deploy suures skaalas“).
 
+<figure markdown="span">
+  ![v1 töötab, v2 image tõmmatakse, konteiner asendatakse, valmisoleku kontroll; õnnestumisel jääb v2, ebaõnnestumisel pööratakse tagasi v1 image ja seadistus; volume dbdata jääb kogu aja samaks](assets/k03_uuendus_ajatelg.svg)
+  <figcaption>Joonis 3.7. Uuendus ja tagasipööramine: image vahetub, andmed volume'is jäävad (Talvik, 2026).</figcaption>
+</figure>
+
 Viimane samm on koristus. Tagasipööramine on kiire ainult siis, kui eelmine image on veel hostis või registry's. Cron'iga käivitatav `docker image prune -a` kustutab kõik image'id, mida ükski konteiner ei kasuta, ka tagasipööramise sihtmärgi. Ilma koristuseta kasvab `/var/lib/docker` iga uuendusega. Hostis hoitakse praegust ja eelmist versiooni, registry's väljalaskeid nii kaua, kui tagasipööramine on lubatud.
 
 ??? info "Deploy suures skaalas"
@@ -582,7 +596,7 @@ Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: 
 
 <figure markdown="span">
   ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, laadib oma image'id üles Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
-  <figcaption>Joonis 3.6. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.8. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
 </figure>
 
 **Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. Hubis on igaühe image'id, ja päritolu järgi on neil märgised: **Docker Official Images** (`library/`, Dockeri hallatud kogumik, näiteks `nginx`, `mariadb`), **Verified Publisher** (tarkvaratootja enda image'id) ja **Docker-Sponsored Open Source** (avatud lähtekoodiga projektide image'id). Märgiseta image võib olla ükskõik kelle oma.
@@ -599,7 +613,40 @@ Kursuse Harboris on kõik kolm rolli: projekt `dockerhub` on Docker Hubi vahemä
 
 Registry usaldus käib TLS-i kaudu. Asutuse oma CA-ga allkirjastatud sertifikaadi jaoks pannakse CA fail kausta `/etc/docker/certs.d/<registry>/ca.crt` (Podmanis `/etc/containers/certs.d/`). `insecure-registries` lülitab kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
 
-??? note "Tabel 3.11. Registry valik"
+### Registry ja artefaktihoidla
+
+Konteineriregistry hoiab ja levitab image'eid ning võib toetada ka teisi OCI-artefakte (näiteks Helm chart'e). **Artefaktihoidla** haldab mitut tüüpi tarkvarapakette ja ehitustulemeid. [Sonatype Nexus Repository](https://help.sonatype.com/en/formats.html) ja [JFrog Artifactory](https://jfrog.com/artifactory/) hoiavad eraldi repositooriumides näiteks Java `.jar`- ja `.war`-faile (Maven), npm- ja Pythoni pakette, konteineri image'eid, `.deb`- ja `.rpm`-pakette ning Helm chart'e. Sellepärast nimetab Google oma teenust Artifact Registry'ks, mitte ainult Container Registry'ks.
+
+Nexuses on kolme tüüpi [repositooriume](https://help.sonatype.com/en/repository-types.html). **Hosted** on asutuse oma pakettide hoidla: CI avaldab sinna näiteks ühise Java teegi ja teised rakendused kasutavad seda sõltuvusena. **Proxy** on välise hoidla vahemälu: Maven, pip või Docker küsib paketti Nexuselt, Nexus laadib puuduva Maven Centralist, PyPI-st või Docker Hubist ja hoiab selle alles. **Group** ühendab sama vormingu mitu hoidlat ühe aadressi taha, nii et Maven saab ühe URL-i kaudu nii asutuse oma teegid kui ka avalikud sõltuvused. Harbori projekt `dockerhub` on sama mõttega proxy, ainult image'itele.
+
+Labori seisus võiks Nexust kasutada kahes kohas: Maven laadib ehitamisel sõltuvused Nexuse proxy kaudu ja valmis WAR avaldatakse hosted-hoidlasse. Image läheb ikka registry'sse. WAR-i eraldi hoidmine ei ole kohustuslik, kui töövoog vajab ainult image'it.
+
+Hoidla valimisel tuleb eristada kolme küsimust: milliseid paketivorminguid on vaja, kes teenust haldab ja millised funktsioonid kuuluvad valitud väljaandesse. **Ise hallatav** (self-hosted) lahendus töötab asutuse serveris või pilve virtuaalmasinas ja serverid, varundus ning uuendused on asutuse kanda. **SaaS** tähendab, et teenust haldab pakkuja ja hind sõltub sageli ka salvestatud ja alla laaditud andmemahust.
+
+??? note "Tabel 3.11. Artefaktihoidlate väljaanded (kontrollitud novembris 2026)"
+
+    | Väljaanne | Mida hoiab | Tasuta | Ise hallatav | SaaS | Piirang |
+    |---|---|---|---|---|---|
+    | Nexus Repository Community Edition | mitme vormingu paketid, ka image'id | jah, kasutuspiiridega | jah | ei | mahu- ja päringupiirid; SSO, kõrgkäideldavus ja tugi ei kuulu sisse |
+    | Nexus Repository tasulised tasemed | samad vormingud | ei | jah | jah | lisafunktsioonid sõltuvad tasemest |
+    | JFrog Artifactory OSS | Maven, Gradle ja üldised failid (Generic) | jah | jah | ei | ei ole kõigi vormingute tasuta hoidla |
+    | JFrog Container Registry (JCR) | Docker/OCI image'id, Helm, Generic | jah | jah | ei | teisi paketivorminguid ega Xray skannimist pole |
+    | JFrog Artifactory tasulised paketid | kõik vormingud | ei | jah | jah | funktsioonid sõltuvad tellimusest |
+
+Tasuta tarkvara ei tähenda tasuta teenust: ise hallates jäävad asutuse kanda serverid, salvestus, varundus, uuendused ja rikete lahendamine.
+
+### AI-rakenduste hoidlad
+
+AI-teenus võtab käituskeskkonna, mudeli ja sõltuvused sageli eri kohtadest. Image tuleb tavalisest registry'st (Harbor, Docker Hub, GHCR) või NVIDIA GPU-tarkvara puhul [NVIDIA NGC](https://catalog.ngc.nvidia.com/) registry'st `nvcr.io`. Mudeli kaalud, tokenizer ja seadistus tulevad mudelihoidlast, kõige sagedamini [Hugging Face Hubist](https://huggingface.co/docs/hub/index) või asutuse sisemisest hoidlast. Pythoni paketid tulevad PyPI-st või asutuse paketiproxy kaudu. Artifactory ja Nexus oskavad uuemates versioonides vahendada ka Hugging Face'i sisu, aga funktsioonid sõltuvad versioonist ja väljaandest.
+
+<figure markdown="span">
+  ![Konteineriregistryst (Harbor, GHCR, NVIDIA NGC) tuleb image ja mudelihoidlast (Hugging Face Hub või sisemine hoidla) mudelifailid; käitushostis ühendatakse mudelifailid konteinerisse](assets/k03_ai_hoidlad.svg)
+  <figcaption>Joonis 3.9. AI-teenuse image ja mudel tulevad eri hoidlatest (Talvik, 2026).</figcaption>
+</figure>
+
+Mudel ja image ei pea olema üks artefakt. Mudelifailid on sageli gigabaitides ja muutuvad teises tempos kui rakendus. Seepärast laaditakse mudel eraldi ja ühendatakse konteinerisse käivitamisel, samamoodi nagu andmebaasi andmed volume'ist.
+
+??? note "Tabel 3.12. Registry valik"
 
     | Vajadus | Valik |
     |---|---|
@@ -607,7 +654,7 @@ Registry usaldus käib TLS-i kaudu. Asutuse oma CA-ga allkirjastatud sertifikaad
     | kood ja konveier GitHubis, väike meeskond | GHCR |
     | teenused ühes pilves | selle pilve registry (ECR, ACR, Artifact Registry) |
     | asutuse võrk, õigused projektide kaupa, skannimine | Harbor |
-    | lisaks image'itele Maveni, npm-i ja apt-i pakettide hoidla | Nexus, Artifactory |
+    | lisaks image'itele Maveni, npm-i ja Pythoni pakettide hoidla | Nexus, Artifactory |
     | test või üks meeskond ilma kasutajaliideseta | `registry:2` |
     | Docker Hubi piir või internetita võrk | pull-through cache (Harbor, Nexus, `registry:2` proxy) |
 
@@ -626,7 +673,7 @@ Detsembris 2021 avaldati Log4j-s [Log4Shell](https://logging.apache.org/security
 
 `FROM` kopeerib baasi kihid rakenduse image'isse ja hosti `apt upgrade` neid ei puuduta. Parandatud baas ei paranda ühtegi rakendust enne, kui need on uuesti ehitatud ja uuendatud. Sellest tuleneb image'i elutsükkel.
 
-??? note "Tabel 3.12. Baas-image'i elutsükkel"
+??? note "Tabel 3.13. Baas-image'i elutsükkel"
 
     | Etapp | Mis juhtub | Kes |
     |---|---|---|
@@ -665,7 +712,7 @@ AlmaLinuxi ja RHEL-i serveris on vaikimisi [Podman](https://docs.podman.io/), mi
 
 <figure markdown="span">
   ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
-  <figcaption>Joonis 3.7. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.10. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
 </figure>
 
 **Daemonita mudel.** Peamine arhitektuuri erinevus on juhtimismudel. Dockeris saadab CLI käsu kesksele daemonile, mis töötab kogu aeg. `podman run` loob konteineri ise `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja lõpetab. Daemonita ei tähenda protsessideta: iga konteineri juures on `conmon`, nagu Dockeris `containerd-shim`. Puudub kõiki konteinereid juhtiv keskne teenus, mille taaskäivitus peataks kõik konteinerid. Selle hind: pärast masina taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
@@ -678,7 +725,7 @@ Podman:  podman ──► crun ──► konteiner
 
 Podmani käsud on teadlikult Dockeri omadega samad (`podman pull`, `podman run -d --name veeb -p 8080:80 docker.io/library/nginx:alpine`, `podman ps`, `podman logs`). Podman ehitab image'eid, laadib neid registry'st alla ja üles ning käivitab konteinereid. Erinevus on selles, kuidas konteinereid taustal juhitakse.
 
-??? note "Tabel 3.13. Docker ja Podman: juhtimine"
+??? note "Tabel 3.14. Docker ja Podman: juhtimine"
 
     | Aspekt | Docker | Podman |
     |---|---|---|
@@ -689,9 +736,9 @@ Podmani käsud on teadlikult Dockeri omadega samad (`podman pull`, `podman run -
     | rootless | toetatud: kasutajal töötab oma `dockerd` | toetatud ilma kasutaja daemonita |
     | teenus pärast taaskäivitust | daemon ja restart-poliitika | systemd (Quadlet) |
 
-**Rootless.** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.14 näitab, kelleks konteineri root hostis muutub.
+**Rootless.** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.15 näitab, kelleks konteineri root hostis muutub.
 
-??? note "Tabel 3.14. Konteineri UID 0 hostis"
+??? note "Tabel 3.15. Konteineri UID 0 hostis"
 
     | Käitusrežiim | Konteineri UID 0 hostis |
     |---|---|
@@ -747,7 +794,7 @@ jq -r '[.components[].licenses[]?.license | (.id // .name)] | group_by(.) | map(
 
 Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 2023. aastal Terraformi ja Vaulti BSL-i litsentsile, mis piirab konkureerivat kasutust. Kogukond tegi neist avatud harud OpenTofu ja OpenBao, mida kasutame 4. kohtumisel. Sama küsimus kehtib iga tööriista kohta, mille ümber meeskond oma automaatika ehitab: kes projekti omab ja mis juhtub, kui litsents muutub.
 
-??? note "Tabel 3.15. Tööriistad ja litsentsid"
+??? note "Tabel 3.16. Tööriistad ja litsentsid"
 
     | Tööriist | Litsents | Tasu |
     |---|---|---|
