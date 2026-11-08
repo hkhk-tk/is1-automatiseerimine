@@ -283,9 +283,7 @@ Sulgudes olevad käsud käivituvad alamkestas, nii et töökaust jääb `~/kursu
 
 ## Osa 3 · Masinanimedest gruppideks
 
-**Probleem:** iga play päises on masina nimi (`hosts: db01`). Kui andmebaas kolib teise masinasse või neid on kaks, tuleb muuta playbook'i. Lisaks võtab `/etc/hosts` plokk IP-aadressid faktidest, mis on olemas ainult käivituses osalevatel masinatel.
-
-**Eesmärk:** inventory ütleb, milline masin millist tööd teeb. Playbook kasutab gruppe ja ülesanded jäävad samaks.
+Asendad play'de päises masinanimed (`hosts: db01`) inventory gruppidega. Siis ei pea playbook'i muutma, kui andmebaas kolib teise masinasse, ja ülesanded jäävad samaks. Lisaks võtab `/etc/hosts` plokk IP-aadressid faktidest, mis on olemas ainult käivituses osalevatel masinatel.
 
 ### 3.1 Inventory gruppideks
 
@@ -391,9 +389,7 @@ k02-ansible/
 
 ## Osa 4 · Väärtused muutujatesse
 
-**Probleem:** rakendusserveri mälu tuleb tõsta. Leia `labseis.yml`-ist koht, kus seda muuta: `grep -n Xmx labseis.yml`. Väärtus on konfiguratsioonifaili teksti sees. Samamoodi on `labseis` kirjas viies kohas ja `app01:8080` Nginxi tekstis.
-
-**Eesmärk:** väärtus on ühes kohas, kus on selge, kelle seadistus see on. Väärtuse muutmiseks ei pea ülesandeid puutuma.
+Tõstad väärtused muutujatesse. Praegu on need konfiguratsiooniteksti sees ja mitmes kohas: rakendusserveri mälu (`grep -n Xmx labseis.yml`), nimi `labseis` viies kohas ja `app01:8080` Nginxi tekstis. Pärast muudatust on iga väärtus ühes kohas ja selle muutmiseks ei pea ülesandeid puutuma.
 
 ### 4.1 Üks väärtus nähtavalt
 
@@ -517,9 +513,7 @@ k02-ansible/
 
 ## Osa 5 · Konfiguratsioonitekst mallidesse
 
-**Probleem:** konfiguratsioonifailide tekst on ülesannete sees (`content: |`). Faili on raske lugeda, sest YAML-i ja Nginxi süntaks on segamini, ja sama teksti ei saa teises play's kasutada.
-
-**Eesmärk:** tekst on eraldi failis, mallis. Ülesanne viitab mallile. Teenuse seadistus ei muutu, muutub ainult see, kus teksti hoitakse.
+Tõstad konfiguratsioonifailide teksti ülesannete seest (`content: |`) mallidesse. Kui YAML-i ja Nginxi süntaks on segamini, on faili raske lugeda ja sama teksti ei saa teises play's kasutada. Teenuse seadistus ei muutu, muutub ainult teksti asukoht.
 
 ### 5.1 Üks mall nähtavalt: Nginx
 
@@ -658,9 +652,7 @@ k02-ansible/
 
 ## Osa 6 · Paroolid Vaulti
 
-**Probleem:** `grep -n 2026 labseis.yml` näitab kolme parooli. Fail on Gitis ja paroole näeb igaüks, kellel on repositooriumile ligipääs.
-
-**Eesmärk:** paroolid on repositooriumis Vaultiga krüpteeritud failis, nende avamise parool on väljaspool repositooriumi. Parooli väärtus jääb samaks, muutub ainult hoidmise viis. Parooli vahetus on eraldi töö (kodutöö).
+`grep -n 2026 labseis.yml` näitab kolme parooli, mida näeb igaüks, kellel on repositooriumile ligipääs. Tõstad need Vaultiga krüpteeritud faili, mille avamise parool on väljaspool repositooriumi. Parooli väärtus jääb samaks, vahetus on kodutöös.
 
 ### 6.1 Vault
 
@@ -777,9 +769,7 @@ k02-ansible/
 
 ## Osa 7 · Teenused rollideks
 
-**Probleem:** `labseis.yml` on korras, aga ühe teenuse osad on ikka mitmes kohas: ülesanded ja handler failis, mall kaustas `templates/`, vaikeväärtusi pole. Teise projekti jaoks ei saa Nginxi seadistust kaasa võtta.
-
-**Eesmärk:** iga teenuse ülesanded, handler'id, mallid ja vaikeväärtused on ühes kaustas, **rollis**. `site.yml` ütleb ainult, milline roll millises grupis käivitub. Kuna tekst on juba mallides ja väärtused muutujates, tõstad ainult olemasolevaid osi ja masinates ei tohi midagi muutuda.
+Koondad iga teenuse ülesanded, handler'id, mallid ja vaikeväärtused ühte kausta, **rolli**. Praegu on ühe teenuse osad mitmes kohas ja Nginxi seadistust ei saa teise projekti kaasa võtta. Lõpus ütleb `site.yml` ainult, milline roll millises grupis käivitub, ja masinates ei muutu midagi.
 
 ### 7.1 Esimene roll nähtavalt: `nginx`
 

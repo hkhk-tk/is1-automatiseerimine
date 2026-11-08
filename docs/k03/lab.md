@@ -33,9 +33,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 ## Osa 1 · Docker ja esimesed konteinerid
 
-**Probleem:** Docker on serveris tavaline pakett ja systemd teenus. Kui konteiner seiskub, saab OOM-kill'i või avab pordi tulemüürist mööda, on põhjus hostis: protsessides, cgroup'ides, nftables'is või failiõigustes. Docker ei too uusi tuuma mehhanisme. Ta paneb kokku need, mida sa juba tunned.
-
-**Eesmärk:** Docker on control'is paigaldatud Dockeri ametliku juhendi järgi ja esimene konteiner on käivitatud Docker Hubi image'ist. Image'id tulevad edaspidi kursuse registry Harbori kaudu. Seejärel käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus asuvad protsess, piirangud, port ja andmed. Iga rida, mille hiljem Compose'i faili kirjutad, on sulle tuttav ühe `docker run` võtmena. Käsitsi tehtud paigalduse kirjutad 8. osas Ansible'i rolliks.
+Paigaldad Dockeri käsitsi, käivitad esimese konteineri ja tutvud Docker Hubi ning kursuse registry Harboriga. Seejärel käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus on konteineri protsess, piirangud, port ja andmed. Docker ei too uusi tuuma mehhanisme: konteiner on hostis tavaline protsess, mida piiravad cgroup'id ja nftables'i reeglid.
 
 ### 1.1 Haru ja failid
 
@@ -685,9 +683,7 @@ docker ps -aq | wc -l
 
 ## Osa 2 · db ja web image
 
-**Probleem:** oma Dockerfile, mis kordab ametliku image'i entrypoint'i tööd, jääb baasimage'i turvaparandustest maha ja läheb katki esimesel suuremal uuendusel.
-
-**Eesmärk:** db01 ja web01 image'id ehitatakse sinu Dockerfile'idest ametlike image'ite põhjal. Kõigepealt vaatad, mida ametlik image juba teeb, ja kirjutad ainult puuduva osa. Nii jääb Dockerfile lühikeseks ja baasimage'i uuendus toob parandused kaasa ilma, et peaksid oma faili muutma. Osa lõpus on ehituskontekst `.dockerignore`-iga väike ja saladustest puhas.
+Ehitad db01 ja web01 image'id ametlike image'ite põhjal. Ametlik image teeb juba suure osa tööst, seega kirjutad Dockerfile'i ainult puuduva osa jaoks ja baasimage'i turvaparandused tulevad uuendusega kaasa.
 
 Rakenduse failid on repositooriumi juures (`pom.xml`, `src/`, `db/`) ja jäävad puutumata, Dockerfile'id ainult loevad neid. db ja app vajavad neid faile, seega on nende **ehituskontekst** repositooriumi juur `..`. web'i kontekst on tema oma kaust.
 
@@ -923,9 +919,7 @@ git ls-files
 
 ## Osa 3 · App image
 
-**Probleem:** suure või root'ina töötava app-image'i viga ei jää ühte kohta. App-image'i ehitab 5. kohtumisel GitHub Actionsi konveier iga commit'iga ja 7. kohtumisel käivitab selle Kubernetese klaster, nii et iga siin tehtud viga korrutub iga ehituse ja iga masinaga. 300 MB image tõmmatakse igale masinale kiiremini kui 1 GB image ja Trivy leiab sealt vähem asju, mida keegi ei kasuta.
-
-**Eesmärk:** app-image on mitmeastmeline, kasutab cache'i, tema PID 1 saab SIGTERM-i kätte ja see ei tööta root'ina. Kõrval on väike tööriista-image, millega kontrollid stacki seestpoolt.
+Ehitad rakenduse image'i kahes astmes, nii et see on väike, ei tööta root'ina ja peatub korrektselt. Sama image'i ehitab 5. kohtumisel konveier ja 7. kohtumisel käivitab Kubernetes, seega iga siin tehtud viga kordub igal ehitusel. Lisaks teed väikese kontroll-image'i, millega küsid stacki olekut seestpoolt.
 
 ### 3.1 Naiivne variant ja selle suurus
 
@@ -1221,9 +1215,7 @@ rm -f app/Dockerfile.naive
 
 ## Osa 4 · Kogu stack Compose'iga
 
-**Probleem:** viis `docker run` käsku shelli ajaloos ei kirjelda soovitud olekut. Järgmine administraator ei tea, millise võtmega mida käivitati, ja pärast taaskäivitust käivituvad teenused vales järjekorras.
-
-**Eesmärk:** võrk, nimed, volume'id ja muutujad, mis `docker run`-iga olid pikad käsuread, lähevad faili, mida saab Gitis hoida, üle vaadata ja korduvalt käivitada. Compose on Ansible'i playbook'i vaste konteineritele: fail kirjeldab soovitud olekut ja `up -d` viib süsteemi sellesse olekusse. Kirjutad faili ühe teenuse kaupa ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)) ning iga teenuse järel käivitad `docker compose up -d <teenus>` ja kontrollid tulemust. Osa lõpus töötab kogu Labori seis ühe `compose.yaml`-iga ja üks tulemus läbib ahela web01-st db01-ni.
+Kirjeldad kogu Labori seisu ühes failis `compose.yaml`. Viis pikka `docker run` käsku shelli ajaloos ei näita, kuidas teenused käivitati. Compose'i fail on Gitis ja `docker compose up -d` viib süsteemi failis kirjeldatud olekusse, nagu playbook Ansible'is. Kirjutad faili ühe teenuse kaupa ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)) ja kontrollid iga teenuse järel tulemust.
 
 <figure markdown="span">
   ![Brauser pöördub pordil 8080 web01 poole, web01 app01 poole, app01 db01, mc01 ja rmq01 poole; kõik on projekti võrgus labori-seis_default](assets/k03_compose_stack.svg)
@@ -1649,9 +1641,7 @@ git status --short
 
 ## Osa 5 · Tootmiskeskkonda sobiv stack
 
-**Probleem:** stack töötab, aga paroolid on konteineri keskkonnas, kõik teenused on ühes võrgus internetiga, mälupiire pole ning logid kasvavad piiramatult ja ketas täitub. Tootmisserveris tähendab see, et üks teenus võtab teiste mälu, parool lekib `inspect`-ist, kompromiteeritud rakendus pääseb internetti, veebijuurde ilmub võõras fail ja ketas saab täis.
-
-**Eesmärk:** kirjutad prod-faili `compose.prod.yaml`, mille seaded liidetakse `compose.yaml`-i seadetega, varundad ja taastad andmebaasi volume'i ning paned paika koristuspoliitika. `compose.yaml` jääb muutmata, sest seda loevad automaatkontroll, 5. kohtumise konveier ja 7. kohtumise töö. Logide rotatsiooni lisad daemoni seadetesse, 8. osas läheb sama seade rolli.
+Lisad stackile tootmise seaded eraldi failis `compose.prod.yaml`: mälupiirid, paroolid failidest, sisemise võrgu, kirjutuskaitse ja logide piirid. Põhifail `compose.yaml` jääb muutmata, sest seda kasutavad automaatkontroll ja 5. kohtumise konveier. Lõpus varundad ja taastad andmebaasi volume'i ning paned paika koristuse.
 
 Tabel 3.4 näitab prod-faili sisu ühes kohas. Iga rida vastab küsimustele: kui palju ressursse teenus tohib kasutada, millistesse võrkudesse see kuulub ja mis on selles kirjutuskaitstud. Mälupiiride summa on umbes 2 GB ja on valitud control'i mälu järgi. Tootmisserveris mõõdad need `docker stats`-iga koormuse all.
 
@@ -2095,9 +2085,7 @@ git ls-files | grep -E 'secrets|backup'
 
 ## Osa 6 · Harbor, Trivy ja SBOM
 
-**Probleem:** image, mis on ainult sinu masinas, ei jõua kunagi tootmisse ja tagasipööramise (rollback) hetkel pole seda kusagilt võtta. 5. kohtumise konveier ja 7. kohtumise Kubernetese klaster tõmbavad image'i registry'st, kus sellel on nimi, versioon ja kuhu pääsevad ligi kõik masinad, millel on õigus.
-
-**Eesmärk:** sinu kolm image'it on Harboris git-SHA tag'iga, stack käivitub sealt ilma kohaliku ehituseta ja Trivy raporti põhjal on otsus kirja pandud. Oma Harbori projektis seadistad ise robotkonto, muutumatud tag'id ja reegli, mis ei lase haavatavat image'it tõmmata. App-image'ist on SBOM, millega vastad auditis või intsidendi järel küsimusele, mis selles image'is on, ja mille vastu saab hiljem skannida ilma image'it tõmbamata. Käsud käivitad kaustas `k03-docker/` põhistackiga (`COMPOSE_FILE` seadmata).
+Lükkad oma image'id Harborisse, kust 5. kohtumise konveier ja 7. kohtumise klaster neid tõmbavad. Harbor skannib iga image'i Trivy'ga. Oma projektis seadistad robotkonto, muutumatud tag'id ja haavatava image'i tõmbamise keelu ning lõpus teed rakenduse image'ist SBOM-i. Käsud käivitad kaustas `k03-docker/` põhistackiga (`COMPOSE_FILE` seadmata).
 
 <figure markdown="span">
   ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, lükkab oma image'id Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
@@ -2358,9 +2346,7 @@ Harboris saad SBOM-i teha ka veebiliidesest: artefakti juures **Generate SBOM**.
 
 ## Osa 7 · Sama teenus Podmaniga
 
-**Probleem:** AlmaLinuxi ja RHEL-i serveris Dockerit vaikimisi pole. `dnf install docker` paigaldab paketi `podman-docker` ja turvanõue keelab tihti root-daemoni, mille socket'i omanik on hostis sisuliselt root. Kui meeskond tahab sinna konteinerit, pead oskama teenust käivitada ilma daemonita, systemd teenusena ja SELinuxiga.
-
-**Eesmärk:** viid Labori seisu mc01 ja db01 teenused samades AlmaLinuxi masinates rootless Podmani konteineritesse. Image'id tulevad Harborist robotkontoga ja app01 jõuab neisse ilma taaskäivituseta. Kõik käsud käivitad control'ist kasutajana `kasutaja`, `sudo` ainult seal, kus see on kirjas.
+Viid mc01 ja db01 teenused samades AlmaLinuxi masinates Podmani konteineritesse. AlmaLinuxis ja RHEL-is Dockerit vaikimisi pole ja Podman töötab ilma daemonita, tavakasutajana ja systemd teenusena SELinuxiga. Kõik käsud käivitad control'ist kasutajana `kasutaja`, `sudo` ainult seal, kus see on kirjas.
 
 Osa eeldab, et mc01-s ja db01-s töötavad 2. kohtumise teenused `memcached` ja `mariadb` ning app01 Tomcat.
 
@@ -2747,9 +2733,7 @@ curl -s http://web01/health; echo
 
 ## Osa 8 · Docker rolliga
 
-**Probleem:** control'is on Docker seadistatud käsitsi: repositoorium, paketid, grupp, Harbori CA, `daemon.json` koos logide piiridega ja Trivy. Teises masinas tuleb kõik need sammud samas järjekorras korrata. Üks unustatud samm, näiteks CA, annab vea alles esimesel `docker pull`-il ja logide piiri puudumist ei märka keegi enne, kui ketas on täis.
-
-**Eesmärk:** kõik osades 1, 5 ja 6 käsitsi tehtud sammud on rollis `docker`. Rakendad rolli masinale, kus Docker juba töötab. `--check --diff` näitab, kus käsitsi seadistus rollist erineb, ja teine käivitus annab `changed=0`. Sama rolliga saab Dockeri paigaldada igasse Ubuntu masinasse.
+Kirjutad osades 1, 5 ja 6 käsitsi tehtud sammud rolliks `docker`. Teises masinas tuleks kõik sammud samas järjekorras korrata ja üks unustatud samm, näiteks CA, annab vea alles esimesel `docker pull`-il. Rakendad rolli control'ile, kus Docker juba töötab, ja teine käivitus peab andma `changed=0`.
 
 ### 8.1 Roll `docker`
 
@@ -2986,9 +2970,7 @@ trivy --version | head -1
 
 ## Osa 9 · Kolm riket
 
-**Probleem:** kaskaadis kaotab kõige rohkem aega see, kes parandab esimest nähtud sümptomit. `dependency failed to start` ütleb, et midagi ahelas on katki, aga mitte seda, mis.
-
-**Eesmärk:** fail `intsident/compose.yaml` kirjeldab sama Labori seisu eraldi projektina `labori-seis-intsident`. Projekt kasutab sinu image'eid ja porti 8090 ning failis on kolm viga eri kohtades. Liigu väljast sisse nagu tootmisintsidendis: sümptomist põhjuseni, parandus failis, mitte töötavas konteineris, ja uuesti luuakse ainult need teenused, mida parandus puudutab. Iga järeldus peab põhinema käsu väljundil, mitte oletusel. Osa lõpus on kolm parandust koodis ja tõend, et need peavad vastu ka uuel masinal ja daemoni taaskäivitusel.
+Failis `intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident` pordil 8090 ja selles on kolm viga. Leiad need nagu tootmisintsidendis: alustad sümptomist, parandad faili, mitte töötavat konteinerit, ja lood uuesti ainult need teenused, mida parandus puudutab. Teade `dependency failed to start` ütleb ainult, et ahelas on midagi katki, seepärast ära paranda esimest nähtud sümptomit.
 
 Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (kirjuta K3 issue kommentaariks enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.6 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
 
@@ -3221,9 +3203,7 @@ docker compose up -d --wait && curl -s localhost:8080/health; echo
 
 ## Osa 10 · Enne esitamist
 
-**Probleem:** kui image ehitub ainult sinu töökaustas, ebaõnnestub ehitus konveieri esimesel käivitusel. 5. kohtumisel võtab konveier sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on.
-
-**Eesmärk:** käivitad samad kontrollid ise ja vaatad, et stack töötab nii, nagu konveier seda ootab.
+Konveier võtab 5. kohtumisel sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Käivitad samad kontrollid ise ja proovid ehitust puhtast kloonist.
 
 ### 10.1 Failide kontroll
 
