@@ -149,3 +149,14 @@
 
 /* Tööriistade logod tabelites ja tekstis (Simple Icons, kaubamärgid kuuluvad omanikele) */
 img.logo { height: 14px; max-height: 14px; width: auto; vertical-align: -0.18em; margin-right: .3em; }
+
+/* Trükk ja PDF: pealkiri jääb järgmise lõiguga samale lehele, lühikesed plokid ei poolitu */
+@media print {
+  .md-typeset :is(h1, h2, h3, h4) { break-after: avoid; page-break-after: avoid; }
+  .md-typeset :is(figure, table) { break-inside: avoid; page-break-inside: avoid; }
+  .md-typeset pre { break-inside: avoid; page-break-inside: avoid; }
+  .md-typeset pre > code { font-size: 7.5pt; white-space: pre-wrap; }
+  .md-typeset details > summary::after { display: none; }
+  .md-typeset :is(.admonition, details) { box-shadow: none; border-width: 1px; border-style: solid; }
+  .md-typeset figcaption { break-before: avoid; page-break-before: avoid; }
+}
