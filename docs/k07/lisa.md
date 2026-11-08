@@ -1558,7 +1558,7 @@ Vihje: kui `helm list` näitab veel podinfot, tee enne `helm uninstall podinfo`.
 
 ### 22. vorgukogu CronJob'ina
 
-**Tase:** keskmine · **Eeldus:** 1. kohtumise lisaülesanne 21, image `vorgukogu:1` ([3. kohtumise lisaülesanne 15](../k03/lab.md#lisaulesanded)), `rtr01` ja `rtr02`, `k3s01` enne `tofu destroy`-d · **Esita:** `vorgukogu/k8s/vorgukogu.yaml`
+**Tase:** keskmine · **Eeldus:** 1. kohtumise lisaülesanne 21, image `vorgukogu:1` ([3. kohtumise lisaülesanne 15](../k03/lisa.md)), `rtr01` ja `rtr02`, `k3s01` enne `tofu destroy`-d · **Esita:** `vorgukogu/k8s/vorgukogu.yaml`
 
 Öine kogumine Jenkinsis sõltub agendist: kui control node on maas, jääb kogumine vahele. Klastris käivitab sama image'i CronJob ja Kubernetes hoolitseb, et samal ajal töötab üks jooks ja ebaõnnestunud jooks on näha. Töö käib k3s01-l namespace'is `vorgukogu`, sest koolitaja klaster sinu võrku ei näe.
 
