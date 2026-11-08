@@ -13,7 +13,7 @@
 <line class="l" x1="680" y1="72" x2="698" y2="72" marker-end="url(#a)"/>
 <rect class="f" x="700" y="44" width="84" height="56" rx="8"/><text class="b c" x="742" y="68">konteiner</text><text class="c s" x="742" y="88">UID 0 = root</text>
 <text class="b" x="20" y="166">Podman: fork/exec, systemd hoiab teenust</text>
-<rect class="u" x="10" y="182" width="780" height="104" rx="10"/><text class="s" x="20" y="306">systemd unit labseis-db.service (Quadlet), kasutaja «kasutaja», MemoryMax=, Restart=</text>
+<rect class="u" x="10" y="182" width="780" height="104" rx="10"/><text class="s" x="20" y="306">systemd unit labseis-mc.service (Quadlet), kasutaja «kasutaja», MemoryMax=, Restart=</text>
 <rect class="p" x="20" y="206" width="110" height="56" rx="8"/><text class="b c" x="75" y="230">podman</text><text class="c s" x="75" y="250">käivitab, lõpetab</text>
 <line class="l" x1="130" y1="234" x2="198" y2="234" marker-end="url(#a)"/>
 <rect class="p" x="200" y="206" width="120" height="56" rx="8"/><text class="b c" x="260" y="230">conmon</text><text class="c s" x="260" y="250">stdio, väljumiskood</text>
