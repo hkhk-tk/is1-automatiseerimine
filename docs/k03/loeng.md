@@ -963,6 +963,29 @@ Fail `~/.config/containers/systemd/labseis-db.container` (`Image=`, `PublishPort
 
 **Millal mida.** Podman koos Quadletiga sobib RHEL-i pere serverisse, kus töötab üks või paar teenust: haldus, logid ja audit käivad samade tööriistadega mis teistel teenustel. Docker sobib näiteks arendaja masinasse, CI agendile ja sinna, kus tööriistad eeldavad Compose'i ja Dockeri socket'it.
 
+### Dockeri alternatiivid
+
+Podman ei ole ainus alternatiiv. Kuna image'i vorming ja käitamine on OCI standardis kirjas, saab Dockeri iga osa asendada teise tööriistaga ja image jääb samaks ([ülevaade Dockeri alternatiividest](https://spacelift.io/blog/docker-alternatives)). Alternatiivid ei asenda Dockerit tervikuna, vaid ühte kihti: arendaja töökeskkonda, image'i ehitamist, mootorit, madala taseme käitusaega või mitme serveri haldust.
+
+<figure markdown="span">
+  ![Kihid ja alternatiivid: arendaja töökeskkond Docker Desktop asemel Podman Desktop, Rancher Desktop, OrbStack, Colima; image'i ehitamine BuildKit asemel Buildah; mootor dockerd asemel Podman või containerd koos nerdctl-iga; käitusaeg runc asemel crun või Kata Containers; mitu serverit Docker Swarm asemel Kubernetes, OpenShift või pilve hallatud teenused](assets/k03_alternatiivid.svg)
+  <figcaption>Joonis 3.23. Dockeri osad ja nende alternatiivid kihtide kaupa (Talvik, 2026).</figcaption>
+</figure>
+
+??? note "Tabel 3.18. Dockeri alternatiivid"
+
+    | Tööriist | Mida asendab | Millal valida |
+    |---|---|---|
+    | [Podman](https://podman.io/) | Docker Engine ja käsurida | RHEL-i pere server, rootless, systemd teenused (Quadlet) |
+    | [containerd](https://containerd.io/) ja [nerdctl](https://github.com/containerd/nerdctl) | Docker Engine | sama käitusaeg, mida kasutavad Docker ja Kubernetes; Dockeriga sarnane käsurida |
+    | [Buildah](https://buildah.io/) | `docker build` | image'ite ehitamine konveieris ilma daemonita |
+    | runc, crun | madala taseme käitusaeg | tavaliselt ei vali kasutaja, need on mootori sees; Podman kasutab crun-i |
+    | [LXC](https://linuxcontainers.org/) | (teine konteineritüüp) | süsteemikonteiner, mida hallatakse nagu väikest serverit (Proxmoxi CT) |
+    | Podman Desktop, [Rancher Desktop](https://rancherdesktop.io/), OrbStack, Colima | Docker Desktop | arendaja Windowsi või macOS-i masin; litsentsid osas 10 |
+    | Kubernetes, OpenShift | Docker Swarm, käsitsi hallatud hostid | palju servereid, kõrgkäideldavus (7. kohtumine) |
+    | virtuaalmasin, Kata Containers | konteineri isolatsioon | tugevam eraldatus, usaldamatu kood, teine OS |
+    | PaaS (Heroku, AWS Elastic Beanstalk, Google App Engine) | kogu käituskeskkonna haldus | meeskond ei soovi konteinereid ise hallata; hinnaks on sõltuvus teenusepakkujast |
+
 ??? question "Kontrolli ennast"
 
     1. AlmaLinuxi serveris töötab Quadleti teenus pärast `systemctl --user start`-i, aga pärast masina taaskäivitust mitte, kuni keegi sisse logib. Miks ja mis on parandus?
@@ -987,7 +1010,7 @@ jq -r '[.components[].licenses[]?.license | (.id // .name)] | group_by(.) | map(
 
 Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 2023. aastal Terraformi ja Vaulti BSL-i litsentsile, mis piirab konkureerivat kasutust. Kogukond tegi neist avatud harud OpenTofu ja OpenBao, mida kasutame 4. kohtumisel. Sama küsimus kehtib iga tööriista kohta, mille ümber meeskond oma automaatika ehitab: kes projekti omab ja mis juhtub, kui litsents muutub.
 
-??? note "Tabel 3.18. Tööriistad ja litsentsid"
+??? note "Tabel 3.19. Tööriistad ja litsentsid"
 
     | Tööriist | Litsents | Tasu |
     |---|---|---|
