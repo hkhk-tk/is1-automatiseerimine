@@ -52,13 +52,13 @@ Sõna „Docker“ kasutatakse mitme eri asja kohta. Selles loengus töötame pe
 
 | Tööetapp | Tööriist või teenus | Roll |
 |---|---|---|
-| käivita serveris | ![](assets/logo/docker.svg){ .logo }Docker Engine (käsk `docker`) | ehitab image'id ja käivitab konteinerid; see on praktikumis control'is |
-| kirjelda mitu teenust | ![](assets/logo/docker.svg){ .logo }Docker Compose | kõik rakenduse teenused ühes failis, käivitus ühe käsuga |
-| arenda oma arvutis | ![](assets/logo/docker.svg){ .logo }Docker Desktop, redaktori laiendused | sama Engine Windowsis ja macOS-is koos graafilise vaatega |
-| hoia ja jaga image'eid | ![](assets/logo/docker.svg){ .logo }Docker Hub või muu registry (meil ![](assets/logo/harbor.svg){ .logo }Harbor) | image'ite hoidla, kust teised masinad need alla laadivad |
-| leia turvaauke | ![](assets/logo/docker.svg){ .logo }Docker Scout | analüüsib image'i komponente ja teadaolevaid turvaauke ning soovitab parandusi |
-| vali hooldatud baas | ![](assets/logo/docker.svg){ .logo }Docker Hardened Images | minimaalsed hooldatud baas-image'id koos komponentide nimekirja ja päritolutõendiga |
-| eralda AI-agendid | ![](assets/logo/docker.svg){ .logo }Docker Sandboxes | käivitab AI-agendi eraldi väikeses virtuaalmasinas |
+| käivita serveris | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Engine (käsk `docker`) | ehitab image'id ja käivitab konteinerid; see on praktikumis control'is |
+| kirjelda mitu teenust | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Compose | kõik rakenduse teenused ühes failis, käivitus ühe käsuga |
+| arenda oma arvutis | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Desktop, redaktori laiendused | sama Engine Windowsis ja macOS-is koos graafilise vaatega |
+| hoia ja jaga image'eid | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Hub või muu registry (meil ![](assets/logo/harbor.svg){ .logo width="18" height="18" }Harbor) | image'ite hoidla, kust teised masinad need alla laadivad |
+| leia turvaauke | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Scout | analüüsib image'i komponente ja teadaolevaid turvaauke ning soovitab parandusi |
+| vali hooldatud baas | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Hardened Images | minimaalsed hooldatud baas-image'id koos komponentide nimekirja ja päritolutõendiga |
+| eralda AI-agendid | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Sandboxes | käivitab AI-agendi eraldi väikeses virtuaalmasinas |
 
 *Tabel 3.2. Dockeri ökosüsteem tööetappide järgi.*
 
@@ -483,7 +483,7 @@ Compose kirjeldab, mis töötab ühe hosti konteinerites. Keegi peab aga paigald
 
 Praktikumis paigaldab Ansible serverisse Dockeri, paneb paika daemoni seaded ja CA-sertifikaadi ning viib serverisse failid, mida stack vajab, ka saladused Vaultist. Rakenduse teenused (millised konteinerid, millise image'iga, millises võrgus) on kirjeldatud Compose'i failis. Ansible ei kirjelda iga konteinerit eraldi: see kopeerib Compose'i faili serverisse ja käivitab selle.
 
-![](assets/logo/ansible.svg){ .logo }Selleks on kogus [`community.docker`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/index.html) moodul [`docker_compose_v2`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_compose_v2_module.html). See käivitab hostis `docker compose up` ja teatab `changed` ainult siis, kui mõni konteiner loodi, muudeti või kustutati. Idempotentsuse annab Compose ise, moodul loeb tema väljundit.
+![](assets/logo/ansible.svg){ .logo width="18" height="18" }Selleks on kogus [`community.docker`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/index.html) moodul [`docker_compose_v2`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_compose_v2_module.html). See käivitab hostis `docker compose up` ja teatab `changed` ainult siis, kui mõni konteiner loodi, muudeti või kustutati. Idempotentsuse annab Compose ise, moodul loeb tema väljundit.
 
 ```yaml
 - name: Labori seis konteinerites
@@ -627,17 +627,17 @@ Hoidla valimisel tuleb eristada kolme küsimust: milliseid paketivorminguid on v
 
     | Väljaanne | Mida hoiab | Tasuta | Ise hallatav | SaaS | Piirang |
     |---|---|---|---|---|---|
-    | ![](assets/logo/sonatype.svg){ .logo }Nexus Repository Community Edition | mitme vormingu paketid, ka image'id | jah, kasutuspiiridega | jah | ei | mahu- ja päringupiirid; SSO, kõrgkäideldavus ja tugi ei kuulu sisse |
-    | ![](assets/logo/sonatype.svg){ .logo }Nexus Repository tasulised tasemed | samad vormingud | ei | jah | jah | lisafunktsioonid sõltuvad tasemest |
-    | ![](assets/logo/jfrog.svg){ .logo }JFrog Artifactory OSS | Maven, Gradle ja üldised failid (Generic) | jah | jah | ei | ei ole kõigi vormingute tasuta hoidla |
-    | ![](assets/logo/jfrog.svg){ .logo }JFrog Container Registry (JCR) | Docker/OCI image'id, Helm, Generic | jah | jah | ei | teisi paketivorminguid ega Xray skannimist pole |
-    | ![](assets/logo/jfrog.svg){ .logo }JFrog Artifactory tasulised paketid | kõik vormingud | ei | jah | jah | funktsioonid sõltuvad tellimusest |
+    | ![](assets/logo/sonatype.svg){ .logo width="18" height="18" }Nexus Repository Community Edition | mitme vormingu paketid, ka image'id | jah, kasutuspiiridega | jah | ei | mahu- ja päringupiirid; SSO, kõrgkäideldavus ja tugi ei kuulu sisse |
+    | ![](assets/logo/sonatype.svg){ .logo width="18" height="18" }Nexus Repository tasulised tasemed | samad vormingud | ei | jah | jah | lisafunktsioonid sõltuvad tasemest |
+    | ![](assets/logo/jfrog.svg){ .logo width="18" height="18" }JFrog Artifactory OSS | Maven, Gradle ja üldised failid (Generic) | jah | jah | ei | ei ole kõigi vormingute tasuta hoidla |
+    | ![](assets/logo/jfrog.svg){ .logo width="18" height="18" }JFrog Container Registry (JCR) | Docker/OCI image'id, Helm, Generic | jah | jah | ei | teisi paketivorminguid ega Xray skannimist pole |
+    | ![](assets/logo/jfrog.svg){ .logo width="18" height="18" }JFrog Artifactory tasulised paketid | kõik vormingud | ei | jah | jah | funktsioonid sõltuvad tellimusest |
 
 Tasuta tarkvara ei tähenda tasuta teenust: ise hallates jäävad asutuse kanda serverid, salvestus, varundus, uuendused ja rikete lahendamine.
 
 ### AI-rakenduste hoidlad
 
-AI-teenus võtab käituskeskkonna, mudeli ja sõltuvused sageli eri kohtadest. Image tuleb tavalisest registry'st (Harbor, Docker Hub, GHCR) või NVIDIA GPU-tarkvara puhul ![](assets/logo/nvidia.svg){ .logo }[NVIDIA NGC](https://catalog.ngc.nvidia.com/) registry'st `nvcr.io`. Mudeli kaalud, tokenizer ja seadistus tulevad mudelihoidlast, kõige sagedamini ![](assets/logo/huggingface.svg){ .logo }[Hugging Face Hubist](https://huggingface.co/docs/hub/index) või asutuse sisemisest hoidlast. Pythoni paketid tulevad PyPI-st või asutuse paketiproxy kaudu. Artifactory ja Nexus oskavad uuemates versioonides vahendada ka Hugging Face'i sisu, aga funktsioonid sõltuvad versioonist ja väljaandest.
+AI-teenus võtab käituskeskkonna, mudeli ja sõltuvused sageli eri kohtadest. Image tuleb tavalisest registry'st (Harbor, Docker Hub, GHCR) või NVIDIA GPU-tarkvara puhul ![](assets/logo/nvidia.svg){ .logo width="18" height="18" }[NVIDIA NGC](https://catalog.ngc.nvidia.com/) registry'st `nvcr.io`. Mudeli kaalud, tokenizer ja seadistus tulevad mudelihoidlast, kõige sagedamini ![](assets/logo/huggingface.svg){ .logo width="18" height="18" }[Hugging Face Hubist](https://huggingface.co/docs/hub/index) või asutuse sisemisest hoidlast. Pythoni paketid tulevad PyPI-st või asutuse paketiproxy kaudu. Artifactory ja Nexus oskavad uuemates versioonides vahendada ka Hugging Face'i sisu, aga funktsioonid sõltuvad versioonist ja väljaandest.
 
 <figure markdown="span">
   ![Konteineriregistryst (Harbor, GHCR, NVIDIA NGC) tuleb image ja mudelihoidlast (Hugging Face Hub või sisemine hoidla) mudelifailid; käitushostis ühendatakse mudelifailid konteinerisse](assets/k03_ai_hoidlad.svg)
@@ -650,13 +650,13 @@ Mudel ja image ei pea olema üks artefakt. Mudelifailid on sageli gigabaitides j
 
     | Vajadus | Valik |
     |---|---|
-    | avatud lähtekoodiga projekt, image kõigile | ![](assets/logo/docker.svg){ .logo }Docker Hub, ![](assets/logo/github.svg){ .logo }GHCR, ![](assets/logo/redhat.svg){ .logo }Quay |
-    | kood ja konveier GitHubis või GitLabis | ![](assets/logo/github.svg){ .logo }GHCR, ![](assets/logo/gitlab.svg){ .logo }GitLab Container Registry |
-    | teenused ühes pilves | ![](assets/logo/amazonwebservices.svg){ .logo }ECR, ACR, ![](assets/logo/googlecloud.svg){ .logo }Artifact Registry |
-    | asutuse võrk, õigused projektide kaupa, skannimine | ![](assets/logo/harbor.svg){ .logo }Harbor |
-    | lisaks image'itele Maveni, npm-i ja Pythoni pakettide hoidla | ![](assets/logo/sonatype.svg){ .logo }Nexus, ![](assets/logo/jfrog.svg){ .logo }Artifactory |
+    | avatud lähtekoodiga projekt, image kõigile | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Hub, ![](assets/logo/github.svg){ .logo width="18" height="18" }GHCR, ![](assets/logo/redhat.svg){ .logo width="18" height="18" }Quay |
+    | kood ja konveier GitHubis või GitLabis | ![](assets/logo/github.svg){ .logo width="18" height="18" }GHCR, ![](assets/logo/gitlab.svg){ .logo width="18" height="18" }GitLab Container Registry |
+    | teenused ühes pilves | ![](assets/logo/amazonwebservices.svg){ .logo width="18" height="18" }ECR, ACR, ![](assets/logo/googlecloud.svg){ .logo width="18" height="18" }Artifact Registry |
+    | asutuse võrk, õigused projektide kaupa, skannimine | ![](assets/logo/harbor.svg){ .logo width="18" height="18" }Harbor |
+    | lisaks image'itele Maveni, npm-i ja Pythoni pakettide hoidla | ![](assets/logo/sonatype.svg){ .logo width="18" height="18" }Nexus, ![](assets/logo/jfrog.svg){ .logo width="18" height="18" }Artifactory |
     | test või üks meeskond ilma kasutajaliideseta | `registry:2` |
-    | Docker Hubi piir või internetita võrk | pull-through cache (![](assets/logo/harbor.svg){ .logo }Harbor, ![](assets/logo/sonatype.svg){ .logo }Nexus, `registry:2` proxy) |
+    | Docker Hubi piir või internetita võrk | pull-through cache (![](assets/logo/harbor.svg){ .logo width="18" height="18" }Harbor, ![](assets/logo/sonatype.svg){ .logo width="18" height="18" }Nexus, `registry:2` proxy) |
 
 ??? question "Kontrolli ennast"
 
@@ -708,7 +708,7 @@ Skanneri tulemus vajab tõlgendamist. Tüüpiline Debiani baasil image annab kü
 
 **Labori seis:** Kuidas käitaksime db01 ja mc01 systemd teenusena ilma Dockerita?
 
-AlmaLinuxi ja RHEL-i serveris on vaikimisi ![](assets/logo/podman.svg){ .logo }[Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab paketi `podman-docker`. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
+AlmaLinuxi ja RHEL-i serveris on vaikimisi ![](assets/logo/podman.svg){ .logo width="18" height="18" }[Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab paketi `podman-docker`. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
 
 <figure markdown="span">
   ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
@@ -820,17 +820,17 @@ Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 20
 
     | Tööriist | Litsents | Tasu |
     |---|---|---|
-    | ![](assets/logo/docker.svg){ .logo }Docker Engine, CLI, Compose | Apache 2.0 | tasuta |
-    | ![](assets/logo/docker.svg){ .logo }Docker Desktop | kommertslitsents | tasuta alla 250 töötaja ja alla 10 M$ käibe; suurem ettevõte ja valitsusasutus maksavad |
-    | ![](assets/logo/podman.svg){ .logo }Podman, Podman Desktop, Buildah | Apache 2.0 | tasuta |
-    | ![](assets/logo/kubernetes.svg){ .logo }containerd, runc, Kubernetes | Apache 2.0 | tasuta |
-    | ![](assets/logo/harbor.svg){ .logo }Harbor, CNCF Distribution (`registry:2`) | Apache 2.0 | tasuta |
-    | ![](assets/logo/docker.svg){ .logo }Docker Hub | teenus | tasuta piirangutega, tasulised tellimused |
-    | ![](assets/logo/sonatype.svg){ .logo }Nexus, Artifactory | tasuta põhiversioon, kommertsversioon | täisfunktsioonid tasulised |
-    | ![](assets/logo/trivy.svg){ .logo }Trivy | Apache 2.0 | tasuta |
-    | ![](assets/logo/docker.svg){ .logo }Docker Hardened Images | Apache 2.0 (alates 12.2025) | tasuta; paikamise lubadus ja vastavusnõuded tasulised |
-    | ![](assets/logo/docker.svg){ .logo }Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
-    | ![](assets/logo/docker.svg){ .logo }Docker Sandboxes | Dockeri toode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Engine, CLI, Compose | Apache 2.0 | tasuta |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Desktop | kommertslitsents | tasuta alla 250 töötaja ja alla 10 M$ käibe; suurem ettevõte ja valitsusasutus maksavad |
+    | ![](assets/logo/podman.svg){ .logo width="18" height="18" }Podman, Podman Desktop, Buildah | Apache 2.0 | tasuta |
+    | ![](assets/logo/kubernetes.svg){ .logo width="18" height="18" }containerd, runc, Kubernetes | Apache 2.0 | tasuta |
+    | ![](assets/logo/harbor.svg){ .logo width="18" height="18" }Harbor, CNCF Distribution (`registry:2`) | Apache 2.0 | tasuta |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Hub | teenus | tasuta piirangutega, tasulised tellimused |
+    | ![](assets/logo/sonatype.svg){ .logo width="18" height="18" }Nexus, Artifactory | tasuta põhiversioon, kommertsversioon | täisfunktsioonid tasulised |
+    | ![](assets/logo/trivy.svg){ .logo width="18" height="18" }Trivy | Apache 2.0 | tasuta |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Hardened Images | Apache 2.0 (alates 12.2025) | tasuta; paikamise lubadus ja vastavusnõuded tasulised |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
+    | ![](assets/logo/docker.svg){ .logo width="18" height="18" }Docker Sandboxes | Dockeri toode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
 
 ??? question "Kontrolli ennast"
 
