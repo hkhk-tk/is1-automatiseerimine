@@ -99,8 +99,16 @@ Konteinerid muutsid ka rakenduste ülesehitust. Varem paigaldati rakendus sageli
 
 ### Konteiner tuuma vaates
 
-
 [Konteiner](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) on hosti tuumas töötav tavaline protsess, mida tuum isoleerib kahe mehhanismiga. [Namespace'id](https://man7.org/linux/man-pages/man7/namespaces.7.html) muudavad seda, mida protsess näeb: oma PID-puu, kus ta on PID 1, oma võrguliidesed, mount'id ja hostinimi. [cgroup'id](https://man7.org/linux/man-pages/man7/cgroups.7.html) piiravad mälu, CPU-aega ja protsesside arvu. systemd kasutab samu mehhanisme (`PrivateTmp=`, `MemoryMax=`).
+
+Konteinerit on kõige lihtsam mõista virtuaalmasinaga võrreldes. **Virtualiseerimisel** jagab tarkvarakiht ehk **hüperviisor** ühe füüsilise serveri protsessori, mälu ja ketta mitme virtuaalmasina vahel. Kursuse masinad on Proxmoxi hüperviisoril töötavad VM-id. Igas VM-is on oma operatsioonisüsteem koos oma tuumaga, nii et Ubuntu VM vajab mitu gigabaiti ketast, sellele eraldatakse kindel hulk mälu ja käivitus võtab kümneid sekundeid kuni minuteid. Konteineril oma tuuma ei ole: selle protsessid töötavad hosti tuumal ja image sisaldab ainult rakendust ja selle sõltuvusi. `nginx:alpine` image on mõnikümmend megabaiti ja konteiner käivitub alla sekundi.
+
+<figure markdown="span">
+  ![Vasakul kaks VM-i, kummalgi oma tuum ja OS hüperviisori peal; paremal viis konteinerit, mis jagavad ühte hosti tuuma](assets/k03_vm_vs_konteiner.svg)
+  <figcaption>Joonis 3.3. VM-il on oma tuum ja OS, konteiner jagab hosti tuuma ja kannab kaasas ainult oma failipuud (Talvik, 2026).</figcaption>
+</figure>
+
+Hind on isolatsiooni tugevus. Kuna tuum on ühine, puudutab tuuma haavatavus kõiki samas hostis töötavaid konteinereid. Hüperviisor on palju kitsam ründepind, sest VM-id jagavad ainult virtualiseeritud riistvara. Seepärast käitatakse konteinereid tavaliselt virtuaalmasinates, nagu ka selles kursuses.
 
 Järgmistes näidetes kasutame Linuxi serveris tavapärast rootful Docker Engine'it, mille daemon töötab root'ina. Rootless-käitust käsitleb osa 9.
 
@@ -127,7 +135,7 @@ Näite kaks viimast käsku on erineva tagajärjega. `docker stop` ja `docker sta
 
 <figure markdown="span">
   ![Image'ist loob create oleku created, start viib olekusse running, docker run teeb mõlemad; pause ja unpause vahetavad running ja paused; stop või protsessi lõpp viib olekusse exited, start tagasi running; rm eemaldab konteineri koos kirjutatava kihiga](assets/k03_elutsykkel.svg)
-  <figcaption>Joonis 3.3. Konteineri elutsükkel: stop jätab kirjutatava kihi alles, rm kustutab selle (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.4. Konteineri elutsükkel: stop jätab kirjutatava kihi alles, rm kustutab selle (Talvik, 2026).</figcaption>
 </figure>
 
 ??? note "Tabel 3.3. Käsu `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine` osad"
@@ -144,11 +152,14 @@ Näite kaks viimast käsku on erineva tagajärjega. `docker stop` ja `docker sta
 
     | Käsk | Vastab küsimusele |
     |---|---|
+    | `docker pull <image>` | laadi image registry'st alla ilma konteinerit käivitamata |
+    | `docker image ls` (vanem kuju `docker images`) | millised image'id on hostis ja kui suured need on |
     | `docker ps`, `docker ps -a` | mis töötab; `-a` näitab ka peatatud konteinereid ja nende väljumiskoodi |
     | `docker logs <nimi>` | mida PID 1 kirjutas stdout'i ja stderr'i |
     | `docker exec -it <nimi> sh` | mis on töötava konteineri sees; käivitab sinna uue protsessi |
     | `docker inspect <nimi>` | täielik seadistus: image, võrgud, mount'id, keskkond, olek |
     | `docker stop`, `docker start` | peata ja käivita sama konteiner; kirjutatav kiht jääb alles |
+    | `docker pause`, `docker unpause` | külmuta konteineri protsessid hetkeks ja jätka; mälu jääb alles |
     | `docker rm` | kustuta konteiner koos kirjutatava kihiga |
 
 Veaotsing algab samadest küsimustest:
@@ -173,7 +184,7 @@ Konteinerit ei käivita käsureaprogramm ise. Käsk läheb socket'i kaudu root'i
 
 <figure markdown="span">
   ![docker klient saadab socket'i kaudu käsu dockerd-le, see containerd-le ja runc-ile, mis käivitab konteineri hosti protsessina; dockerd tõmbab image'id registry'st](assets/k03_docker_ahel.svg)
-  <figcaption>Joonis 3.4. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.5. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
 </figure>
 
 ??? note "Tabel 3.5. Docker Engine'i osad"
@@ -189,13 +200,6 @@ Konteinerit ei käivita käsureaprogramm ise. Käsk läheb socket'i kaudu root'i
 ??? info "Süvenemiseks: käivitusahel ja daemoni taaskäivitus"
 
     `dockerd` annab töö edasi `containerd`-le, see käivitab iga konteineri jaoks `containerd-shim`-i ja shim kutsub välja `runc`-i. `runc` loob namespace'id ja [cgroup'i](https://docs.docker.com/engine/containers/resource_constraints/), käivitab protsessi ja lõpetab ise töö. Konteineri protsessi vanem on shim, mitte `dockerd`. Kas daemoni taaskäivitus konteinerid peatab, sõltub seadest [`live-restore`](https://docs.docker.com/engine/daemon/live-restore/), mis on vaikimisi välja lülitatud. Tavaline `apt upgrade` paketiga `docker-ce` taaskäivitab seega kõik hosti konteinerid. Paikamise plaanis on see sama oluline kui tuumauuendus.
-
-<figure markdown="span">
-  ![Vasakul kaks VM-i, kummalgi oma tuum ja OS hüperviisori peal; paremal viis konteinerit, mis jagavad ühte hosti tuuma](assets/k03_vm_vs_konteiner.svg)
-  <figcaption>Joonis 3.5. VM-il on oma tuum ja OS, konteiner jagab hosti tuuma ja kannab kaasas ainult oma failipuud (Talvik, 2026).</figcaption>
-</figure>
-
-Kuna eraldi tuuma pole, käivitub konteiner sekunditega, aga tuuma haavatavus puudutab kõiki konteinereid. Hüperviisor on palju kitsam ründepind.
 
 ### Docker socket
 
