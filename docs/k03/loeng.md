@@ -808,7 +808,7 @@ Litsentsi muutus on tarneahela risk samamoodi nagu haavatavus. HashiCorp viis 20
     | ![](assets/logo/trivy.svg){ .logo }Trivy | Apache 2.0 | tasuta |
     | ![](assets/logo/docker.svg){ .logo }Docker Hardened Images | Apache 2.0 (alates 12.2025) | tasuta; paikamise lubadus ja vastavusnõuded tasulised |
     | ![](assets/logo/docker.svg){ .logo }Docker Scout | teenus | tasuta piiratud arvule repositooriumidele, rohkem tasulises tellimuses |
-    | ![](assets/logo/docker.svg){ .logo }Docker Sandboxes | kommertstoode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
+    | ![](assets/logo/docker.svg){ .logo }Docker Sandboxes | Dockeri toode | kohalik kasutus tasuta, ka äriliselt; Cloud Sandboxes ja AI Governance tasulised |
 
 ??? question "Kontrolli ennast"
 
