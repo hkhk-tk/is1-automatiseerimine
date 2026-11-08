@@ -115,11 +115,11 @@ Konteinerit on kõige lihtsam mõista virtuaalmasinaga võrreldes. **Virtualisee
   <figcaption>Joonis 3.4. VM-il on oma tuum ja OS, konteiner jagab hosti tuuma ja kannab kaasas ainult oma failipuud (Talvik, 2026).</figcaption>
 </figure>
 
-Ühes serveris paiknevad konteinerid nii, nagu näitab järgmine joonis. Iga konteiner kannab kaasas oma rakenduse ja selle sõltuvused, nii et app01 Java ja db01 teegid ei sega teineteist. Operatsioonisüsteemi tuum on kõigile ühine. Docker Engine käivitab ja jälgib konteinereid, aga konteinerite protsessid töötavad otse hosti tuumal, Docker ei ole nende ja tuuma vahel (osa 1).
+Igal konteineril on oma rakendus ja teegid, nii et app01 Java ja db01 teegid ei sega teineteist. Tuum on aga ühine: konteinerite protsessid teevad süsteemikutsed otse hosti tuumale. Docker Engine loob ja haldab konteinereid, aga ei asu nende ja tuuma vahel.
 
 <figure markdown="span">
-  ![Kolm konteinerit web01, app01 ja db01, igaühes rakendus ja selle teegid; nende all konteinerite käituskeskkond Docker Engine või Podman, hosti operatsioonisüsteem ühe Linuxi tuumaga ja infrastruktuur](assets/k03_konteiner_kihid.svg)
-  <figcaption>Joonis 3.5. Konteinerid ühes serveris: igaühel oma sõltuvused, tuum on ühine (Talvik, 2026).</figcaption>
+  ![Kolm konteinerit web01, app01 ja db01: igaühes rakendus ja selle teegid; app01 on esile tõstetud kui konteiner; kõik teevad süsteemikutseid ühisele hosti Linuxi tuumale; Docker Engine või Podman on kõrval ja loob ning haldab konteinereid; all füüsiline server või virtuaalmasin](assets/k03_konteiner_kihid.svg)
+  <figcaption>Joonis 3.5. Igal konteineril on oma rakendus ja teegid, tuum on ühine; Docker loob ja haldab konteinereid, aga ei ole nende ja tuuma vahel (Talvik, 2026).</figcaption>
 </figure>
 
 Hind on isolatsiooni tugevus. Kuna tuum on ühine, puudutab tuuma haavatavus kõiki samas hostis töötavaid konteinereid. Hüperviisor on palju kitsam ründepind, sest VM-id jagavad ainult virtualiseeritud riistvara. Seepärast käitatakse konteinereid tavaliselt virtuaalmasinates, nagu ka selles kursuses.
