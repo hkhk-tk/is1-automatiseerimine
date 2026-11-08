@@ -38,18 +38,24 @@ Loengu keskne mõte on üks lause: konteiner on ühekordne, image on muutumatu, 
     - valida, kus image'eid hoida (avalik registry, oma registry, pull-through cache), ning hinnata SBOM-i ja skannimise abil, mida uuesti ehitada;
     - võrrelda Dockeri ja Podmani käitusmudelit ning teada, millised tööriistad on tasuta ja millised mitte.
 
-## Docker ei ole ainult üks programm
+## Kolm põhimõistet ja Dockeri tööriistad
+
+Enne tööriistu kolm sõna, mis korduvad kogu loengus. Igaühe kohta on lähem selgitus oma osas.
+
+- **Image** on pakett, milles on rakendus koos kõigega, mida see käivitamiseks vajab: Labori seisu puhul JRE, Tomcat ja WAR-fail. Seda ei paigaldata serverisse failideks laiali, vaid käivitatakse tervikuna. Image ei muutu: uus versioon on uus image.
+- **Konteiner** on image'ist käivitatud protsess. Samast image'ist võib käivitada mitu konteinerit, nagu samast programmist mitu protsessi.
+- **Registry** on server, kus image'eid hoitakse ja kust neid alla laaditakse. See on image'ite jaoks sama, mis apt-repositoorium pakettide jaoks, mida kasutasid 1. kohtumisel: `docker pull` laadib image'i alla nagu `apt install` paketi, ja `docker push` laadib oma image'i üles, et teised masinad saaksid seda kasutada.
 
 Sõna „Docker“ kasutatakse mitme eri asja kohta. Selles loengus töötame peamiselt Docker Engine'i, käsurea ja Compose'iga, aga need kuuluvad laiemasse tööriistade ja teenuste ökosüsteemi.
 
 | Tööetapp | Tööriist või teenus | Roll |
 |---|---|---|
-| arenda ja testi | Docker Desktop, CLI, IDE laiendused | rakenduse ehitamine, käivitamine ja uurimine arendaja masinas |
-| kirjelda mitu teenust | Docker Compose | rakenduse teenused, võrgud ja volume'id ühes failis |
-| ehita ja käita | Docker Engine ja BuildKit | image'ite ehitamine ja konteinerite käitamine |
-| avalda ja tõmba | Docker Hub või muu registry | image'ite hoidmine ja levitamine |
-| kontrolli ja hoolda | Docker Scout, Docker Hardened Images | komponentide ja haavatavuste analüüs, hooldatud baas-image'id |
-| käita AI-agente eraldatult | Docker Sandboxes | agendi käitamine eraldi microVM-is |
+| käivita serveris | Docker Engine (käsk `docker`) | ehitab image'id ja käivitab konteinerid; see on praktikumis control'is |
+| kirjelda mitu teenust | Docker Compose | kõik rakenduse teenused ühes failis, käivitus ühe käsuga |
+| arenda oma arvutis | Docker Desktop, redaktori laiendused | sama Engine Windowsis ja macOS-is koos graafilise vaatega |
+| hoia ja jaga image'eid | Docker Hub või muu registry (meil Harbor) | image'ite hoidla, kust teised masinad need alla laadivad |
+| kontrolli turvalisust | Docker Scout, Docker Hardened Images | otsib image'ist teadaolevaid turvaauke; turvalisemaks tehtud valmis image'id |
+| eralda AI-agendid | Docker Sandboxes | käivitab AI-agendi eraldi väikeses virtuaalmasinas |
 
 *Tabel 3.2. Dockeri ökosüsteem tööetappide järgi.*
 
@@ -509,7 +515,15 @@ Viimane samm on koristus. Tagasipööramine on kiire ainult siis, kui eelmine im
 
 ## 7. Kus image'id hoitakse
 
-Image, mis on ainult ehitaja masinas, ei jõua tootmisse. **Registry** on server, mis hoiab image'eid ja pakub OCI distribution API-t (`/v2/`): kihid ja manifestid on räsi järgi salvestatud failid (blob'id), tag on muudetav viide manifestile. Konveier ja klaster võtavad image'i registry'st, nii et seal otsustatakse, mis tootmisse jõuab: kes tohib lükata, kes tohib tõmmata ja mida enne skannitakse.
+Image, mis on ainult ehitaja masinas, ei jõua tootmisse. Kui control'is ehitatud app-image peab käivituma ka teises serveris, konveieris või klastris, peab see olema kohas, kust kõik need masinad selle kätte saavad. See koht on **registry**.
+
+Töö käib kahe käsuga. `docker push` laadib image'i registry'sse üles, `docker pull` laadib selle alla. `docker run` teeb `pull`-i ise, kui image'it masinas veel pole. Image'i nimes on registry aadress ees: `harbor.lab.hkhk.lan/maasikas/labori-seis-app:1.0` tähendab registry't `harbor.lab.hkhk.lan`, projekti `maasikas`, image'it `labori-seis-app` ja versiooni `1.0`. Kui registry aadressi pole (`nginx:alpine`), on see Docker Hub.
+
+Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: kes tohib image'eid üles laadida, kes alla laadida ja mida enne kontrollitakse. Seepärast on registry valik ja seadistus administraatori töö samamoodi nagu apt-repositooriumide haldus.
+
+??? info "Süvenemiseks: mis on registry sees"
+
+    Registry pakub OCI distribution API-t (`/v2/`). Image on seal kihid ja manifest, mis on salvestatud räsi järgi failidena (blob'id). Tag on muudetav viide manifestile. `docker push` küsib iga kihi kohta, kas see on juba olemas, ja saadab ainult puuduvad. Seepärast on teine sama baasiga image kiire üles laadida.
 
 <figure markdown="span">
   ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, lükkab oma image'id Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
