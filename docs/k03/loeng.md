@@ -275,6 +275,13 @@ Tarkvaraarenduses nimetatakse **artefaktiks** ehitamise käigus loodud tulemit, 
 
 Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon. Image'i puhul on vastupidi: tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse.
 
+Arendaja ehitab image'i ja proovib selle oma masinas konteinerina läbi. Seejärel laadib ta image'i registry'sse. Testserver ja tootmisserver tõmbavad sealt täpselt sama image'i, mitte ei paigalda rakendust uuesti. Kui test õnnestus, käivitub tootmises sama sisuga konteiner. Seda, et sisu on sama, saab kontrollida image'i räsi ehk digest'i järgi (vt allpool „Tag ja digest“).
+
+<figure markdown="span">
+  ![Arendaja kirjutab Dockerfile'i, build teeb image'i labori-seis-app:1.4, run käivitab selle arendaja masinas, push laadib Harborisse, testserver ja tootmisserver tõmbavad sama image'i ja käivitavad konteineri](assets/k03_yks_image.svg)
+  <figcaption>Joonis 3.9. Image ehitatakse üks kord ja iga masin käivitab sama image'i (Talvik, 2026).</figcaption>
+</figure>
+
 Dockerfile kirjeldab, kuidas image ehitatakse, image on see, mis käivitamiseks pakitakse, ja konteiner on image'i käivitatud eksemplar.
 
 ```text
@@ -288,7 +295,7 @@ Dockerfile ja lähtekood ──build──► image ──run──► konteiner
 
 <figure markdown="span">
   ![Viis kirjutuskaitstud kihti üksteise peal ja nende peal kaks konteinerit, kummalgi oma kirjutatav kiht](assets/k03_kihid.svg)
-  <figcaption>Joonis 3.9. Kirjutuskaitstud kihid on ühised, igal konteineril on oma õhuke kirjutatav kiht (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.10. Kirjutuskaitstud kihid on ühised, igal konteineril on oma õhuke kirjutatav kiht (Talvik, 2026).</figcaption>
 </figure>
 
 Vastus küsimusele: ei jõua. Mõlemad konteinerid loevad samu kirjutuskaitstud kihte, aga kirjutavad igaüks oma kirjutatavasse kihti, mis kaob koos konteineriga.
@@ -371,7 +378,7 @@ CMD ["catalina.sh", "run"]
 
 <figure markdown="span">
   ![Ehitusaste maven-image'iga teeb WAR-faili; käitusaste tomcat-image'iga saab ainult WAR-i COPY --from abil; lõppimage'is pole Maveni ega lähtekoodi](assets/k03_multistage.svg)
-  <figcaption>Joonis 3.10. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.11. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
 Ehituse vahemälu (build cache) kasutab kihi uuesti, kui juhis ja sisendi räsi pole muutunud, ja esimene muutunud kiht tühistab kõik järgmised ([head tavad](https://docs.docker.com/build/building/best-practices/)). Näites kopeeritakse `pom.xml` enne lähtekoodi: kui muutub ainult kood, võetakse sõltuvuste kiht vahemälust ja Maven ei laadi neid uuesti. Samal põhjusel on commit'i SHA (`GIT_SHA`, antakse `docker build --build-arg GIT_SHA=…`) viimaste ridade seas: kui see oleks faili alguses, ehitataks iga commit'iga kõik järgnevad kihid uuesti.
@@ -382,7 +389,7 @@ Image'ile saab viidata kahel viisil. **Tag** on liigutatav viide manifestile. `l
 
 <figure markdown="span">
   ![Digest osutab alati samale manifestile; tag nginx:1.27 osutas enne turvaparandust samale manifestile ja pärast seda uuele](assets/k03_tag_digest.svg)
-  <figcaption>Joonis 3.11. Tag on liigutatav viide, digest osutab alati samale sisule (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.12. Tag on liigutatav viide, digest osutab alati samale sisule (Talvik, 2026).</figcaption>
 </figure>
 
 ??? info "Mitu arhitektuuri ühe tag'i all"
@@ -419,7 +426,7 @@ Andmete säilitamiseks ühendatakse konteinerisse volume või hosti kataloog. **
 
 <figure markdown="span">
   ![Konteiner db01: kirjutatav kiht kaob docker rm-iga, volume /var/lib/docker/volumes all ja bind mount hosti kataloogis jäävad alles](assets/k03_l_andmed.svg)
-  <figcaption>Joonis 3.12. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.13. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist (Talvik, 2026).</figcaption>
 </figure>
 
 Mõlemal juhul peavad failiõigused sobima konteineris töötava protsessi kasutajaga, ja siin käituvad need kaks erinevalt. Kui tühi volume ühendatakse kataloogi, kus image'is on juba failid, kopeerib Docker selle kataloogi sisu koos omaniku ja õigustega volume'isse, nii et MariaDB andmekataloog saab kohe õige UID. Oluline on, et volume oleks tühi, nimi ei mängi rolli, ja kopeerimise saab keelata valikuga `volume-nocopy`. Bind mount'il on hosti kataloogi õigused. Seepärast sobib bind mount konfiguratsioonifailile ja volume andmebaasile.
@@ -475,7 +482,7 @@ Viie `docker run` käsuga käivitatud stacki soovitud olek on kirjas ainult shel
 
 <figure markdown="span">
   ![Brauser pöördub pordil 8080 web01 poole, web01 app01 poole, app01 db01, mc01 ja rmq01 poole; numbrid näitavad käivitusjärjekorda](assets/k03_compose_stack.svg)
-  <figcaption>Joonis 3.13. Viie teenusega stack. Iga teenus ootab enne käivitumist, kuni sõltuvuste healthcheck annab oleku healthy (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.14. Viie teenusega stack. Iga teenus ootab enne käivitumist, kuni sõltuvuste healthcheck annab oleku healthy (Talvik, 2026).</figcaption>
 </figure>
 
 Allolev näide on väljavõte praktikumi viie teenusega failist. Selles on kaks teenust: app01 ehitatakse oma Dockerfile'ist ja db01 võetakse valmis image'ist. Kommentaarid ütlevad, mida iga rida näitab.
@@ -564,7 +571,7 @@ Praktikumi tootmisfailis on kaks võrku. Sisemises võrgus `back` on kõik teenu
 
 <figure markdown="span">
   ![Võrgus front on web01 ja rmq01; sisemises võrgus back on web01, app01, db01, mc01 ja rmq01; brauser jõuab web01-ni pordi 8080 kaudu](assets/k03_vorgud.svg)
-  <figcaption>Joonis 3.14. Tootmisfaili võrgud: app01, db01 ja mc01 on ainult sisemises võrgus (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.15. Tootmisfaili võrgud: app01, db01 ja mc01 on ainult sisemises võrgus (Talvik, 2026).</figcaption>
 </figure>
 
 Teenuse nimi lahendub Dockeri DNS-is iga kord, kui keegi seda küsib. Nginx lahendab `proxy_pass` aadressi vaikimisi ainult käivitusel, nii et kui app01 luuakse uuesti uue IP-ga, vastab web01 kuni enda taaskäivituseni 502-ga. Praktikumis on Nginx'i seadistuses `resolver 127.0.0.11` ja aadress muutujas, nii et nimi lahendatakse uuesti.
@@ -621,7 +628,7 @@ Töö jaguneb kaheks. Ansible seadistab hosti ja viib sinna failid, Compose loob
 
 <figure markdown="span">
   ![Vasakul Ansible: paigaldab Dockeri, kirjutab daemon.json-i ja CA, kopeerib compose.yaml-i ja .env-i ning käivitab docker_compose_v2; paremal Compose: loob võrgud ja volume'id, käivitab teenused web01, app01, db01, mc01 ja rmq01](assets/k03_ansible_compose.svg)
-  <figcaption>Joonis 3.15. Ansible seadistab hosti, Compose käivitab rakenduse teenused (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.16. Ansible seadistab hosti, Compose käivitab rakenduse teenused (Talvik, 2026).</figcaption>
 </figure>
 
 Compose'i käivitamiseks on kogus [`community.docker`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/index.html) moodul [`docker_compose_v2`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_compose_v2_module.html). See käivitab hostis `docker compose up` ja teatab `changed` ainult siis, kui mõni konteiner loodi, muudeti või kustutati. Idempotentsuse annab Compose ise, moodul loeb tema väljundit.
@@ -709,7 +716,7 @@ Protsessi käivitumine ei tähenda valmisolekut: healthcheck näitab olekut, aga
 
 <figure markdown="span">
   ![v1 töötab, v2 image tõmmatakse, konteiner asendatakse, valmisoleku kontroll; õnnestumisel jääb v2, ebaõnnestumisel pööratakse tagasi v1 image ja seadistus; volume dbdata jääb kogu aja samaks](assets/k03_uuendus_ajatelg.svg)
-  <figcaption>Joonis 3.16. Uuendus ja tagasipööramine: image vahetub, andmed volume'is jäävad (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.17. Uuendus ja tagasipööramine: image vahetub, andmed volume'is jäävad (Talvik, 2026).</figcaption>
 </figure>
 
 Viimane samm on koristus. Tagasipööramine on kiire ainult siis, kui eelmine image on veel hostis või registry's. Cron'iga käivitatav `docker image prune -a` kustutab kõik image'id, mida ükski konteiner ei kasuta, ka tagasipööramise sihtmärgi. Ilma koristuseta kasvab `/var/lib/docker` iga uuendusega. Hostis hoitakse praegust ja eelmist versiooni, registry's väljalaskeid nii kaua, kui tagasipööramine on lubatud.
@@ -745,7 +752,7 @@ Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: 
 
 <figure markdown="span">
   ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, laadib oma image'id üles Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
-  <figcaption>Joonis 3.17. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.18. Image'i teekond: Docker Hub, Harbori vahemälu, oma projekt ja kasutajad (Talvik, 2026).</figcaption>
 </figure>
 
 **Avalikud registry'd** on internetis ja enamasti tasuta avalike image'ite jaoks. [Docker Hub](https://hub.docker.com/) on vaikimisi registry: nimi `nginx` tähendab `docker.io/library/nginx`. Hubis on igaühe image'id, ja päritolu järgi on neil märgised: **Docker Official Images** (`library/`, Dockeri hallatud kogumik, näiteks `nginx`, `mariadb`), **Verified Publisher** (tarkvaratootja enda image'id) ja **Docker-Sponsored Open Source** (avatud lähtekoodiga projektide image'id). Märgiseta image võib olla ükskõik kelle oma.
@@ -792,7 +799,7 @@ AI-teenus võtab käituskeskkonna, mudeli ja sõltuvused sageli eri kohtadest. I
 
 <figure markdown="span">
   ![Konteineriregistryst (Harbor, GHCR, NVIDIA NGC) tuleb image ja mudelihoidlast (Hugging Face Hub või sisemine hoidla) mudelifailid; käitushostis ühendatakse mudelifailid konteinerisse](assets/k03_ai_hoidlad.svg)
-  <figcaption>Joonis 3.18. AI-teenuse image ja mudel tulevad eri hoidlatest (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.19. AI-teenuse image ja mudel tulevad eri hoidlatest (Talvik, 2026).</figcaption>
 </figure>
 
 Mudel ja image ei pea olema üks artefakt. Mõnikord pakitakse väike mudel ka image'isse; see on arhitektuurivalik. Mudelifailid on sageli gigabaitides ja muutuvad teises tempos kui rakendus. Seepärast laaditakse mudel eraldi ja ühendatakse konteinerisse käivitamisel, samamoodi nagu andmebaasi andmed volume'ist.
@@ -865,7 +872,7 @@ AlmaLinuxi ja RHEL-i serveris on vaikimisi [Podman](https://docs.podman.io/), mi
 
 <figure markdown="span">
   ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
-  <figcaption>Joonis 3.19. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.20. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
 </figure>
 
 **Daemonita mudel.** Peamine arhitektuuri erinevus on juhtimismudel. Dockeris saadab CLI käsu kesksele daemonile, mis töötab kogu aeg. `podman run -d` loob konteineri ise `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja käsk ise lõpetab. Daemonita ei tähenda protsessideta: iga konteineri juures on `conmon`, nagu Dockeris `containerd-shim`. Puudub kõiki konteinereid juhtiv keskne teenus, mille taaskäivitus peataks kõik konteinerid. Selle hind: pärast masina taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
@@ -896,7 +903,7 @@ Podmani põhikäsud on teadlikult Dockeri omadega sarnased (`podman pull`, `podm
 
 <figure markdown="span">
   ![Rootful Dockeris jõuab kasutaja grupist docker socket'i ja root'ina töötava dockerd kaudu konteinerini, mille UID 0 on hosti root; rootless Podmanis käivitab tavakasutaja konteineri ise ja konteineri UID 0 on hostis tema UID 1000](assets/k03_rootless.svg)
-  <figcaption>Joonis 3.20. Usalduspiir: rootful Dockeris on konteineri root hosti root, rootless Podmanis tavakasutaja (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.21. Usalduspiir: rootful Dockeris on konteineri root hosti root, rootless Podmanis tavakasutaja (Talvik, 2026).</figcaption>
 </figure>
 
 Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on hostis see kasutaja, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. Kui ründaja pääseb konteinerist välja tavalise vea kaudu, on tal tavakasutaja õigused. See vähendab õiguste ülempiiri, aga ei kaitse andmeid, mis on konteinerisse mount'itud, ega tuuma haavatavuste eest. Piirid tulevad tuumast: port alla 1024 vajab sysctl'i `ip_unprivileged_port_start`, võrk käib kasutajaruumi `pasta` kaudu ja cgroup v2 piirangud kehtivad ainult kontrolleritega, mille systemd on kasutajale delegeerinud.

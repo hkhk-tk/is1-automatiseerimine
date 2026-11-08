@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 340" width="860"><style>text{font-family:Inter, Arial, sans-serif;fill:#212121;font-size:15px}.b{font-weight:700}.s{font-size:13px}.c{text-anchor:middle}.p{fill:#ede7f6;stroke:#5e35b1;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.f{fill:#fff;stroke:#7e57c2;stroke-width:1.5}.z{fill:#f5f5f5;stroke:#9e9e9e;stroke-width:1.2;stroke-dasharray:5 4}.l{stroke:#7e57c2;stroke-width:2;fill:none}.d{stroke:#ff9100;stroke-width:2;fill:none;stroke-dasharray:6 4}</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/></marker></defs>
+<rect width="860" height="340" fill="#fff"/>
+<rect class="f" x="20" y="30" width="150" height="56" rx="8"/><text class="b c" x="95.0" y="55.0">arendaja</text><text class="c s" x="95.0" y="73.0">kirjutab Dockerfile'i</text>
+<line class="l" x1="95" y1="86" x2="95" y2="150" marker-end="url(#a)"/>
+<rect class="f" x="20" y="150" width="150" height="56" rx="8"/><text class="b c" x="95.0" y="175.0">Dockerfile</text><text class="c s" x="95.0" y="193.0">ehitusjuhis</text>
+<line class="l" x1="170" y1="178" x2="220" y2="178" marker-end="url(#a)"/>
+<text class="c s" x="195" y="170">build</text>
+<rect class="o" x="220" y="150" width="170" height="56" rx="8"/><text class="b c" x="305.0" y="175.0">image</text><text class="c s" x="305.0" y="193.0">labori-seis-app:1.4</text>
+<line class="l" x1="305" y1="206" x2="305" y2="262" marker-end="url(#a)"/>
+<text class="c s" x="330" y="238">run</text>
+<rect class="g" x="220" y="262" width="170" height="56" rx="8"/><text class="b c" x="305.0" y="287.0">konteiner</text><text class="c s" x="305.0" y="305.0">arendaja masinas</text>
+<line class="l" x1="390" y1="178" x2="450" y2="178" marker-end="url(#a)"/>
+<text class="c s" x="420" y="170">push</text>
+<rect class="p" x="450" y="150" width="150" height="56" rx="8"/><text class="b c" x="525.0" y="175.0">Harbor</text><text class="c s" x="525.0" y="193.0">registry</text>
+<line class="l" x1="600" y1="165" x2="660" y2="98" marker-end="url(#a)"/>
+<text class="c s" x="615" y="122">pull</text>
+<line class="l" x1="600" y1="192" x2="660" y2="262" marker-end="url(#a)"/>
+<text class="c s" x="615" y="240">pull</text>
+<rect class="g" x="660" y="70" width="180" height="56" rx="8"/><text class="b c" x="750.0" y="95.0">konteiner</text><text class="c s" x="750.0" y="113.0">testserveris</text>
+<rect class="g" x="660" y="234" width="180" height="56" rx="8"/><text class="b c" x="750.0" y="259.0">konteiner</text><text class="c s" x="750.0" y="277.0">tootmisserveris</text>
+<text class="c s" x="750" y="170">sama image,</text>
+<text class="c s" x="750" y="188">sama digest</text>
+</svg>
