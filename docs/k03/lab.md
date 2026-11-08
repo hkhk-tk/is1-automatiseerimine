@@ -297,59 +297,104 @@ sudo journalctl -u docker --since '30 min ago' --no-pager | grep -iE 'starting u
 
 ### 1.7 Elutsükkel ja PID 1
 
-Sama Nginx paistab hostis tavalise protsessina, konteineris on ta PID 1. Elutsükli käsud `run`, `stop`, `start` ja `rm` muudavad eri asju: protsessi, kirjutatavat kihti või mõlemat. Konteiner lõpeb koos PID 1-ga. Kui sa seda ei tea, otsid valest kohast: teenus „ebaõnnestub“, aga tegelikult lõpetas entrypoint'i skript oma töö ja konteiner tegi täpselt seda, mida pidi.
+Konteiner töötab seni, kuni töötab tema esimene protsess (PID 1). Kui see lõpetab, lõpetab ka konteiner. Kui seda ei tea, otsid viga valest kohast: teenus näib ebaõnnestuvat, aga tegelikult lõpetas käivitusskript oma töö.
 
-Vaata 1.3 lõpetanud konteinereid, siis käivita Nginx esiplaanil (lõpeta Ctrl+C-ga), taustal, peatatuna ja uuesti käivitatuna:
+**Esiplaanil ja taustal.** Käivita Nginx esiplaanil. Terminal jääb Nginxi logi näitama, lõpeta Ctrl+C-ga:
 
 ```bash
-docker ps -a --format '{{.Names}} {{.Status}}'
 docker run --name fg $HUB/nginx:1.30-alpine
+```
+
+Käivita teine Nginx taustal (`-d`) ja ava hosti port 8081 konteineri pordile 80 (`-p`):
+
+```bash
 docker run -d --name w -p 8081:80 $HUB/nginx:1.30-alpine
-docker stop w && docker start w && docker ps --filter name=w
+docker ps -a
 ```
 
-Võrdle sama protsessi hostis ja konteineris ning leia tema namespace'id ja cgroup:
+Peata konteiner ja käivita see uuesti:
 
 ```bash
-ps -ef | grep '[n]ginx: master'
-docker exec w ps; docker exec w id
-sudo lsns -p "$(docker inspect -f '{{.State.Pid}}' w)"
-cat /proc/"$(docker inspect -f '{{.State.Pid}}' w)"/cgroup
+docker stop w
+docker start w
+docker ps
 ```
-
-**Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner?
-
-```bash
-docker rmi $HUB/nginx:1.30-alpine
-docker run $HUB/ubuntu:24.04
-docker run -it --rm $HUB/ubuntu:24.04 bash
-```
-
-Viimase käsuga avanenud konteineris käivita `cat /proc/1/comm` ja `ps`, siis `exit`.
 
 ??? success "Oodatav tulemus"
 
-    `fg` on pärast Ctrl+C olekus `Exited`, `w` tuli `start`-iga tagasi sama ID-ga. Hostis on Nginx'il tavaline PID, konteineris PID 1. `rmi` annab vea `conflict` konteineri ID-ga. Ubuntu ilma `-it`-ita lõpetas kohe koodiga 0.
+    `fg` on olekus `Exited`, sest Ctrl+C lõpetas Nginxi. `w` on pärast `start`-i jälle `Up` sama konteineri ID-ga: `stop` peatab protsessi, aga konteiner ja selle failid jäävad alles.
 
-    `lsns` näitas, et konteiner on hulk namespace'e ühe hostiprotsessi ümber, mitte eraldi masin. `rmi` viga tõestab, et konteiner kasutab image'i kihte otse ka peatatuna. Ubuntu ilma `-it`-ita lõpetas, sest bash ilma terminalita sai stdin'ist kohe faililõpu ja väljus koodiga 0. Ubuntu image'is pole `ps`-i: image'is on ainult see, mida peaprotsess vajab.
+**Konteiner hostist vaadatuna.** Nginx konteineris on hostis tavaline protsess. Leia see hosti protsesside hulgast ja vaata sama protsessi konteineri seest:
+
+```bash
+ps -ef | grep '[n]ginx: master'
+docker exec w ps
+docker exec w id
+```
+
+Konteineri eraldatuse teevad tuuma namespace'id ja cgroup. Vaata neid hostist:
+
+```bash
+PID=$(docker inspect -f '{{.State.Pid}}' w)
+echo $PID
+sudo lsns -p $PID
+cat /proc/$PID/cgroup
+```
+
+??? success "Oodatav tulemus"
+
+    Hostis on Nginxil tavaline PID, konteineris on sama protsess PID 1. `lsns` näitab, et konteiner on hulk namespace'e ühe hostiprotsessi ümber, mitte eraldi masin.
+
+**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`?
+
+```bash
+docker rmi $HUB/nginx:1.30-alpine
+```
+
+??? success "Oodatav tulemus"
+
+    `rmi` annab vea `conflict` konteineri ID-ga. Konteiner kasutab image'i kihte ka peatatuna, seepärast tuleb enne kustutada kõik seda image'it kasutavad konteinerid.
+
+**Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta:
+
+```bash
+docker run $HUB/ubuntu:24.04
+docker ps -a
+```
+
+Käivita sama image interaktiivselt (`-it`):
+
+```bash
+docker run -it --rm $HUB/ubuntu:24.04 bash
+```
+
+Konteineris käivita `cat /proc/1/comm` ja `ps`, siis `exit`.
+
+??? success "Oodatav tulemus"
+
+    Esimene Ubuntu lõpetas kohe koodiga 0: bash ilma terminalita sai sisendist kohe faililõpu ja väljus. `-it`-ga on PID 1 `bash`. Ubuntu image'is pole käsku `ps`: image'is on ainult see, mida peaprotsess vajab.
 
 ### 1.8 Pordid ja konteineri IP
 
-Konteiner saab IP-aadressi sisemises sillas `docker0`. Selle aadressi poole saab pöörduda ainult hostist. Väljast jõuab konteinerini ainult avaldatud pordi kaudu, mille jaoks Docker kirjutab NAT-reegli.
+Konteiner saab IP-aadressi hosti sisemises sillas `docker0`. Selle aadressi poole saab pöörduda ainult hostist. Väljast jõuab konteinerini ainult avaldatud pordi kaudu (`-p`), mille jaoks Docker kirjutab NAT-reegli.
 
-Tootmisserveris tähendab see, et `-p 8081:80` avab pordi kõigile, kes hostini jõuavad. Tavapärase UFW seadistusega hosti tulemüür seda ei peata, sest Dockeri DNAT-reegel rakendub enne UFW reegleid. Täpne käitumine sõltub tulemüüri taustaprogrammist ja Dockeri versioonist, seetõttu kontrolli pordi ligipääsetavust teisest masinast (`nc -zv <host> 8081`).
+Tootmisserveris tähendab see, et `-p 8081:80` avab pordi kõigile, kes hostini jõuavad. Tavapärase UFW seadistusega hosti tulemüür seda ei peata, sest Dockeri NAT-reegel rakendub enne UFW reegleid. Seepärast kontrolli avatud porte teisest masinast.
+
+Leia konteineri `w` IP-aadress ja proovi seda ning hostiporti control'ist:
 
 ```bash
 IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' w)
-curl -sI "http://$IP" | head -1; curl -sI localhost:8081 | head -1
-docker run -d --name w2 -P $HUB/nginx:1.30-alpine && docker port w2
-sudo nft list ruleset | grep -i dnat | head -3
+echo $IP
+curl -sI http://$IP | head -1
+curl -sI http://localhost:8081 | head -1
 ```
 
-Ava oma arvuti brauseris (VPN-iga) `http://<control IP>:8081` ja proovi ka `http://<konteineri IP>`. Seejärel eemalda katse konteinerid:
+Ava oma arvuti brauseris (VPN-iga) `http://<control IP>:8081` ja seejärel `http://<konteineri IP>`.
+
+Vaata NAT-reeglit, mille Docker pordi jaoks kirjutas:
 
 ```bash
-docker rm -f w w2 fg && docker container prune -f
+sudo nft list ruleset | grep -i dnat | head -3
 ```
 
 <figure markdown="span">
@@ -359,13 +404,21 @@ docker rm -f w w2 fg && docker container prune -f
 
 ??? success "Oodatav tulemus"
 
-    Konteineri IP (`172.17.x.x`) vastab control'ist, aga mitte sinu arvutist. Hostiport vastab mõlemast. nft-reeglites on DNAT pordile 80.
+    Konteineri IP (`172.17.x.x`) vastab control'ist, aga mitte sinu arvutist. Hostiport 8081 vastab mõlemast. nft-reeglites on DNAT pordile 80. Kui konteineri IP vastaks sinu arvutist, oleks võrgus marsruut hosti sisemisse silda: see oleks võrgu seadistuse viga.
 
-    Kui konteineri IP vastaks sinu arvutist, oleks võrgus marsruut hosti sisemisse silda ja see oleks võrgu seadistuse viga, mitte Dockeri omadus. `-P` valis juhusliku kõrge pordi. See sobib testiks, aga mitte teenusele, sest port muutub iga uue konteineriga.
+Eemalda katse konteinerid:
+
+```bash
+docker rm -f w fg
+docker container prune -f
+docker ps -a
+```
 
 ### 1.9 Võrgudraiverid: bridge, host ja none
 
-Siiani olid kõik konteinerid vaikevõrgus `bridge`. Dockeril on veel kaks sisseehitatud draiverit: `host`, kus konteiner kasutab otse hosti võrgupinu, ja `none`, kus võrku pole üldse. Tootmisserveris küsib `--network host`-i tavaliselt monitooringuagent või VPN-tööriist. Kui seda lubada mõtlemata, kaob konteineri võrguisolatsioon: konteiner näeb kõiki hosti liideseid ja võib kuulata mis tahes porti, ka seda, mida hosti enda teenus vajab.
+Siiani olid kõik konteinerid vaikevõrgus `bridge`. Dockeril on veel kaks sisseehitatud võrku: `host`, kus konteiner kasutab otse hosti võrku, ja `none`, kus võrku pole üldse. Tootmisserveris vajab host-võrku näiteks monitooringuagent. Host-võrgus pole konteineril võrguisolatsiooni: see näeb kõiki hosti liideseid ja võib kuulata mis tahes porti.
+
+Vaata Dockeri võrke ja vaikevõrgu aadresse:
 
 ```bash
 docker network ls
@@ -373,100 +426,168 @@ docker network inspect bridge -f '{{range .IPAM.Config}}{{.Subnet}} gw {{.Gatewa
 ip -br addr show docker0
 ```
 
-Kontrolli, kas port 80 on hostis vaba, ja käivita Nginx hosti võrgus koos pordivõtmega:
+??? success "Oodatav tulemus"
+
+    Võrgud on `bridge`, `host` ja `none`. `bridge` alamvõrk on `172.17.0.0/16` ja lüüs on sama aadress, mis hosti liidesel `docker0`: sild on hosti liides ja konteinerid on selle taga.
+
+**Host-võrk.** Kontrolli, et port 80 on hostis vaba, ja käivita Nginx host-võrgus:
 
 ```bash
-sudo ss -tlnp | grep -E ':80 ' || echo "80 vaba"
+sudo ss -tlnp | grep ':80 '
 docker run -d --name hostnet --network host -p 9999:80 $HUB/nginx:1.30-alpine
-sleep 2; sudo ss -tlnp | grep -E ':(80|9999) '; docker port hostnet
-docker exec hostnet ip addr | grep -E '^[0-9]+:|inet '
 ```
 
-Käivita konteiner ilma võrguta ja proovi sellest internetti jõuda. Seejärel eemalda konteiner `hostnet`:
+Vaata, kes kuulab porte 80 ja 9999:
 
 ```bash
-docker run --rm --network none $HUB/alpine:3.22 ip addr
-docker run --rm --network none $HUB/alpine:3.22 wget -qO- -T 3 http://example.com; echo "kood $?"
-docker rm -f hostnet
+sudo ss -tlnp | grep -E ':(80|9999) '
+docker port hostnet
 ```
 
 ??? success "Oodatav tulemus"
 
-    `bridge` alamvõrk on `172.17.0.0/16` ja lüüs on sama aadress, mis `docker0` liidesel: sild on hosti liides ja konteinerid on selle taga. Host-võrgus kuulab pordil 80 `nginx` ise, mitte `docker-proxy`. `docker port` on tühi, pordil 9999 ei kuula keegi ja CLI hoiatas, et `-p` jäetakse kõrvale. Kuna DNAT-i pole, kehtib siin hosti tulemüür tavapäraselt. `none` jättis ainult `lo` ja `wget` ebaõnnestus. See sobib tööle, mis ei tohi kunagi võrku puutuda, näiteks võtmete genereerimine.
+    Esimene `ss` ei näita midagi: port 80 on vaba. `docker run` hoiatab, et `-p` jäetakse kõrvale. Pordil 80 kuulab `nginx` ise, mitte `docker-proxy`, pordil 9999 ei kuula keegi ja `docker port` on tühi. NAT-reeglit pole, seega kehtib siin hosti tulemüür tavapäraselt.
 
 ??? warning "Kui `hostnet` lõpetab kohe"
 
     `docker logs hostnet` näitab `Address in use`: port 80 oli hõivatud. Host-võrgus tekib pordikonflikt, kui sama porti kasutab hosti teenus.
 
-### 1.10 Mälu, CPU ja protsessid
-
-Piiranguid vaikimisi pole. Konteiner ilma piiranguta näeb kogu hosti mälu ja CPU-d nagu iga teine protsess. Mälulekkega teenus ilma piiranguta käivitab hosti OOM killeri, mis võib tappa hoopis `sshd` või andmebaasi.
-
-Käivita konteiner 64 MB mälupiiriga ja ilma swap'ita. Konteineri programm võtab järjest rohkem mälu, kuni tuum protsessi lõpetab:
+**Võrguta konteiner.** Käivita konteiner ilma võrguta ja vaata selle liideseid:
 
 ```bash
-docker run --name oom -m 64m --memory-swap 64m $HUB/alpine:3.22 sh -c 'tail /dev/zero'
-echo "kood $?"
+docker run --rm --network none $HUB/alpine:3.22 ip addr
+```
+
+Proovi sellest internetti jõuda:
+
+```bash
+docker run --rm --network none $HUB/alpine:3.22 wget -qO- -T 3 http://example.com
+```
+
+??? success "Oodatav tulemus"
+
+    Konteineril on ainult liides `lo` ja `wget` ebaõnnestub. Võrguta konteiner sobib tööle, mis ei tohi võrku puutuda, näiteks võtmete genereerimiseks.
+
+Eemalda konteiner `hostnet`:
+
+```bash
+docker rm -f hostnet
+```
+
+### 1.10 Mälu, CPU ja protsessid
+
+Vaikimisi piiranguid pole: konteiner näeb kogu hosti mälu ja CPU-d nagu iga teine protsess. Mälulekkega teenus ilma piiranguta käivitab hosti OOM killeri, mis võib lõpetada hoopis `sshd` või andmebaasi.
+
+**Mälupiir.** Käivita konteiner 64 MB mälupiiriga ja ilma swap'ita. Programm `tail /dev/zero` võtab järjest rohkem mälu:
+
+```bash
+docker run --name oom -m 64m --memory-swap 64m $HUB/alpine:3.22 tail /dev/zero
+echo $?
+```
+
+Vaata, kes konteineri lõpetas:
+
+```bash
 docker inspect -f '{{.State.OOMKilled}} {{.State.ExitCode}}' oom
 sudo dmesg | grep -i 'killed process' | tail -1
 ```
 
-Käivita CPU-koormus poole tuuma piiranguga ja vaata `docker stats`-i:
+??? success "Oodatav tulemus"
+
+    Väljumiskood on 137 ja `OOMKilled` on `true`. 137 on 128 + 9: protsess sai signaali SIGKILL. `OOMKilled: true` tähendab, et protsessi lõpetas tuum mälupiiri tõttu.
+
+**CPU ja protsesside arv.** Käivita konteiner poole tuuma piiranguga (`--cpus 0.5`) ja kuni 50 protsessiga (`--pids-limit 50`). Programm `yes` koormab CPU-d:
 
 ```bash
 docker run -d --name cpu --cpus 0.5 --pids-limit 50 $HUB/alpine:3.22 sh -c 'yes > /dev/null'
 docker stats --no-stream cpu
-docker exec cpu cat /sys/fs/cgroup/cpu.max /sys/fs/cgroup/pids.max
 ```
 
-Muuda töötava konteineri piirangut ja vaata cgroup'i faili:
+Piirangud on cgroup'i failides. Vaata neid konteineri seest:
+
+```bash
+docker exec cpu cat /sys/fs/cgroup/cpu.max
+docker exec cpu cat /sys/fs/cgroup/pids.max
+```
+
+??? success "Oodatav tulemus"
+
+    `docker stats` näitab umbes 50% CPU-d. `cpu.max` on `50000 100000` (50 ms igast 100 ms-st) ja `pids.max` on `50`.
+
+**Piirangu muutmine.** Muuda töötava konteineri mälupiiri ja vaata cgroup'i faili uuesti:
 
 ```bash
 docker update --memory 128m --memory-swap 128m cpu
 docker exec cpu cat /sys/fs/cgroup/memory.max
-docker rm -f oom cpu
 ```
 
 ??? success "Oodatav tulemus"
 
-    `oom` lõpetas koodiga 137 ja `OOMKilled` on `true`. `docker stats` näitab `cpu` konteineril umbes 50% CPU-d, `cpu.max` on `50000 100000` ja `memory.max` pärast `update`-i `134217728`.
+    `memory.max` on `134217728` (128 MB). `docker update` muutis piirangut ilma protsessi taaskäivitamata, sest piirang on lihtsalt cgroup'i fail. Hostis on sama fail kaustas `/sys/fs/cgroup/system.slice/docker-<id>.scope/`.
 
-    Kood 137 on 128 + 9: protsess sai SIGKILL-i. `OOMKilled: true` ütleb, et tappis tuum mälupiiri tõttu, mitte keegi `docker kill`-iga. `docker update` muutis faili töötaval konteineril protsessi taaskäivitamata: piir on lihtsalt cgroup'i fail. `docker exec` näeb konteineri enda cgroup'i juurena (cgroup namespace). Hostis on sama fail kaustas `/sys/fs/cgroup/system.slice/docker-<id>.scope/`.
+Eemalda katse konteinerid:
+
+```bash
+docker rm -f oom cpu
+```
 
 ### 1.11 Restart-poliitika: kes konteineri uuesti käivitab
 
-Konteineris pole systemd'd, aga pärast tõrget või masina taaskäivitust peab konteineri keegi uuesti käivitama. Seda teeb `dockerd` restart-poliitika järgi. Vale poliitika annab kaks klassikalist viga: teenus ei käivitu pärast hooldusjärgset taaskäivitust või käivitub teenus, mille sa meelega peatasid.
+Konteineris pole systemd'd. Pärast tõrget või masina taaskäivitust käivitab konteineri uuesti `dockerd` restart-poliitika järgi. Vale poliitika annab kaks tüüpilist viga: teenus ei käivitu pärast hooldusjärgset taaskäivitust või käivitub teenus, mille sa meelega peatasid.
 
-Käivita Nginx poliitikaga `unless-stopped` ja tapa tema PID 1 hostist:
+**Protsess lõpetab.** Käivita Nginx poliitikaga `unless-stopped`:
 
 ```bash
 docker run -d --name rs --restart unless-stopped $HUB/nginx:1.30-alpine
-sudo kill -9 "$(docker inspect -f '{{.State.Pid}}' rs)"
-sleep 3; docker inspect -f '{{.RestartCount}} {{.State.Status}}' rs
 ```
 
-Käivita teine konteiner poliitikaga `always`, peata mõlemad käsitsi ja taaskäivita daemon.
+Lõpeta konteineri PID 1 hostist, oota paar sekundit ja vaata konteineri olekut:
+
+```bash
+sudo kill -9 $(docker inspect -f '{{.State.Pid}}' rs)
+sleep 3
+docker inspect -f '{{.RestartCount}} {{.State.Status}}' rs
+```
+
+??? success "Oodatav tulemus"
+
+    `RestartCount` on 1 ja olek `running`. Daemon märkas, et PID 1 lõpetas, ja käivitas sama konteineri uuesti.
+
+**Daemon taaskäivitub.** Käivita teine konteiner poliitikaga `always`. Seejärel peata mõlemad käsitsi:
+
+```bash
+docker run -d --name ra --restart always $HUB/nginx:1.30-alpine
+docker stop rs ra
+```
 
 **Küsimus enne käsku:** kumb konteiner on pärast daemoni taaskäivitust `Up`, `rs` või `ra`?
 
 ```bash
-docker run -d --name ra --restart always $HUB/nginx:1.30-alpine
-docker stop rs ra && sudo systemctl restart docker
-docker ps -a --filter name=rs --filter name=ra --format '{{.Names}} {{.Status}}'
-docker rm -f rs ra
-```
-
-Proovi kolmandat poliitikat konteineriga, mis ebaõnnestub alati:
-
-```bash
-docker run -d --name rf --restart on-failure:3 $HUB/alpine:3.22 sh -c 'sleep 2; exit 1'
-sleep 30; docker inspect -f '{{.RestartCount}} {{.State.Status}} {{.State.ExitCode}}' rf
-docker rm rf
+sudo systemctl restart docker
+docker ps -a --filter name=rs --filter name=ra
 ```
 
 ??? success "Oodatav tulemus"
 
-    `rs` käivitus pärast `kill -9`-i ise uuesti: `RestartCount` 1 ja olek `running`. Daemon märkas PID 1 lõppemist ja käivitas sama konteineri uuesti, sama ID ja kirjutatava kihiga. Pärast daemoni taaskäivitust on `ra` üleval ja `rs` `Exited`: `always` ei arvesta sinu käsitsi peatamist, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` `unless-stopped`-i. `rf` näitab `3 exited 1`: `on-failure:3` proovis kolm korda ja jättis siis konteineri seisma. Nii ei taaskäivitu katkine konteiner lõputult ning logi ja väljumiskood jäävad uurimiseks alles.
+    `ra` on `Up` ja `rs` on `Exited`. `always` ei arvesta, et peatasid konteineri käsitsi, `unless-stopped` arvestab. Seepärast kasutab sinu `compose.yaml` hiljem `unless-stopped`-i.
+
+**Konteiner, mis ebaõnnestub alati.** Poliitika `on-failure:3` proovib kolm korda ja jätab siis konteineri seisma:
+
+```bash
+docker run -d --name rf --restart on-failure:3 $HUB/alpine:3.22 sh -c 'sleep 2; exit 1'
+sleep 30
+docker inspect -f '{{.RestartCount}} {{.State.Status}} {{.State.ExitCode}}' rf
+```
+
+??? success "Oodatav tulemus"
+
+    Väljund on `3 exited 1`. Katkine konteiner ei taaskäivitu lõputult ning logi ja väljumiskood jäävad uurimiseks alles.
+
+Eemalda katse konteinerid:
+
+```bash
+docker rm -f rs ra rf
+```
 
 ### 1.12 Käivitusvõtmed, mida admin vajab
 
@@ -570,17 +691,36 @@ docker rm ngx
 
 ### 1.13 Oma võrk ja kolm backend'i teenust
 
-Labori seis otsib teenuseid nimede järgi `db01`, `mc01` ja `rmq01`. Vaikimisi bridge-võrgus nimelahendust pole, seega teed oma võrgu. Teenuste IP-d muutuvad iga uue konteineriga: rakendus, mis viitab IP-le, läheb katki esimesel uuesti loomisel, nimi jääb samaks. Samal ajal näed kõige tavalisemat käivitusviga: andmebaas lõpetab kohe, sest kohustuslik muutuja puudub.
+Labori seis otsib teenuseid nimede järgi: `db01`, `mc01` ja `rmq01`. Konteineri IP muutub iga uue konteineriga, nimi jääb samaks. Vaikevõrgus `bridge` nimesid ei lahendata, seepärast teed oma võrgu.
+
+Tee võrk `labnet` ja käivita sinna MariaDB:
 
 ```bash
 docker network create labnet
 docker run -d --name db01 --network labnet $HUB/mariadb:11.4
-docker ps -a --filter name=db01; docker logs db01 | tail -5
 ```
 
-Rikke otsimise järjekord on alati sama: `docker ps -a` (väljumiskood), `docker logs`, `docker inspect`.
+Vaata, kas konteiner töötab, ja kui ei, siis miks:
 
-Kustuta `db01` ja käivita see uuesti nii, et nõuded on täidetud: root-parool, andmebaas `labseis`, kasutaja `labseis` ja tema parool `-e` võtmetega (nimed on logis ja [image'i lehel](https://hub.docker.com/_/mariadb)), andmed nimega volume'is `dbtest` kataloogis `/var/lib/mysql`, võrk `labnet`. Lisa samasse võrku `mc01` (`memcached:1.6-alpine`) ja `rmq01` (`rabbitmq:4.1-management-alpine`, `--hostname rmq01`, kasutaja ja parool muutujatest `RABBITMQ_DEFAULT_USER` ja `RABBITMQ_DEFAULT_PASS`).
+```bash
+docker ps -a
+docker logs db01
+```
+
+??? success "Oodatav tulemus"
+
+    `db01` on olekus `Exited (1)` ja logi viimastel ridadel on puuduva muutuja nimi. See on kõige tavalisem käivitusviga: kohustuslik muutuja puudub. Rikke otsimise järjekord on alati sama: `docker ps -a` (väljumiskood), `docker logs` ja vajadusel `docker inspect`.
+
+**Ülesanne.** Kustuta `db01` ja käivita see uuesti nii, et nõuded on täidetud. Muutujate nimed leidsid 1.4-s [image'i lehelt](https://hub.docker.com/_/mariadb).
+
+- võrk `labnet`;
+- `-e` võtmetega root'i parool, andmebaas `labseis`, kasutaja `labseis` ja tema parool;
+- andmed nimega volume'is `dbtest` kataloogis `/var/lib/mysql`.
+
+Lisa samasse võrku veel kaks teenust:
+
+- `mc01` image'ist `memcached:1.6-alpine`;
+- `rmq01` image'ist `rabbitmq:4.1-management-alpine`, hostinimi `rmq01` (`--hostname`), kasutaja ja parool muutujatest `RABBITMQ_DEFAULT_USER` ja `RABBITMQ_DEFAULT_PASS`.
 
 ??? example "Lahendus"
 
@@ -592,10 +732,10 @@ Kustuta `db01` ja käivita see uuesti nii, et nõuded on täidetud: root-parool,
     docker run -d --name mc01 --network labnet $HUB/memcached:1.6-alpine
     docker run -d --name rmq01 --network labnet --hostname rmq01 \
       -e RABBITMQ_DEFAULT_USER=labseis -e RABBITMQ_DEFAULT_PASS=Labseis123 $HUB/rabbitmq:4.1-management-alpine
-    docker ps --format '{{.Names}} {{.Status}}'
+    docker ps
     ```
 
-Kontrolli nimelahendust samast võrgust ja vaikevõrgust:
+Kontrolli nimelahendust võrgust `labnet` ja vaikevõrgust:
 
 ```bash
 docker run --rm --network labnet $HUB/busybox:1.37 nslookup db01
@@ -604,76 +744,108 @@ docker run --rm $HUB/busybox:1.37 nslookup db01
 
 ??? success "Oodatav tulemus"
 
-    Esimene `db01` oli `Exited (1)` ja logis oli puuduva muutuja nimi. Nüüd on kolm konteinerit `Up` võrgus `labnet`. `nslookup` vastab `labnet`-is serveriga `127.0.0.11` ja vaikevõrgus ei vasta.
-
-    Server `127.0.0.11` tähendab, et nime lahendas Dockeri sisseehitatud DNS, mitte hosti resolver. Vaikevõrgus seda DNS-i pole. Seepärast töötab Labori seisu rakendus Compose'is muutmata: Compose loob igale projektile oma võrgu.
+    Kolm konteinerit on `Up`. Võrgus `labnet` vastab `nslookup` serveriga `127.0.0.11`, vaikevõrgus nime ei leita. `127.0.0.11` on Dockeri sisseehitatud DNS, mis töötab ainult ise loodud võrkudes. Compose loob igale projektile oma võrgu, seepärast leiavad teenused seal üksteist nime järgi.
 
 ### 1.14 Sisemine võrk
 
-Võrk `--internal` laseb konteineritel teineteist näha, aga väljapääsu ei anna. Seda kasutad 5. osas andmebaasi ja rakenduse võrgu jaoks. Kui andmebaasi konteineris on haavatavus, ei saa ründaja sisemisest võrgust ise koodi alla laadida ega andmeid otse välja saata.
+Võrk `--internal` laseb konteineritel üksteist näha, aga internetti välja ei lase. Seda kasutad 5. osas andmebaasi võrgu jaoks: kui andmebaasi konteineris on haavatavus, ei saa ründaja sealt koodi alla laadida ega andmeid otse välja saata.
 
-Tee sisemine võrk, ühenda sinna töötav `mc01` ja proovi jõuda internetti ja teise konteinerini:
+Tee sisemine võrk ja proovi sellest internetti jõuda:
 
 ```bash
 docker network create --internal sisemine
 docker run --rm --network sisemine $HUB/alpine:3.22 wget -qO- -T 3 http://example.com
+```
+
+Ühenda töötav `mc01` lisaks ka sisemisse võrku ja küsi sellelt sisemisest võrgust olekut:
+
+```bash
 docker network connect sisemine mc01
-docker run --rm --network sisemine $HUB/busybox:1.37 sh -c 'echo stats | nc -w 1 mc01 11211 | head -2'
+docker run --rm --network sisemine $HUB/busybox:1.37 sh -c 'echo stats | nc -w 1 mc01 11211' | head -2
+```
+
+Vaata, mis võrkudes `mc01` nüüd on:
+
+```bash
 docker inspect -f '{{json .NetworkSettings.Networks}}' mc01 | jq 'keys'
-docker network inspect -f '{{.Internal}}' sisemine
 ```
 
 ??? success "Oodatav tulemus"
 
-    `wget` internetti ebaõnnestub, `mc01` vastab sisemises võrgus `STAT pid`-iga ja `mc01`-l on kaks võrku. Kaks võrku ühel konteineril tähendab kaht liidest ja kaht IP-d. Samamoodi on prod-failis teenusel web01 kaks liidest: üks välimises võrgus, teine sisemises. `wget` ebaõnnestus, sest sisemises võrgus pole vaikemarsruuti, mitte sellepärast, et DNS oleks katki.
+    `wget` internetti ebaõnnestub, sest sisemises võrgus pole vaikemarsruuti. `mc01` vastab sisemises võrgus reaga `STAT pid`. `mc01` on kahes võrgus, `labnet` ja `sisemine`: tal on kaks liidest ja kaks IP-d. Samamoodi on prod-failis web01 korraga välimises ja sisemises võrgus.
 
 ### 1.15 Andmed volume'is ja bind mount'is
 
-Konteineri kirjutatav kiht kaob `rm`-iga. Andmebaas kirjutatavas kihis kaotab kõik andmed esimesel image'i uuendusel, sest uuendus tähendab alati uut konteinerit. Volume ja bind mount jäävad alles, aga käituvad õiguste poolest erinevalt.
+Konteineri enda failid kaovad `docker rm`-iga. Andmebaas, mille andmed on konteineri sees, kaotab kõik andmed esimesel image'i uuendusel, sest uuendus tähendab alati uut konteinerit. Volume ja bind mount jäävad alles, aga käituvad õiguste poolest erinevalt.
 
-Kirjuta tabelisse rida, kustuta konteiner ja käivita see uuesti 1.13 lahenduse käsuga (sama volume `dbtest`):
+**Volume.** Kirjuta `db01` andmebaasi tabel ühe reaga (parool on `Labseis123`):
 
 ```bash
 docker exec -it db01 mariadb -ulabseis -p labseis -e "CREATE TABLE proov (id INT); INSERT INTO proov VALUES (42);"
-docker rm -f db01
 ```
 
-Pärast uuesti käivitamist kontrolli, kas rida on alles ja kus andmed hostis on:
+Kustuta konteiner ja käivita see uuesti sama käsuga nagu 1.13 lahenduses, sama volume'iga `dbtest`:
+
+```bash
+docker rm -f db01
+docker run -d --name db01 --network labnet -v dbtest:/var/lib/mysql \
+  -e MARIADB_ROOT_PASSWORD=Juur123 -e MARIADB_DATABASE=labseis \
+  -e MARIADB_USER=labseis -e MARIADB_PASSWORD=Labseis123 $HUB/mariadb:11.4
+```
+
+Kontrolli, kas rida on alles, ja vaata, kus andmed hostis asuvad:
 
 ```bash
 docker exec -it db01 mariadb -ulabseis -p labseis -e "SELECT * FROM proov;"
-docker inspect -f '{{json .Mounts}}' db01 | jq '.[] | {Type, Name, Source}'
+docker inspect -f '{{json .Mounts}}' db01 | jq
 ```
 
-Käivita sama image nii, et andmekataloog on [bind mount'iga](https://docs.docker.com/engine/storage/bind-mounts/) sinu kodukataloogis. Seejärel kustuta konteiner ja proovi kausta kustutada:
+??? success "Oodatav tulemus"
+
+    Rida `42` on alles. `Mounts` näitab tüüpi `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`: andmed on hostis Dockeri kataloogis, mitte konteineris.
+
+**Bind mount.** [Bind mount](https://docs.docker.com/engine/storage/bind-mounts/) ühendab konteinerisse hosti kausta. Tee kaust oma kodukataloogi ja käivita MariaDB nii, et andmekataloog on selles kaustas:
 
 ```bash
-mkdir -p "$HOME/k03-bind"
-docker run -d --name dbbind -e MARIADB_ROOT_PASSWORD=x -v "$HOME/k03-bind:/var/lib/mysql" $HUB/mariadb:11.4
-sleep 15; ls -ln "$HOME/k03-bind" | head -3
-docker rm -f dbbind; rm -rf "$HOME/k03-bind"
+mkdir ~/k03-bind
+docker run -d --name dbbind -e MARIADB_ROOT_PASSWORD=x -v ~/k03-bind:/var/lib/mysql $HUB/mariadb:11.4
 ```
+
+Oota 15 sekundit, kuni MariaDB loob oma failid, ja vaata, kellele need kuuluvad:
+
+```bash
+ls -ln ~/k03-bind | head -3
+```
+
+Kustuta konteiner ja proovi kausta kustutada:
+
+```bash
+docker rm -f dbbind
+rm -rf ~/k03-bind
+```
+
+??? success "Oodatav tulemus"
+
+    Failide omanik on UID 999 ja `rm -rf` annab `Permission denied`. UID 999 on konteineri kasutaja `mysql`. Hostis ei pruugi sellel numbril nime olla, aga tuum kontrollib õigusi numbri järgi, seepärast ei saa sinu kasutaja faile kustutada.
 
 <figure markdown="span">
   ![Konteineri db01 kataloog /var/lib/mysql võib olla kirjutatavas kihis, nimega volume'is või bind mount'is; kirjutatav kiht kaob docker rm-iga, ülejäänud jäävad alles](assets/k03_l_andmed.svg)
   <figcaption>Joonis 3.3. Kolm kohta, kuhu konteineri andmed võivad sattuda (Talvik, 2026).</figcaption>
 </figure>
 
-Loe joonist kahe küsimusega: mis jääb alles, kui konteiner kustutada, ja kelle õigustega on failid hostis.
-
-Koristus enne järgmist osa:
+Eemalda enne järgmist osa kõik katse konteinerid, volume ja võrgud:
 
 ```bash
-docker rm -f db01 mc01 rmq01 && docker volume rm dbtest
-docker network rm labnet sisemine && sudo rm -rf "$HOME/k03-bind"
-docker ps -aq | wc -l
+docker rm -f db01 mc01 rmq01
+docker volume rm dbtest
+docker network rm labnet sisemine
+sudo rm -rf ~/k03-bind
+docker ps -a
 ```
 
 ??? success "Oodatav tulemus"
 
-    Rida `42` jäi pärast `docker rm -f`-i alles. `Mounts` näitab tüüpi `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`. Bind mount'i failide omanik on UID 999, tavaline `rm -rf` andis `Permission denied` ja viimane käsk näitab `0`.
-
-    UID 999 on konteineri `mysql` kasutaja. Hostis ei pruugi sellel numbril nime olla, aga tuum kontrollib õigusi numbri järgi. Seepärast ei saanud sinu tavakasutaja faile kustutada.
+    `docker ps -a` on tühi.
 
 ### 1.16 Commit
 
