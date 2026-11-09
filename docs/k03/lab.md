@@ -120,7 +120,7 @@ systemctl is-active docker containerd   # mõlemad teenused töötavad
 
 ??? warning "Kui tuleb ikka `permission denied … docker.sock`"
 
-    Uus grupp ei hakanud veel kehtima. Kontrolli käsuga `id`: kui `docker` puudub, logi uuesti sisse nagu ülal kirjas. Kui see puudub ka siis, käivita `usermod` käsk uuesti.
+    Uus grupp ei hakanud veel kehtima. Kontrolli käsuga `id`, kas grupp `docker` on olemas. Kui see puudub, logi uuesti sisse nagu ülal kirjas. Kui see puudub ka siis, käivita `usermod` käsk uuesti.
 
 !!! warning "Grupp `docker` annab root'i õigused"
 
@@ -128,7 +128,7 @@ systemctl is-active docker containerd   # mõlemad teenused töötavad
 
 ### 1.3 Esimene konteiner
 
-Nüüd käivitad esimese konteineri. Selleks on vaja kahte mõistet. **Image** on nagu programmi paigalduspakett: selles on programmi failid ja seaded, millega see käivitub. **Konteiner** on image'ist käivitatud programm. Ühest image'ist saab käivitada mitu konteinerit.
+Nüüd käivitad esimese konteineri. Selleks on vaja kahte mõistet. **Image** on nagu programmi paigalduspakett. Selles on programmi failid ja seaded, millega programm käivitub. **Konteiner** on image'ist käivitatud programm. Ühest image'ist saab käivitada mitu konteinerit.
 
 Proovi image'iga `hello-world`. Selles on üks väike programm, mis prindib tervituse ja lõpetab.
 
@@ -140,7 +140,7 @@ docker run hello-world
 
 ??? success "Oodatav tulemus"
 
-    Esimene rida on `Unable to find image 'hello-world:latest' locally`: image'it masinas polnud. Siis tuleb `Pulling from library/hello-world`: Docker laadis image'i alla **Docker Hubist**, mis on Dockeri avalik image'ite hoidla (registry). Lõpuks prindib programm `Hello from Docker!` ja selgitab neljas punktis, mis juhtus.
+    Esimene rida `Unable to find image 'hello-world:latest' locally` tähendab, et image'it masinas polnud. Rida `Pulling from library/hello-world` tähendab, et Docker laadis image'i alla **Docker Hubist**. Docker Hub on Dockeri avalik image'ite hoidla (registry). Lõpuks prindib programm `Hello from Docker!` ja selgitab neljas punktis, mis juhtus.
 
 Teate neli punkti vastavad joonisele 3.1. Käsk `docker` saadab sinu soovi taustteenusele `dockerd`. `dockerd` laadib image'i alla, käivitab sellest konteineri ja saadab programmi väljundi sinu terminali.
 
@@ -160,7 +160,7 @@ docker image ls    # image'id
 
 ??? success "Oodatav tulemus"
 
-    Teisel korral allalaadimist ei olnud, sest image oli juba masinas. `docker ps` on tühi: ükski konteiner ei tööta. `docker ps -a` näitab kahte konteinerit olekus `Exited (0)`: programm lõpetas töö edukalt ja konteiner peatus koos sellega. Peatatud konteinerid jäävad masinasse, kuni need kustutad. `docker image ls` näitab ühte image'it `hello-world`, sest mõlemad konteinerid tehti samast image'ist.
+    Teisel korral allalaadimist ei olnud, sest image oli juba masinas. `docker ps` on tühi, sest ükski konteiner ei tööta. `docker ps -a` näitab kahte konteinerit olekus `Exited (0)`. See tähendab, et programm lõpetas töö edukalt ja konteiner peatus koos sellega. Peatatud konteinerid jäävad masinasse, kuni need kustutad. `docker image ls` näitab ühte image'it `hello-world`, sest mõlemad konteinerid tehti samast image'ist.
 
 ### 1.4 Docker Hub
 
