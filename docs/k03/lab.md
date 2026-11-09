@@ -149,7 +149,7 @@ Teate neli punkti vastavad joonisele 3.1. Käsk `docker` saadab sinu soovi taust
   <figcaption>Joonis 3.1. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
 </figure>
 
-Käivita sama käsk teist korda. Nii näed kolme asja: kas image laaditakse uuesti alla, kas lõpetanud konteiner jääb masinasse alles ja mitu image'it sinna tekkis:
+Käivita sama käsk teist korda ja vaata seejärel konteinerid ja image'id üle. Nii näed, kas image laaditakse uuesti alla, kas töö lõpetanud konteiner jääb masinasse alles ja mitu image'it masinas on.
 
 ```bash
 docker run hello-world | head -3
@@ -160,7 +160,7 @@ docker image ls    # image'id
 
 ??? success "Oodatav tulemus"
 
-    Teisel korral allalaadimist ei olnud, sest image oli juba masinas. `docker ps` on tühi: ükski konteiner ei tööta. `docker ps -a` näitab kahte konteinerit olekus `Exited (0)`: programm lõpetas edukalt ja konteiner peatus koos sellega. Peatatud konteinerid jäävad masinasse, kuni need kustutad. `docker image ls` näitab ühte image'it `hello-world`, sest mõlemad konteinerid tehti samast image'ist.
+    Teisel korral allalaadimist ei olnud, sest image oli juba masinas. `docker ps` on tühi: ükski konteiner ei tööta. `docker ps -a` näitab kahte konteinerit olekus `Exited (0)`: programm lõpetas töö edukalt ja konteiner peatus koos sellega. Peatatud konteinerid jäävad masinasse, kuni need kustutad. `docker image ls` näitab ühte image'it `hello-world`, sest mõlemad konteinerid tehti samast image'ist.
 
 ### 1.4 Docker Hub
 
