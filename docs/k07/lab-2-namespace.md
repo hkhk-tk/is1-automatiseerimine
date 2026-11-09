@@ -27,7 +27,7 @@ Kui sa oma õigusi ei tea, tõlgendad `Forbidden`-it valesti: otsid viga manifes
     kubectl auth can-i create namespaces
     ```
 
-2. Küsi veel viie tegevuse kohta. Kirjuta issue'sse tabel "tegevus | vastus | miks nii":
+2. Küsi veel viie tegevuse kohta:
 
     ```bash
     for r in 'get nodes' 'create networkpolicies' 'create rolebindings' 'create applications.argoproj.io' 'list secrets'; do

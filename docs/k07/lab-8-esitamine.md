@@ -95,7 +95,6 @@ Kontrolli, et K7 issue's on iga osa tõend. Nimekiri on sama, mida koolitaja vaa
 - [ ] 7. GitOps: boti commit, `/version` SHA = boti commit'i SHA, drift'i kestus, `OutOfSync` ilma selfHeal'ita, prune, `ComparisonError`, halb commit + revert, halva koodi kolm kellaaega ja logis ainult `200`
 - [ ] 8. Esitamine: tag `k07`, Releases tulemus, Labori seisus `lab-07`
 
-Kui mõni linnuke jääb tegemata, kirjuta issue'sse, mis jäi ja miks. Koolitaja hindab ka seda, kas sa tead, mis puudu on.
 
 **Edasi saad minna, kui** kõik linnukesed on tehtud ja iga mooduli issue on suletud.
 

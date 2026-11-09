@@ -138,13 +138,13 @@ Loe `labseis.yml` läbi ja leia kuus asja, mis täna failist välja lähevad: ma
 
 ## Osa 2 · Leia ja paranda vead
 
-Iga viga leiad samade sammudega: **Sümptom** (mida näed), **Hüpotees** (mis võib olla põhjus), **Tõend** (käsk, mis hüpoteesi kinnitab või lükkab ümber), **Paranda** ja **Kontrolli**. Kirjuta iga vea hüpotees enne tõendi otsimist oma K2 issue kommentaariks.
+Iga viga leiad samade sammudega: **Sümptom** (mida näed), **Hüpotees** (mis võib olla põhjus), **Tõend** (käsk, mis hüpoteesi kinnitab või lükkab ümber), **Paranda** ja **Kontrolli**.
 
 ### 2.1 Viga 1: vahemälu ei vasta
 
 **Sümptom:** `/health` näitab `"cache":"DOWN"`. Rakendus app01-s ei saa ühendust Memcachedi serveriga mc01-s.
 
-**Hüpotees:** kirjuta issue'sse, mis võib ühenduse takistada. Mõtle kolmele kohale: kas teenus töötab, kas see kuulab võrgus ja kas midagi on teel ees.
+**Hüpotees:** mis võib ühenduse takistada? Võimalikke kohti on kolm: kas teenus töötab, kas see kuulab võrgus ja kas midagi on teel ees.
 
 ??? tip "Tõend"
 
@@ -198,7 +198,7 @@ ansible-playbook labseis.yml
 
     Kõigis viies masinas on `changed=1` või rohkem. Väljundis on `changed` kahes ülesandes: `Masinad tunnevad üksteist nime järgi` (iga masina kohta) ja app01-s `Tomcat taaskäivitatakse, et seaded rakenduksid`.
 
-**Hüpotees:** kirjuta issue'sse, miks need kaks ülesannet muudavad masinat igal käivitusel.
+**Hüpotees:** miks need kaks ülesannet muudavad masinat igal käivitusel?
 
 ??? tip "Tõend"
 
