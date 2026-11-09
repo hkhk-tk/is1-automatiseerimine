@@ -736,46 +736,47 @@ Brauser pöördub veebiserveri `web01` poole, see saadab päringu rakendusele `a
 
 Starteri `compose.yaml`-is on teenused ette antud TODO-ridade ja kommentaaridena. Täidad need ühe kaupa ja käivitad iga teenuse kohe, et näha, kas see töötab ([Compose'i faili juhend](https://docs.docker.com/reference/compose-file/services/)).
 
-### 4.1 Paroolid ja andmebaas
+### 4.1 Paroolid failis `.env`
 
-Paroolid ei kuulu `compose.yaml`-i, sest see fail on Gitis. Need on failis `.env`, mis jääb Gitist välja. Compose loeb `.env`-i ise ja asendab failis viited kujul `${DB_PASSWORD}` sealsete väärtustega. Starteri `.env.example` näitab, milliseid muutujaid on vaja, ja see on Gitis.
+Andmebaas vajab paroole. Neid ei kirjutata `compose.yaml`-i, sest see fail on Gitis ja paroole näeks igaüks. Paroolid lähevad faili `.env`, mida Git ei salvesta.
 
-??? example "Fail `.env.example` (starteris)"
-
-    ```bash
-    DB_PASSWORD=muuda-mind
-    DB_ROOT_PASSWORD=muuda-mind
-    RABBITMQ_PASSWORD=muuda-mind
-    TEACHER_TOKEN=muuda-mind
-    HUB=docker.io/library
-    REGISTRY=harbor.lab.hkhk.lan
-    OWNER=sinu-github-kasutaja
-    TAG=dev
-    WEB_PORT=8080
-    ```
-
-    `HUB=docker.io/library` on näidisfailis meelega: GitHubi automaatkontroll Harborit ei näe ja tõmbab Docker Hubist.
-
-??? info "Mis on `.env` ja miks mitte Vault?"
-
-    `.env` on lihtne tekstifail, kus igal real on üks muutuja kujul `NIMI=väärtus`. Compose loeb selle faili ise, kui see on samas kaustas kui `compose.yaml`. Failis `compose.yaml` kirjutad parooli asemele `${DB_PASSWORD}` ja Compose paneb käivitamisel sinna `.env`-is oleva väärtuse.
-
-    Nii on `compose.yaml` Gitis ilma paroolideta ja iga masin saab kasutada oma paroole. `.env` on failis `.gitignore`, seega Gitti see ei jõua. Teised näevad ainult `.env.example`-i, kus on muutujate nimed ja näidisväärtused.
-
-    2. kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest, nii et paroole ei pea käsitsi kirjutama.
-
-Tee `.env.example`-ist oma `.env`. Teine käsk paneb sinna sinu `HUB` väärtuse ja GitHubi kasutajanime. `nano`-s pane paroolideks oma väärtused.
+Starteris on näidisfail `.env.example`. Tee sellest oma koopia ja ava see redaktoris.
 
 ```bash
-cp .env.example .env && chmod 600 .env
-sed -i -e "s|^HUB=.*|HUB=$HUB|" -e "s|^OWNER=.*|OWNER=<github-kasutaja>|" .env
+cp .env.example .env
+chmod 600 .env
 nano .env
+```
+
+Muuda failis kolme asja ja salvesta.
+
+1. Pane kõigi `muuda-mind` asemele oma paroolid.
+2. Kirjuta reale `HUB=` Harbori vahemälu aadress `harbor.lab.hkhk.lan/dockerhub/library`.
+3. Kirjuta reale `OWNER=` oma GitHubi kasutajanimi väikeste tähtedega.
+
+Kontrolli, et Git jätab faili välja.
+
+```bash
 git check-ignore -v .env
 ```
 
-Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. Kontrolli seda käsuga `printenv HUB` (või muu muutuja nimega). Paroolide väärtusi ära kleebi küsimustesse ega ekraanipiltidele.
+??? success "Oodatav tulemus"
 
-Nüüd täida `compose.yaml`-is teenus `db01`. Vaja on järgmist.
+    `git check-ignore` näitab rida failist `.gitignore`, mis jätab `.env`-i välja. `git status` seda faili ei näita.
+
+??? info "Mis on `.env` ja miks mitte Vault?"
+
+    `.env` on lihtne tekstifail, kus igal real on üks muutuja kujul `NIMI=väärtus`. Compose loeb selle ise, kui fail on samas kaustas kui `compose.yaml`. Failis `compose.yaml` on parooli asemel `${DB_PASSWORD}` ja Compose paneb käivitamisel sinna `.env`-is oleva väärtuse. Nii on `compose.yaml` Gitis ilma paroolideta.
+
+    `.env.example` on Gitis ja näitab teistele, milliseid muutujaid on vaja. Automaatkontroll kasutab just seda faili. Seal on `HUB=docker.io/library`, sest GitHubi automaatkontroll Harborini ei ulatu.
+
+    Kui sama muutuja on määratud ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. Kontrolli seda käsuga `printenv HUB`.
+
+    2. kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest.
+
+### 4.2 Andmebaas Compose'iga
+
+Täida `compose.yaml`-is esimene teenus `db01`. Vaja on järgmist.
 
 1. Faili algusesse projekti nimi `name: labori-seis`.
 2. Teenus `db01` ehitatakse sinu `db/Dockerfile`-ist. Ehituskontekst on `..` ja argument `HUB`.
@@ -828,7 +829,7 @@ sleep 25; docker compose ps
 
     Fail `.env` puudub või käivitasid käsu vales kaustas. Käsk peab olema kaustas `~/kursus/k03-docker`.
 
-### 4.2 Vahemälu ja sõnumijärjekord
+### 4.3 Vahemälu ja sõnumijärjekord
 
 Teenused `mc01` ja `rmq01` tulevad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Nende porte väljast vaja ei ole, nii et neid ei avalda. Avatud vahemälust saaks igaüks lugeda kõike, mis sinna pandi.
 
@@ -890,7 +891,7 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
     Kolm teenust on `(healthy)` ja halduse leht näitab nime `rabbit@rmq01`. Nimi tuleb hostinimest `rmq01`. Ilma selleta saaks iga uus konteiner juhusliku nime ja RabbitMQ ei kasutaks enam volume'is olevaid andmeid.
 
-### 4.3 Rakendus
+### 4.4 Rakendus
 
 Nüüd lisad rakenduse `app01`. Rakendus vajab kõiki kolme teenust, nii et see tohib käivituda alles siis, kui need on valmis. Compose'is ütleb seda `depends_on` koos tingimusega `service_healthy`. Siis ootab Compose, kuni `db01`, `mc01` ja `rmq01` on olekus `healthy`.
 
@@ -940,7 +941,7 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
     Andmebaas loodi varem teise parooliga. MariaDB võtab parooli `.env`-ist ainult esimesel käivitusel, kui andmekataloog on tühi. Siin on andmebaasis ainult näidisandmed, nii et võid selle kustutada ja uuesti luua käsuga `docker compose down -v`. See kustutab ka andmed. Tõelise andmebaasi puhul muudetakse parool andmebaasis endas.
 
-### 4.4 Veebiserver ja automaatne taaskäivitus
+### 4.5 Veebiserver ja automaatne taaskäivitus
 
 Viimasena lisad veebiserveri `web01`. See on ainus teenus, mille poole brauser pöördub. Lisaks peavad kõik teenused pärast serveri taaskäivitust ise uuesti käivituma. Seda teeb igal teenusel rida `restart: unless-stopped`.
 
@@ -1009,7 +1010,7 @@ Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppij
 
     Port 8080 on juba kasutusel. Vaata käsuga `ss -tlnp | grep 8080`, mis seda kasutab, või vali `.env`-is teine `WEB_PORT`.
 
-### 4.5 Salvesta GitHubi
+### 4.6 Salvesta GitHubi
 
 Automaatkontroll loeb sama `compose.yaml`-i, aga sinu `.env`-i asemel kasutab `.env.example`-i. Seepärast peavad näidisfailis olema kõik muutujad, mida `compose.yaml` nõuab. Käivita kolm testi ja salvesta.
 
