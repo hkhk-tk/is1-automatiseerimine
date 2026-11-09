@@ -105,7 +105,7 @@ nav:
           - Loeng: k02/loeng.md
           - Praktikum: k02/lab.md
           - Kodutöö: k02/kodutoo.md
-      - 3. kohtumine · Docker ja Podman:
+      - 3. kohtumine · Docker ja Compose:
           - Loeng: k03/loeng.md
           - Praktikum: k03/lab.md
           - Kodutöö: k03/kodutoo.md

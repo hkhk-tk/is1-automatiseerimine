@@ -8,13 +8,21 @@ tags:
 
 # Praktikum: Labori seis konteinerites
 
-Kahel esimesel kohtumisel seadistasid Ansible'iga teenused otse virtuaalmasinatesse. Täna pakid sama rakenduse, Labori seisu, konteineritesse. Paigaldad Dockeri, ehitad image'id oma Dockerfile'idest, käivitad viis teenust ühe `compose.yaml`-iga, lükkad image'id kursuse registry'sse Harbor ja parandad vigase stacki.
+Kahel esimesel kohtumisel seadistasid Ansible'iga teenused otse virtuaalmasinatesse. Täna pakid sama rakenduse, Labori seisu, konteineritesse. Paigaldad Dockeri, ehitad image'id oma Dockerfile'idest, käivitad viis teenust ühe `compose.yaml`-iga ja esitad töö.
 
 Iga osa alguses on eesmärk ja kontroll. Kui oskad, tee osa eesmärgi järgi ise ja ava lahendused ainult kontrolliks. Töö tulemus on sinu harus `k03-docker` olev kood ja automaatkontroll kontrollib seda GitHubis.
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
 Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa küsimusele käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
+
+??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
+
+    **Saad valmis kujul:** starteris kaust `k03-docker` rakenduse koodi, Nginxi konfiguratsioonifaili, `.env.example`-i, Harbori CA ja mallidega, kuhu kirjutad Dockerfile'id ja `compose.yaml`-i. Harbori vahemälu tõmbab image'id Docker Hubist. 2. kohtumise tööd see praktikum ei vaja: alustad harust `main`.
+
+    **Teed ise:** paigaldad Dockeri, kirjutad kolm Dockerfile'i ja `compose.yaml`-i ning esitad töö tag'iga `k03`. Kodutöö on boonus.
+
+    **Kui midagi läks katki:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. `docker compose down` ja `docker compose up -d` loovad konteinerid uuesti. `docker compose down -v` kustutab ka andmebaasi andmed.
 
 ??? abstract "Õpiväljundid"
 
