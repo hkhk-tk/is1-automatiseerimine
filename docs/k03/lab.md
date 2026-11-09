@@ -882,11 +882,16 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
     Kolm teenust on `(healthy)` ja halduse leht näitab nime `rabbit@rmq01`. Nimi tuleb hostinimest `rmq01`. Ilma selleta saaks iga uus konteiner juhusliku nime ja RabbitMQ ei kasutaks enam volume'is olevaid andmeid.
 
-### 4.3 app01
+### 4.3 Rakendus
 
-Rakendus käivitub backend'i teenuste järel, sest vajab kõiki kolme. Ilma tingimuseta `service_healthy` käivitub app01 ajal, kui MariaDB alles algseadistab. Rakendus ootab ja ühendub hiljem ise, aga logides on siis hulk ühendusvigu, mis peidavad tegeliku vea, kui see peaks tekkima.
+Nüüd lisad rakenduse `app01`. Rakendus vajab kõiki kolme teenust, nii et see tohib käivituda alles siis, kui need on valmis. Compose'is ütleb seda `depends_on` koos tingimusega `service_healthy`. Siis ootab Compose, kuni `db01`, `mc01` ja `rmq01` on olekus `healthy`.
 
-Nõuded: build nagu db01, aga oma Dockerfile ja argumendid `HUB` ja `GIT_SHA: ${TAG:-dev}`; image `${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}` (5. kohtumise konveier annab `APP_IMAGE`-iga valmis image'i); `environment`-is ainult kolm saladust (`DB_PASSWORD`, `RABBITMQ_PASSWORD`, `TEACHER_TOKEN`), hostinimed on rakenduses vaikeväärtustena olemas; `depends_on` kolmele teenusele, igaühel `condition: service_healthy`.
+Lisa `compose.yaml`-i teenus `app01`.
+
+1. Ehitatakse sinu `app/Dockerfile`-ist, ehituskontekst `..`, argumendid `HUB` ja `GIT_SHA: ${TAG:-dev}`.
+2. Image'i nimi on `${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}`.
+3. Muutujad `DB_PASSWORD`, `RABBITMQ_PASSWORD` ja `TEACHER_TOKEN` tulevad `.env`-ist.
+4. `depends_on` kolmele teenusele, igaühel `condition: service_healthy`.
 
 ??? example "Lahendus: app01"
 
@@ -912,52 +917,34 @@ Nõuded: build nagu db01, aga oma Dockerfile ja argumendid `HUB` ja `GIT_SHA: ${
             condition: service_healthy
     ```
 
+Käivita rakendus. `--wait` ootab kuni 3 minutit, et rakendus jõuaks olekusse `healthy`.
+
 ```bash
 docker compose up -d --build --wait --wait-timeout 180 app01
-docker compose logs app01 | grep -m1 'Server startup'
 docker compose exec app01 curl -s localhost:8080/health; echo
 ```
 
 ??? success "Oodatav tulemus"
 
-    `up --wait` ootab, kuni app01 healthcheck annab `healthy`, ja lõpetab veaga, kui seda 180 sekundi jooksul ei juhtu. Siis vaata `docker compose logs app01`. `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja app01 on `(healthy)`. Neli `UP`-i tähendavad, et app01 jõudis iga backend'i teenuseni nime ja parooliga. `Server startup` logis ütleb, kui kaua Tomcat käivitus. See aeg on põhjus, miks healthcheck'il on `start-period`: selle aja jooksul ebaõnnestunud kontrolle ei loeta.
+    `/health` vastab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}`. Neli `UP`-i tähendavad, et rakendus jõudis andmebaasi, sõnumijärjekorra ja vahemäluni. Kui `--wait` lõpetab veaga, vaata logi käsuga `docker compose logs app01`.
 
-??? warning "Kui `db` on DOWN ja logis `Access denied`"
+??? warning "Kui `db` on `DOWN` ja logis on `Access denied`"
 
-    MariaDB loeb paroolid muutujatest ainult siis, kui andmekataloog on tühi. Volume `dbdata` algseadistati varem teise parooliga ja uus `.env`-i parool seda ei muuda. Selles etapis on baasis ainult skeem ja näidisandmed, mille init-skript loob uuesti, seega võid volume'i kustutada: `docker compose down -v` eemaldab stacki volume'id (ka RabbitMQ oma) ja järgmine `up` algseadistab baasi uue parooliga. Tootmises kustutaks see andmed: seal muudetakse parool baasis endas.
+    Andmebaas loodi varem teise parooliga. MariaDB võtab parooli `.env`-ist ainult esimesel käivitusel, kui andmekataloog on tühi. Siin on andmebaasis ainult näidisandmed, nii et võid selle kustutada ja uuesti luua käsuga `docker compose down -v`. See kustutab ka andmed. Tõelise andmebaasi puhul muudetakse parool andmebaasis endas.
 
-### 4.4 web01 ja ühised seaded
+### 4.4 Veebiserver ja automaatne taaskäivitus
 
-Viimase teenuse kaudu pääseb stackile ligi väljast. Kõigil teenustel on samad restart- ja logiseaded, seega kirjutad need üks kord ja viitad neile YAML-ankruga. Ilma logide rotatsioonita täidab üks palju logi kirjutav konteiner `/var/lib/docker` partitsiooni ja siis seiskub kogu Docker koos kõigi teenustega.
+Viimasena lisad veebiserveri `web01`. See on ainus teenus, mille poole brauser pöördub. Lisaks peavad kõik teenused pärast serveri taaskäivitust ise uuesti käivituma. Seda teeb igal teenusel rida `restart: unless-stopped`.
 
-Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
-
-??? example "Lahendus: ühised seaded (faili algusesse pärast `name:`)"
-
-    ```yaml
-    x-common: &common
-      restart: unless-stopped
-      logging:
-        driver: json-file
-        options:
-          max-size: "10m"
-          max-file: "3"
-    ```
-
-    Lisa iga teenuse esimeseks reaks:
-
-    ```yaml
-      db01:
-        <<: *common
-    ```
-
-    `&common` paneb plokile nime, `*common` viitab sellele ja `<<:` liidab ploki võtmed teenuse võtmetega.
+1. Lisa teenus `web01`. Ehituskontekst on `./web`, argument `HUB`, image'i nimi tabeli 3.2 järgi ja port `"${WEB_PORT:-8080}:80"`.
+2. `web01` sõltub teenusest `app01` tingimusega `service_healthy`.
+3. Lisa igale viiele teenusele rida `restart: unless-stopped`.
 
 ??? example "Lahendus: web01"
 
     ```yaml
       web01:
-        <<: *common
+        restart: unless-stopped
         build:
           context: ./web
           args:
@@ -970,14 +957,36 @@ Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 jär
             condition: service_healthy
     ```
 
+??? tip "Sama lühemalt: ühised seaded ühes kohas"
+
+    Kui sama seade on igal teenusel, võid selle kirjutada üks kord faili algusesse ja igas teenuses sellele viidata. Nii saab lisada ka logide suuruse piirangu.
+
+    ```yaml
+    x-common: &common
+      restart: unless-stopped
+      logging:
+        driver: json-file
+        options:
+          max-size: "10m"
+          max-file: "3"
+
+    services:
+      db01:
+        <<: *common
+    ```
+
+    `&common` paneb plokile nime ja `<<: *common` toob selle sisu teenusesse. Vaata [Compose'i laiendusvälju](https://docs.docker.com/reference/compose-file/extension/).
+
+Käivita kogu stack ja kontrolli rakendust.
+
 ```bash
 docker compose up -d --build
 docker compose ps
-curl -s http://localhost:8080/health; echo; curl -s http://localhost:8080/version; echo
-docker compose top app01
+curl -s http://localhost:8080/health; echo
+curl -s http://localhost:8080/version; echo
 ```
 
-Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppija vaade: token tuleb failist `db/seed.sql`. Õpetaja vaade on `/?token=<TEACHER_TOKEN>`.
+Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppija vaade. Õpetaja vaade on `/?token=<TEACHER_TOKEN>`, kus token on sinu `.env`-ist.
 
 <figure markdown="span">
   ![Labori seisu avaleht brauseris pordil 8080](assets/k03_labori_seis_avaleht.png)
@@ -986,15 +995,15 @@ Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppij
 
 ??? success "Oodatav tulemus"
 
-    Viis teenust on `(healthy)`, `/version` näitab sinu `TAG`-i, `top` näitab app01 `java` protsessi hosti PID-iga ja brauseris avaneb Labori seis. `top` näitas hosti PID-i: Compose'i teenus on endiselt hostiprotsess nagu `docker run`-iga käivitatud konteiner. Ühised seaded ühes kohas tähendavad, et kuues teenus saab need ühe reaga ja automaatkontrolli `deps` leiab restart-poliitika igalt teenuselt.
+    Viis teenust on `(healthy)`, `/health` näitab nelja `UP`-i ja `/version` näitab sinu `TAG`-i. Brauseris avaneb Labori seis.
 
-??? warning "Kui `port is already allocated`"
+??? warning "Kui tuleb viga `port is already allocated`"
 
-    Port 8080 on juba kasutusel. Vaata, milline protsess seda kasutab: `ss -tlnp | grep 8080`. Muuda `.env`-is `WEB_PORT`.
+    Port 8080 on juba kasutusel. Vaata käsuga `ss -tlnp | grep 8080`, mis seda kasutab, või vali `.env`-is teine `WEB_PORT`.
 
-### 4.5 Commit
+### 4.5 Salvesta GitHubi
 
-Enne commit'i käivitad kolm automaatkontrolli testi, mis loevad sama `compose.yaml`-i. Testid kasutavad `.env.example` väärtusi, mitte sinu `.env`-i. Seepärast peab näidisfail sisaldama kõiki muutujaid, mida `${VAR:?}` nõuab, muidu ebaõnnestub `compose` GitHubis, kuigi sinu masinas töötab.
+Automaatkontroll loeb sama `compose.yaml`-i, aga sinu `.env`-i asemel kasutab `.env.example`-i. Seepärast peavad näidisfailis olema kõik muutujad, mida `compose.yaml` nõuab. Käivita kolm testi ja salvesta.
 
 ```bash
 (cd .. && for t in compose deps tags; do bash autograde/check.sh k03 "$t"; done)
@@ -1004,7 +1013,7 @@ git status --short
 
 ??? success "Oodatav tulemus"
 
-    `compose`, `deps` ja `tags` annavad `OK` ja `git status` ei näita `.env`-i.
+    `compose`, `deps` ja `tags` annavad `OK`. `git status` ei näita `.env`-i, sest see jääb Gitist välja.
 
 ## Osa 5 · Harbor
 
@@ -1247,7 +1256,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `up -d` loob teenuse iga kord uuesti | `docker compose config` kahe käivituse vahel | failis on väärtus, mis muutub (näiteks `latest` või muutuja, mis tuleb käsurealt) | Compose võrdleb seadistuse räsi; muutunud räsi tähendab uut konteinerit |
     | RabbitMQ halduses on järjekorrad pärast konteineri uuesti loomist tühjad | `docker compose exec rmq01 hostname` | `hostname: rmq01` puudub: node'i nimi muutus | RabbitMQ andmekataloog on node'i nime järgi ja uus nimi tähendab uut, tühja node'i |
     | järjekorras on sõnumid, consumer'eid 0 | `docker compose logs app01 \| grep -i rabbit` | app01 consumer ei ühendunud või parool on vale | API ja consumer on eraldi komponendid; POST õnnestub ka siis, kui consumer ei tööta |
-    | `k03 deps`: `restart-poliitika puudub` | `docker compose config \| grep restart` | `<<: *common` puudub mõnel teenusel | ankru seaded kehtivad ainult teenustele, kuhu ankur on lisatud |
+    | `k03 deps`: `restart-poliitika puudub` | `docker compose config \| grep restart` | `restart: unless-stopped` puudub mõnel teenusel | restart-poliitika on iga teenuse oma seade |
     | `k03 deps`: `port on hostis avatud` | `docker compose config \| grep -B3 published` | app01, db01 või mc01 all on `ports:` | test nõuab, et väljast oleks nähtav ainult web01 |
     | healthcheck toruga ei tööta | `docker inspect -f '{{json .State.Health.Log}}' <k>` | `CMD` kuju ei käivita shelli: kasuta `CMD-SHELL` | `CMD` käivitab programmi otse ja `\|` läheb talle argumendina |
     | `docker compose logs -f --since 1m` ei näita midagi | `docker compose ps web01`, `date -u` | viimase minuti jooksul pole päringuid tehtud või vaatad valet teenust | `--since` filtreerib Dockeri ajatempli järgi; vanemad read jäävad välja |
