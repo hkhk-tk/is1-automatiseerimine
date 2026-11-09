@@ -597,11 +597,11 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
     Rida `ENV` puudub või fail ei ole kaustas `/etc/nginx/templates/`. Kontrolli Dockerfile'i ja ehita image uuesti.
 
-### 2.3 .dockerignore
+### 2.3 Hoia saladused image'ist väljas
 
-Ehituskontekst on kõik, mis saadetakse builderile enne esimest juhist. Docker ei vaata, mida Dockerfile tegelikult kasutab. Kõik, mis on kontekstis, võib `COPY . .` abil image'isse jõuda, ka `.env` paroolidega ja OpenTofu `tfstate`. Saladus image'is jõuab igasse koopiasse: registry'sse, iga masina kettale ja igaühele, kes image'i tõmbab. Kustutamine hilisemas kihis ei aita, sest varasem kiht on alles.
+Ehitamisel annab Docker ehituskonteksti failid, ehk kogu repositooriumi juure, builderile kaasa. Kui Dockerfile'is on kunagi rida `COPY . .`, satub image'isse kõik, ka paroolidega fail `.env`. Image'i võivad tõmmata teised ja nii jõuaks parool nendeni.
 
-Loo repositooriumi juurde [`.dockerignore`](https://docs.docker.com/build/concepts/context/) lubamisnimekirjana (allowlist): esimene rida `*`, siis `!` ridadega tagasi ainult see, mida Dockerfile'id kopeerivad.
+Selle vastu on fail [`.dockerignore`](https://docs.docker.com/build/concepts/context/). See ütleb, milliseid faile Docker ehitusele ei anna. Kõige kindlam on keelata kõik ja lubada ainult vajalikud failid. Loo repositooriumi juurde (`~/kursus/.dockerignore`) fail, mille esimene rida `*` keelab kõik ja järgmised `!` read lubavad tagasi `pom.xml`-i, `src`-i ja `db`.
 
 ??? example "Lahendus: `~/kursus/.dockerignore`"
 
@@ -612,7 +612,9 @@ Loo repositooriumi juurde [`.dockerignore`](https://docs.docker.com/build/concep
     !db
     ```
 
-    Reeglid loetakse ülevalt alla ja hilisem reegel kirjutab varasema üle. `*` jätab välja kõik, `!` read toovad tagasi ainult vajaliku.
+    Docker loeb ridu ülevalt alla ja hilisem rida kirjutab varasema üle.
+
+Kontrolli, et andmebaasi image ehitub endiselt, ja käivita automaatkontrolli failitest.
 
 ```bash
 docker build -q --build-arg HUB -f db/Dockerfile -t labseis-db:test ..
@@ -621,49 +623,55 @@ docker build -q --build-arg HUB -f db/Dockerfile -t labseis-db:test ..
 
 ??? success "Oodatav tulemus"
 
-    db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole. `.dockerignore` on kaitse. Kui Dockerfile'is on kunagi `COPY . .`, ei jõua `.env` ega `.git` image'isse. Lubamisnimekirjaga ei jõua uus fail image'isse enne, kui sa selle ise lubad. Keelunimekirja (`.env`, `.git`) tuleb iga uue saladusefailiga täiendada, ja see ununeb.
+    Image ehitub. `k03 files` annab `OK` või kurdab ainult `app/Dockerfile`-i ja `compose.yaml`-i üle, mida sa pole veel teinud.
 
-### 2.4 Commit
+### 2.4 Salvesta GitHubi
 
 ```bash
 (cd ~/kursus && git add .dockerignore k03-docker && git commit -m "k03: db ja web Dockerfile, .dockerignore" && git push)
 git ls-files
 ```
 
-`git ls-files` näitab, mida automaatkontroll näeb. Fail, mis on töökaustas, aga mitte Gitis, puudub ka GitHubi ehituses, ja see viga tuleb välja alles esitamisel.
+`git ls-files` näitab, millised failid on Gitis. Automaatkontroll näeb ainult neid. Kui fail on ainult sinu kaustas, ei leia GitHub seda.
 
 ??? success "Oodatav tulemus"
 
     `git ls-files` näitab faile `db/Dockerfile`, `web/Dockerfile` ja `web/nginx.conf`.
 
-## Osa 3 · App image
+## Osa 3 · Rakenduse image
 
-Ehitad rakenduse image'i kahes astmes, nii et lõppimage'isse jõuab ainult rakendus, mitte Maven ega lähtekood. Sama image'i ehitab 5. kohtumisel konveier ja 7. kohtumisel käivitab Kubernetes, seega iga siin tehtud viga kordub igal ehitusel.
+Rakendus on Java veebirakendus. Selle lähtekoodist teeb tööriist Maven faili `labori-seis.war` ja selle käivitab veebiserver Tomcat. Maveni on vaja ainult ehitamiseks, töötavasse image'isse seda vaja pole. Seepärast teed image'i kahes astmes.
 
-**Eesmärk:** app-image ehitub kahes astmes ja lõppimage'is pole Maveni ega lähtekoodi.  
+**Eesmärk:** rakenduse image ehitub kahes astmes ja lõppimage'is pole Maveni ega lähtekoodi.  
 **Kontroll:** `bash ../autograde/check.sh k03 multistage` annab `OK`.  
 **Kus:** control, kaust `~/kursus/k03-docker`.
 
-### 3.1 Mitmeastmeline Dockerfile
+### 3.1 Kahes astmes Dockerfile
 
-Kirjutad Dockerfile'i kahes astmes. Esimene aste ehitab WAR-i, teine käivitab selle. Lõppimage'isse jõuab ainult see, mille sa `COPY --from` abil teisest astmest üle tood.
+Esimene aste ehitab Maveniga WAR-faili. Teine aste võtab aluseks Tomcati ja kopeerib sinna esimesest astmest ainult WAR-faili. Kõik muu esimesest astmest jääb lõppimage'ist välja.
 
 <figure markdown="span">
   ![Ehitusaste maven-image'iga teeb WAR-faili; käitusaste tomcat-image'iga saab ainult WAR-i COPY --from abil; lõppimage'is pole Maveni ega lähtekoodi](assets/k03_multistage.svg)
   <figcaption>Joonis 3.4. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.2 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitust kustutatakse; teine läheb tootmisse; lõpu read on metaandmed, mis muutuvad iga commit'iga ja peavad seepärast olema viimased.
+Ava starteri fail `app/Dockerfile` ja täida TODO-read ([mitmeastmeline ehitus](https://docs.docker.com/build/building/multi-stage/)).
 
-??? note "Tabel 3.2. App-Dockerfile'i plaan"
+**Esimene aste (ehitus):**
 
-    | Aste | Mida teeb |
-    |---|---|
-    | `FROM ${HUB}/maven:3-eclipse-temurin-21 AS build` | töökataloog `/src`; **ainult** `pom.xml`; `mvn -B -q dependency:go-offline`; siis `src/`; `mvn -B -q package -DskipTests` |
-    | `FROM ${HUB}/tomcat:10.1-jre21-temurin` | `RUN`-i pole vaja (`curl` on baasis olemas ja `webapps` on tühi); `COPY --from=build` WAR → `webapps/ROOT.war`; `EXPOSE 8080`; `HEALTHCHECK` `curl -fsS http://localhost:8080/health` (`--start-period=60s`) |
-    | lõpp | `ARG GIT_SHA=unknown`, `ENV GIT_SHA=${GIT_SHA}`, `LABEL org.opencontainers.image.revision="${GIT_SHA}"`, `CMD ["catalina.sh", "run"]` |
+1. Aluseks image `maven:3-eclipse-temurin-21`, astme nimi `build` (`FROM … AS build`).
+2. Töökataloog `/src` (`WORKDIR`).
+3. Kopeeri kõigepealt ainult `pom.xml` ja laadi sõltuvused alla käsuga `mvn -B -q dependency:go-offline`.
+4. Siis kopeeri kaust `src` ja ehita WAR käsuga `mvn -B -q package -DskipTests`.
 
-Täida starteri `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/multi-stage/) tabeli järgi. Kirjuta see ise, ühe astmega näidet ära kopeeri.
+**Teine aste (käivitus):**
+
+5. Aluseks image `tomcat:10.1-jre21-temurin`.
+6. Kopeeri esimesest astmest fail `/src/target/labori-seis.war` nimega `/usr/local/tomcat/webapps/ROOT.war` (`COPY --from=build`).
+7. Port `8080` (`EXPOSE`) ja tervisekontroll, mis küsib `curl`-iga aadressi `http://localhost:8080/health`. Tomcat käivitub umbes minuti, nii et anna kontrollile `--start-period=60s`.
+8. Lõppu argument `GIT_SHA`, sama nimega muutuja ja silt `org.opencontainers.image.revision` ning käivituskäsk `catalina.sh run`.
+
+Mõlema astme baasimage'i eesliide tuleb argumendist `HUB`.
 
 ??? example "Lahendus: `app/Dockerfile`"
 
@@ -687,22 +695,23 @@ Täida starteri `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/bu
     CMD ["catalina.sh", "run"]
     ```
 
-    `pom.xml` eraldi ja enne `src`-i: sõltuvuste kiht muutub ainult siis, kui `pom.xml` muutub. Käitusaste ei vaja `RUN`-i: ametliku Tomcati image'i kaust `webapps` on tühi (näiterakendused on kaustas `webapps.dist`) ja healthcheck'i `curl` tuleb baasist (eclipse-temurin).
+    `pom.xml` kopeeritakse enne `src`-i, et Docker saaks sõltuvuste allalaadimise järgmisel ehitusel vahelt jätta, kui muutus ainult kood. Silt `GIT_SHA` näitab hiljem registry's, millisest commit'ist image tehti.
+
+Ehita image. Esimesel korral laadib Maven sõltuvused alla ja see võtab mõne minuti.
 
 ```bash
 docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t labseis-app:multi ..
-docker image ls labseis-app
 docker history labseis-app:multi | head -8
 docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 ```
 
 ??? success "Oodatav tulemus"
 
-    `history` ülemistes ridades on WAR (umbes 30 MB), Maveni kihte pole, ja label'is on sinu SHA. Maven, JDK ja kaust `~/.m2` jäid ehitusastmesse ega jõudnud lõppimage'isse. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
+    Ehitus lõpeb ilma veata. `history` ülemistes ridades on WAR-fail (umbes 30 MB) ja Maveni ridu pole. Sildis on sinu commit'i lühike SHA.
 
-### 3.2 Commit
+### 3.2 Salvesta GitHubi
 
-Enne commit'i käivita automaatkontrolli test, mis kontrollib app-Dockerfile'i ülesehitust.
+Enne salvestamist käivita automaatkontrolli test, mis vaatab, kas Dockerfile on kahes astmes.
 
 ```bash
 (cd .. && bash autograde/check.sh k03 multistage)
@@ -711,7 +720,7 @@ Enne commit'i käivita automaatkontrolli test, mis kontrollib app-Dockerfile'i �
 
 ??? success "Oodatav tulemus"
 
-    `multistage` annab `OK`. Test vaatab ainult faili kuju: kaks `FROM`-i ja `COPY --from`. Kas image töötab, näed 4. osas, kui app01 käivitub Compose'iga. Automaatkontrolli `build` ehitab selle esitamisel puhtast kloonist.
+    `multistage` annab `OK`. Test vaatab ainult Dockerfile'i ülesehitust. Kas rakendus töötab, näed 4. osas.
 
 ## Osa 4 · Kogu stack Compose'iga
 
@@ -726,9 +735,9 @@ Kirjeldad kogu rakenduse Labori seis ühes failis `compose.yaml`. Viis pikka `do
   <figcaption>Joonis 3.5. Labori seis Compose'i stackina (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.3 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hostis avatud“ näitab, millised teenused on väljast nähtavad. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
+Tabel 3.2 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hostis avatud“ näitab, millised teenused on väljast nähtavad. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
 
-??? note "Tabel 3.3. Stacki teenused"
+??? note "Tabel 3.2. Stacki teenused"
 
     | Teenus | Image | Hostis avatud | Healthcheck |
     |---|---|---|---|
@@ -771,7 +780,7 @@ Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõj
 
 ??? example "Ülesanne: db01 `compose.yaml`-is"
 
-    Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.3 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
+    Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.2 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
 
     ```yaml
     name: labori-seis
@@ -919,7 +928,7 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
 Viimase teenuse kaudu pääseb stackile ligi väljast. Kõigil teenustel on samad restart- ja logiseaded, seega kirjutad need üks kord ja viitad neile YAML-ankruga. Ilma logide rotatsioonita täidab üks palju logi kirjutav konteiner `/var/lib/docker` partitsiooni ja siis seiskub kogu Docker koos kõigi teenustega.
 
-Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.3 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
+Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
 
 ??? example "Lahendus: ühised seaded (faili algusesse pärast `name:`)"
 
@@ -1171,7 +1180,7 @@ Võid jätta stacki control'is tööle. Järgmisel kohtumisel saad kasutada oma 
 
 Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises käsk, mille väljund näitab põhjust.
 
-??? note "Tabel 3.4. Osa 1 · Docker ja esimesed konteinerid"
+??? note "Tabel 3.3. Osa 1 · Docker ja esimesed konteinerid"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1200,7 +1209,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `docker stop` kestab 10 s, image käivitab lihtsa skripti või `sleep`-i | `docker top <k>` | PID 1 ei käsitle SIGTERM-i: lisa `--init` (Compose'is `init: true`) | tuum ei rakenda PID 1-le signaali vaikekäitumist; init annab signaali edasi |
     | `docker exec`: `container … is not running` | `docker ps -a`, `docker logs <k>` | konteiner ebaõnnestus: vaata logi või käivita sama image `--entrypoint sh` | `exec` vajab töötavat PID 1 protsessi, mille namespace'idesse siseneda |
 
-??? note "Tabel 3.5. Osa 2 · db ja web image"
+??? note "Tabel 3.4. Osa 2 · db ja web image"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1212,7 +1221,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | web annab 502 ja logis `could not be resolved` | `docker network inspect <võrk>` | app01 pole samas võrgus või pole veel käivitunud | muutujaga `proxy_pass` lahendab nginx nime päringu ajal ja vastab 502-ga, kui nimi ei lahendu |
     | `k03 files`: `.dockerignore ei jäta .env faili välja` | `grep -n env .dockerignore` | denylist'is puudub `**/.env`; allowlist'iga (`*`) seda viga ei tule | ilma `**/` eesliiteta kehtib muster ainult konteksti juures, mitte `k03-docker/.env`-ile |
 
-??? note "Tabel 3.6. Osa 3 · App image"
+??? note "Tabel 3.5. Osa 3 · App image"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1224,7 +1233,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `k03 tags` FAIL app-image'i järel | `ls k03-docker/compose.yaml` | test vajab ka `compose.yaml`-i, mis tekib Compose'i lehel | test loeb ametlike image'ite tag'id Compose'i failist |
     | `grep upperdir … mountinfo`: `Permission denied` või tühi | `docker inspect -f '{{.State.Pid}}' <k>` | `sudo` puudu või konteiner ei tööta | teise protsessi `mountinfo` on loetav ainult root'ile ja ainult töötava protsessi kohta |
 
-??? note "Tabel 3.7. Osa 4 · Kogu stack Compose'iga"
+??? note "Tabel 3.6. Osa 4 · Kogu stack Compose'iga"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1244,7 +1253,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `docker top … -eo`: `error: unsupported option` | `docker top <k>` ilma võtmeteta | võtmed antakse hosti `ps`-ile: kasuta `ps` süntaksit | `docker top` käivitab hostis `ps` ja filtreerib konteineri protsessid |
     | `docker compose cp`: `Could not find the file` | `docker compose exec web01 ls /etc/nginx/conf.d` | tee on vale või fail on tmpfs'is, mis kadus | `cp` loeb konteineri failisüsteemist praegust olekut |
 
-??? note "Tabel 3.8. Osa 6 · Enne esitamist ja töö esitamine"
+??? note "Tabel 3.7. Osa 6 · Enne esitamist ja töö esitamine"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
