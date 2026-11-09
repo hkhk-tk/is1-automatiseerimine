@@ -21,8 +21,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
     1. Paigaldad Dockeri, tõmbad image'id Docker Hubist ja Harbori kaudu ning selgitad, kus konteiner hostis paistab: protsess, port ja andmed.
     2. Kirjutad ametlike image'ite põhjal Dockerfile'id ja mitmeastmelise app-image'i.
     3. Kirjeldad viie teenusega stacki `compose.yaml`-is healthcheck'ide ja sõltuvustega.
-    4. Lükkad image'id Harborisse ja käivitad stacki registry image'itest.
-    5. Parandad vigase Compose'i faili nii, et stack käivitub ise ja läbib kontrolli.
+    4. Kontrollid töö automaatkontrolli testidega ja esitad selle.
 
 ??? info "Testitud versioonid"
 
@@ -54,7 +53,7 @@ git check-ignore -v .env
 
 ??? success "Oodatav tulemus"
 
-    Kaustas on `.env.example`, `web/nginx.conf`, mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile`, vigane `intsident/compose.yaml`, `docker.yml` ja `roles/docker/files/harbor-ca.crt`. Mallides on TODO-read ja need ei käivitu enne, kui oled need täitnud. `intsident/compose.yaml` on meelega vigane: selle parandad 6. osas. `docker.yml` ja `roles/` on kodutöö jaoks. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: fail `.env`, kuhu tulevad paroolid, jääb Gitist välja juba enne, kui sa selle lood. Kõik selle kohtumise käsud käivitad kaustas `~/kursus/k03-docker`, kui juures pole kirjas teisiti.
+    Kaustas on `.env.example`, `web/nginx.conf`, mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile`, vigane `intsident/compose.yaml`, `docker.yml` ja `roles/docker/files/harbor-ca.crt`. Mallides on TODO-read ja need ei käivitu enne, kui oled need täitnud. `intsident/compose.yaml` on meelega vigane ja seda kasutab kursus IS2. `docker.yml` ja `roles/` on kodutöö jaoks. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: fail `.env`, kuhu tulevad paroolid, jääb Gitist välja juba enne, kui sa selle lood. Kõik selle kohtumise käsud käivitad kaustas `~/kursus/k03-docker`, kui juures pole kirjas teisiti.
 
 ??? warning "Kui failid puuduvad"
 
@@ -217,7 +216,7 @@ Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksu
 Harboris on kahte liiki projekte:
 
 - **`dockerhub`** on avalik **pull-through cache** (vahemälu). Esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tõmbed tulevad Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
-- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad 5. osas oma image'id.
+- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad image'id kursusel IS2.
 
 Harbori sertifikaadi on allkirjastanud kursuse oma CA, mida Ubuntu ei tunne. Docker usaldab registry't, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail, et ka `curl` ja Trivy Harborit usaldaksid. CA on starteris failina `roles/docker/files/harbor-ca.crt`.
 
@@ -564,7 +563,7 @@ Rakenduse failid on repositooriumi juures (`pom.xml`, `src/`, `db/`) ja jäävad
 └── k03-docker/
     ├── db/Dockerfile                  ← 2.2
     ├── web/Dockerfile  web/nginx.conf ← 2.4
-    ├── app/Dockerfile  kontroll/      ← 3. osa
+    ├── app/Dockerfile                 ← 3. osa
     └── compose.yaml  .env.example     ← 4. osa
 ```
 
@@ -723,7 +722,7 @@ git ls-files
 
 ## Osa 3 · App image
 
-Ehitad rakenduse image'i kahes astmes, nii et lõppimage'isse jõuab ainult rakendus, mitte Maven ega lähtekood. Sama image'i ehitab 5. kohtumisel konveier ja 7. kohtumisel käivitab Kubernetes, seega iga siin tehtud viga kordub igal ehitusel. Lisaks teed väikese kontroll-image'i, millega küsid stacki olekut seestpoolt.
+Ehitad rakenduse image'i kahes astmes, nii et lõppimage'isse jõuab ainult rakendus, mitte Maven ega lähtekood. Sama image'i ehitab 5. kohtumisel konveier ja 7. kohtumisel käivitab Kubernetes, seega iga siin tehtud viga kordub igal ehitusel.
 
 **Eesmärk:** app-image ehitub kahes astmes ja lõppimage'is pole Maveni ega lähtekoodi.  
 **Kontroll:** `bash ../autograde/check.sh k03 multistage` annab `OK`.  
@@ -785,48 +784,13 @@ docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 
     `multi` on mitusada MB väiksem kui `naive`. `history` ülemistes ridades on WAR (umbes 50–60 MB) Maveni kihte pole, ja label'is on sinu SHA. Suuruse vahe tuleb JDK-st, Mavenist ja kaustast `~/.m2`. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
-### 3.2 ENTRYPOINT ja CMD: kontroll-image
-
-Kontroll-image on tööriist, mis teeb ühe asja ja lõpetab: küsib Labori seisult olekut. Compose'i stackis kontrollid sellega stacki seestpoolt. `ENTRYPOINT` määrab programmi ja `CMD` selle vaikeargumendid, ja mõlemat saab käsureal asendada. Sama muster on Trivy, kubectl'i ja CI image'itel. Kui sa ei tea, mis on ENTRYPOINT, ei saa sa neid konveieris õigesti kasutada ja saad vea `unknown command`.
-
-Nõuded failile `kontroll/Dockerfile` (kontekst on see kaust): baas `alpine:3.22` (eesliide `HUB`), `apk add --no-cache curl`, `LABEL org.opencontainers.image.description="Labori seisu kontroll"`, `USER nobody`, `ENTRYPOINT ["curl", "-fsS", "--max-time", "5"]` ja `CMD ["http://web01/health"]`.
-
-??? example "Lahendus: `kontroll/Dockerfile`"
-
-    ```dockerfile
-    ARG HUB=docker.io/library
-    FROM ${HUB}/alpine:3.22
-    RUN apk add --no-cache curl
-    LABEL org.opencontainers.image.description="Labori seisu kontroll"
-    USER nobody
-    ENTRYPOINT ["curl", "-fsS", "--max-time", "5"]
-    CMD ["http://web01/health"]
-    ```
-
-Ehita ja käivita app testvõrgus. Seejärel käivita kontroll-image kolmel viisil: ilma argumendita, argumendiga ja asendatud ENTRYPOINT-iga.
-
-```bash
-docker build --build-arg HUB -t labseis-kontroll:test kontroll
-docker network create k03test
-docker rm -f appt; docker run -d --name appt --network k03test labseis-app:multi
-docker run --rm --network k03test labseis-kontroll:test; echo "exit=$?"
-sleep 30; docker run --rm --network k03test labseis-kontroll:test http://appt:8080/health/live; echo
-docker run --rm --entrypoint sh labseis-kontroll:test -c 'id; head -2 /etc/os-release'
-docker rm -f appt && docker network rm k03test
-```
-
-??? success "Oodatav tulemus"
-
-    Esimene annab `Could not resolve host: web01` ja `exit=6`: töötas vaike-CMD. Teine annab `{"status":"UP"}`: argument asendas CMD-i. Kolmas annab `uid=65534(nobody)`: asendati programm ise. Kood 6 on curl'i kood „nime ei lahendatud“, nii et skript saab eristada nimeviga ühendusveast (7) või HTTP veast (22).
-
-### 3.3 Commit
+### 3.2 Commit
 
 Enne commit'i käivita automaatkontrolli test, mis kontrollib app-Dockerfile'i ülesehitust.
 
 ```bash
-rm -f app/Dockerfile.naive
 (cd .. && bash autograde/check.sh k03 multistage)
-(cd ~/kursus && git add k03-docker && git commit -m "k03: mitmeastmeline app, mitte-root, kontroll-image" && git push)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: mitmeastmeline app-image" && git push)
 ```
 
 ??? success "Oodatav tulemus"
@@ -1011,7 +975,7 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
 ### 4.3 app01
 
-Rakendus käivitub backend'i teenuste järel, sest vajab kõiki kolme. Ilma tingimuseta `service_healthy` käivitub app01 ajal, kui MariaDB alles algseadistab. Rakendus ootab ja ühendub hiljem ise (seda näed 6. osas), aga logides on siis hulk ühendusvigu, mis peidavad tegeliku vea, kui see peaks tekkima.
+Rakendus käivitub backend'i teenuste järel, sest vajab kõiki kolme. Ilma tingimuseta `service_healthy` käivitub app01 ajal, kui MariaDB alles algseadistab. Rakendus ootab ja ühendub hiljem ise, aga logides on siis hulk ühendusvigu, mis peidavad tegeliku vea, kui see peaks tekkima.
 
 Nõuded: build nagu db01, aga oma Dockerfile ja argumendid `HUB` ja `GIT_SHA: ${TAG:-dev}`; image `${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}` (5. kohtumise konveier annab `APP_IMAGE`-iga valmis image'i); `environment`-is ainult kolm saladust (`DB_PASSWORD`, `RABBITMQ_PASSWORD`, `TEACHER_TOKEN`), hostinimed on rakenduses vaikeväärtustena olemas; `depends_on` kolmele teenusele, igaühel `condition: service_healthy`.
 
@@ -1119,53 +1083,7 @@ Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppij
 
     Port 8080 on juba kasutusel. Vaata, milline protsess seda kasutab: `ss -tlnp | grep 8080`. Muuda `.env`-is `WEB_PORT`.
 
-### 4.5 Tulemus web01-st db01-ni
-
-`/health` ütleb, et ühendused on olemas. Roheline `/health` ei tõesta, et kasutaja andmed jõuavad kohale: sõnum võib järjekorda kinni jääda, kui consumer ei tööta, ja API vastab ikka `accepted`. Nüüd saadad ühe tulemuse läbi ahela web01 → app01 → rmq01 → consumer → db01 (consumer on app01 sees töötav RabbitMQ listener, mis kirjutab sõnumi baasi) ja loed koondtabelit mc01 kaudu. Demotoken `demo-kati-token` on failis `db/seed.sql`.
-
-<figure markdown="span">
-  ![POST läheb web01 ja app01 kaudu RabbitMQ järjekorda, consumer kirjutab selle db01-sse; korduv GET saab koondtabeli mc01-st](assets/k03_l_tulemuse_teekond.svg)
-  <figcaption>Joonis 3.8. Ühe tulemuse teekond läbi stacki (Talvik, 2026).</figcaption>
-</figure>
-
-Joonis näitab, et POST- ja GET-päringud käivad eri teid. Kirjutamine on asünkroonne: app01 vastab kohe ja tulemus jõuab baasi alles siis, kui consumer sõnumi järjekorrast võtab. Lugemine käib vahemälu kaudu.
-
-```bash
-docker run --rm --network labori-seis_default labseis-kontroll:test; echo
-curl -s -X POST http://localhost:8080/api/results \
-  -H 'Authorization: Bearer demo-kati-token' -H 'Content-Type: application/json' \
-  -d '{"lab":"lab-03","check":"compose","status":"OK","host":"'"$(hostname)"'"}'; echo
-sleep 2; docker compose exec rmq01 rabbitmqctl list_queues name messages consumers
-curl -s -H 'Authorization: Bearer demo-kati-token' http://localhost:8080/api/results | jq '.[] | {lab, check, status}'
-T=$(grep '^TEACHER_TOKEN=' .env | cut -d= -f2)
-for i in 1 2 3; do curl -s -o /dev/null "http://localhost:8080/?token=$T"; done
-docker compose exec mc01 sh -c 'echo stats | nc -w 1 127.0.0.1 11211' | grep -E 'get_(hits|misses)'
-```
-
-??? success "Oodatav tulemus"
-
-    Kontroll-image annab `/health` JSON-i, POST vastab `{"status":"accepted"}`, järjekorras `results` on 0 sõnumit ja 1 consumer, GET näitab `lab-03 / compose / OK` ja `get_hits` on suurem kui 0. 0 sõnumit ja 1 consumer tähendab, et sõnum läbis järjekorra: consumer võttis selle ja kirjutas baasi. Kui sõnumeid oleks 1 ja consumer'eid 0, töötaks API, aga andmed oleksid järjekorras kinni. `get_hits` üle nulli näitab, et korduv õpetaja vaate päring tuli vahemälust ega koormanud andmebaasi.
-
-### 4.6 Riku ja vaata
-
-Peatad ühe sõltuvuse, lood rakenduse uuesti ja taaskäivitad terve masina. Need kolm juhtuvad tootmises: järjekorraserver läheb hooldusse, konveier uuendab rakendust, host saab tuumauuenduse.
-
-```bash
-docker compose stop rmq01
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-sleep 45; docker compose ps app01 web01
-docker compose start rmq01
-docker compose up -d --force-recreate --no-deps app01
-until curl -fs -o /dev/null http://localhost:8080/health; do sleep 3; done; echo ok
-```
-
-Taaskäivita control (`sudo reboot`) ja vaata pärast sisselogimist `docker compose ps`.
-
-??? success "Oodatav tulemus"
-
-    `/health` andis 503 ja app01 läks `unhealthy`, aga keegi seda ei taaskäivitanud. Kui rmq01 uuesti käivitus, taastas rakendus ühenduse ise. Uuesti loomise järel vastas web01 ilma 502-ta: `nginx.conf`-i `resolver` leidis app01 uue IP 10 sekundi jooksul. Pärast taaskäivitust käivitas stacki `restart: unless-stopped`, mitte sina.
-
-### 4.7 Commit
+### 4.5 Commit
 
 Enne commit'i käivitad kolm automaatkontrolli testi, mis loevad sama `compose.yaml`-i. Testid kasutavad `.env.example` väärtusi, mitte sinu `.env`-i. Seepärast peab näidisfail sisaldama kõiki muutujaid, mida `${VAR:?}` nõuab, muidu ebaõnnestub `compose` GitHubis, kuigi sinu masinas töötab.
 
@@ -1216,365 +1134,15 @@ git status --short
 
     Image'id, healthcheck'i otspunktid, mitte-root kasutaja, ressursipiirid ja saladused failidena lähevad Kubernetesesse muutmata.
 
-## Osa 5 · Harbor
+## Osa 5 · Enne esitamist
 
-Lükkad oma image'id Harborisse, kust 5. kohtumise konveier ja 7. kohtumise klaster neid tõmbavad. Harbor skannib iga image'i Trivy'ga.
+Konveier võtab 5. kohtumisel sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Käivitad samad kontrollid ise.
 
-**Eesmärk:** kolm image'it on sinu Harbori projektis SHA-tag'iga ja stack käivitub registry image'itest.  
-**Kontroll:** automaatkontrolli test `tags` annab `OK` ja Harbori veebiliideses on kolm repositooriumi.  
-**Kus:** control, kaust `~/kursus/k03-docker`, põhistack `compose.yaml`.
-
-<figure markdown="span">
-  ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, lükkab oma image'id Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
-  <figcaption>Joonis 3.9. Image'i teekond: Docker Hub, Harbori vahemälu, sinu projekt ja kasutajad (Talvik, 2026).</figcaption>
-</figure>
-
-### 5.1 Push Harborisse
-
-Tag'iks saab commit'i lühike SHA, et iga image'i saaks seostada koodiga. Tag `latest` või `dev` ei ütle, mis kood image'is on. Kui midagi läheb katki, ei tea sa, millise versiooni juurde tagasi minna, ega saa tõestada, mis tootmises töötas.
-
-1.5-s logisid Harborisse sisse. Pane `.env`-is tag'iks commit'i SHA, seejärel ehita image'id ja lükka need Harborisse:
-
-```bash
-TAG=$(git rev-parse --short HEAD) && sed -i "s/^TAG=.*/TAG=$TAG/" .env
-grep -E '^(REGISTRY|OWNER|TAG)=' .env
-docker compose build && docker compose push
-```
-
-Anna web-image'ile teine nimi ja lükka see ka selle nimega:
-
-```bash
-W=harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-web
-docker tag "$W:$TAG" "$W:k03" && docker image ls "$W"
-docker push "$W:k03"
-```
-
-Ava Harboris oma projekt ja vali **Repositories**.
-
-<figure markdown="span">
-  ![Harbori projekti Repositories vaade kolme repositooriumiga labori-seis-app, labori-seis-db ja labori-seis-web](assets/k03_harbor_repositories.png)
-  <figcaption>Joonis 3.10. Kolm image'it sinu Harbori projektis (Talvik, 2026).</figcaption>
-</figure>
-
-??? success "Oodatav tulemus"
-
-    Harboris on kolm repositooriumi tag'iga `<lühike SHA>`, web-image'i kahel real on sama IMAGE ID ja teine push ütles iga kihi kohta `Layer already exists`. Registry hoiab kihte, mitte terveid image'eid: sama sisuga kiht salvestatakse üks kord. Uus tag on ainult uus nimi sama manifesti juurde, seepärast on IMAGE ID mõlemal real sama.
-
-??? warning "Kui `denied: requested access to the resource is denied`"
-
-    `OWNER` pole sinu Harbori kasutajanimi või logisid sisse teise kasutajana. Kasutajanimi ja projekti nimi on GitHubi kasutajanimi väikeste tähtedega.
-
-??? warning "Kui `x509: certificate signed by unknown authority`"
-
-    CA puudub kaustas `/etc/docker/certs.d/harbor.lab.hkhk.lan/`. Korda 1.5 sertifikaadi samme. `insecure-registries` ei ole lahendus: see lülitab sertifikaadi kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
-
-??? note "Kui Harbor ei vasta: GHCR"
-
-    GitHubi registry GHCR sobib samaks tööks. Loo GitHubis **Settings → Developer settings → Personal access tokens → Tokens (classic)** token õigusega `write:packages` ([juhend](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
-
-    ```bash
-    sed -i -e 's/^REGISTRY=.*/REGISTRY=ghcr.io/' .env
-    docker login ghcr.io -u <github-kasutaja>        # parooliks token
-    docker compose build && docker compose push
-    ```
-
-    Pakett on vaikimisi privaatne. GitHubis näed seda profiili all **Packages**. Trivy skannimise saad siis teha käsurealt ([IS2, osa 3](https://hkhk-tk.github.io/is2-automatiseerimine/k03/syvenemine/)).
-
-### 5.2 Stack registry'st
-
-Kustutad oma image'id kohalikult ja käivitad stacki ainult registry'st: nii käivitavad rakenduse konveier ja Kubernetese klaster. Kui mõni image on ainult sinu masinas, töötab käivitus sinu juures ja ebaõnnestub igal teisel masinal. Seda viga on lihtne mitte märgata, sest sinu masinas on kõik alati olemas.
-
-```bash
-docker compose down
-docker image rm $(docker compose config --images | grep labori-seis-)
-docker compose pull && docker compose up -d --no-build --wait
-docker compose images
-curl -s http://localhost:8080/version; echo
-```
-
-??? success "Oodatav tulemus"
-
-    `pull` tõmbas app-, db- ja web-image'i Harborist (olemasolevad kihid `Already exists`), `docker compose images` näitab Harbori nimesid SHA-tag'iga ja `/version` sama SHA-d. Töötav kood on tõendatavalt see, mis on Gitis. 4. osas lisatud tulemus on andmebaasis alles, sest `down` ilma `-v`-ta ei puuduta volume'eid.
-
-??? warning "Kui `pull` ebaõnnestub teatega `current image with … vulnerabilities cannot be pulled`"
-
-    6.3 tõmbamise keeld on sees. Lülita see projekti **Configuration** all välja.
-
-### 5.3 Commit
-
-```bash
-(cd ~/kursus && git add k03-docker && git status --short && git commit -m "k03: image'id Harboris" && git push)
-```
-
-??? success "Oodatav tulemus"
-
-    Commit on GitHubis ja `git status` ei näita `.env`-i ega `secrets/`-i.
-
-??? info "Miks see nii töötab"
-
-    **Registry sisselogimine.** `~/.docker/config.json` näitab, milliste registry'de autentimisandmed on salvestatud. Kui credential helper puudub, on parool seal Base64-kodeeringus, mitte krüpteeritult, seetõttu ei jagata faili kellegagi.
-
-    **Registry prügikoristus.** Kustutatud tag ei vabasta kohe kettaruumi. Kihid jäävad registry's alles, kuni registry prügikoristus (garbage collection) need eemaldab. Harboris käivitab selle süsteemiadministraator ajakava järgi.
-
-    **Robotkonto ja CI.** Inimese parool konveieris tähendab, et konveieril on kõik inimese õigused ja parooli vahetus katkestab konveieri töö. Robotkontol on ainult vajalik õigus (pull või push), aegumisaeg ja see ei saa veebiliidesesse sisse logida. Seepärast antakse CI-le eraldi robotkonto ja seda ei jagata kasutajate vahel.
-
-    **Pull-through cache ja replikatsioon.** Harbori vahemälu projekt `dockerhub` tõmbab image'i esimesel küsimisel ja hoiab seda. Replikatsioon kopeerib image'eid ajakava järgi kahe registry vahel. Mõlemad on süsteemiadministraatori seaded, sest need puudutavad kogu registry't.
-
-    **Trivy pakettide nimekiri.** `trivy image --list-all-pkgs --format json` näitab kõiki pakette, mille Trivy image'ist leidis. Samast paketiloendist koosneb ka SBOM.
-
-    **`--ignore-unfixed`.** `--ignore-unfixed` peidab leiud, millele parandust veel pole. See sobib konveieri peatamise tingimuseks, aga mitte raportiks, sest parandamata riski peab keegi teadlikult aktsepteerima.
-
-    **X-tee konteinerina.** Samad küsimused tulevad ette ka Eesti riigi taristus. X-tee turvaserverit levitatakse ka konteineri image'ina ([Security Server Sidecar](https://github.com/nordic-institute/X-Road-Security-Server-sidecar)), nii et asutus saab selle käivitada ilma eraldi virtuaalmasinat ehitamata. Ka selle image'i puhul tuleb jälgida versiooni, CVE-sid ja SBOM-i samamoodi nagu praktikumis.
-
-## Osa 6 · Vigane stack
-
-**Kus:** control, kaust `~/kursus/k03-docker`, intsidendistack `intsident/compose.yaml` pordil 8090.
-
-Failis `intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident`. Fail on süntaktiliselt korras ja `docker compose config -q` laseb selle läbi, aga stack ei käivitu: selles on kolm viga ja restart-poliitika puudub. Paranda konfiguratsioon nii, et stack käivitub automaatselt ja läbib kontrolli. Parandused teed failis, mitte töötavas konteineris, ja lood uuesti ainult need teenused, mida parandus puudutab.
-
-Teade `dependency failed to start` ütleb ainult, et keegi ahelas ei jõudnud `healthy` olekusse. Tabel 3.4 näitab, millise käsuga näed, milline teenus on katki.
-
-??? note "Tabel 3.4. Compose'i stacki veaotsing"
-
-    | Mida näed | Vaata esimesena | Tõenäoline koht |
-    |---|---|---|
-    | `up` lõpeb `dependency failed to start` | `docker compose ps -a`: kes on `Exited`, kes `unhealthy` | sõltuvus, mitte app01 ise |
-    | teenus `Exited (1)` kohe pärast käivitust | `docker compose logs <teenus> \| tail -20` | andmekataloog, õigused, kasutaja |
-    | teenus `unhealthy`, aga protsess töötab | `docker inspect -f '{{json .State.Health}}' <konteiner> \| jq` | healthcheck'i käsk, port |
-    | web01 `unhealthy`, `curl` annab 502 | `docker compose exec web01 getent hosts app01` | võrgud: kes on millises võrgus |
-    | kõik `healthy`, aga `/health` ütleb `DOWN` | `docker compose exec app01 curl -s localhost:8080/health` | parool või volume, mis algseadistati varem |
-
-### 6.1 Algseis
-
-Control'is pole kahe stacki jaoks piisavalt mälu. Kahe stacki samaaegne käivitamine annab OOM-kille, mis näevad välja nagu stacki vead. Peata põhistack (volume'id jäävad alles) ja käivita intsidendistack:
-
-```bash
-docker compose down
-docker compose -f intsident/compose.yaml --env-file .env config -q && echo OK
-alias dci='docker compose -f intsident/compose.yaml --env-file .env'
-dci up -d
-dci ps -a
-```
-
-Alias `dci` kehtib ainult selles shellis. Uues terminalis defineeri see uuesti. Projekti nimi `labori-seis-intsident` hoiab konteinerid, võrgud ja volume'id põhistackist eraldi.
-
-??? success "Oodatav tulemus"
-
-    `config -q` annab `OK`, aga `up` lõpeb veaga `dependency failed to start`. `ps -a` näitab, millised teenused on `Exited` ja millised `unhealthy`. Teenused, mis ootavad sõltuvust, ei käivitunudki ja nende logid on tühjad. Alusta teenusest, mis on `Exited` või `unhealthy`, mitte ahela viimasest teenusest.
-
-### 6.2 db01 ei käivitu
-
-**Mis ei tööta:** db01 lõpetab kohe pärast käivitust ja kõik teised teenused ootavad seda.
-
-**Kontrolli:**
-
-```bash
-dci ps -a db01; dci logs db01 | tail -10
-docker inspect -f '{{.Config.User}} {{json .Mounts}}' labori-seis-intsident-db01-1 | jq .
-ls -ln intsident/data
-```
-
-??? success "Oodatav tulemus"
-
-    Logis on õiguste viga andmekataloogis. MariaDB töötab kasutajana `999`, aga hosti kaust `intsident/data` kuulub root'ile (UID 0). Kausta lõi Docker bind mount'i jaoks, sest seda polnud olemas.
-
-**Paranda** `intsident/compose.yaml`-is. `user: "999:999"` jääb alles, sest andmebaas ei tohi töötada root'ina. Parandus peab töötama ka uuel masinal ilma käsitsi `chown`-ita.
-
-??? example "Lahendus"
-
-    Nimega volume'i täidab Docker esimesel ühendamisel image'i kataloogi sisuga koos omanikuga (`mysql`, 999). Asenda db01 `volumes` rida ja lisa faili lõppu volume:
-
-    ```yaml
-        volumes:
-          - dbdata:/var/lib/mysql
-    ```
-
-    ```yaml
-    volumes:
-      dbdata:
-      rmqdata:
-    ```
-
-**Käivita uuesti:**
-
-```bash
-dci up -d --wait db01
-dci exec db01 id
-```
-
-??? success "Oodatav tulemus"
-
-    db01 on `(healthy)` ja `id` näitab `uid=999`. Tee commit: `git commit -am "fix(intsident): db01 nimega volume"`.
-
-### 6.3 mc01 on unhealthy
-
-**Mis ei tööta:** mc01 protsess töötab, aga Docker märgib selle `unhealthy`-ks ja seepärast app01 ei käivitu.
-
-**Kontrolli:**
-
-```bash
-docker inspect -f '{{json .State.Health}}' labori-seis-intsident-mc01-1 | jq '.Status, .Log[-1]'
-dci exec mc01 sh -c 'netstat -tln 2>/dev/null || cat /proc/net/tcp'
-dci exec mc01 sh -c 'echo stats | nc -w 1 127.0.0.1 11211 | head -2'
-```
-
-??? success "Oodatav tulemus"
-
-    Memcached kuulab pordil 11211 ja vastab käsule `stats`. Healthcheck küsib teist porti, seepärast on iga kontroll ebaõnnestunud. Teenuse enda logis pole midagi, sest teenus töötab.
-
-**Paranda** mc01 healthcheck nii, et see kontrollib porti, millel Memcached kuulab.
-
-??? example "Lahendus"
-
-    ```yaml
-        healthcheck:
-          test: ["CMD-SHELL", "echo stats | nc -w 1 127.0.0.1 11211 | grep -q uptime"]
-    ```
-
-**Käivita uuesti:**
-
-```bash
-dci up -d --wait mc01
-dci up -d --wait app01
-```
-
-??? success "Oodatav tulemus"
-
-    mc01 on `(healthy)` ja app01 jõuab `(healthy)` olekusse. Commit: `fix(intsident): mc01 healthcheck õigele pordile`.
-
-### 6.4 web01 annab 502
-
-**Mis ei tööta:** app01 on `healthy`, aga web01 on `unhealthy` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8090/` annab 502.
-
-**Kontrolli:**
-
-```bash
-dci exec web01 getent hosts app01
-dci logs web01 | grep -m3 -iE 'resolve|upstream|error'
-docker network inspect -f '{{.Name}}: {{range .Containers}}{{.Name}} {{end}}' labori-seis-intsident_front labori-seis-intsident_back
-```
-
-??? success "Oodatav tulemus"
-
-    `getent` ei leia nime `app01` ja logis on `could not be resolved`. web01 on ainult võrgus `front`, app01 ainult võrgus `back`. Nimi `app01` lahendub ainult võrgus, kus app01 on.
-
-**Paranda** võrgud nii, et app01 jääb sisemisse võrku `back` ja väljast on nähtav ainult web01. Kui paned kõik teenused ühte võrku, töötab stack samuti, aga app01 ja andmebaas jäävad sisemisest võrgust välja.
-
-??? example "Lahendus"
-
-    web01 on mõlemas võrgus:
-
-    ```yaml
-      web01:
-        networks: [front, back]
-    ```
-
-**Käivita uuesti:**
-
-```bash
-dci up -d --wait web01
-curl -s localhost:8090/health; echo
-```
-
-??? success "Oodatav tulemus"
-
-    web01 on `(healthy)` ja `/health` annab `"status":"UP"`. Commit: `fix(intsident): web01 ka back-võrku`.
-
-### 6.5 Stack pärast daemoni taaskäivitust
-
-**Mis ei tööta:** pärast Dockeri või VM-i taaskäivitust jääb intsidendistack seisma. Taaskäivitamisel ei arvesta `dockerd` `depends_on`-i (see kehtib ainult `docker compose up`-i ajal) ja käivitab ainult need konteinerid, mille restart-poliitika seda lubab.
-
-**Kontrolli:** peata mc01, nagu teeksid seda hoolduseks, ja taaskäivita daemon. Pärast seda ära anna ühtegi `dci` käsku peale `ps`-i.
-
-```bash
-dci stop mc01 && sudo systemctl restart docker
-sleep 120; dci ps -a --format '{{.Service}} {{.Status}}'
-curl -s -w ' HTTP %{http_code}\n' localhost:8090/health
-```
-
-??? success "Oodatav tulemus"
-
-    Kõik teenused on `Exited` ja `/health` ei vasta. Vaata iga konteineri poliitikat: `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)` annab `no`.
-
-**Paranda** fail nende nõuete järgi:
-
-- pärast daemoni taaskäivitust on db01, rmq01, app01 ja web01 120 s jooksul `healthy` ilma käsitsi sekkumiseta;
-- käsitsi peatatud mc01 jääb olekusse `Exited`;
-- poliitika on kirjas ühes kohas, mitte viie teenuse juures eraldi.
-
-??? example "Lahendus"
-
-    Sama ühine plokk nagu põhistackis. Faili algusesse pärast `name:` rida:
-
-    ```yaml
-    x-common: &common
-      restart: unless-stopped
-    ```
-
-    ja iga teenuse esimeseks reaks `<<: *common`. `always` käivitaks ka käsitsi peatatud mc01.
-
-**Käivita uuesti:** uuenda stacki (`dci up -d --wait`), korda selle sammu kontrollkäske ja lõpuks käivita mc01: `dci start mc01`.
-
-??? success "Oodatav tulemus"
-
-    120 s pärast on neli teenust `healthy` ja mc01 on `Exited`. `/health` annab HTTP 200 ja `"cache":"DOWN"`, pärast `dci start mc01` `"cache":"UP"`. Vahemälu on rakendusele valikuline: `/health` annab 503 ainult siis, kui andmebaas või järjekord puudub. Commit: `fix(intsident): restart-poliitika unless-stopped`.
-
-### 6.6 Konteinerid uuesti failist
-
-Viimane kontroll eemaldab intsidendistacki konteinerid ja võrgud ning loob need failist uuesti. Volume'id jäävad alles, nii et see kontroll ei käivita andmebaasi algseadistust uuesti. See näitab, et parandused on failis, mitte varem käsitsi muudetud konteinerites.
-
-```bash
-dci down && dci up -d --wait
-dci ps --format '{{.Service}} {{.Status}}'
-curl -s localhost:8090/health; echo
-```
-
-??? success "Oodatav tulemus"
-
-    Viis teenust on `healthy` ilma käsitsi sekkumiseta ja `/health` pordil 8090 on `UP`.
-
-Eemalda intsidendistack koos andmetega ja käivita põhistack uuesti. `down -v` kustutab intsidendistacki volume'id ja `rm -rf` kausta, mille vigane bind mount lõi. Neis on ainult selle osa testandmed, põhistacki andmeid see ei puuduta.
-
-```bash
-dci down -v && sudo rm -rf intsident/data
-docker compose up -d --wait && curl -s localhost:8080/health; echo
-```
-
-??? success "Oodatav tulemus"
-
-    Põhistack on jälle üleval ja `/health` pordil 8080 on `UP`.
-
-### 6.7 Commit
-
-```bash
-(cd ~/kursus && git add k03-docker && git commit -m "k03: intsidendi parandused" && git push)
-```
-
-??? info "Miks see nii töötab"
-
-    **Volume'i omanik.** Kui nimega volume on tühi, täidab Docker selle esimesel ühendamisel image'i sihtkataloogi sisuga, sealhulgas omaniku ja õigustega. Tulemus sõltub seega image'ist: kui image'is sihtkataloogi pole või selle omanik on root, ei saa mitte-root teenus volume'isse kirjutada.
-
-    **Bind mount'i kaust.** Compose'i lühivorm (`- ./data:/var/lib/mysql`) loob puuduva hosti kausta root'i omana. Mitte-root teenus (`user: "999:999"`) ei saa siis oma andmekataloogi kirjutada.
-
-    **Vale port healthcheck'is.** Healthcheck, mis küsib vale porti, muudab muidu töötava teenuse olekuks `unhealthy`. Kõik teenused, mille käivitamine sõltub selle teenuse olekust `service_healthy`, võivad jääda käivitamata.
-
-    **Võrk teenuse omadusena.** Compose'is määratakse võrgud iga teenuse juures. Kui web01 ja app01 pole ühes võrgus, ei lahendu nimi `app01` ja Nginx vastab 502-ga.
-
-    **Restart ja `depends_on`.** `depends_on` koos `condition: service_healthy`-ga on Compose'i kliendi loogika: `docker compose up` ootab enne järgmise teenuse loomist. Daemon ei tea sellest midagi. Pärast `dockerd` taaskäivitust käivitab see kõik konteinerid, mille restart-poliitika seda lubab, paralleelselt ja ilma järjekorrata. `unless-stopped` jätab vahele konteinerid, mille administraator peatas `docker stop`-iga, `always` käivitab ka need. Järjekorra puudumist peab taluma rakendus ise. app01 HikariCP pool (`initialization-fail-timeout=-1`) lubab Springil käivituda ka ilma andmebaasita ja ühendus luuakse hiljem, RabbitMQ listener proovib uuesti ja Nginx lahendab `app01` nime uuesti iga 10 s järel. Ühel YAML-ankrul (`x-…: &…`) põhinev ühine plokk hoiab poliitika ühes kohas nagu põhistacki `compose.yaml`-is.
-
-    **Süntaktiliselt korras fail.** Kõigil kolmel rikkel on ühine joon: fail on süntaktiliselt korras ja `docker compose config -q` laseb selle läbi. Need vead avastab ainult käivitamine või test, mis kontrollib tulemust, mitte ainult faili süntaksit. Seetõttu on konveieris lisaks süntaksikontrollile (lint) ka samm, mis käivitab stacki ja küsib `/health`-i.
-
-    **Ennetav kontroll.** Intsidendi järel lisatakse kontroll, mis püüab sama vea järgmine kord varem kinni, juba enne käivitamist.
-
-## Osa 7 · Enne esitamist
-
-Konveier võtab 5. kohtumisel sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Käivitad samad kontrollid ise ja proovid ehitust puhtast kloonist.
-
-**Eesmärk:** GitHubis on kõik vajalikud failid ja image'id ehituvad puhtast kloonist.  
+**Eesmärk:** GitHubis on kõik vajalikud failid ja image'id ehituvad.  
 **Kontroll:** kuus automaatkontrolli testi annavad `OK`.  
 **Kus:** control, kaust `~/kursus/k03-docker`, põhistack `compose.yaml`.
 
-### 7.1 Failide kontroll
+### 5.1 Failide kontroll
 
 Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i faile ja Dockerfile'e, seejärel käivita automaatkontrolli testid ning kontrolli saladusi ja idempotentsust:
 
@@ -1591,45 +1159,6 @@ git status --short
 ??? success "Oodatav tulemus"
 
     `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud.
-
-### 7.2 Puhta klooni test
-
-Kohalik kontroll käivitub sinu töökaustas, kus on ka commit'imata failid. Automaatkontroll alustab GitHubist tehtud puhtast kloonist. Sama teed ka sina: kloonid oma haru GitHubist, mitte kohalikust kaustast. See on klassikaline „minu masinas töötab“ olukord: Dockerfile kopeerib faili, mis on töökaustas, aga mitte Gitis, ja GitHubis ebaõnnestub ehitus, kuigi sinu juures läks kõik läbi.
-
-```bash
-(cd ~/kursus && git push)
-rm -rf /tmp/k03-proov
-(cd ~/kursus && gh repo clone "$(gh repo view --json nameWithOwner -q .nameWithOwner)" /tmp/k03-proov -- -q -b k03-docker)
-ls -a /tmp/k03-proov/k03-docker
-(cd /tmp/k03-proov && bash autograde/check.sh k03 files && bash autograde/check.sh k03 build)
-rm -rf /tmp/k03-proov
-```
-
-??? success "Oodatav tulemus"
-
-    Kloonis puuduvad `.env` ja `secrets/`, `files` ja `build` annavad `OK`. See on õige: automaatkontroll töötab `.env.example`-iga. Kui klooni ehitus õnnestus, ei sõltu image ühestki failist, mis on ainult sinu töökaustas. Kui see ebaõnnestus, näitab veateade puuduvat faili: lisa see Giti või `.dockerignore` lubamisnimekirja.
-
-### 7.3 Lõppkontroll
-
-Kontrolli seda, mida automaatkontroll ei näe: stacki täielikku taaskäivitust, versiooni, rikkele reageerimist ja vastust stacki seest tehtud päringule.
-
-```bash
-docker compose down && docker compose up -d --wait && docker compose ps
-curl -s http://localhost:8080/version; echo
-docker compose stop rmq01; curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-docker compose start rmq01 && sleep 30; curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-docker run --rm --network labori-seis_default labseis-kontroll:test; echo
-```
-
-??? success "Oodatav tulemus"
-
-    Viis teenust on `(healthy)` pärast `down` ja `up`-i, `/version` näitab sama SHA-d mis Harbori image'i tag, `/health` annab rmq01 peatamisel 503 ja pärast käivitust 200 ilma app01 taaskäivituseta ning kontroll-image annab `/health` JSON-i.
-
-??? note "Kontrollnimekiri"
-
-    - [ ] `compose.yaml`, Dockerfile'id ja `.env.example` on Gitis, `.env` ja `secrets/` mitte
-    - [ ] kolm image'it on Harboris SHA-tag'iga
-    - [ ] intsidendistack käivitub pärast `dci down` ja `dci up -d --wait` ise ja `/health` pordil 8090 on `UP`
 
 ## Töö esitamine
 
@@ -1675,7 +1204,7 @@ Jäta Compose'i stack control'is tööle, sest 5. kohtumisel on seda vaja.
 
 Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises käsk, mille väljund näitab põhjust.
 
-??? note "Tabel 3.5. Osa 1 · Docker ja esimesed konteinerid"
+??? note "Tabel 3.4. Osa 1 · Docker ja esimesed konteinerid"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1707,7 +1236,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `-v` järel on konteineris tühi kaust ootuspärase faili asemel | `ls -ld <hosti tee>` | hosti tee oli vale ja Docker lõi tühja kausta | `-v` loob puuduva allika kaustana; kasuta `--mount`-i, mis annab vea |
     | `docker exec`: `container … is not running` | `docker ps -a`, `docker logs <k>` | konteiner ebaõnnestus: vaata logi või käivita sama image `--entrypoint sh` | `exec` vajab töötavat PID 1 protsessi, mille namespace'idesse siseneda |
 
-??? note "Tabel 3.6. Osa 2 · db ja web image"
+??? note "Tabel 3.5. Osa 2 · db ja web image"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1720,7 +1249,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `transferring context` on ikka MB-d | `head -3 .dockerignore` | `.dockerignore` pole repo juures või esimene rida pole `*` | builder loeb `.dockerignore` ainult konteksti juurest |
     | `k03 files`: `.dockerignore ei jäta .env faili välja` | `grep -n env .dockerignore` | denylist'is puudub `**/.env`; allowlist'iga (`*`) seda viga ei tule | ilma `**/` eesliiteta kehtib muster ainult konteksti juures, mitte `k03-docker/.env`-ile |
 
-??? note "Tabel 3.7. Osa 3 · App image"
+??? note "Tabel 3.6. Osa 3 · App image"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1732,11 +1261,10 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | Tomcat ei käivitu pärast `USER 10001`, logis `Permission denied` | `docker run --rm --entrypoint ls labseis-app:multi -ln /usr/local/tomcat` | mõni kirjutatav kaust (`logs`, `temp`, `work`, `webapps`, `conf/Catalina`) kuulub root'ile | Tomcat pakib WAR-i lahti ja kirjutab logisid; mitte-root kasutaja vajab neis kaustades omandit |
     | `useradd: UID 10001 is not unique` | `docker run --rm --entrypoint getent tomcat:10.1-jre21-temurin passwd 10001` | baasimage'is on see UID juba olemas: vali teine | UID peab olema image'i `/etc/passwd`-is unikaalne |
     | `naive` ja `multi` on peaaegu sama suured | `docker history labseis-app:multi \| head -8` | käitusaste kopeerib midagi suurt build-astmest või baas on vale | `COPY --from` kopeerib selle, mis antud teel on; vale tee toob kaasa `~/.m2` või kogu `/src` |
-    | kontroll-image: `Could not resolve host: web01` | `docker run` `--network` | ootuspärane testvõrgus; stacki võrgus (`labori-seis_default`) peab vastama | nimi lahendub ainult võrgus, kus see teenus on |
     | `k03 tags` FAIL app-image'i järel | `ls k03-docker/compose.yaml` | test vajab ka `compose.yaml`-i, mis tekib Compose'i lehel | test loeb ametlike image'ite tag'id Compose'i failist |
     | `grep upperdir … mountinfo`: `Permission denied` või tühi | `docker inspect -f '{{.State.Pid}}' <k>` | `sudo` puudu või konteiner ei tööta | teise protsessi `mountinfo` on loetav ainult root'ile ja ainult töötava protsessi kohta |
 
-??? note "Tabel 3.8. Osa 4 · Kogu stack Compose'iga"
+??? note "Tabel 3.7. Osa 4 · Kogu stack Compose'iga"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
@@ -1751,35 +1279,12 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `k03 deps`: `restart-poliitika puudub` | `docker compose config \| grep restart` | `<<: *common` puudub mõnel teenusel | ankru seaded kehtivad ainult teenustele, kuhu ankur on lisatud |
     | `k03 deps`: `port on hostis avatud` | `docker compose config \| grep -B3 published` | app01, db01 või mc01 all on `ports:` | test nõuab, et väljast oleks nähtav ainult web01 |
     | healthcheck toruga ei tööta | `docker inspect -f '{{json .State.Health.Log}}' <k>` | `CMD` kuju ei käivita shelli: kasuta `CMD-SHELL` | `CMD` käivitab programmi otse ja `\|` läheb talle argumendina |
-    | kontroll-image: `Could not resolve host` stacki võrgus | `docker network ls` | võrgu nimi on `<projekt>_default`: projekti nimi `name:` real | Compose paneb võrgu nimele projekti nime ette |
     | `docker compose logs -f --since 1m` ei näita midagi | `docker compose ps web01`, `date -u` | viimase minuti jooksul pole päringuid tehtud või vaatad valet teenust | `--since` filtreerib Dockeri ajatempli järgi; vanemad read jäävad välja |
     | `docker inspect -f`: `map has no entry for key` | `docker inspect <k> \| jq '.[0] \| keys'` | välja nimi on vale või punktiga silt vajab `index`-it | Go template (`--format` muster) loeb JSON-i välju täpse nimega; punktiga võtme jaoks on `{{index .Config.Labels "a.b"}}` |
     | `docker top … -eo`: `error: unsupported option` | `docker top <k>` ilma võtmeteta | võtmed antakse hosti `ps`-ile: kasuta `ps` süntaksit | `docker top` käivitab hostis `ps` ja filtreerib konteineri protsessid |
     | `docker compose cp`: `Could not find the file` | `docker compose exec web01 ls /etc/nginx/conf.d` | tee on vale või fail on tmpfs'is, mis kadus | `cp` loeb konteineri failisüsteemist praegust olekut |
 
-??? note "Tabel 3.9. Osa 5 · Harbor"
-
-    | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
-    |---|---|---|---|
-    | `x509: certificate signed by unknown authority` | `ls /etc/docker/certs.d/harbor.lab.hkhk.lan/` | kursuse CA puudub: korda 1.5 sertifikaadi samme; `insecure-registries` ei ole lahendus | Docker usaldab registry sertifikaati ainult süsteemi või `certs.d` CA põhjal |
-    | `denied: requested access to the resource is denied` | `grep OWNER .env` | `OWNER` pole sinu Harbori kasutajanimi (GitHubi nimi väikeste tähtedega) või logisid sisse teise kasutajana | registry lubab push'i ainult oma namespace'i ja õigusega tokenile |
-    | `unauthorized` pärast `docker login` | `cat ~/.docker/config.json \| jq '.auths \| keys'` | sisselogimisel kasutati vale registry nime või robotkonto on aegunud | volitused on salvestatud registry hostinime kaupa |
-    | `docker pull <nimi>@sha256:…`: `manifest unknown` | `docker image inspect -f '{{json .RepoDigests}}' <image>` | digest on lokaalse image'i ID, mitte registry digest | image ID ja manifesti digest on eri räsid; registry tunneb ainult manifesti oma |
-    | `docker compose pull` ehitab või ei leia image'it | `docker compose config --images` | `TAG` `.env`-is erineb push'itud tag'ist | Compose otsib registry'st täpselt seda nime ja tag'i, mis on failis |
-    | `current image with … vulnerabilities cannot be pulled` | projekt → **Configuration** | haavatava image'i tõmbamise keeld on sees | Harbor kontrollib enne tõmbamist Trivy tulemust |
-    | push: `… configured as immutable` | projekt → **Policy → Tag Immutability** | tag on muutumatu: kasuta uut tag'i | muutumatut tag'i ei saa üle kirjutada ega kustutada |
-
-??? note "Tabel 3.10. Osa 6 · Vigane stack"
-
-    | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
-    |---|---|---|---|
-    | `dci: command not found` | `alias dci` | alias kehtib ainult selles shellis: defineeri uuesti | aliased ei pärandu uude shelli ega skripti |
-    | `up` ütleb `dependency failed to start` | `dci ps -a` | sõltuvus on `Exited` või `unhealthy`; vaata veaotsingu tabelit | `service_healthy` tingimus ei käivita teenust enne, kui sõltuvus on terve |
-    | pärast parandust on ikka sama viga | `dci config` | fail on parandatud, aga konteiner on vana: `dci up -d --wait <teenus>` | töötav konteiner ei loe faili uuesti; muudatus jõuab kohale alles uue konteineriga |
-    | pärast `systemctl restart docker` on intsidendistack `Exited` | `docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(dci ps -aq)` | poliitika on `no`: lisa see ühisesse plokki ja `dci up -d` | `depends_on` kehtib ainult `compose up`-i ajal, daemon käivitab ainult poliitikaga konteinerid |
-    | `intsident/data` ei kustu | `ls -ln intsident/data` | kaust kuulub root'ile või UID-le 999: `sudo rm -rf` | kausta lõi Docker või konteiner, mitte sinu kasutaja |
-
-??? note "Tabel 3.11. Osa 7 · Enne esitamist ja töö esitamine"
+??? note "Tabel 3.8. Osa 5 · Enne esitamist ja töö esitamine"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
