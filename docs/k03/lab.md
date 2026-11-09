@@ -149,7 +149,7 @@ Teate neli punkti vastavad joonisele 3.1. Käsk `docker` saadab sinu soovi taust
   <figcaption>Joonis 3.1. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
 </figure>
 
-Käivita sama käsk teist korda. Siis vaata, millised konteinerid ja image'id masinasse jäid:
+Käivita sama käsk teist korda. Nii näed kolme asja: kas image laaditakse uuesti alla, kas lõpetanud konteiner jääb masinasse alles ja mitu image'it sinna tekkis:
 
 ```bash
 docker run hello-world | head -3
