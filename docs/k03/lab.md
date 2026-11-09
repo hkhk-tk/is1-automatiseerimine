@@ -535,16 +535,11 @@ Viimane käsk kustutab testkonteineri, sest seda edaspidi vaja pole.
 
     Docker ei leidnud faili, sest ehituskontekst oli vale. Kontrolli, et käsu viimane argument on `..` ja et käivitad käsu kaustas `~/kursus/k03-docker`.
 
-### 2.2 web/Dockerfile ja Nginx'i mall
+### 2.2 Veebiserveri image
 
-web01 on app01 ees pöördproksi. Nginx lahendab `upstream` nime ainult käivitusel. Kui app01 konteiner luuakse uuesti uue IP-ga, vastab web01 502-ga, ja 5. kohtumise GitHub Actionsi konveier uuendab app01 iga commit'iga. [Ametlik Nginx'i image](https://hub.docker.com/_/nginx) oskab konfiguratsioonifaili mallist genereerida ja konteineri DNS-serveri sinna kirjutada.
+Selles sammus teed veebiserveri image'i. Veebiserver `web01` on rakenduse ees. Brauser pöördub `web01` poole ja Nginx saadab päringu edasi rakendusele `app01`. Sellist veebiserverit nimetatakse pöördproksiks (reverse proxy).
 
-Konfiguratsioonifail `web/nginx.conf` on starteris valmis. Selle esimene rida `resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;` on mall: Nginx'i image'i entrypoint asendab muutuja konteineri DNS-serveri aadressiga. `set $app_upstream` ja `proxy_pass $app_upstream` panevad Nginx'i nime `app01` lahendama iga päringu ajal, mitte ainult käivitusel.
-
-Täida starteri `web/Dockerfile` nende nõuete järgi:
-
--  `nginx:1.30-alpine` (eesliide `HUB` nagu db-s), konfiguratsioonifail kopeeritakse `/etc/nginx/templates/default.conf.template`, `ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1`;
-- `HEALTHCHECK`, mis küsib `wget`-iga `http://127.0.0.1/health` (Alpine'is curl'i pole).
+Nginxi konfiguratsioonifail `web/nginx.conf` on starteris valmis ja seda sa ei muuda. Sinu Dockerfile kopeerib selle Nginxi image'isse.
 
 ??? example "Fail `k03-docker/web/nginx.conf` (starteris)"
 
@@ -565,6 +560,15 @@ Täida starteri `web/Dockerfile` nende nõuete järgi:
     }
     ```
 
+Konfiguratsioonis on üks eripära. `app01` IP-aadress muutub iga kord, kui `app01` konteiner uuesti luuakse. Et Nginx leiaks rakenduse ka siis, küsib ta aadressi iga päringu juures uuesti Dockeri nimeserverilt. Nimeserveri aadressi kirjutab Nginxi image ise reale `resolver`, kui fail on kaustas `/etc/nginx/templates/` ja muutuja `NGINX_ENTRYPOINT_LOCAL_RESOLVERS` on `1`.
+
+Ava starteri fail `web/Dockerfile` ja täida TODO-read. Dockerfile'is on vaja nelja asja.
+
+1. Aluseks võta image `nginx:1.30-alpine`. Eesliide tuleb argumendist `HUB` nagu andmebaasi image'il.
+2. Määra muutuja `NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1` juhisega `ENV`.
+3. Kopeeri `nginx.conf` image'isse nimega `/etc/nginx/templates/default.conf.template`.
+4. Lisa tervisekontroll juhisega `HEALTHCHECK`, mis küsib aadressi `http://127.0.0.1/health`. Alpine'i image'is pole `curl`-i, nii et kasuta `wget`-i.
+
 ??? example "Lahendus: `k03-docker/web/Dockerfile`"
 
     ```dockerfile
@@ -576,6 +580,10 @@ Täida starteri `web/Dockerfile` nende nõuete järgi:
       CMD wget -qO- http://127.0.0.1/health || exit 1
     ```
 
+    `ENV` määrab muutuja, mis on konteineris olemas. `HEALTHCHECK` käivitab iga 10 sekundi järel kontrollkäsu. Kui see ebaõnnestub kolm korda järjest, märgib Docker konteineri olekuks `unhealthy`.
+
+Ehita image. Siin on ehituskontekst kaust `web`, sest Dockerfile vajab ainult faili `web/nginx.conf`. Seejärel vaata, millise konfiguratsiooni Nginx failist tegi.
+
 ```bash
 docker build --build-arg HUB -t labseis-web:test web
 docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_pass'
@@ -583,11 +591,11 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
 ??? success "Oodatav tulemus"
 
-    `resolver` real on IP-aadress ja `proxy_pass $app_upstream;` on alles. `nginx -T` näitab lõplikku konfiguratsiooni, mille entrypoint mallist tegi. IP-aadress tähendab, et `envsubst` sai muutuja kätte. `proxy_pass $app_upstream` tähendab, et Nginx lahendab nime iga päringu ajal, mitte ainult käivitusel.
+    Real `resolver` on `${NGINX_LOCAL_RESOLVERS}` asemel IP-aadress. See tähendab, et Nginxi image kirjutas nimeserveri aadressi faili. Rida `proxy_pass $app_upstream;` on alles. Kas veebiserver rakenduseni jõuab, näed 4. osas, kui `app01` töötab.
 
-??? warning "Kui näed `${NGINX_LOCAL_RESOLVERS}` muutmata kujul"
+??? warning "Kui `resolver` real on endiselt `${NGINX_LOCAL_RESOLVERS}`"
 
-    `ENV` jäi puudu või fail pole kaustas `templates/`.
+    Rida `ENV` puudub või fail ei ole kaustas `/etc/nginx/templates/`. Kontrolli Dockerfile'i ja ehita image uuesti.
 
 ### 2.3 .dockerignore
 
