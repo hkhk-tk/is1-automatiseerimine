@@ -7,7 +7,7 @@ tags:
 
 # Kodutöö: Docker rolliga ja stack playbook'iga
 
-Praktikumis paigaldasid Dockeri käsitsi ja käivitasid stacki käsuga. Kodutöös kirjutad paigalduse rolliks `docker` ja paned sama playbook'i käivitama ka Labori seisu stacki. Nii saab uue masina seadistada ühe käsuga. Kodutöö on boonus.
+Praktikumis paigaldasid Dockeri käsitsi ja käivitasid stacki käsuga. Kodutöös kirjutad paigalduse rolliks `docker` ja paned sama playbook'i käivitama ka Labori seisu stacki. Lõpuks võtab playbook paroolid 2. kohtumise Vaultist. Nii saab uue masina seadistada ühe käsuga. Kodutöö on boonus.
 
 Kodutöö teed harus `main` pärast seda, kui praktikumi pull request on ühendatud. Starteris on `docker.yml` ja `roles/docker/files/harbor-ca.crt`.
 
@@ -294,6 +294,73 @@ curl -s localhost:8080/health; echo
 ??? success "Oodatav tulemus"
 
     Esimene käivitus on `ok` või `changed`, teine lõpeb `changed=0` ja `/health` annab neli `UP`-i. `wait: true` teeb sama mis `docker compose up -d --wait`: play jätkub alles siis, kui teenused on `healthy`.
+
+## Osa 3 · Paroolid Vaultist
+
+Praktikumis kirjutasid paroolid faili `.env` käsitsi. 2. kohtumisel olid samad paroolid Ansible Vaultis. Selles osas teeb Ansible `.env`-i Vaulti paroolidest, nii et paroolid on ühes kohas ja krüpteeritud.
+
+Selleks on vaja 2. kohtumise Vaulti: faili `~/kursus/k02-ansible/group_vars/all/vault.yml` ja Vaulti parooli failis `~/.config/is1/vault_pass`. Kui sul neid pole, jäta see osa vahele.
+
+Vaultis pole veel andmebaasi root'i parooli. Lisa see:
+
+```bash
+ansible-vault edit ~/kursus/k02-ansible/group_vars/all/vault.yml --vault-password-file ~/.config/is1/vault_pass
+```
+
+Lisa faili rida `vault_db_root_password: "<parool>"`, salvesta ja sulge redaktor.
+
+Nüüd lisa `stack.yml`-i teise play'sse Vaulti fail ja ülesanne, mis kirjutab `.env`-i. `no_log: true` hoiab paroolid Ansible'i väljundist eemal.
+
+??? example "Lahendus: `stack.yml` teine play"
+
+    ```yaml
+    - name: Labori seis
+      hosts: localhost
+      connection: local
+      vars_files:
+        - ../k02-ansible/group_vars/all/vault.yml
+      vars:
+        github_kasutaja: sinu-github-kasutaja
+      tasks:
+        - name: .env Vaulti paroolidest
+          ansible.builtin.copy:
+            dest: "{{ playbook_dir }}/.env"
+            mode: "0600"
+            content: |
+              DB_PASSWORD={{ vault_db_password }}
+              DB_ROOT_PASSWORD={{ vault_db_root_password }}
+              RABBITMQ_PASSWORD={{ vault_rabbitmq_password }}
+              TEACHER_TOKEN={{ vault_teacher_token }}
+              HUB=harbor.lab.hkhk.lan/dockerhub/library
+              REGISTRY=harbor.lab.hkhk.lan
+              OWNER={{ github_kasutaja }}
+              TAG=dev
+              WEB_PORT=8080
+          no_log: true
+
+        - name: Stack töötab
+          community.docker.docker_compose_v2:
+            project_src: "{{ playbook_dir }}"
+            state: present
+            wait: true
+            wait_timeout: 300
+    ```
+
+    Asenda `sinu-github-kasutaja` oma GitHubi kasutajanimega väikeste tähtedega.
+
+!!! warning "Uued paroolid ja olemasolev andmebaas"
+
+    MariaDB võtab paroolid ainult esimesel käivitusel. Kui Vaulti paroolid erinevad nendest, mis olid praktikumis `.env`-is, ei pääse rakendus andmebaasi. Siin on andmebaasis ainult näidisandmed, nii et kustuta enne käivitamist stack koos andmetega: `docker compose down -v`.
+
+```bash
+ansible-playbook stack.yml --vault-password-file ~/.config/is1/vault_pass
+ansible-playbook stack.yml --vault-password-file ~/.config/is1/vault_pass
+curl -s localhost:8080/health; echo
+```
+
+??? success "Oodatav tulemus"
+
+    Esimesel käivitusel on `.env` ülesanne `changed`, teisel `ok` ja kogu play lõpeb `changed=0`. `/health` annab neli `UP`-i. `.env`-is on nüüd Vaulti paroolid, aga Ansible'i väljundis neid ei näe.
 
 ## Töö esitamine
 

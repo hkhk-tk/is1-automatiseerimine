@@ -756,6 +756,14 @@ Paroolid ei kuulu `compose.yaml`-i, sest see fail on Gitis. Need on failis `.env
 
     `HUB=docker.io/library` on näidisfailis meelega: GitHubi automaatkontroll Harborit ei näe ja tõmbab Docker Hubist.
 
+??? info "Mis on `.env` ja miks mitte Vault?"
+
+    `.env` on lihtne tekstifail, kus igal real on üks muutuja kujul `NIMI=väärtus`. Compose loeb selle faili ise, kui see on samas kaustas kui `compose.yaml`. Failis `compose.yaml` kirjutad parooli asemele `${DB_PASSWORD}` ja Compose paneb käivitamisel sinna `.env`-is oleva väärtuse.
+
+    Nii on `compose.yaml` Gitis ilma paroolideta ja iga masin saab kasutada oma paroole. `.env` on failis `.gitignore`, seega Gitti see ei jõua. Teised näevad ainult `.env.example`-i, kus on muutujate nimed ja näidisväärtused.
+
+    2. kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest, nii et paroole ei pea käsitsi kirjutama.
+
 Tee `.env.example`-ist oma `.env`. Teine käsk paneb sinna sinu `HUB` väärtuse ja GitHubi kasutajanime. `nano`-s pane paroolideks oma väärtused.
 
 ```bash
