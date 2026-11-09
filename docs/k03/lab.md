@@ -748,11 +748,27 @@ chmod 600 .env
 nano .env
 ```
 
-Muuda failis kolme asja ja salvesta.
+Muuda failis kolme asja. Salvesta klahvidega Ctrl+O ja Enter ning sulge Ctrl+X-ga.
 
-1. Pane kõigi `muuda-mind` asemele oma paroolid.
-2. Kirjuta reale `HUB=` Harbori vahemälu aadress `harbor.lab.hkhk.lan/dockerhub/library`.
-3. Kirjuta reale `OWNER=` oma GitHubi kasutajanimi väikeste tähtedega.
+1. Igal real, kus on `muuda-mind`, kirjuta selle asemele oma parool. Näiteks `DB_PASSWORD=muuda-mind` asemel `DB_PASSWORD=Labseis123`.
+2. Rida `HUB=docker.io/library` muuda kujule `HUB=harbor.lab.hkhk.lan/dockerhub/library`. Siis tulevad image'id Harborist nagu 1. osas.
+3. Rida `OWNER=sinu-github-kasutaja` muuda nii, et seal on sinu GitHubi kasutajanimi väikeste tähtedega, näiteks `OWNER=maasikas`.
+
+??? example "Lahendus: valmis `.env`"
+
+    ```bash
+    DB_PASSWORD=Labseis123
+    DB_ROOT_PASSWORD=Juur123
+    RABBITMQ_PASSWORD=Jarjekord123
+    TEACHER_TOKEN=opetaja123
+    HUB=harbor.lab.hkhk.lan/dockerhub/library
+    REGISTRY=harbor.lab.hkhk.lan
+    OWNER=maasikas
+    TAG=dev
+    WEB_PORT=8080
+    ```
+
+    `maasikas` asemel on sinu GitHubi kasutajanimi. Paroolid võivad olla sinu omad, aga sama parooli peab hiljem kasutama ka sisselogimisel.
 
 Kontrolli, et Git jätab faili välja.
 
@@ -772,7 +788,7 @@ git check-ignore -v .env
 
     Kui sama muutuja on määratud ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. Kontrolli seda käsuga `printenv HUB`.
 
-    2. kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest.
+    Teisel kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest.
 
 ### 4.2 Andmebaas Compose'iga
 
