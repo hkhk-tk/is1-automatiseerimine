@@ -936,11 +936,11 @@ Vihje: juhendi [Shared Libraries](https://www.jenkins.io/doc/book/pipeline/share
 
 ## Võrguinsenerile
 
-Rada jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21, image [3. kohtumise lisa 15](../k03/lisa.md)). Jenkins teeb siin sama, mida võrgumeeskondades teevad RANCID või Oxidized: kogub igal ööl ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
+Rada jätkab tööriistaga `vorgukogu` (1. kohtumise lisa 21, image [3. kohtumise lisa 15](https://hkhk-tk.github.io/is2-automatiseerimine/k03/lisa/)). Jenkins teeb siin sama, mida võrgumeeskondades teevad RANCID või Oxidized: kogub igal ööl ruuterite väljundi ja commit'ib selle Giti ainult siis, kui midagi muutus, nii et igal muudatusel on aeg ja diff. Eeldus: koolitaja on loonud `rtr01` ja `rtr02`, sinu agent (control node) jõuab neile pordil 22 ja ehitab image'eid (põhilabori Image ja deploy).
 
 ### 17. vorgukogu öösel Jenkinsiga
 
-**Tase:** keskmine · **Eeldus:** [Triggerid, options ja post](lab-2-triggerid.md), [3. kohtumise lisa 15](../k03/lisa.md), tühi privaatne repositoorium `vork-konf` · **Esita:** `vorgukogu/Jenkinsfile`, `vorgukogu/varunda.sh`
+**Tase:** keskmine · **Eeldus:** [Triggerid, options ja post](lab-2-triggerid.md), [3. kohtumise lisa 15](https://hkhk-tk.github.io/is2-automatiseerimine/k03/lisa/), tühi privaatne repositoorium `vork-konf` · **Esita:** `vorgukogu/Jenkinsfile`, `vorgukogu/varunda.sh`
 
 Pärast riket küsitakse, mis ruuteris eile teisiti oli, ja vastus on "keegi ei tea". Job `vorgukogu` ehitab igal ööl image'i, kogub mõlemalt ruuterilt väljundi ja paneb selle repositooriumisse `vork-konf`, mille sisu võib proovides kustutada.
 
