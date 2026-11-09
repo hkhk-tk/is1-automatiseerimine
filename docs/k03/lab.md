@@ -472,13 +472,13 @@ Selles osas tegid katseid käsurealt ja faile tavaliselt ei muutnud. Siis on `gi
 
 ## Osa 2 · db ja web image
 
-Ehitad db01 ja web01 image'id ametlike image'ite põhjal. Ametlik image teeb juba suure osa tööst, seega kirjutad Dockerfile'i ainult puuduva osa jaoks ja baasimage'i turvaparandused tulevad uuendusega kaasa.
+Nüüd teed rakenduse jaoks oma image'id. Alustad kahest lihtsamast, andmebaasist `db01` ja veebiserverist `web01`. Mõlemal juhul võtad aluseks ametliku image'i ja lisad sellele ainult rakenduse failid.
 
-**Eesmärk:** image'id `labseis-db` ja `labseis-web` ehituvad sinu Dockerfile'idest. Nginx'i konfiguratsioonifail `web/nginx.conf` on starteris valmis.  
-**Kontroll:** `docker image ls 'labseis-*'` näitab mõlemat image'it. Kõiki faile kontrollib `k03 files` pärast 4. osa.  
+**Eesmärk:** image'id `labseis-db` ja `labseis-web` ehituvad sinu Dockerfile'idest.  
+**Kontroll:** `docker image ls 'labseis-*'` näitab mõlemat image'it.  
 **Kus:** control, kaust `~/kursus/k03-docker`.
 
-Rakenduse failid on repositooriumi juures (`pom.xml`, `src/`, `db/`) ja jäävad puutumata, Dockerfile'id ainult loevad neid. db ja app vajavad neid faile, seega on nende **ehituskontekst** repositooriumi juur `..`. web'i kontekst on tema oma kaust.
+Rakenduse failid `pom.xml`, `src/` ja `db/` on repositooriumi juures. Neid sa ei muuda, Dockerfile'id ainult kopeerivad neid.
 
 ```text
 ~/kursus/
@@ -493,13 +493,11 @@ Rakenduse failid on repositooriumi juures (`pom.xml`, `src/`, `db/`) ja jäävad
 
 ### 2.1 db/Dockerfile
 
-Andmebaasi image põhineb ametlikul MariaDB image'il ja sisaldab lisaks Labori seisu skeemi ja näidisandmeid. Starteri `db/Dockerfile`-is on TODO-read: kirjutad ainult baasi ja failide kopeerimise. Algseadistuse teeb entrypoint. Kui skeem on image'is, on andmebaasi struktuur versioonitud koos rakendusega ja iga uus keskkond saab sama alguse.
-
-Nõuded ([juhiste viide](https://docs.docker.com/reference/dockerfile/)):
+Andmebaasi image on ametlik MariaDB image, millele lisad rakenduse tabelid ja näidisandmed. MariaDB loob need ise esimesel käivitusel, kui SQL-failid on kaustas `/docker-entrypoint-initdb.d/`. Starteri `db/Dockerfile`-is on TODO-read, mille täidad nende nõuete järgi ([Dockerfile'i juhised](https://docs.docker.com/reference/dockerfile/)).
 
 - baas `mariadb:11.4`, eesliide tuleb ehituse argumendist `HUB` vaikeväärtusega `docker.io/library`;
 - `db/schema.sql` ja `db/seed.sql` lähevad kausta `/docker-entrypoint-initdb.d/` nii, et skeem käivitub enne andmeid (failid käivitatakse failinimede tähestikulises järjekorras);
-- `COPY`, mitte `ADD`: `ADD` pakib arhiive lahti ja laeb faile URL-ilt, mida siin vaja pole.
+- failide kopeerimiseks kasuta juhist `COPY`.
 
 ??? example "Lahendus: `k03-docker/db/Dockerfile`"
 
@@ -512,7 +510,7 @@ Nõuded ([juhiste viide](https://docs.docker.com/reference/dockerfile/)):
 
     `ARG` enne `FROM`-i on ainuke juhis, mis tohib olla `FROM`-ist eespool. Argument kehtib ainult `FROM` real. Numbrid failinimede ees panevad paika järjekorra.
 
-Ehita ja kontrolli. `--build-arg HUB` ilma väärtuseta võtab väärtuse sinu shelli muutujast:
+Ehita image ja proovi see käivitada. Käsu lõpus olev `..` on **ehituskontekst**, kaust, mille failid Docker ehitusele kaasa annab. Siin on see repositooriumi juur, sest Dockerfile kopeerib sealt kausta `db/`. `--build-arg HUB` võtab baasimage'i eesliite sinu muutujast `HUB`.
 
 ```bash
 docker build --build-arg HUB -f db/Dockerfile -t labseis-db:test ..
