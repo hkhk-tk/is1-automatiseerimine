@@ -702,12 +702,9 @@ Docker ei ole ainus viis konteinereid käivitada. Kõik allolevad tööriistad k
     |---|---|---|
     | [Docker Engine](https://docs.docker.com/engine/) | daemon `dockerd`, käsk `docker` ja Compose | Linuxi serverid, arendus |
     | [Podman](https://podman.io/) | ilma daemonita, töötab ka tavakasutajana, teenused systemd kaudu | AlmaLinux, RHEL, Fedora |
-    | [containerd](https://containerd.io/) ja [nerdctl](https://github.com/containerd/nerdctl) | käituskeskkond, mis töötab ka Dockeri ja Kubernetese all; `nerdctl` on Dockeri-sarnane käsk | Kubernetes (k3s, pilveteenused) |
-    | [CRI-O](https://cri-o.io/) | ainult Kubernetese jaoks tehtud käituskeskkond | OpenShift |
-    | [LXC ja Incus](https://linuxcontainers.org/) | süsteemikonteinerid: terve Linux koos systemd'ga | Proxmoxi konteinerid (CT) |
     | [Docker Desktop](https://docs.docker.com/desktop/), [Podman Desktop](https://podman-desktop.io/), [Rancher Desktop](https://rancherdesktop.io/) | graafiline arenduskeskkond Windowsis ja macOS-is, Linux töötab nende sees virtuaalmasinas | arendaja arvuti |
 
-    Mitme serveri jaoks kasutatakse Kubernetest, mis käivitab konteinereid containerd või CRI-O kaudu (7. kohtumine).
+    Kubernetese käituskeskkonnad ja süsteemikonteinerid on kursuse IS2 [loengus](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/#muud-konteinerite-kaituskeskkonnad).
 
 AlmaLinuxi ja RHEL-i serveris on vaikimisi [Podman](https://docs.podman.io/), mitte Docker: `dnf install docker` paigaldab paketi `podman-docker`. Image'id on samad OCI image'id, erinev on see, kes konteinerit käitab.
 
