@@ -655,35 +655,22 @@ Esimene aste ehitab Maveniga WAR-faili. Teine aste võtab aluseks Tomcati ja kop
   <figcaption>Joonis 3.4. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
-Ava starteri fail `app/Dockerfile` ja täida TODO-read ([mitmeastmeline ehitus](https://docs.docker.com/build/building/multi-stage/)).
-
-**Esimene aste (ehitus):**
-
-1. Aluseks image `maven:3-eclipse-temurin-21`, astme nimi `build` (`FROM … AS build`).
-2. Töökataloog `/src` (`WORKDIR`).
-3. Kopeeri kõigepealt ainult `pom.xml` ja laadi sõltuvused alla käsuga `mvn -B -q dependency:go-offline`.
-4. Siis kopeeri kaust `src` ja ehita WAR käsuga `mvn -B -q package -DskipTests`.
-
-**Teine aste (käivitus):**
-
-5. Aluseks image `tomcat:10.1-jre21-temurin`.
-6. Kopeeri esimesest astmest fail `/src/target/labori-seis.war` nimega `/usr/local/tomcat/webapps/ROOT.war` (`COPY --from=build`).
-7. Port `8080` (`EXPOSE`) ja tervisekontroll, mis küsib `curl`-iga aadressi `http://localhost:8080/health`. Tomcat käivitub umbes minuti, nii et anna kontrollile `--start-period=60s`.
-8. Lõppu argument `GIT_SHA`, sama nimega muutuja ja silt `org.opencontainers.image.revision` ning käivituskäsk `catalina.sh run`.
-
-Mõlema astme baasimage'i eesliide tuleb argumendist `HUB`.
+Ava starteri fail `app/Dockerfile`. TODO-read ütlevad, mis igasse kohta kirjutada. Abiks on [mitmeastmelise ehituse juhend](https://docs.docker.com/build/building/multi-stage/) ja lahendus, kus iga rida on lahti seletatud.
 
 ??? example "Lahendus: `app/Dockerfile`"
 
     ```dockerfile
     ARG HUB=docker.io/library
+
+    # Esimene aste: Maven ehitab WAR-faili
     FROM ${HUB}/maven:3-eclipse-temurin-21 AS build
     WORKDIR /src
     COPY pom.xml .
-    RUN mvn -B -q dependency:go-offline
+    RUN mvn -B -q dependency:go-offline     # sõltuvused alla, enne koodi
     COPY src ./src
-    RUN mvn -B -q package -DskipTests
+    RUN mvn -B -q package -DskipTests      # valmib target/labori-seis.war
 
+    # Teine aste: Tomcat käivitab WAR-i
     FROM ${HUB}/tomcat:10.1-jre21-temurin
     COPY --from=build /src/target/labori-seis.war /usr/local/tomcat/webapps/ROOT.war
     EXPOSE 8080
@@ -695,7 +682,7 @@ Mõlema astme baasimage'i eesliide tuleb argumendist `HUB`.
     CMD ["catalina.sh", "run"]
     ```
 
-    `pom.xml` kopeeritakse enne `src`-i, et Docker saaks sõltuvuste allalaadimise järgmisel ehitusel vahelt jätta, kui muutus ainult kood. Silt `GIT_SHA` näitab hiljem registry's, millisest commit'ist image tehti.
+    `COPY --from=build` toob esimesest astmest ainult WAR-faili. `pom.xml` kopeeritakse enne koodi, et järgmisel ehitusel ei peaks sõltuvusi uuesti alla laadima, kui muutus ainult kood. Tomcat käivitub umbes minuti, seepärast on tervisekontrollil `--start-period=60s`. `GIT_SHA` jääb image'i sildiks ja näitab hiljem, millisest commit'ist image tehti.
 
 Ehita image. Esimesel korral laadib Maven sõltuvused alla ja see võtab mõne minuti.
 
