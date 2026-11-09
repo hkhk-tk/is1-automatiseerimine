@@ -711,7 +711,7 @@ Enne salvestamist käivita automaatkontrolli test, mis vaatab, kas Dockerfile on
 
 ## Osa 4 · Kogu stack Compose'iga
 
-1. osas käivitasid kolm teenust pikkade `docker run` käskudega. Nüüd kirjeldad kõik viis teenust ühes failis `compose.yaml`. Fail on Gitis ja üks käsk `docker compose up -d` käivitab kõik teenused nii, nagu failis kirjas. See sarnaneb Ansible'i playbook'iga, mis kirjeldab soovitud olekut.
+Selles osas paned kogu rakenduse tööle. Rakendusel on viis teenust ja need kirjeldad ühes failis `compose.yaml`. Siis käivitab üks käsk `docker compose up -d` kõik teenused korraga. 1. osas tegid sama pikkade `docker run` käskudega, nüüd on kõik failis kirjas ja Gitis alles.
 
 **Eesmärk:** viis teenust käivituvad ühe käsuga ja rakendus vastab brauseris.  
 **Kontroll:** `curl -s localhost:8080/health` näitab nelja `UP`-i ning testid `compose` ja `deps` annavad `OK`.  
@@ -722,7 +722,7 @@ Enne salvestamist käivita automaatkontrolli test, mis vaatab, kas Dockerfile on
   <figcaption>Joonis 3.5. Labori seis Compose'i stackina (Talvik, 2026).</figcaption>
 </figure>
 
-Brauser pöördub veebiserveri `web01` poole, see rakenduse `app01` poole ja rakendus kasutab kolme teenust. Väljast on nähtav ainult `web01` ja RabbitMQ halduse leht, teised suhtlevad ainult omavahel. Tabelis 3.2 on iga teenuse image ja tervisekontroll.
+Brauser pöördub veebiserveri `web01` poole, see saadab päringu rakendusele `app01` ja rakendus kasutab andmebaasi, vahemälu ja sõnumijärjekorda. Teenuste andmed on tabelis 3.2, seda vajad järgmistes sammudes.
 
 ??? note "Tabel 3.2. Stacki teenused"
 
@@ -734,7 +734,7 @@ Brauser pöördub veebiserveri `web01` poole, see rakenduse `app01` poole ja rak
     | app01 | sinu `app/Dockerfile`, kontekst `..` | ei | Dockerfile'ist |
     | web01 | sinu `web/`, kontekst `./web` | `${WEB_PORT:-8080}:80` | Dockerfile'ist |
 
-Starteri `compose.yaml`-is on `db01` TODO-ridadega ja teised teenused kommentaarina. Täida teenused ükshaaval ja eemalda kommentaarimärgid alles siis, kui hakkad teenust täitma. Iga teenuse järel käivita see ja vaata, kas see töötab ([Compose'i faili juhend](https://docs.docker.com/reference/compose-file/services/)).
+Starteri `compose.yaml`-is on teenused ette antud TODO-ridade ja kommentaaridena. Täidad need ühe kaupa ja käivitad iga teenuse kohe, et näha, kas see töötab ([Compose'i faili juhend](https://docs.docker.com/reference/compose-file/services/)).
 
 ### 4.1 Paroolid ja andmebaas
 
