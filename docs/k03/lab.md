@@ -903,49 +903,68 @@ sleep 25; docker compose ps
 
 ### 4.3 Vahemälu ja sõnumijärjekord
 
-Teenused `mc01` ja `rmq01` tulevad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Nende porte väljast vaja ei ole, nii et neid ei avalda. Avatud vahemälust saaks igaüks lugeda kõike, mis sinna pandi.
+Selles sammus lisad vahemälu `mc01` ja sõnumijärjekorra `rmq01`. Need on samad teenused, mille käivitasid 1.8-s. Mõlemad tulevad otse ametlikest image'itest, nii et Dockerfile'i pole vaja.
 
-Lisa `compose.yaml`-i kaks teenust.
+Ava `compose.yaml`. Teenused `mc01` ja `rmq01` on seal praegu kommentaarina, iga rea alguses on märk `#`. Kustuta need neli rida ja kirjuta nende asemele järgmised osad. Taane on sama nagu `db01`-l.
 
-1. `mc01` image'ist `memcached:1.6-alpine`, ilma `ports:` reata.
-2. `rmq01` image'ist `rabbitmq:4.1-management-alpine`, hostinimi `rmq01`, kasutaja `labseis` ja parool `.env`-ist.
-3. `rmq01` andmed on volume'is `rmqdata` kataloogis `/var/lib/rabbitmq`. Volume on faili lõpus jaotises `volumes:` juba olemas.
-4. Hostis avalda ainult RabbitMQ halduse lehe port `15672`.
-5. Tervisekontrollid tabelist 3.2. Kui kontrollkäsus on toru `|`, kirjuta see kujul `CMD-SHELL`.
+1. **Vahemälu `mc01`.** Image tuleb Harbori vahemälust. Porti välja ei avata, sest teenust kasutab ainult rakendus.
 
-??? example "Lahendus: mc01 ja rmq01"
+    ??? example "Näita koodi"
 
-    ```yaml
-      mc01:
-        image: ${HUB:-docker.io/library}/memcached:1.6-alpine
-        healthcheck:
-          test: ["CMD-SHELL", "echo stats | nc -w 1 127.0.0.1 11211 | grep -q uptime"]
-          interval: 10s
-          retries: 5
+        ```yaml
+          mc01:
+            image: ${HUB:-docker.io/library}/memcached:1.6-alpine
+            healthcheck:
+              test: ["CMD-SHELL", "echo stats | nc -w 1 127.0.0.1 11211 | grep -q uptime"]
+              interval: 10s
+              retries: 5
+        ```
 
-      rmq01:
-        image: ${HUB:-docker.io/library}/rabbitmq:4.1-management-alpine
-        hostname: rmq01
-        environment:
-          RABBITMQ_DEFAULT_USER: labseis
-          RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?}
-        ports:
-          - "15672:15672"
-        volumes:
-          - rmqdata:/var/lib/rabbitmq
-        healthcheck:
-          test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-          interval: 10s
-          retries: 10
-    ```
+    Tervisekontrollis on toru `|`. Sellise käsu jaoks on vaja kuju `CMD-SHELL`.
 
-    Faili lõppu:
+2. **Sõnumijärjekord `rmq01`, image ja nimi.** Hostinimi `rmq01` on vajalik, sest RabbitMQ seob oma andmed hostinimega.
 
-    ```yaml
-    volumes:
-      dbdata:
-      rmqdata:
-    ```
+    ??? example "Näita koodi"
+
+        ```yaml
+          rmq01:
+            image: ${HUB:-docker.io/library}/rabbitmq:4.1-management-alpine
+            hostname: rmq01
+        ```
+
+3. **Kasutaja ja parool.** Samad muutujad nagu 1.8-s, parool tuleb `.env`-ist.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            environment:
+              RABBITMQ_DEFAULT_USER: labseis
+              RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?}
+        ```
+
+4. **Halduse leht ja andmed.** Port `15672` avab RabbitMQ halduse lehe brauseris. Andmed lähevad volume'isse `rmqdata`, mis on faili lõpus juba olemas.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            ports:
+              - "15672:15672"
+            volumes:
+              - rmqdata:/var/lib/rabbitmq
+        ```
+
+5. **Tervisekontroll.**
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            healthcheck:
+              test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+              interval: 10s
+              retries: 10
+        ```
+
+Salvesta, kontrolli faili käsuga `docker compose config -q && echo OK` ja käivita mõlemad teenused.
 
 ```bash
 docker compose up -d mc01 rmq01
@@ -965,38 +984,58 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
 ### 4.4 Rakendus
 
-Nüüd lisad rakenduse `app01`. Rakendus vajab kõiki kolme teenust, nii et see tohib käivituda alles siis, kui need on valmis. Compose'is ütleb seda `depends_on` koos tingimusega `service_healthy`. Siis ootab Compose, kuni `db01`, `mc01` ja `rmq01` on olekus `healthy`.
+Nüüd lisad rakenduse `app01`. Rakendus vajab kõiki kolme teenust, nii et see tohib käivituda alles siis, kui need on valmis.
 
-Lisa `compose.yaml`-i teenus `app01`.
+Ava `compose.yaml`. Kustuta kommentaariread `# app01:` ja selle all olev TODO-rida ning kirjuta nende asemele järgmised osad.
 
-1. Ehitatakse sinu `app/Dockerfile`-ist, ehituskontekst `..`, argumendid `HUB` ja `GIT_SHA: ${TAG:-dev}`.
-2. Image'i nimi on `${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}`.
-3. Muutujad `DB_PASSWORD`, `RABBITMQ_PASSWORD` ja `TEACHER_TOKEN` tulevad `.env`-ist.
-4. `depends_on` kolmele teenusele, igaühel `condition: service_healthy`.
+1. **Kust image tuleb.** Compose ehitab image'i sinu 3.1 Dockerfile'ist. `GIT_SHA` paneb image'i sildiks versiooni `.env`-ist.
 
-??? example "Lahendus: app01"
+    ??? example "Näita koodi"
 
-    ```yaml
-      app01:
-        build:
-          context: ..
-          dockerfile: k03-docker/app/Dockerfile
-          args:
-            HUB: ${HUB:-docker.io/library}
-            GIT_SHA: ${TAG:-dev}
-        image: ${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}
-        environment:
-          DB_PASSWORD: ${DB_PASSWORD:?}
-          RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?}
-          TEACHER_TOKEN: ${TEACHER_TOKEN:?}
-        depends_on:
-          db01:
-            condition: service_healthy
-          mc01:
-            condition: service_healthy
-          rmq01:
-            condition: service_healthy
-    ```
+        ```yaml
+          app01:
+            build:
+              context: ..
+              dockerfile: k03-docker/app/Dockerfile
+              args:
+                HUB: ${HUB:-docker.io/library}
+                GIT_SHA: ${TAG:-dev}
+        ```
+
+2. **Image'i nimi.** Sama kuju nagu andmebaasil.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            image: ${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}
+        ```
+
+3. **Paroolid.** Rakendus vajab andmebaasi ja järjekorra paroole ning õpetaja vaate tokenit. Teenuste nimed `db01`, `mc01` ja `rmq01` teab rakendus ise.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            environment:
+              DB_PASSWORD: ${DB_PASSWORD:?}
+              RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?}
+              TEACHER_TOKEN: ${TEACHER_TOKEN:?}
+        ```
+
+4. **Oota teisi teenuseid.** `depends_on` ütleb, et `app01` käivitub alles siis, kui kõik kolm teenust on olekus `healthy`.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            depends_on:
+              db01:
+                condition: service_healthy
+              mc01:
+                condition: service_healthy
+              rmq01:
+                condition: service_healthy
+        ```
+
+Salvesta ja kontrolli faili käsuga `docker compose config -q && echo OK`.
 
 Käivita rakendus. `--wait` ootab kuni 3 minutit, et rakendus jõuaks olekusse `healthy`.
 
@@ -1015,28 +1054,45 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
 ### 4.5 Veebiserver ja automaatne taaskäivitus
 
-Viimasena lisad veebiserveri `web01`. See on ainus teenus, mille poole brauser pöördub. Lisaks peavad kõik teenused pärast serveri taaskäivitust ise uuesti käivituma. Seda teeb igal teenusel rida `restart: unless-stopped`.
+Viimasena lisad veebiserveri `web01`. See on ainus teenus, mille poole brauser pöördub.
 
-1. Lisa teenus `web01`. Ehituskontekst on `./web`, argument `HUB`, image'i nimi tabeli 3.2 järgi ja port `"${WEB_PORT:-8080}:80"`.
-2. `web01` sõltub teenusest `app01` tingimusega `service_healthy`.
-3. Lisa igale viiele teenusele rida `restart: unless-stopped`.
+Ava `compose.yaml`. Kustuta kommentaariread `# web01:` ja selle all olev TODO-rida ning kirjuta nende asemele järgmised osad.
 
-??? example "Lahendus: web01"
+1. **Kust image tuleb.** Compose ehitab image'i sinu 2.2 Dockerfile'ist. Ehituskontekst on kaust `web`.
 
-    ```yaml
-      web01:
-        restart: unless-stopped
-        build:
-          context: ./web
-          args:
-            HUB: ${HUB:-docker.io/library}
-        image: ${REGISTRY:?}/${OWNER:?}/labori-seis-web:${TAG:-dev}
-        ports:
-          - "${WEB_PORT:-8080}:80"
-        depends_on:
-          app01:
-            condition: service_healthy
-    ```
+    ??? example "Näita koodi"
+
+        ```yaml
+          web01:
+            build:
+              context: ./web
+              args:
+                HUB: ${HUB:-docker.io/library}
+            image: ${REGISTRY:?}/${OWNER:?}/labori-seis-web:${TAG:-dev}
+        ```
+
+2. **Port ja ootamine.** Control'i port 8080 viib veebiserverisse. Veebiserver käivitub alles siis, kui rakendus on valmis.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            ports:
+              - "${WEB_PORT:-8080}:80"
+            depends_on:
+              app01:
+                condition: service_healthy
+        ```
+
+3. **Automaatne taaskäivitus.** Kui server taaskäivitub, peavad kõik teenused ise uuesti käivituma. Lisa **igale viiele teenusele** teenuse nime alla rida `restart: unless-stopped`.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+          db01:
+            restart: unless-stopped
+            build:
+              ...
+        ```
 
 ??? tip "Sama lühemalt: ühised seaded ühes kohas"
 
