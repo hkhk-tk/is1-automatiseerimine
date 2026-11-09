@@ -108,6 +108,8 @@ nav:
       - 3. kohtumine · Docker ja Podman:
           - Loeng: k03/loeng.md
           - Praktikum: k03/lab.md
+          - Süvenemine: k03/syvenemine.md
+          - Kodutöö: k03/kodutoo.md
           - Lisaülesanded: k03/lisa.md
       - 4. kohtumine · OpenTofu (Terraform):
           - Loeng: k04/loeng.md
