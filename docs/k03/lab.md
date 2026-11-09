@@ -128,9 +128,11 @@ systemctl is-active docker containerd   # mõlemad teenused töötavad
 
 ### 1.3 Esimene konteiner
 
-Image on pakitud failisüsteem koos käivitamise seadetega. Konteiner on image'ist käivitatud protsess. Image'i `hello-world` ainus programm prindib teate ja lõpetab.
+Nüüd käivitad esimese konteineri. Selleks on vaja kahte mõistet. **Image** on nagu programmi paigalduspakett: selles on programmi failid ja seaded, millega see käivitub. **Konteiner** on image'ist käivitatud programm. Ühest image'ist saab käivitada mitu konteinerit.
 
-**Küsimus enne käsku:** image'it `hello-world` masinas ei ole. Kust Docker selle saab?
+Proovi image'iga `hello-world`. Selles on üks väike programm, mis prindib tervituse ja lõpetab.
+
+**Küsimus enne käsku:** image'it `hello-world` sinu masinas veel ei ole. Kust Docker selle võtab?
 
 ```bash
 docker run hello-world
@@ -138,27 +140,27 @@ docker run hello-world
 
 ??? success "Oodatav tulemus"
 
-    Esimesed read on `Unable to find image 'hello-world:latest' locally` ja `Pulling from library/hello-world`. Docker tõmbas image'i registry'st **Docker Hub**, sest nime ees polnud muud registry't. Seejärel tuleb `Hello from Docker!` ja nelja sammu loetelu.
+    Esimene rida on `Unable to find image 'hello-world:latest' locally`: image'it masinas polnud. Siis tuleb `Pulling from library/hello-world`: Docker laadis image'i alla **Docker Hubist**, mis on Dockeri avalik image'ite hoidla (registry). Lõpuks prindib programm `Hello from Docker!` ja selgitab neljas punktis, mis juhtus.
 
-Loe teate nelja sammu ja võrdle neid joonisega. Klient `docker` on käsurea programm, mis saadab päringu daemonile `dockerd`. Daemon tõmbab image'i, loob sellest konteineri ja saadab programmi väljundi kliendile tagasi.
+Teate neli punkti vastavad joonisele 3.1. Käsk `docker` saadab sinu soovi taustteenusele `dockerd`. `dockerd` laadib image'i alla, käivitab sellest konteineri ja saadab programmi väljundi sinu terminali.
 
 <figure markdown="span">
   ![docker CLI saadab socket'i kaudu päringu dockerd-le, dockerd annab töö containerd-le, containerd käivitab runc-iga konteineri, mis on hostis tavaline protsess; dockerd tõmbab ja lükkab image'id registry'sse Harbor](assets/k03_docker_ahel.svg)
   <figcaption>Joonis 3.1. Docker Engine'i osad: klient, daemon, containerd ja runc (Talvik, 2026).</figcaption>
 </figure>
 
-Käivita sama image teist korda ja vaata, mis masinasse jäi:
+Käivita sama käsk teist korda. Siis vaata, millised konteinerid ja image'id masinasse jäid:
 
 ```bash
 docker run hello-world | head -3
-docker ps
-docker ps -a
-docker image ls
+docker ps          # töötavad konteinerid
+docker ps -a       # kõik konteinerid, ka lõpetanud
+docker image ls    # image'id
 ```
 
 ??? success "Oodatav tulemus"
 
-    Teisel korral tõmmet ei olnud, sest image oli juba masinas. `docker ps` on tühi, `docker ps -a` näitab kaht konteinerit olekus `Exited (0)` ja `docker image ls` näitab ühte image'it `hello-world`. Konteiner lõpetas koos oma programmiga, aga jäi masinasse alles, kuni selle kustutad.
+    Teisel korral allalaadimist ei olnud, sest image oli juba masinas. `docker ps` on tühi: ükski konteiner ei tööta. `docker ps -a` näitab kahte konteinerit olekus `Exited (0)`: programm lõpetas edukalt ja konteiner peatus koos sellega. Peatatud konteinerid jäävad masinasse, kuni need kustutad. `docker image ls` näitab ühte image'it `hello-world`, sest mõlemad konteinerid tehti samast image'ist.
 
 ### 1.4 Docker Hub
 
