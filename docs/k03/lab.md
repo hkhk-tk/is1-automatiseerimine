@@ -164,30 +164,37 @@ docker image ls    # image'id
 
 ### 1.4 Docker Hub
 
-**Docker Hub** (<https://hub.docker.com>) on Dockeri avalik registry. Kui image'i nimes pole registry aadressi, tõmbab Docker selle Docker Hubist. Lühike nimi `nginx` tähendab täisnime `docker.io/library/nginx:latest`: registry `docker.io`, ametlike image'ite nimeruum `library`, repositoorium `nginx` ja tag `latest`.
+Eelmises sammus tuli image `hello-world` Docker Hubist. **Docker Hub** (<https://hub.docker.com>) on Dockeri avalik registry ehk image'ite hoidla. Kui image'i nimes pole registry aadressi, võtab Docker image'i sealt.
 
-Ava brauseris <https://hub.docker.com> ja otsi `nginx`. Tulemuste juures on märk, kes image'i teeb:
+Lühike nimi `nginx` tähendab tegelikult täisnime `docker.io/library/nginx:latest`. Selles on neli osa.
 
-- **Docker Official Image**: Dockeri hallatud image, mille Dockerfile on avalik ja mida uuendatakse turvaparandustega. Nimes pole kasutajanime (`nginx`, `mariadb`).
-- **Verified Publisher**: tarkvara tootja enda image, näiteks `grafana/grafana`.
-- Märgita image'i võib laadida üles igaüks. Enne kasutamist vaata, kas lehel on link lähtekoodile ja Dockerfile'ile ning millal image'it viimati uuendati.
+- `docker.io` on registry aadress.
+- `library` on ametlike image'ite kaust.
+- `nginx` on image'i nimi.
+- `latest` on tag ehk versioon.
 
-Ava ametliku image'i `nginx` leht ja vaheleht **Tags**. Tag `latest` liigub iga uue versiooniga edasi, seega sama käsk annab kuu aja pärast teise image'i. Selles praktikumis on igal image'il versioon nimes, näiteks `nginx:1.30-alpine`. `alpine` tähendab, et image on tehtud väikese Alpine Linuxi peale.
+Ava brauseris Docker Hub ja otsi `nginx`. Tulemuste juures on märk, mis näitab, kes image'i teeb.
 
-Tõmba image lühinimega ja täisnimega:
+- **Docker Official Image** on Dockeri hallatud image. Selle Dockerfile on avalik ja seda uuendatakse turvaparandustega. Nimes pole kasutajanime, näiteks `nginx` või `mariadb`.
+- **Verified Publisher** on tarkvara tootja enda image, näiteks `grafana/grafana`.
+- Märgita image'i võib üles laadida igaüks. Enne kasutamist vaata, kas lehel on link lähtekoodile ja millal image'it viimati uuendati.
+
+Ava image'i `nginx` leht ja vaheleht **Tags**. Tag `latest` näitab alati uusimat versiooni, nii et sama käsk annab kuu aja pärast teise image'i. Seepärast on selles praktikumis igal image'il versioon nimes, näiteks `nginx:1.30-alpine`. Osa `alpine` tähendab, et image on tehtud väikese Alpine Linuxi peale.
+
+Tõmba sama image lühikese nimega ja täisnimega. Siis vaata, mida image sisaldab.
 
 ```bash
 docker pull nginx:1.30-alpine
 docker pull docker.io/library/nginx:1.30-alpine
 docker image ls nginx
-docker image inspect nginx:1.30-alpine --format '{{.Config.ExposedPorts}} {{.Config.Cmd}}'
+docker image inspect nginx:1.30-alpine --format '{{.Config.ExposedPorts}} {{.Config.Cmd}}'   # port ja käivituskäsk
 ```
 
 ??? success "Oodatav tulemus"
 
-    Teine `pull` ütleb `Image is up to date`: lühinimi ja täisnimi on sama image. `inspect` näitab porti `80/tcp` ja käsku, millega Nginx käivitub.
+    Teine `pull` vastab `Image is up to date`. See tähendab, et lühike nimi ja täisnimi on sama image. `inspect` näitab porti `80/tcp` ja käsku, millega Nginx käivitub.
 
-Image'i lehe ülevaates on kirjas, mida image käivitamiseks vajab. Ava ametliku image'i [`mariadb`](https://hub.docker.com/_/mariadb) leht ja leia sealt vastused. Neid läheb vaja 1.8-s, kui käivitad andmebaasi konteinerina.
+Image'i lehel on kirjas ka see, mida image käivitamiseks vajab. Ava image'i [`mariadb`](https://hub.docker.com/_/mariadb) leht ja leia vastused allolevatele küsimustele. Neid läheb vaja 1.8-s, kui käivitad andmebaasi konteinerina.
 
 ??? question "Mida vajab MariaDB image?"
 
@@ -198,7 +205,7 @@ Image'i lehe ülevaates on kirjas, mida image käivitamiseks vajab. Ava ametliku
 
     ??? success "Vastus"
 
-        1. Üks kolmest: `MARIADB_ROOT_PASSWORD`, `MARIADB_ALLOW_EMPTY_ROOT_PASSWORD` või `MARIADB_RANDOM_ROOT_PASSWORD`. Ilma nendeta konteiner lõpetab.
+        1. Üks kolmest muutujast `MARIADB_ROOT_PASSWORD`, `MARIADB_ALLOW_EMPTY_ROOT_PASSWORD` või `MARIADB_RANDOM_ROOT_PASSWORD`. Ilma nendeta konteiner lõpetab töö kohe.
         2. `MARIADB_DATABASE`, `MARIADB_USER` ja `MARIADB_PASSWORD`.
         3. `/var/lib/mysql`.
         4. `3306`.
