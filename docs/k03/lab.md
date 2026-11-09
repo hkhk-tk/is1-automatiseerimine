@@ -354,14 +354,14 @@ docker ps -a
 
 Rakendus Labori seis vajab kolme teenust: andmebaasi `db01`, vahemälu `mc01` ja sõnumijärjekorda `rmq01`. Rakendus leiab need nime järgi, sest konteineri IP-aadress muutub iga kord, kui konteiner uuesti luuakse. Docker leiab konteineri nime järgi ainult sinu enda loodud võrgus, mitte vaikevõrgus. Seepärast teed kõigepealt oma võrgu.
 
-Tee võrk `labnet` ja käivita sinna MariaDB:
+Tee võrk `labnet` ja käivita sinna MariaDB. Käsus on meelega üks viga.
 
 ```bash
 docker network create labnet
 docker run -d --name db01 --network labnet $HUB/mariadb:11.4
 ```
 
-Vaata, kas konteiner töötab, ja kui ei, siis miks:
+Vaata, kas konteiner töötab. Kui ei tööta, loe logist, miks.
 
 ```bash
 docker ps -a
@@ -370,7 +370,7 @@ docker logs db01
 
 ??? success "Oodatav tulemus"
 
-    `db01` on olekus `Exited (1)` ja logi viimastel ridadel on puuduva muutuja nimi. See on kõige tavalisem käivitusviga: kohustuslik muutuja puudub. Rikke otsimise järjekord on alati sama: `docker ps -a` (väljumiskood), `docker logs` ja vajadusel `docker inspect`.
+    `db01` on olekus `Exited (1)`. Logi viimastel ridadel on kirjas, et root'i parool puudub. See on kõige tavalisem käivitusviga, sest image vajab muutujat, mida käsus polnud. Kui konteiner ei tööta, vaata alati kõigepealt `docker ps -a` ja siis `docker logs`.
 
 **Ülesanne.** Kustuta `db01` ja käivita see uuesti nii, et nõuded on täidetud. Muutujate nimed leidsid 1.4-s [image'i lehelt](https://hub.docker.com/_/mariadb).
 
@@ -378,7 +378,7 @@ docker logs db01
 - `-e` võtmetega root'i parool, andmebaas `labseis`, kasutaja `labseis` ja tema parool;
 - andmed nimega volume'is `dbtest` kataloogis `/var/lib/mysql`.
 
-Lisa samasse võrku veel kaks teenust:
+Lisa samasse võrku veel kaks teenust.
 
 - `mc01` image'ist `memcached:1.6-alpine`;
 - `rmq01` image'ist `rabbitmq:4.1-management-alpine`, hostinimi `rmq01` (`--hostname`), kasutaja ja parool muutujatest `RABBITMQ_DEFAULT_USER` ja `RABBITMQ_DEFAULT_PASS`.
@@ -396,7 +396,7 @@ Lisa samasse võrku veel kaks teenust:
     docker ps
     ```
 
-Kontrolli nimelahendust võrgust `labnet` ja vaikevõrgust:
+Kontrolli, kas nimi `db01` leitakse. Esimene käsk küsib võrgust `labnet`, teine vaikevõrgust.
 
 ```bash
 docker run --rm --network labnet $HUB/alpine:3.22 sh -c 'getent hosts db01; grep nameserver /etc/resolv.conf'
@@ -405,7 +405,7 @@ docker run --rm $HUB/alpine:3.22 getent hosts db01; echo "kood $?"
 
 ??? success "Oodatav tulemus"
 
-    Kolm konteinerit on `Up`. Võrgus `labnet` annab `getent` db01 IP-aadressi ja nimeserver on `127.0.0.11`. Vaikevõrgus nimi ei lahendu ja kood on 2. `127.0.0.11` on Dockeri sisseehitatud DNS, mis töötab ainult ise loodud võrkudes. Compose loob igale projektile oma võrgu, seepärast leiavad teenused seal üksteist nime järgi.
+    Kolm konteinerit on `Up`. Võrgus `labnet` annab `getent` nimele `db01` IP-aadressi ja nimeserver on `127.0.0.11`. See on Dockeri sisseehitatud nimeserver, mis töötab ainult ise loodud võrkudes. Vaikevõrgus nime ei leita ja kood on 2. Compose loob igale projektile oma võrgu, nii et 4. osas leiavad teenused üksteist nime järgi ilma lisatööta.
 
 ### 1.9 Andmed volume'is
 
