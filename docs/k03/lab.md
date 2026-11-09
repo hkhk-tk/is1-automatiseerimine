@@ -267,9 +267,11 @@ Ava brauseris <https://harbor.lab.hkhk.lan> ja logi samade andmetega sisse. Lehe
 
     Brauser ei tunne kursuse CA-d. Brauseris võid hoiatuse kõrvale jätta või importida faili `roles/docker/files/harbor-ca.crt` oma arvutis usaldatud juursertifikaatide hulka (Windowsis topeltklõps, **Install Certificate**, **Local Machine**, **Trusted Root Certification Authorities**). Kui nimi `harbor.lab.hkhk.lan` sinu arvutis ei avane, kasuta aadressi <https://192.168.125.42>.
 
-### 1.6 Elutsükkel ja PID 1
+### 1.6 Käivita ja peata konteiner
 
-Konteineris töötab üks peaprogramm. Linuxis on selle protsessi number 1 (PID 1). Konteiner töötab seni, kuni töötab see programm. Kui programm lõpetab, peatub ka konteiner. Seda on hea teada, sest peatunud konteiner ei tähenda alati viga. Vahel lõpetas programm lihtsalt oma töö.
+1.3-s lõpetas konteiner `hello-world` kohe, sest selle programm prindib teate ja lõpetab. Veebiserver Nginx peab aga töötama pidevalt. Selles sammus käivitad Nginxi konteineri, peatad selle ja käivitad uuesti. Neid käske vajad iga konteineriga.
+
+Konteiner töötab seni, kuni töötab selle peaprogramm. Linuxis on selle protsessi number 1 (PID 1). Kui programm lõpetab, peatub ka konteiner.
 
 **Esiplaanil ja taustal.** Käivita Nginx esiplaanil. Terminal jääb siis Nginxi logi näitama. Lõpeta see klahvidega Ctrl+C.
 
@@ -295,18 +297,6 @@ docker ps
 ??? success "Oodatav tulemus"
 
     `fg` on olekus `Exited`, sest Ctrl+C lõpetas Nginxi. `veeb` on pärast `start`-i jälle `Up` ja konteineri ID on sama. `stop` peatab programmi, aga konteiner ja selle failid jäävad alles.
-
-**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`? 1.5-s nägid, et sama Nginxi image on masinas kahe nimega. Eemalda kõigepealt Docker Hubi nimi ja siis Harbori nimi.
-
-```bash
-docker rmi nginx:1.30-alpine
-docker image ls
-docker rmi $HUB/nginx:1.30-alpine
-```
-
-??? success "Oodatav tulemus"
-
-    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama ID-d Harbori nime all edasi. Kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
 
 **Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta.
 
