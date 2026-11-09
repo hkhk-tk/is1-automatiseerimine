@@ -2809,7 +2809,7 @@ ssh db01 'sudo systemctl disable --now mariadb
     sudo ausearch -m avc -ts recent | grep -m2 03-dump'
 ```
 
-**Hüpotees:** kirjuta K3 issue'sse, miks konteiner ei saa lugeda faili, millel on õigused `644`.
+**Hüpotees:** miks konteiner ei saa lugeda faili, millel on õigused `644`?
 
 ??? tip "Tõend"
 
@@ -3179,7 +3179,7 @@ trivy --version | head -1
 
 Failis `intsident/compose.yaml` on sama Labori seis eraldi projektina `labori-seis-intsident` pordil 8090 ja selles on kolm viga. Leiad need nagu tootmisintsidendis: alustad sümptomist, parandad faili, mitte töötavat konteinerit, ja lood uuesti ainult need teenused, mida parandus puudutab. Teade `dependency failed to start` ütleb ainult, et ahelas on midagi katki, seepärast ära paranda esimest nähtud sümptomit.
 
-Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (kirjuta K3 issue kommentaariks enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.6 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
+Iga viga leiad samade sammudega nagu 2. kohtumisel: **Sümptom**, **Hüpotees** (mõtle põhjus läbi enne tõendi otsimist), **Tõend**, **Paranda** ja **Kontrolli**. Tabelit 3.6 loe ülevalt alla: esimene rida on kõige laiem sümptom, iga järgmine kitsendab otsingu ühe teenuse ja ühe põhjuseni.
 
 ??? note "Tabel 3.6. Compose'i stacki veaotsing"
 
@@ -3214,7 +3214,7 @@ Alias `dci` kehtib selles shellis kogu ülesande ajal. Projekti nimi `labori-sei
 
 **Sümptom:** db01 lõpetab kohe pärast käivitust. Alusta sellest teenusest, sest kõik teised ootavad selle käivitumist.
 
-**Hüpotees:** kirjuta issue'sse, miks db01 lõpetab kohe pärast käivitust.
+**Hüpotees:** miks db01 lõpetab kohe pärast käivitust?
 
 ??? tip "Tõend"
 
@@ -3258,7 +3258,7 @@ dci exec db01 id
 
 **Sümptom:** mc01 protsess töötab, aga Docker märgib selle `unhealthy`-ks ja seepärast app01 ei käivitu.
 
-**Hüpotees:** kirjuta issue'sse, miks töötav mc01 on `unhealthy`.
+**Hüpotees:** miks töötav mc01 on `unhealthy`?
 
 ??? tip "Tõend"
 
@@ -3294,7 +3294,7 @@ dci up -d --wait app01
 
 **Sümptom:** app01 on `healthy`, web01 töötab, aga web01 on `unhealthy` ja `curl -s -o /dev/null -w '%{http_code}\n' localhost:8090/` annab 502. Kolmas viga ei ole üheski konteineris eraldi.
 
-**Hüpotees:** kirjuta issue'sse, miks web01 vastab 502-ga, kuigi app01 on `healthy`.
+**Hüpotees:** miks web01 vastab 502-ga, kuigi app01 on `healthy`?
 
 ??? tip "Tõend"
 
