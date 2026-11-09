@@ -1240,39 +1240,40 @@ git push
 
 ## Osa 6 · Enne esitamist
 
-Automaatkontroll vaatab sinu faile GitHubis. Enne esitamist käivita samad kontrollid ise, siis näed vigu kohe.
+Automaatkontroll vaatab sinu faile GitHubis ja käivitab kuus testi. Enne esitamist käivita samad testid ise, siis näed vead kohe ja saad need parandada.
 
-**Eesmärk:** kõik vajalikud failid on GitHubis ja kuus testi annavad `OK`.  
-**Kontroll:** kuus automaatkontrolli testi annavad `OK`.  
-**Kus:** control, kaust `~/kursus/k03-docker`.
+**Eesmärk:** kõik kuus testi annavad `OK` ja paroolid pole Gitis.  
+**Kus:** control, kaust `~/kursus`.
 
-### 6.1 Käivita testid
+### 6.1 Käivita kõik testid
 
-Kõigepealt kontrolli, kas `compose.yaml` ja Dockerfile'id on vigadeta. Siis käivita kuus automaatkontrolli testi. Test `build` ehitab kõik kolm image'it ja võtab kõige rohkem aega.
+Käivita testid ükshaaval. Test `build` ehitab kõik kolm image'it ja võtab kõige rohkem aega.
 
 ```bash
-docker compose config -q && echo compose OK
-for d in app db; do docker build --check -f $d/Dockerfile ..; done
-docker build --check web
-(cd .. && for t in files compose deps multistage tags build; do bash autograde/check.sh k03 "$t"; done)
+cd ~/kursus
+bash autograde/check.sh k03 files
+bash autograde/check.sh k03 compose
+bash autograde/check.sh k03 deps
+bash autograde/check.sh k03 multistage
+bash autograde/check.sh k03 tags
+bash autograde/check.sh k03 build
 ```
 
 ??? success "Oodatav tulemus"
 
-    Esimene rida prindib `compose OK`. `build --check` ei anna hoiatusi. Kõik kuus testi annavad `OK`.
+    Iga test prindib `OK`. Kui mõni test annab vea, ütleb see, mis puudu on. Paranda fail, salvesta see GitHubi nagu 4.6-s ja käivita test uuesti.
 
 ### 6.2 Kontrolli, et paroolid pole Gitis
 
-Otsi Gitis olevate failide nimedest paroolifaile.
+`git ls-files` näitab kõiki faile, mis on Gitis. Otsi nende hulgast faile, mille nimes on `env`.
 
 ```bash
-git ls-files .. | grep -E '(^|/)\.env$|secrets/|\.pem$|\.key$'
-git status --short
+git ls-files | grep env
 ```
 
 ??? success "Oodatav tulemus"
 
-    Mõlemad käsud ei prindi midagi. See tähendab, et Gitis pole selliste nimedega faile. Failide sisu see ei kontrolli, seega vaata ka ise üle, mida esitad.
+    Väljundis on ainult `k03-docker/.env.example`. Faili `k03-docker/.env` seal ei ole, sest Git jätab selle välja. Kui `.env` on nimekirjas, eemalda see Gitist käsuga `git rm --cached k03-docker/.env` ja salvesta muudatus.
 
 ??? note "Kontrollnimekiri enne esitamist"
 
