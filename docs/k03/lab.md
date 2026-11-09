@@ -1026,41 +1026,32 @@ git status --short
 
 ## Osa 5 · Harbor
 
-Lükkad oma image'id Harborisse. Registry'st saab sama image'i tõmmata iga masin, mis Harborini jõuab. Harbor skannib iga image'i Trivy'ga.
+Siiani olid sinu image'id ainult control'is. Selles osas paned need Harborisse. Siis saab sama image'i tõmmata iga masin, mis Harborini jõuab, ja seda ei pea igal pool uuesti ehitama. Harbor kontrollib iga image'i ka turvaaukude suhtes.
 
-**Eesmärk:** kolm image'it on sinu Harbori projektis SHA-tag'iga ja stack käivitub registry image'itest.  
-**Kontroll:** automaatkontrolli test `tags` annab `OK` ja Harbori veebiliideses on kolm repositooriumi.  
-**Kus:** control, kaust `~/kursus/k03-docker`, põhistack `compose.yaml`.
+**Eesmärk:** kolm image'it on sinu Harbori projektis ja stack käivitub Harborist tõmmatud image'itest.  
+**Kontroll:** Harbori veebiliideses on sinu projektis kolm repositooriumi.  
+**Kus:** control, kaust `~/kursus/k03-docker`.
 
 <figure markdown="span">
   ![Control tõmbab Docker Hubi image'id Harbori proxy cache'i kaudu, lükkab oma image'id Harbori projekti, kus Trivy need skannib; sealt tõmbavad mc01 ja db01 Podmaniga, 5. kohtumise konveier ja 7. kohtumise k3s](assets/k03_image_teekond.svg)
   <figcaption>Joonis 3.8. Image'i teekond: Docker Hub, Harbori vahemälu, sinu projekt ja kasutajad (Talvik, 2026).</figcaption>
 </figure>
 
-### 5.1 Push Harborisse
+### 5.1 Lükka image'id Harborisse
 
-Tag'iks saab commit'i lühike SHA, et iga image'i saaks seostada koodiga. Tag `latest` või `dev` ei ütle, mis kood image'is on. Kui midagi läheb katki, ei tea sa, millise versiooni juurde tagasi minna, ega saa tõestada, mis tootmises töötas.
+Image'i nime lõpus on tag ehk silt, näiteks `labori-seis-app:dev`. Silt `dev` ei ütle, mis kood image'is on. Seepärast paned sildiks commit'i lühikese SHA. Siis on iga image'i juures näha, millisest koodist see tehti.
 
-1.5-s logisid Harborisse sisse. Pane `.env`-is tag'iks commit'i SHA, seejärel ehita image'id ja lükka need Harborisse:
-
-Enne seda kontrolli, et kõik Dockerfile'id ja `compose.yaml` on commit'itud. Muidu ei vasta SHA image'i sisule.
+Kontrolli kõigepealt, et kõik failid on commit'itud. Kui `git status` näitab muudatusi, tee enne commit. Seejärel pane SHA `.env`-i, ehita image'id ja lükka need Harborisse.
 
 ```bash
 git status --short
 TAG=$(git rev-parse --short HEAD) && sed -i "s/^TAG=.*/TAG=$TAG/" .env
 grep -E '^(REGISTRY|OWNER|TAG)=' .env
-docker compose build && docker compose push
+docker compose build
+docker compose push
 ```
 
-Anna web-image'ile teine nimi ja lükka see ka selle nimega:
-
-```bash
-W=harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-web
-docker tag "$W:$TAG" "$W:k03" && docker image ls "$W"
-docker push "$W:k03"
-```
-
-Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labori-seis-app` ja seejärel image'i real. Veerg **Vulnerabilities** näitab, mitu turvaauku Trivy image'ist leidis. Harbor skannib iga image'i kohe pärast push'i.
+Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labori-seis-app` ja seejärel image'i real. Veerg **Vulnerabilities** näitab, mitu turvaauku Trivy image'ist leidis.
 
 <figure markdown="span">
   ![Harbori projekti Repositories vaade kolme repositooriumiga labori-seis-app, labori-seis-db ja labori-seis-web](assets/k03_harbor_repositories.png)
@@ -1069,15 +1060,15 @@ Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labo
 
 ??? success "Oodatav tulemus"
 
-    Harboris on kolm repositooriumi tag'iga `<lühike SHA>`, web-image'i kahel real on sama ID ja teine push ütles iga kihi kohta `Layer already exists`. Registry hoiab kihte, mitte terveid image'eid: sama sisuga kiht salvestatakse üks kord. Uus tag on ainult uus nimi sama manifesti juurde, seepärast on IMAGE ID mõlemal real sama.
+    `grep` näitab sinu Harbori aadressi, kasutajanime ja SHA-d. `push` lõpeb ilma veata. Harboris on kolm repositooriumi `labori-seis-app`, `labori-seis-db` ja `labori-seis-web`, igaühel silt sinu SHA-ga.
 
-??? warning "Kui `denied: requested access to the resource is denied`"
+??? warning "Kui tuleb viga `denied: requested access to the resource is denied`"
 
-    `OWNER` pole sinu Harbori kasutajanimi või logisid sisse teise kasutajana. Kasutajanimi ja projekti nimi on GitHubi kasutajanimi väikeste tähtedega.
+    `.env`-is on `OWNER` vale või logisid 1.5-s sisse teise kasutajana. Mõlemad peavad olema sinu GitHubi kasutajanimi väikeste tähtedega.
 
-??? warning "Kui `x509: certificate signed by unknown authority`"
+??? warning "Kui tuleb viga `x509: certificate signed by unknown authority`"
 
-    CA puudub kaustas `/etc/docker/certs.d/harbor.lab.hkhk.lan/`. Korda 1.5 sertifikaadi samme. `insecure-registries` ei ole lahendus: see lülitab sertifikaadi kontrolli välja ja parool liigub siis serverile, mille identiteeti keegi ei kontrolli.
+    Docker ei usalda Harbori sertifikaati. Korda 1.5 sertifikaadi käske.
 
 ??? note "Kui Harbor ei vasta: GHCR"
 
@@ -1091,29 +1082,29 @@ Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labo
 
     Pakett on vaikimisi privaatne. GitHubis näed seda profiili all **Packages**. Trivy skannimise saad siis teha käsurealt ([IS2, osa 3](https://hkhk-tk.github.io/is2-automatiseerimine/k03/syvenemine/)).
 
-### 5.2 Stack registry'st
+### 5.2 Käivita stack Harborist
 
-Kustutad oma image'id kohalikult ja käivitad stacki ainult registry'st: nii käivitavad rakenduse konveier ja Kubernetese klaster. Kui mõni image on ainult sinu masinas, töötab käivitus sinu juures ja ebaõnnestub igal teisel masinal. Seda viga on lihtne mitte märgata, sest sinu masinas on kõik alati olemas.
+Kontrolli, et stack töötab ka siis, kui image'id tulevad Harborist, mitte sinu masinast. Kustuta oma image'id control'ist, tõmba need Harborist ja käivita stack uuesti.
 
 ```bash
 docker compose down
 docker image rm $(docker compose config --images | grep labori-seis-)
-docker compose pull && docker compose up -d --no-build --wait
-docker compose images
+docker compose pull
+docker compose up -d --no-build --wait
 curl -s http://localhost:8080/version; echo
 ```
 
 ??? success "Oodatav tulemus"
 
-    `pull` tõmbas app-, db- ja web-image'i Harborist (olemasolevad kihid `Already exists`), `docker compose images` näitab Harbori nimesid SHA-tag'iga ja `/version` sama SHA-d. Töötav kood on tõendatavalt see, mis on Gitis.  Andmebaasi andmed on alles, sest `down` ilma `-v`-ta ei puuduta volume'eid.
+    `pull` tõmbab kolm image'it Harborist ja stack käivitub ilma ehitamata. `/version` näitab sama SHA-d, mis on image'i sildis. Andmebaasi andmed on alles, sest `down` ilma `-v`-ta neid ei kustuta.
 
-??? warning "Kui `pull` ebaõnnestub teatega `current image with … vulnerabilities cannot be pulled`"
+??? warning "Kui tuleb viga `current image with … vulnerabilities cannot be pulled`"
 
-    Projekti seadetes on haavatava image'i tõmbamise keeld sees. Lülita see projekti **Configuration** all välja.
+    Sinu projekti seadetes on haavatavate image'ide tõmbamise keeld sees. Lülita see projekti **Configuration** all välja.
 
 ### 5.3 Kontrolli haru
 
-Selles osas muutus ainult `.env`, mis jääb Gitist välja, ja image'id registry's. Uut commit'i pole vaja, kui jälgitavad failid ei muutunud.
+Selles osas muutus ainult `.env`, mis jääb Gitist välja. Uut commit'i pole vaja.
 
 ```bash
 git status --short
@@ -1122,33 +1113,43 @@ git push
 
 ??? success "Oodatav tulemus"
 
-    `git status` on tühi ega näita `.env`-i. `git push` vastab `Everything up-to-date`.
+    `git status` on tühi ja `git push` vastab `Everything up-to-date`.
 
 ## Osa 6 · Enne esitamist
 
-Automaatkontroll võtab sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need GitHubis on. Käivitad samad kontrollid ise.
+Automaatkontroll vaatab sinu faile GitHubis. Enne esitamist käivita samad kontrollid ise, siis näed vigu kohe.
 
-**Eesmärk:** GitHubis on kõik vajalikud failid ja image'id ehituvad.  
+**Eesmärk:** kõik vajalikud failid on GitHubis ja kuus testi annavad `OK`.  
 **Kontroll:** kuus automaatkontrolli testi annavad `OK`.  
-**Kus:** control, kaust `~/kursus/k03-docker`, põhistack `compose.yaml`.
+**Kus:** control, kaust `~/kursus/k03-docker`.
 
-### 6.1 Failide kontroll
+### 6.1 Käivita testid
 
-Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i faile ja Dockerfile'e, seejärel käivita automaatkontrolli testid ning kontrolli saladusi ja idempotentsust:
+Kõigepealt kontrolli, kas `compose.yaml` ja Dockerfile'id on vigadeta. Siis käivita kuus automaatkontrolli testi. Test `build` ehitab kõik kolm image'it ja võtab kõige rohkem aega.
 
 ```bash
-docker compose -f compose.yaml config -q && echo compose OK
+docker compose config -q && echo compose OK
 for d in app db; do docker build --check -f $d/Dockerfile ..; done
 docker build --check web
 (cd .. && for t in files compose deps multistage tags build; do bash autograde/check.sh k03 "$t"; done)
-git ls-files .. | grep -E '(^|/)\.env$|secrets/|backup/|\.pem$|\.key$|tfstate'
-docker compose up -d --wait
+```
+
+??? success "Oodatav tulemus"
+
+    Esimene rida prindib `compose OK`. `build --check` ei anna hoiatusi. Kõik kuus testi annavad `OK`.
+
+### 6.2 Kontrolli, et paroolid pole Gitis
+
+Otsi Gitis olevate failide nimedest paroolifaile.
+
+```bash
+git ls-files .. | grep -E '(^|/)\.env$|secrets/|\.pem$|\.key$'
 git status --short
 ```
 
 ??? success "Oodatav tulemus"
 
-    `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et jälgitavate failide hulgas pole nende nimedega faile. See ei tõesta, et failide sisus või varasemates commit'ides pole saladusi.
+    Mõlemad käsud ei prindi midagi. See tähendab, et Gitis pole selliste nimedega faile. Failide sisu see ei kontrolli, seega vaata ka ise üle, mida esitad.
 
 ??? note "Kontrollnimekiri enne esitamist"
 
@@ -1161,9 +1162,9 @@ git status --short
 
 ## Töö esitamine
 
-Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k03`.
+Töö jõuab harusse `main` pull request'iga ja esitatakse sildiga (tag) `k03`.
 
-Kui `git status --short` näitab veel muudatusi, salvesta need commit'ina. Kui muudatusi pole, jäta commit vahele.
+Kui `git status --short` näitab veel muudatusi, salvesta need. Siis tee pull request.
 
 ```bash
 cd ~/kursus
@@ -1173,10 +1174,11 @@ git push
 gh pr create --base main --head k03-docker --title "K3 Docker" --body "3. kohtumise praktikum"
 ```
 
-Vaata pull request GitHubis üle ja ühenda (**Merge pull request**). Seejärel:
+Kui muudatusi polnud, ütleb `git commit` `nothing to commit` ja see on korras. Kui käsku `gh` pole, ava oma repositoorium GitHubis ja vajuta **Compare & pull request**.
+
+Ühenda pull request GitHubis (**Merge pull request**). Seejärel pane harule `main` silt `k03`:
 
 ```bash
-cd ~/kursus
 git switch main
 git pull
 git tag k03
@@ -1187,7 +1189,7 @@ Tulemuse näed Classroom 50-s.
 
 ??? warning "K3 tulemus on 0, kuigi töö on tehtud"
 
-    Tag `k03` osutab siis harus `main` olevatele algfailidele, sest pull request jäi tegemata või haru `k03-docker` ei jõudnud GitHubi. Tee pull request ja ühenda see, seejärel tõsta tag uuele commit'ile:
+    Silt `k03` osutab vanale commit'ile, sest pull request jäi ühendamata või haru ei jõudnud GitHubi. Ühenda pull request ja tõsta silt uuele commit'ile:
 
     ```bash
     cd ~/kursus && git switch main && git pull
