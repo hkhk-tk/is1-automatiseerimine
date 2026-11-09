@@ -792,21 +792,23 @@ git check-ignore -v .env
 
 ### 4.2 Andmebaas Compose'iga
 
-Täida `compose.yaml`-is esimene teenus `db01`. Vaja on järgmist.
+Compose'i fail kirjeldab sama, mida 1.8-s kirjutasid käsku `docker run`. Vahe on selles, et iga valik on failis oma real ja fail jääb alles. Starteri `compose.yaml`-is on projekti nimi ja volume'ide loend juba olemas. Sinu töö on täita teenus `db01`, kus on praegu TODO-rida.
 
-1. Faili algusesse projekti nimi `name: labori-seis`.
-2. Teenus `db01` ehitatakse sinu `db/Dockerfile`-ist. Ehituskontekst on `..` ja argument `HUB`.
-3. Image'i nimi on `${REGISTRY:?}/${OWNER:?}/labori-seis-db:${TAG:-dev}`.
-4. Muutujad nagu 1.8-s, aga paroolid tulevad `.env`-ist.
-5. Andmed on nimega volume'is `dbdata` kataloogis `/var/lib/mysql`.
-6. Tervisekontroll tabelist 3.2, kontroll iga 10 sekundi järel ja kuni 10 korda.
+Tabel näitab, kuhu iga 1.8 käsu osa Compose'i failis läheb.
+
+| `docker run` 1.8-s | `compose.yaml`-is teenuse `db01` all |
+|---|---|
+| `--name db01` | teenuse nimi `db01:` |
+| `$HUB/mariadb:11.4` | `build:` sinu `db/Dockerfile`-ist, ehituskontekst `..` ja argument `HUB` |
+| `-e MARIADB_ROOT_PASSWORD=Juur123` jne | `environment:` all, paroolid kujul `${DB_ROOT_PASSWORD:?}` failist `.env` |
+| `-v dbtest:/var/lib/mysql` | `volumes:` all `- dbdata:/var/lib/mysql` |
+| `--network labnet` | pole vaja, Compose teeb võrgu ise |
+
+Lisaks on failis kaks uut asja. `image:` annab ehitatud image'ile nime, millega see 5. osas Harborisse läheb. `healthcheck:` kontrollib iga 10 sekundi järel, kas andmebaas vastab (käsk on tabelis 3.2).
 
 ??? example "Lahendus: `db01`"
 
     ```yaml
-    name: labori-seis
-
-    services:
       db01:
         build:
           context: ..
@@ -825,12 +827,11 @@ Täida `compose.yaml`-is esimene teenus `db01`. Vaja on järgmist.
           test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
           interval: 10s
           retries: 10
-
-    volumes:
-      dbdata:
     ```
 
-    `${VAR:?}` katkestab käivituse, kui muutuja puudub. `${VAR:-x}` annab muutujale vaikeväärtuse `x`.
+    Taanded on YAML-is olulised: iga tase on kaks tühikut paremal. `${DB_ROOT_PASSWORD:?}` võtab väärtuse `.env`-ist ja katkestab käivituse, kui see puudub. `${HUB:-docker.io/library}` kasutab vaikeväärtust, kui `HUB` pole määratud.
+
+Käivita ainult andmebaas ja vaata selle olekut.
 
 ```bash
 docker compose up -d --build db01
