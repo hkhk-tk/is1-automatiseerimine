@@ -1094,27 +1094,7 @@ Ava `compose.yaml`. Kustuta kommentaariread `# web01:` ja selle all olev TODO-ri
               ...
         ```
 
-??? tip "Sama lühemalt: ühised seaded ühes kohas"
-
-    Kui sama seade on igal teenusel, võid selle kirjutada üks kord faili algusesse ja igas teenuses sellele viidata. Nii saab lisada ka logide suuruse piirangu.
-
-    ```yaml
-    x-common: &common
-      restart: unless-stopped
-      logging:
-        driver: json-file
-        options:
-          max-size: "10m"
-          max-file: "3"
-
-    services:
-      db01:
-        <<: *common
-    ```
-
-    `&common` paneb plokile nime ja `<<: *common` toob selle sisu teenusesse. Vaata [Compose'i laiendusvälju](https://docs.docker.com/reference/compose-file/extension/).
-
-Käivita kogu stack ja kontrolli rakendust.
+Salvesta ja käivita kõik viis teenust. `docker compose ps` näitab teenuste olekut. `curl` küsib rakenduselt veebiserveri kaudu tervist ja versiooni.
 
 ```bash
 docker compose up -d --build
@@ -1140,17 +1120,32 @@ Ava brauseris `http://<control IP>:8080/s/demo-kati-token`. See on näidisõppij
 
 ### 4.6 Salvesta GitHubi
 
-Automaatkontroll loeb sama `compose.yaml`-i, aga sinu `.env`-i asemel kasutab `.env.example`-i. Seepärast peavad näidisfailis olema kõik muutujad, mida `compose.yaml` nõuab. Käivita kolm testi ja salvesta.
+Enne salvestamist käivita kolm automaatkontrolli testi, mis vaatavad faili `compose.yaml`. Testid kasutavad paroolide asemel `.env.example`-i, sest sinu `.env` GitHubi ei jõua.
 
 ```bash
-(cd .. && for t in compose deps tags; do bash autograde/check.sh k03 "$t"; done)
-git status --short
-(cd ~/kursus && git add k03-docker && git commit -m "k03: kogu stack Compose'iga" && git push)
+cd ~/kursus
+bash autograde/check.sh k03 compose
+bash autograde/check.sh k03 deps
+bash autograde/check.sh k03 tags
 ```
 
 ??? success "Oodatav tulemus"
 
-    `compose`, `deps` ja `tags` annavad `OK`. `git status` ei näita `.env`-i, sest see jääb Gitist välja.
+    Iga test prindib `OK`. Kui test annab vea, ütleb see, mis puudu on, näiteks `restart-poliitika puudub` või `teenus web01 puudub`. Paranda `compose.yaml` ja käivita test uuesti.
+
+Salvesta muudatused GitHubi ja mine tagasi kausta `k03-docker`.
+
+```bash
+git status --short
+git add k03-docker
+git commit -m "k03: kogu stack Compose'iga"
+git push
+cd k03-docker
+```
+
+??? success "Oodatav tulemus"
+
+    `git status` näitab muudetud faili `k03-docker/compose.yaml`, aga mitte `.env`-i, sest see jääb Gitist välja. `git push` saadab muudatuse GitHubi.
 
 ## Osa 5 · Harbor
 
