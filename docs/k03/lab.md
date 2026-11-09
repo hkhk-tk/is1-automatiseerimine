@@ -426,7 +426,7 @@ Konteineri enda failid kaovad `docker rm`-iga. Andmebaas, mille andmed on kontei
 docker exec -it db01 mariadb -ulabseis -p labseis -e "CREATE TABLE proov (id INT); INSERT INTO proov VALUES (42);"
 ```
 
-Kustuta konteiner ja käivita see uuesti sama käsuga nagu 1.10 lahenduses, sama volume'iga `dbtest`:
+Kustuta konteiner ja käivita see uuesti sama käsuga nagu 1.8 lahenduses, sama volume'iga `dbtest`:
 
 ```bash
 docker rm -f db01
@@ -477,18 +477,18 @@ Kui Git vastab `nothing to commit`, ei muutnud sa selles osas kaustas `k03-docke
 Ehitad db01 ja web01 image'id ametlike image'ite põhjal. Ametlik image teeb juba suure osa tööst, seega kirjutad Dockerfile'i ainult puuduva osa jaoks ja baasimage'i turvaparandused tulevad uuendusega kaasa.
 
 **Eesmärk:** image'id `labseis-db` ja `labseis-web` ehituvad sinu Dockerfile'idest. Nginx'i konfiguratsioonifail `web/nginx.conf` on starteris valmis.  
-**Kontroll:** `docker image ls 'labseis-*'` näitab mõlemat image'it ja `k03 files` annab `OK`.  
+**Kontroll:** `docker image ls 'labseis-*'` näitab mõlemat image'it. Kõiki faile kontrollib `k03 files` pärast 4. osa.  
 **Kus:** control, kaust `~/kursus/k03-docker`.
 
 Rakenduse failid on repositooriumi juures (`pom.xml`, `src/`, `db/`) ja jäävad puutumata, Dockerfile'id ainult loevad neid. db ja app vajavad neid faile, seega on nende **ehituskontekst** repositooriumi juur `..`. web'i kontekst on tema oma kaust.
 
 ```text
 ~/kursus/
-├── .dockerignore                      ← 2.6
+├── .dockerignore                      ← 2.3
 ├── pom.xml  src/  db/                 ← rakendus, ei muuda
 └── k03-docker/
-    ├── db/Dockerfile                  ← 2.2
-    ├── web/Dockerfile  web/nginx.conf ← 2.4
+    ├── db/Dockerfile                  ← 2.1
+    ├── web/Dockerfile  web/nginx.conf ← 2.2
     ├── app/Dockerfile                 ← 3. osa
     └── compose.yaml  .env.example     ← 4. osa
 ```
@@ -658,7 +658,7 @@ Tabel 3.2 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitu
 
 Täida starteri `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/multi-stage/) tabeli järgi. Kirjuta see ise, ühe astmega näidet ära kopeeri.
 
-??? example "Lahendus: `app/Dockerfile` (esimene versioon)"
+??? example "Lahendus: `app/Dockerfile`"
 
     ```dockerfile
     ARG HUB=docker.io/library
@@ -691,7 +691,7 @@ docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 
 ??? success "Oodatav tulemus"
 
-    `multi` on mitusada MB väiksem kui `naive`. `history` ülemistes ridades on WAR (umbes 50–60 MB) Maveni kihte pole, ja label'is on sinu SHA. Suuruse vahe tuleb JDK-st, Mavenist ja kaustast `~/.m2`. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
+    `history` ülemistes ridades on WAR (umbes 50–60 MB), Maveni kihte pole, ja label'is on sinu SHA. Maven, JDK ja kaust `~/.m2` jäid ehitusastmesse ega jõudnud lõppimage'isse. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
 ### 3.2 Commit
 
@@ -704,7 +704,7 @@ Enne commit'i käivita automaatkontrolli test, mis kontrollib app-Dockerfile'i �
 
 ??? success "Oodatav tulemus"
 
-    `multistage` annab `OK` ja `Dockerfile.naive` pole Gitis. `multistage` vaatab ainult faili kuju: kaks `FROM`-i ja `COPY --from`. Kas image töötab, nägid ise. Automaatkontrolli `build` ehitab selle esitamisel puhtast kloonist.
+    `multistage` annab `OK`. Test vaatab ainult faili kuju: kaks `FROM`-i ja `COPY --from`. Kas image töötab, näed 4. osas, kui app01 käivitub Compose'iga. Automaatkontrolli `build` ehitab selle esitamisel puhtast kloonist.
 
 ## Osa 4 · Kogu stack Compose'iga
 
@@ -990,7 +990,7 @@ git status --short
 
 ## Osa 5 · Harbor
 
-Lükkad oma image'id Harborisse, kust 5. kohtumise konveier ja 7. kohtumise klaster neid tõmbavad. Harbor skannib iga image'i Trivy'ga.
+Lükkad oma image'id Harborisse. Registry'st saab sama image'i tõmmata iga masin, mis Harborini jõuab. Harbor skannib iga image'i Trivy'ga.
 
 **Eesmärk:** kolm image'it on sinu Harbori projektis SHA-tag'iga ja stack käivitub registry image'itest.  
 **Kontroll:** automaatkontrolli test `tags` annab `OK` ja Harbori veebiliideses on kolm repositooriumi.  
@@ -1066,7 +1066,7 @@ curl -s http://localhost:8080/version; echo
 
 ??? success "Oodatav tulemus"
 
-    `pull` tõmbas app-, db- ja web-image'i Harborist (olemasolevad kihid `Already exists`), `docker compose images` näitab Harbori nimesid SHA-tag'iga ja `/version` sama SHA-d. Töötav kood on tõendatavalt see, mis on Gitis. 4. osas lisatud tulemus on andmebaasis alles, sest `down` ilma `-v`-ta ei puuduta volume'eid.
+    `pull` tõmbas app-, db- ja web-image'i Harborist (olemasolevad kihid `Already exists`), `docker compose images` näitab Harbori nimesid SHA-tag'iga ja `/version` sama SHA-d. Töötav kood on tõendatavalt see, mis on Gitis.  Andmebaasi andmed on alles, sest `down` ilma `-v`-ta ei puuduta volume'eid.
 
 ??? warning "Kui `pull` ebaõnnestub teatega `current image with … vulnerabilities cannot be pulled`"
 
@@ -1075,7 +1075,7 @@ curl -s http://localhost:8080/version; echo
 ### 5.3 Commit
 
 ```bash
-(cd ~/kursus && git add k03-docker && git status --short && git commit -m "k03: image'id Harboris" && git push)
+(cd ~/kursus && git add k03-docker && git status --short; git commit -m "k03: image'id Harboris"; git push)
 ```
 
 ??? success "Oodatav tulemus"
@@ -1084,7 +1084,7 @@ curl -s http://localhost:8080/version; echo
 
 ## Osa 6 · Enne esitamist
 
-Konveier võtab 5. kohtumisel sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need `main`-is on. Käivitad samad kontrollid ise.
+Automaatkontroll võtab sinu `compose.yaml`-i, Dockerfile'id ja `.env.example`-i täpselt sellisel kujul, nagu need GitHubis on. Käivitad samad kontrollid ise.
 
 **Eesmärk:** GitHubis on kõik vajalikud failid ja image'id ehituvad.  
 **Kontroll:** kuus automaatkontrolli testi annavad `OK`.  
@@ -1097,7 +1097,7 @@ Automaatkontroll näeb ainult repositooriumi. Kontrolli Compose'i faile ja Docke
 ```bash
 docker compose -f compose.yaml config -q && echo compose OK
 for d in app db; do docker build --check -f $d/Dockerfile ..; done
-for d in web kontroll; do docker build --check $d; done
+docker build --check web
 (cd .. && for t in files compose deps multistage tags build; do bash autograde/check.sh k03 "$t"; done)
 git ls-files .. | grep -E '(^|/)\.env$|secrets/|backup/|\.pem$|\.key$|tfstate'
 docker compose up -d --wait
@@ -1106,7 +1106,7 @@ git status --short
 
 ??? success "Oodatav tulemus"
 
-    `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et ükski saladus ega varukoopia pole Giti ajalukku jõudnud.
+    `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et jälgitavate failide hulgas pole nende nimedega faile. See ei tõesta, et failide sisus või varasemates commit'ides pole saladusi.
 
 ## Töö esitamine
 
@@ -1138,7 +1138,7 @@ Tulemuse näed Classroom 50-s.
     git tag -f k03 && git push -f origin k03
     ```
 
-Jäta Compose'i stack control'is tööle, sest 5. kohtumisel on seda vaja.
+Võid jätta stacki control'is tööle. Järgmisel kohtumisel saad kasutada oma lahendust, aga alustamiseks on olemas ka koolitaja valmis starter.
 
 ## Rikkeotsing
 
@@ -1163,7 +1163,6 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | MariaDB `Exited (1)` kohe | `docker logs db01 \| tail -5` | root-parooli muutuja puudub (`MARIADB_ROOT_PASSWORD`) | entrypoint keeldub initsialiseerimast baasi, millel pole root-parooli määratud |
     | konteineri IP ei vasta sülearvutist | `docker port <konteiner>` | konteineri IP on ainult hostis: kasuta avaldatud porti | `docker0` sild on hosti sisevõrk ja väljast sinna marsruuti pole |
     | `wget` sisemisest võrgust ootab kaua ja ebaõnnestub | `docker network inspect -f '{{.Internal}}' <võrk>` | ootuspärane: `internal` võrgul pole väljapääsu | sisemisel võrgul pole vaikemarsruuti ega NAT-i välja |
-    | `rm -rf ~/k03-bind`: `Permission denied` | `ls -ln ~/k03-bind` | failid kuuluvad UID 999-le: `sudo rm -rf` | konteiner kirjutas bind mount'i oma UID-ga ja tuum kontrollib hostis sama numbrit |
     | `dockerd --validate`: `unknown flag: --validate` | `dockerd --version` | Docker on vanem kui 23; paigalda ametlikust repositooriumist (1.2) | konfiguratsiooni kontrollimise võti lisati daemonile versioonis 23 |
     | `systemctl restart docker` järel `failed`, `docker ps` ei vasta | `sudo journalctl -u docker -n 20`, `sudo dockerd --validate --config-file /etc/docker/daemon.json` | `daemon.json` on vigane või sama võti on ka unit'i `ExecStart` real | daemon loeb faili ainult käivitusel ja keeldub käivitumast, kui JSON on vigane või võti on kahes kohas |
     | `docker info` näitab `overlayfs`, juhend räägib `overlay2`-st | `docker info \| grep -A1 'Storage Driver'` | ootuspärane: uus paigaldus kasutab containerd'i image store'i | Docker 29 vaikimisi salvestus on containerd'i snapshotter, uuendatud masinad jäävad `overlay2` peale |
@@ -1172,8 +1171,6 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `--env-file`: väärtuses on jutumärgid | `cat <fail>` | eemalda failist jutumärgid | `docker run --env-file` loeb rea sõna-sõnalt; jutumärke tõlgendab ainult Compose'i `.env` |
     | `--env-file`: `variable '…' contains whitespaces` | `grep -n ' ' <fail>` | real on `export` või tühik võtme ees | võtme nimi on kõik märgid `=` märgini ja tühik nimes pole lubatud |
     | `docker stop` kestab 10 s, image käivitab lihtsa skripti või `sleep`-i | `docker top <k>` | PID 1 ei käsitle SIGTERM-i: lisa `--init` (Compose'is `init: true`) | tuum ei rakenda PID 1-le signaali vaikekäitumist; init annab signaali edasi |
-    | `--mount`: `bind source path does not exist` | `ls -ld <tee>` | tee on vale või kaust loomata | `--mount` ei loo puuduvat allikat, `-v` lõi selle hoiatuseta ja omanikuks sai root |
-    | `-v` järel on konteineris tühi kaust ootuspärase faili asemel | `ls -ld <hosti tee>` | hosti tee oli vale ja Docker lõi tühja kausta | `-v` loob puuduva allika kaustana; kasuta `--mount`-i, mis annab vea |
     | `docker exec`: `container … is not running` | `docker ps -a`, `docker logs <k>` | konteiner ebaõnnestus: vaata logi või käivita sama image `--entrypoint sh` | `exec` vajab töötavat PID 1 protsessi, mille namespace'idesse siseneda |
 
 ??? note "Tabel 3.5. Osa 2 · db ja web image"
@@ -1198,9 +1195,6 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | Maven laeb iga build'iga kõik sõltuvused | `grep -n COPY k03-docker/app/Dockerfile` | `src` kopeeritakse enne `dependency:go-offline`-i | koodi muutus muudab `COPY src` kihi ja kõik järgnevad, sh sõltuvuste allalaadimine, käivituvad uuesti |
     | `docker stop` kestab 10 s | `docker exec <k> cat /proc/1/cmdline \| tr '\0' ' '` | CMD on shell-vormis, PID 1 on `sh` | `sh -c` ei edasta SIGTERM-i lapsele; Docker ootab 10 s ja saadab SIGKILL-i |
     | app konteiner `unhealthy` ilma andmebaasita | `docker exec <k> curl -s localhost:8080/health/live` | ootuspärane: `/health` annab 503, kui db pole | `/health` kontrollib sõltuvusi, `/health/live` ainult protsessi |
-    | Tomcat ei käivitu pärast `USER 10001`, logis `Permission denied` | `docker run --rm --entrypoint ls labseis-app:multi -ln /usr/local/tomcat` | mõni kirjutatav kaust (`logs`, `temp`, `work`, `webapps`, `conf/Catalina`) kuulub root'ile | Tomcat pakib WAR-i lahti ja kirjutab logisid; mitte-root kasutaja vajab neis kaustades omandit |
-    | `useradd: UID 10001 is not unique` | `docker run --rm --entrypoint getent tomcat:10.1-jre21-temurin passwd 10001` | baasimage'is on see UID juba olemas: vali teine | UID peab olema image'i `/etc/passwd`-is unikaalne |
-    | `naive` ja `multi` on peaaegu sama suured | `docker history labseis-app:multi \| head -8` | käitusaste kopeerib midagi suurt build-astmest või baas on vale | `COPY --from` kopeerib selle, mis antud teel on; vale tee toob kaasa `~/.m2` või kogu `/src` |
     | `k03 tags` FAIL app-image'i järel | `ls k03-docker/compose.yaml` | test vajab ka `compose.yaml`-i, mis tekib Compose'i lehel | test loeb ametlike image'ite tag'id Compose'i failist |
     | `grep upperdir … mountinfo`: `Permission denied` või tühi | `docker inspect -f '{{.State.Pid}}' <k>` | `sudo` puudu või konteiner ei tööta | teise protsessi `mountinfo` on loetav ainult root'ile ja ainult töötava protsessi kohta |
 
