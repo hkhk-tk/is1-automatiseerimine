@@ -724,18 +724,18 @@ Enne salvestamist käivita automaatkontrolli test, mis vaatab, kas Dockerfile on
 
 ## Osa 4 · Kogu stack Compose'iga
 
-Kirjeldad kogu rakenduse Labori seis ühes failis `compose.yaml`. Viis pikka `docker run` käsku shelli ajaloos ei näita, kuidas teenused käivitati. Compose'i fail on Gitis ja `docker compose up -d` viib süsteemi failis kirjeldatud olekusse, nagu playbook Ansible'is. Kirjutad faili ühe teenuse kaupa ([failivormingu viide](https://docs.docker.com/reference/compose-file/services/)) ja kontrollid iga teenuse järel tulemust.
+1. osas käivitasid kolm teenust pikkade `docker run` käskudega. Nüüd kirjeldad kõik viis teenust ühes failis `compose.yaml`. Fail on Gitis ja üks käsk `docker compose up -d` käivitab kõik teenused nii, nagu failis kirjas. See sarnaneb Ansible'i playbook'iga, mis kirjeldab soovitud olekut.
 
-**Eesmärk:** viis teenust käivituvad ühe käsuga, andmebaasi andmed jäävad volume'isse ja app01 ootab, kuni sõltuvused on valmis.  
-**Kontroll:** `docker compose up -d --wait` ja `curl -s localhost:8080/health` annab neli `UP`-i; automaatkontrolli testid `compose` ja `deps` annavad `OK`.  
-**Kus:** control, kaust `~/kursus/k03-docker`, põhistack `compose.yaml`.
+**Eesmärk:** viis teenust käivituvad ühe käsuga ja rakendus vastab brauseris.  
+**Kontroll:** `curl -s localhost:8080/health` näitab nelja `UP`-i ning testid `compose` ja `deps` annavad `OK`.  
+**Kus:** control, kaust `~/kursus/k03-docker`.
 
 <figure markdown="span">
   ![Brauser pöördub pordil 8080 web01 poole, web01 app01 poole, app01 db01, mc01 ja rmq01 poole; kõik on projekti võrgus labori-seis_default](assets/k03_compose_stack.svg)
   <figcaption>Joonis 3.5. Labori seis Compose'i stackina (Talvik, 2026).</figcaption>
 </figure>
 
-Tabel 3.2 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hostis avatud“ näitab, millised teenused on väljast nähtavad. Kõik teised suhtlevad ainult projekti võrgus. Ehitataval teenusel on image'i nimi `${REGISTRY:?}/${OWNER:?}/labori-seis-<db|app|web>:${TAG:-dev}`, ametlikul image'il on ees `${HUB:-docker.io/library}/`.
+Brauser pöördub veebiserveri `web01` poole, see rakenduse `app01` poole ja rakendus kasutab kolme teenust. Väljast on nähtav ainult `web01` ja RabbitMQ halduse leht, teised suhtlevad ainult omavahel. Tabelis 3.2 on iga teenuse image ja tervisekontroll.
 
 ??? note "Tabel 3.2. Stacki teenused"
 
@@ -747,9 +747,11 @@ Tabel 3.2 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hosti
     | app01 | sinu `app/Dockerfile`, kontekst `..` | ei | Dockerfile'ist |
     | web01 | sinu `web/`, kontekst `./web` | `${WEB_PORT:-8080}:80` | Dockerfile'ist |
 
-### 4.1 .env ja db01
+Starteri `compose.yaml`-is on `db01` TODO-ridadega ja teised teenused kommentaarina. Täida teenused ükshaaval ja eemalda kommentaarimärgid alles siis, kui hakkad teenust täitma. Iga teenuse järel käivita see ja vaata, kas see töötab ([Compose'i faili juhend](https://docs.docker.com/reference/compose-file/services/)).
 
-Starteri `compose.yaml`-is on db01 TODO-ga ja ülejäänud teenused kommentaaris. Täidad teenused ükshaaval: eemaldad kommentaarimärgid alles siis, kui hakkad seda teenust täitma, sest Compose kontrollib kogu faili ja kontrollid iga teenuse järel tulemust. Alustad saladustest ja andmebaasist, sest kõik teised sõltuvad neist. `.env` hoiab paroole ja jääb Gitist välja. Starteri `.env.example` näitab, milliseid muutujaid on vaja, ja on Gitis; automaatkontroll kasutab just seda faili. Compose loeb `.env`-i projekti kaustast ja asendab `${VAR}` viited enne, kui fail üldse valideeritakse.
+### 4.1 Paroolid ja andmebaas
+
+Paroolid ei kuulu `compose.yaml`-i, sest see fail on Gitis. Need on failis `.env`, mis jääb Gitist välja. Compose loeb `.env`-i ise ja asendab failis viited kujul `${DB_PASSWORD}` sealsete väärtustega. Starteri `.env.example` näitab, milliseid muutujaid on vaja, ja see on Gitis.
 
 ??? example "Fail `.env.example` (starteris)"
 
@@ -767,20 +769,27 @@ Starteri `compose.yaml`-is on db01 TODO-ga ja ülejäänud teenused kommentaaris
 
     `HUB=docker.io/library` on näidisfailis meelega: GitHubi automaatkontroll Harborit ei näe ja tõmbab Docker Hubist.
 
-Loo selle põhjal fail `.env` oma väärtustega. `OWNER` on sinu GitHubi kasutajanimi väikeste tähtedega, `HUB` sama mis shellis:
+Tee `.env.example`-ist oma `.env`. Teine käsk paneb sinna sinu `HUB` väärtuse ja GitHubi kasutajanime. `nano`-s pane paroolideks oma väärtused.
 
 ```bash
 cp .env.example .env && chmod 600 .env
 sed -i -e "s|^HUB=.*|HUB=$HUB|" -e "s|^OWNER=.*|OWNER=<github-kasutaja>|" .env
-nano .env          # paroolid
+nano .env
 git check-ignore -v .env
 ```
 
-Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. `HUB` on sul `.bashrc`-is, seepärast on `.env`-is sama väärtus. Kui `.env`-i muudatus ei mõju, kontrolli käsuga `printenv HUB` (või muu muutuja nimega), kas see on shellis määratud. Paroolide väärtusi ära kleebi küsimustesse ega ekraanipiltidele.
+Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. Kontrolli seda käsuga `printenv HUB` (või muu muutuja nimega). Paroolide väärtusi ära kleebi küsimustesse ega ekraanipiltidele.
 
-??? example "Ülesanne: db01 `compose.yaml`-is"
+Nüüd täida `compose.yaml`-is teenus `db01`. Vaja on järgmist.
 
-    Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.2 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
+1. Faili algusesse projekti nimi `name: labori-seis`.
+2. Teenus `db01` ehitatakse sinu `db/Dockerfile`-ist. Ehituskontekst on `..` ja argument `HUB`.
+3. Image'i nimi on `${REGISTRY:?}/${OWNER:?}/labori-seis-db:${TAG:-dev}`.
+4. Muutujad nagu 1.8-s, aga paroolid tulevad `.env`-ist.
+5. Andmed on nimega volume'is `dbdata` kataloogis `/var/lib/mysql`.
+6. Tervisekontroll tabelist 3.2, kontroll iga 10 sekundi järel ja kuni 10 korda.
+
+??? example "Lahendus: `db01`"
 
     ```yaml
     name: labori-seis
@@ -809,7 +818,7 @@ Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõj
       dbdata:
     ```
 
-    `${VAR:?}` katkestab, kui muutujat pole. `${VAR:-x}` annab vaikeväärtuse.
+    `${VAR:?}` katkestab käivituse, kui muutuja puudub. `${VAR:-x}` annab muutujale vaikeväärtuse `x`.
 
 ```bash
 docker compose up -d --build db01
@@ -818,17 +827,23 @@ sleep 25; docker compose ps
 
 ??? success "Oodatav tulemus"
 
-    db01 on `Up (healthy)`. `(healthy)` tähendab rohkem kui `Up`: MariaDB healthcheck kontrollis, et InnoDB on algseadistatud ja ühendusi võetakse vastu. Ainult seda olekut saavad teised teenused `depends_on`-iga oodata.
+    `db01` on olekus `Up (healthy)`. `Up` tähendab, et konteiner töötab. `(healthy)` tähendab lisaks, et tervisekontroll õnnestus ja MariaDB võtab ühendusi vastu. Teised teenused ootavad just seda olekut.
 
-??? warning "Kui `required variable DB_ROOT_PASSWORD is missing`"
+??? warning "Kui tuleb viga `required variable DB_ROOT_PASSWORD is missing`"
 
-    `.env` puudub või oled vales kaustas. `${VAR:?}` teebki täpselt seda.
+    Fail `.env` puudub või käivitasid käsu vales kaustas. Käsk peab olema kaustas `~/kursus/k03-docker`.
 
-### 4.2 mc01 ja rmq01
+### 4.2 Vahemälu ja sõnumijärjekord
 
-Kaks backend'i teenust käivitad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Avatud Memcachedi port on tuntud ründevektor: vahemälust saab lugeda kõike, mis sinna pandi, ja UDP kaudu on seda kasutatud võimendusrünnakuteks. Porti, mida väljast ei vajata, ei avaldata.
+Teenused `mc01` ja `rmq01` tulevad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Nende porte väljast vaja ei ole, nii et neid ei avalda. Avatud vahemälust saaks igaüks lugeda kõike, mis sinna pandi.
 
-Nõuded: rmq01-l `hostname: rmq01`, kasutaja `labseis` ja parool `.env`-ist (muutujad nagu `docker run -e`-ga), andmed volume'is `rmqdata` (`/var/lib/rabbitmq`); hostis on avatud ainult RabbitMQ halduse UI port `15672`, mc01-l `ports:` pole; healthcheck tabelist, toruga käsk vajab `CMD-SHELL` kuju; volume `rmqdata` on faili lõpus jaotises `volumes:` juba olemas.
+Lisa `compose.yaml`-i kaks teenust.
+
+1. `mc01` image'ist `memcached:1.6-alpine`, ilma `ports:` reata.
+2. `rmq01` image'ist `rabbitmq:4.1-management-alpine`, hostinimi `rmq01`, kasutaja `labseis` ja parool `.env`-ist.
+3. `rmq01` andmed on volume'is `rmqdata` kataloogis `/var/lib/rabbitmq`. Volume on faili lõpus jaotises `volumes:` juba olemas.
+4. Hostis avalda ainult RabbitMQ halduse lehe port `15672`.
+5. Tervisekontrollid tabelist 3.2. Kui kontrollkäsus on toru `|`, kirjuta see kujul `CMD-SHELL`.
 
 ??? example "Lahendus: mc01 ja rmq01"
 
@@ -878,7 +893,7 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
 ??? success "Oodatav tulemus"
 
-    Kolm teenust on `(healthy)` ja halduse UI näitab node'i `rabbit@rmq01`. Nimi tuleb võtmest `hostname`. Ilma selleta oleks nimi konteineri juhuslik ID ja iga uus konteiner leiaks volume'ist võõra node'i andmed: järjekorrad oleksid tühjad, kuigi andmed on kettal alles.
+    Kolm teenust on `(healthy)` ja halduse leht näitab nime `rabbit@rmq01`. Nimi tuleb hostinimest `rmq01`. Ilma selleta saaks iga uus konteiner juhusliku nime ja RabbitMQ ei kasutaks enam volume'is olevaid andmeid.
 
 ### 4.3 app01
 
