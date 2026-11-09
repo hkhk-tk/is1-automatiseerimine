@@ -56,7 +56,7 @@ git switch main
 git pull
 git switch -c k03-docker
 cd k03-docker
-ls -R
+ls -AR
 git check-ignore -v .env
 ```
 
@@ -249,7 +249,7 @@ docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 
 ??? success "Oodatav tulemus"
 
-    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. IMAGE ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
+    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
 
 ??? warning "Kui `x509: certificate signed by unknown authority`"
 
@@ -302,7 +302,7 @@ docker rmi $HUB/nginx:1.30-alpine
 
 ??? success "Oodatav tulemus"
 
-    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama IMAGE ID-d Harbori nime all edasi: kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
+    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama ID-d Harbori nime all edasi: kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
 
 **Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta:
 
@@ -321,7 +321,7 @@ Konteineris käivita `cat /proc/1/comm` ja `ps`, siis `exit`.
 
 ??? success "Oodatav tulemus"
 
-    Esimene Ubuntu lõpetas kohe koodiga 0: bash ilma terminalita sai sisendist kohe faililõpu ja väljus. `-it`-ga on PID 1 `bash`. Ubuntu image'is pole käsku `ps`: image'is on ainult see, mida peaprotsess vajab.
+    Esimene Ubuntu lõpetas kohe koodiga 0: bash ilma terminalita sai sisendist kohe faililõpu ja väljus. `-it`-ga on PID 1 `bash`.
 
 ### 1.7 Pordid ja konteineri IP
 
@@ -441,6 +441,10 @@ docker inspect -f '{{json .Mounts}}' db01 | jq
 
     Rida `42` on alles. `Mounts` näitab tüüpi `volume` ja allikat `/var/lib/docker/volumes/dbtest/_data`: andmed on hostis Dockeri kataloogis, mitte konteineris.
 
+??? warning "Kui tuleb `ERROR 2002` või `Access denied`"
+
+    MariaDB käivitub umbes 15 sekundit. `ERROR 2002 … mysqld.sock` tähendab, et server pole veel valmis. Oota 15 sekundit ja proovi uuesti. Kui tuleb `Access denied`, kustutati konteiner enne, kui MariaDB jõudis andmebaasi luua. Siis alusta 1.8-st uuesti: `docker rm -f db01; docker volume rm dbtest`.
+
 <figure markdown="span">
   ![Konteineri db01 kataloog /var/lib/mysql võib olla kirjutatavas kihis, nimega volume'is või bind mount'is; kirjutatav kiht kaob docker rm-iga, ülejäänud jäävad alles](assets/k03_l_andmed.svg)
   <figcaption>Joonis 3.3. Kolm kohta, kuhu konteineri andmed võivad sattuda (Talvik, 2026).</figcaption>
@@ -515,6 +519,7 @@ Ehita ja kontrolli. `--build-arg HUB` ilma väärtuseta võtab väärtuse sinu s
 docker build --build-arg HUB -f db/Dockerfile -t labseis-db:test ..
 docker run -d --name dbt -e MARIADB_ROOT_PASSWORD=x -e MARIADB_DATABASE=labseis labseis-db:test
 sleep 20; docker exec dbt mariadb -uroot -px labseis -e "SHOW TABLES;"
+docker rm -f dbt
 ```
 
 ??? success "Oodatav tulemus"
@@ -583,12 +588,6 @@ docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_
 
 Ehituskontekst on kõik, mis saadetakse builderile enne esimest juhist. Docker ei vaata, mida Dockerfile tegelikult kasutab. Kõik, mis on kontekstis, võib `COPY . .` abil image'isse jõuda, ka `.env` paroolidega ja OpenTofu `tfstate`. Saladus image'is jõuab igasse koopiasse: registry'sse, iga masina kettale ja igaühele, kes image'i tõmbab. Kustutamine hilisemas kihis ei aita, sest varasem kiht on alles.
 
-Mõõda praegust ehituskonteksti:
-
-```bash
-docker build --no-cache --build-arg HUB -f db/Dockerfile .. 2>&1 | grep -i 'transferring context'
-```
-
 Loo repositooriumi juurde [`.dockerignore`](https://docs.docker.com/build/concepts/context/) lubamisnimekirjana (allowlist): esimene rida `*`, siis `!` ridadega tagasi ainult see, mida Dockerfile'id kopeerivad.
 
 ??? example "Lahendus: `~/kursus/.dockerignore`"
@@ -603,13 +602,13 @@ Loo repositooriumi juurde [`.dockerignore`](https://docs.docker.com/build/concep
     Reeglid loetakse ülevalt alla ja hilisem reegel kirjutab varasema üle. `*` jätab välja kõik, `!` read toovad tagasi ainult vajaliku.
 
 ```bash
-docker build --no-cache --build-arg HUB -f db/Dockerfile .. 2>&1 | grep -i 'transferring context'
+docker build -q --build-arg HUB -f db/Dockerfile -t labseis-db:test ..
 (cd .. && bash autograde/check.sh k03 files)
 ```
 
 ??? success "Oodatav tulemus"
 
-    Kontekst langes megabaitidelt mõnesaja kilobaidini, db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole. Väiksem kontekst tähendab kiiremat ehitust, aga peamine võit on turvalisus. Lubamisnimekirjaga ei jõua uus fail image'isse enne, kui sa selle ise lubad. Keelunimekirja (`.env`, `.git`) tuleb iga uue saladusefailiga täiendada, ja see ununeb.
+    db-image ehitub endiselt ja `k03 files` annab `OK` või kurdab ainult app-image'i ja Compose'i failide üle, mida sul veel pole. `.dockerignore` on kaitse. Kui Dockerfile'is on kunagi `COPY . .`, ei jõua `.env` ega `.git` image'isse. Lubamisnimekirjaga ei jõua uus fail image'isse enne, kui sa selle ise lubad. Keelunimekirja (`.env`, `.git`) tuleb iga uue saladusefailiga täiendada, ja see ununeb.
 
 ### 2.4 Commit
 
@@ -622,7 +621,7 @@ git ls-files
 
 ??? success "Oodatav tulemus"
 
-    `git status` on puhas ja `git ls-files` näitab faile `db/Dockerfile`, `web/Dockerfile` ja `web/nginx.conf`.
+    `git ls-files` näitab faile `db/Dockerfile`, `web/Dockerfile` ja `web/nginx.conf`.
 
 ## Osa 3 · App image
 
@@ -686,7 +685,7 @@ docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
 
 ??? success "Oodatav tulemus"
 
-    `history` ülemistes ridades on WAR (umbes 50–60 MB), Maveni kihte pole, ja label'is on sinu SHA. Maven, JDK ja kaust `~/.m2` jäid ehitusastmesse ega jõudnud lõppimage'isse. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
+    `history` ülemistes ridades on WAR (umbes 30 MB), Maveni kihte pole, ja label'is on sinu SHA. Maven, JDK ja kaust `~/.m2` jäid ehitusastmesse ega jõudnud lõppimage'isse. Kui näed `history` ülemistes ridades Maveni kihte, kopeerib käitusaste valest kohast. Label SHA-ga ütleb hiljem registry's, millisest commit'ist image tehti, ilma Giti vaatamata.
 
 ### 3.2 Commit
 
@@ -807,7 +806,7 @@ sleep 25; docker compose ps
 
 Kaks backend'i teenust käivitad otse ametlikest image'itest, oma Dockerfile'i pole vaja. Avatud Memcachedi port on tuntud ründevektor: vahemälust saab lugeda kõike, mis sinna pandi, ja UDP kaudu on seda kasutatud võimendusrünnakuteks. Porti, mida väljast ei vajata, ei avaldata.
 
-Nõuded: rmq01-l `hostname: rmq01`, kasutaja `labseis` ja parool `.env`-ist (muutujad nagu `docker run -e`-ga), andmed volume'is `rmqdata` (`/var/lib/rabbitmq`); hostis on avatud ainult RabbitMQ halduse UI port `15672`, mc01-l `ports:` pole; healthcheck tabelist, toruga käsk vajab `CMD-SHELL` kuju; lisa uus volume ka faili lõpus olevasse jaotisse `volumes:`.
+Nõuded: rmq01-l `hostname: rmq01`, kasutaja `labseis` ja parool `.env`-ist (muutujad nagu `docker run -e`-ga), andmed volume'is `rmqdata` (`/var/lib/rabbitmq`); hostis on avatud ainult RabbitMQ halduse UI port `15672`, mc01-l `ports:` pole; healthcheck tabelist, toruga käsk vajab `CMD-SHELL` kuju; volume `rmqdata` on faili lõpus jaotises `volumes:` juba olemas.
 
 ??? example "Lahendus: mc01 ja rmq01"
 
@@ -1025,7 +1024,7 @@ Ava Harboris oma projekt ja vali **Repositories**.
 
 ??? success "Oodatav tulemus"
 
-    Harboris on kolm repositooriumi tag'iga `<lühike SHA>`, web-image'i kahel real on sama IMAGE ID ja teine push ütles iga kihi kohta `Layer already exists`. Registry hoiab kihte, mitte terveid image'eid: sama sisuga kiht salvestatakse üks kord. Uus tag on ainult uus nimi sama manifesti juurde, seepärast on IMAGE ID mõlemal real sama.
+    Harboris on kolm repositooriumi tag'iga `<lühike SHA>`, web-image'i kahel real on sama ID ja teine push ütles iga kihi kohta `Layer already exists`. Registry hoiab kihte, mitte terveid image'eid: sama sisuga kiht salvestatakse üks kord. Uus tag on ainult uus nimi sama manifesti juurde, seepärast on IMAGE ID mõlemal real sama.
 
 ??? warning "Kui `denied: requested access to the resource is denied`"
 
@@ -1075,7 +1074,7 @@ curl -s http://localhost:8080/version; echo
 
 ??? success "Oodatav tulemus"
 
-    Commit on GitHubis ja `git status` ei näita `.env`-i ega `secrets/`-i.
+    `git status` ei näita `.env`-i ega `secrets/`-i. Kui Git vastab `nothing to commit`, on see ootuspärane, sest selles osas muutus ainult `.env`, mis jääb Gitist välja.
 
 ## Osa 6 · Enne esitamist
 
@@ -1178,7 +1177,6 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `nginx -T` näitab `${NGINX_LOCAL_RESOLVERS}` muutmata kujul | `docker run --rm labseis-web:test ls /etc/nginx/templates` | `ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1` puudub või fail pole `templates/` all | envsubst käsitleb ainult `templates/*.template` faile ja asendab ainult defineeritud muutujad |
     | web konteiner `Exited (1)`, logis `host not found in upstream` | `docker run --rm labseis-web:test nginx -T \| grep proxy_pass` | `proxy_pass` kasutab nime otse, mitte muutujat `$app_upstream` | staatiline upstream lahendatakse käivitusel ja lahendamata nimega nginx ei käivitu |
     | web annab 502 ja logis `could not be resolved` | `docker network inspect <võrk>` | app01 pole samas võrgus või pole veel käivitunud | muutujaga `proxy_pass` lahendab nginx nime päringu ajal ja vastab 502-ga, kui nimi ei lahendu |
-    | `transferring context` on ikka MB-d | `head -3 .dockerignore` | `.dockerignore` pole repo juures või esimene rida pole `*` | builder loeb `.dockerignore` ainult konteksti juurest |
     | `k03 files`: `.dockerignore ei jäta .env faili välja` | `grep -n env .dockerignore` | denylist'is puudub `**/.env`; allowlist'iga (`*`) seda viga ei tule | ilma `**/` eesliiteta kehtib muster ainult konteksti juures, mitte `k03-docker/.env`-ile |
 
 ??? note "Tabel 3.6. Osa 3 · App image"
