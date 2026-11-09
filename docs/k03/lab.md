@@ -62,22 +62,11 @@ git check-ignore -v .env
 
 ??? success "Oodatav tulemus"
 
-    Kaustas on `.env.example`, `web/nginx.conf`, mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile`, vigane `intsident/compose.yaml`, `docker.yml` ja `roles/docker/files/harbor-ca.crt`. Mallides on TODO-read ja need ei käivitu enne, kui oled need täitnud. `intsident/compose.yaml` on meelega vigane ja seda kasutab kursus IS2. `docker.yml` ja `roles/` on kodutöö jaoks. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: fail `.env`, kuhu tulevad paroolid, jääb Gitist välja juba enne, kui sa selle lood. Kõik selle kohtumise käsud käivitad kaustas `~/kursus/k03-docker`, kui juures pole kirjas teisiti.
+    Kaustas on mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile` ning failid `.env.example` ja `web/nginx.conf`. Mallid täidad selle praktikumi käigus. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: paroolidega fail `.env` jääb Gitist välja.
 
 ??? warning "Kui failid puuduvad"
 
-    Laadi need starterist (käivita kaustas `~/kursus/k03-docker`):
-
-    ```bash
-    B=https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/k03-docker
-    mkdir -p roles/docker/files intsident web db app
-    curl -fsSLo docker.yml "$B/docker.yml"
-    curl -fsSLo roles/docker/files/harbor-ca.crt "$B/roles/docker/files/harbor-ca.crt"
-    curl -fsSLo intsident/compose.yaml "$B/intsident/compose.yaml"
-    for f in .env.example compose.yaml web/nginx.conf web/Dockerfile db/Dockerfile app/Dockerfile; do
-        curl -fsSLo "$f" "$B/$f"
-    done
-    ```
+    Kui `git pull` ei toonud kausta `k03-docker` faile, kirjuta koolitajale. Koolitaja saadab need sinu repositooriumisse.
 
 ### 1.2 Docker käsitsi
 
