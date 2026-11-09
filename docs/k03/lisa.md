@@ -9,6 +9,8 @@ tags:
 
 Ülesanded jätkavad praktikumi [Labori seis konteinerites](lab.md) stacki ja eeldavad selle osi, mis on ülesande juures kirjas.
 
+Kõik ülesanded on samas projektis ja iga ülesanne lõpeb kontrolliga. Failid lähevad kausta `k03-docker/` (ülesanne 15 kausta `vorgukogu/`). Docker Hubi image'id kirjuta kujul `$HUB/<image>` (näiteks `$HUB/nginx:1.30-alpine`), mitteametlikud kujul `harbor.lab.hkhk.lan/dockerhub/<omanik>/<image>` (näiteks `louislam/uptime-kuma:2`).
+
 ??? example "1 · Swarm ühel node'il"
 
 ??? example "1 · Swarm ühel node'il"
