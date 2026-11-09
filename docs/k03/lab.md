@@ -1286,39 +1286,32 @@ git ls-files | grep env
 
 ## Töö esitamine
 
-Töö jõuab harusse `main` pull request'iga ja esitatakse sildiga (tag) `k03`.
-
-Kui `git status --short` näitab veel muudatusi, salvesta need. Siis tee pull request.
+Esitamiseks saada viimased muudatused GitHubi ja pane tööle silt (tag) `k03`. Kui silt jõuab GitHubi, käivitab automaatkontroll testid.
 
 ```bash
 cd ~/kursus
 git status --short
-git add .dockerignore k03-docker && git commit -m "k03: valmis"
 git push
-gh pr create --base main --head k03-docker --title "K3 Docker" --body "3. kohtumise praktikum"
-```
-
-Kui muudatusi polnud, ütleb `git commit` `nothing to commit` ja see on korras. Kui käsku `gh` pole, ava oma repositoorium GitHubis ja vajuta **Compare & pull request**.
-
-Ühenda pull request GitHubis (**Merge pull request**). Seejärel pane harule `main` silt `k03`:
-
-```bash
-git switch main
-git pull
 git tag k03
 git push origin k03
 ```
 
-Tulemuse näed Classroom 50-s.
+Kui `git status` näitab veel muudatusi, salvesta need enne käskudega `git add .dockerignore k03-docker` ja `git commit -m "k03: valmis"`.
 
-??? warning "K3 tulemus on 0, kuigi töö on tehtud"
+Tulemuse näed Classroom 50-s mõne minuti pärast.
 
-    Silt `k03` osutab vanale commit'ile, sest pull request jäi ühendamata või haru ei jõudnud GitHubi. Ühenda pull request ja tõsta silt uuele commit'ile:
+??? warning "Kui parandad tööd pärast esitamist"
+
+    Silt osutab endiselt vanale commit'ile. Pärast parandust ja `git push`-i tõsta silt uuele commit'ile:
 
     ```bash
-    cd ~/kursus && git switch main && git pull
-    git tag -f k03 && git push -f origin k03
+    git tag -f k03
+    git push -f origin k03
     ```
+
+??? info "Pull request harusse `main`"
+
+    Töökohas ei lähe muudatus otse põhiharusse. Kõigepealt tehakse pull request, keegi vaatab muudatused üle ja alles siis ühendatakse need harusse `main`. Kui tahad seda proovida, ava oma repositoorium GitHubis, vajuta **Compare & pull request** ja seejärel **Merge pull request**. Hindamiseks seda vaja ei ole.
 
 Võid jätta stacki control'is tööle. Järgmisel kohtumisel saad kasutada oma lahendust, aga alustamiseks on olemas ka koolitaja valmis starter.
 

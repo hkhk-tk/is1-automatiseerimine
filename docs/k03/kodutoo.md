@@ -9,7 +9,7 @@ tags:
 
 Praktikumis paigaldasid Dockeri käsitsi ja käivitasid stacki käsuga. Kodutöös kirjutad paigalduse rolliks `docker` ja paned sama playbook'i käivitama ka Labori seisu stacki. Lõpuks võtab playbook paroolid 2. kohtumise Vaultist. Nii saab uue masina seadistada ühe käsuga. Kodutöö on boonus.
 
-Kodutöö teed harus `main` pärast seda, kui praktikumi pull request on ühendatud. Starteris on `docker.yml` ja `roles/docker/files/harbor-ca.crt`.
+Kodutöö teed samas harus `k03-docker`, kus oli praktikum. Starteris on `docker.yml` ja `roles/docker/files/harbor-ca.crt`.
 
 ## Osa 1 · Docker rolliga
 
