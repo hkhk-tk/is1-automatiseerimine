@@ -217,7 +217,7 @@ Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksu
 Harboris on kahte liiki projekte:
 
 - **`dockerhub`** on avalik **pull-through cache** (vahemälu). Esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tõmbed tulevad Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
-- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad 6. osas oma image'id.
+- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad 5. osas oma image'id.
 
 Harbori sertifikaadi on allkirjastanud kursuse oma CA, mida Ubuntu ei tunne. Docker usaldab registry't, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail, et ka `curl` ja Trivy Harborit usaldaksid. CA on starteris failina `roles/docker/files/harbor-ca.crt`.
 
@@ -258,7 +258,7 @@ docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 
 ??? info "Miks mitte `registry-mirrors`?"
 
-    Dockeri `daemon.json` võti `registry-mirrors` suunab Docker Hubi tõmbed teise serverisse, aga ainult sellisesse, kus image'id on juurtasemel (`/v2/library/nginx`). Harbori vahemälu on projekti all (`/dockerhub/library/nginx`), ja seda Docker ei toeta. Podman toetab, seda näed 7. osas. Seepärast on Dockeri image'ite nimes eesliide `$HUB`. GitHubi automaatkontroll Harborit ei näe (see on VPN-i taga) ja kasutab vaikimisi `docker.io/library`.
+    Dockeri `daemon.json` võti `registry-mirrors` suunab Docker Hubi tõmbed teise serverisse, aga ainult sellisesse, kus image'id on juurtasemel (`/v2/library/nginx`). Harbori vahemälu on projekti all (`/dockerhub/library/nginx`), ja seda Docker ei toeta. Podman toetab, seda näed lehel [Süvenemine](syvenemine.md). Seepärast on Dockeri image'ite nimes eesliide `$HUB`. GitHubi automaatkontroll Harborit ei näe (see on VPN-i taga) ja kasutab vaikimisi `docker.io/library`.
 
 ### 1.6 Engine hostis: teenus, kataloog ja konfiguratsioonifail
 
@@ -351,15 +351,17 @@ cat /proc/$PID/cgroup
 
     Hostis on Nginxil tavaline PID, konteineris on sama protsess PID 1. `lsns` näitab, et konteiner on hulk namespace'e ühe hostiprotsessi ümber, mitte eraldi masin.
 
-**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`?
+**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`? 1.5-s nägid, et sama Nginxi image on masinas kahe nimega. Eemalda kõigepealt Docker Hubi nimi, siis Harbori nimi:
 
 ```bash
+docker rmi nginx:1.30-alpine
+docker image ls
 docker rmi $HUB/nginx:1.30-alpine
 ```
 
 ??? success "Oodatav tulemus"
 
-    `rmi` annab vea `conflict` konteineri ID-ga. Konteiner kasutab image'i kihte ka peatatuna, seepärast tuleb enne kustutada kõik seda image'it kasutavad konteinerid.
+    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama IMAGE ID-d Harbori nime all edasi: kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
 
 **Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta:
 
@@ -611,8 +613,10 @@ docker ps -a
 ### 1.12 Commit
 
 ```bash
-(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker käsitsi ja konteinerid" && git push -u origin k03-docker)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker käsitsi ja konteinerid"; git push -u origin k03-docker)
 ```
+
+Kui Git vastab `nothing to commit`, ei muutnud sa selles osas kaustas `k03-docker` ühtegi faili. Haru jõuab GitHubi ka siis.
 
 ??? info "Miks see nii töötab"
 
@@ -1158,9 +1162,11 @@ nano .env          # paroolid
 git check-ignore -v .env
 ```
 
+Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. `HUB` on sul `.bashrc`-is, seepärast on `.env`-is sama väärtus. Kui `.env`-i muudatus ei mõju, kontrolli käsuga `echo $<MUUTUJA>`, kas see on shellis määratud.
+
 ??? example "Ülesanne: db01 `compose.yaml`-is"
 
-    Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.2 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
+    Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.3 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
 
     ```yaml
     name: labori-seis
@@ -1262,7 +1268,7 @@ Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
 
 ### 4.3 app01
 
-Rakendus käivitub backend'i teenuste järel, sest vajab kõiki kolme. Ilma tingimuseta `service_healthy` ebaõnnestub app01 esimesel käivitusel, sest MariaDB alles algseadistab. Logides on siis hulk ühendusvigu, mis peidavad tegeliku vea, kui see peaks tekkima.
+Rakendus käivitub backend'i teenuste järel, sest vajab kõiki kolme. Ilma tingimuseta `service_healthy` käivitub app01 ajal, kui MariaDB alles algseadistab. Rakendus ootab ja ühendub hiljem ise (seda näed 6. osas), aga logides on siis hulk ühendusvigu, mis peidavad tegeliku vea, kui see peaks tekkima.
 
 Nõuded: build nagu db01, aga oma Dockerfile ja argumendid `HUB` ja `GIT_SHA: ${TAG:-dev}`; image `${APP_IMAGE:-${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}}` (5. kohtumise konveier annab `APP_IMAGE`-iga valmis image'i); `environment`-is ainult kolm saladust (`DB_PASSWORD`, `RABBITMQ_PASSWORD`, `TEACHER_TOKEN`), hostinimed on rakenduses vaikeväärtustena olemas; `depends_on` kolmele teenusele, igaühel `condition: service_healthy`.
 
@@ -1291,15 +1297,14 @@ Nõuded: build nagu db01, aga oma Dockerfile ja argumendid `HUB` ja `GIT_SHA: ${
     ```
 
 ```bash
-docker compose up -d --build app01
-until docker compose exec app01 curl -fs localhost:8080/health/live; do sleep 5; done; echo
+docker compose up -d --build --wait --wait-timeout 180 app01
 docker compose logs app01 | grep -m1 'Server startup'
 docker compose exec app01 curl -s localhost:8080/health; echo
 ```
 
 ??? success "Oodatav tulemus"
 
-    `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja app01 on `(healthy)`. Neli `UP`-i tähendavad, et app01 jõudis iga backend'i teenuseni nime ja parooliga. `Server startup` logis ütleb, kui kaua Tomcat käivitus. See aeg on põhjus, miks healthcheck'il on `start-period`: selle aja jooksul ebaõnnestunud kontrolle ei loeta.
+    `up --wait` ootab, kuni app01 healthcheck annab `healthy`, ja lõpetab veaga, kui seda 180 sekundi jooksul ei juhtu. Siis vaata `docker compose logs app01`. `/health` annab `{"status":"UP","db":"UP","queue":"UP","cache":"UP"}` ja app01 on `(healthy)`. Neli `UP`-i tähendavad, et app01 jõudis iga backend'i teenuseni nime ja parooliga. `Server startup` logis ütleb, kui kaua Tomcat käivitus. See aeg on põhjus, miks healthcheck'il on `start-period`: selle aja jooksul ebaõnnestunud kontrolle ei loeta.
 
 ??? warning "Kui `db` on DOWN ja logis `Access denied`"
 
@@ -1309,7 +1314,7 @@ docker compose exec app01 curl -s localhost:8080/health; echo
 
 Viimase teenuse kaudu pääseb stackile ligi väljast. Kõigil teenustel on samad restart- ja logiseaded, seega kirjutad need üks kord ja viitad neile YAML-ankruga. Ilma logide rotatsioonita täidab üks palju logi kirjutav konteiner `/var/lib/docker` partitsiooni ja siis seiskub kogu Docker koos kõigi teenustega.
 
-Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.2 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
+Nõuded: `web01` kontekstiga `./web` ja argumendiga `HUB`, image tabeli 3.3 järgi, port `"${WEB_PORT:-8080}:80"`, `depends_on: app01` tingimusega `service_healthy`. Kõigile teenustele kehtivad seaded üks kord faili algusesse [laiendusvälja](https://docs.docker.com/reference/compose-file/extension/) `x-common: &common` alla ja igale teenusele `<<: *common`: `restart: unless-stopped` ning `logging` draiveriga `json-file`, `max-size: "10m"`, `max-file: "3"`.
 
 ??? example "Lahendus: ühised seaded (faili algusesse pärast `name:`)"
 
@@ -1411,7 +1416,7 @@ diff web/nginx.conf /tmp/web01-default.conf
 
     Logis tekkisid read samal hetkel, kui tegid päringu, ja päring `/olematu` andis logisse 404 rea, mida saad otsida ilma kogu logi kerimata. Inspect-päringud andsid `healthy`, teenuse nime, võrgu ja IP. `Health.Log` hoiab viie viimase kontrolli väljumiskoode: nullid tähendavad, et healthcheck on järjest õnnestunud. `-1` või `1` alguses tähendab, et kontroll ei õnnestunud ajal, kui Tomcat alles käivitus. `stats` näitab, et kõige rohkem mälu kasutavad app01 ja db01. `top` näitab Java protsessi hosti PID-iga ja kasutajaga `10001`, sest hostis sellel UID-l nime pole. `diff` näitab erinevust ainult `resolver` real: entrypoint asendas `${NGINX_LOCAL_RESOLVERS}` DNS-serveri aadressiga ja kõik muu on sinu fail.
 
-    `docker cp` töötab ka teises suunas, hostist konteinerisse. See sobib silumiseks, aga mitte parandamiseks: järgmine `up -d` loob konteineri uuesti ja sinu fail kaob.
+    `docker cp` töötab ka teises suunas, hostist konteinerisse. See sobib silumiseks, aga mitte parandamiseks: kui Compose konteineri uuesti loob (muutunud image või seadistus, `down` ja `up`), kaob sinu fail. Püsiv parandus käib lähtefaili ja image ehitatakse uuesti.
 
 ### 4.6 Muudatus ja idempotentsus
 
@@ -1649,9 +1654,9 @@ docker pull "harbor.lab.hkhk.lan/<github-kasutaja>/labori-seis-app:$TAG"
 
 ??? success "Oodatav tulemus"
 
-    Tõmme ebaõnnestub, sest image'il on CRITICAL leide. Harbor keeldub andmast image'it, mida ta peab ohtlikuks, ükskõik kes seda küsib: arendaja, konveier või klaster. Lülita seade välja, muidu ei käivitu stack 5.5-s registry'st. Tootmises lisatakse aktsepteeritud leiud projekti **CVE allowlist**'i koos põhjendusega.
+    Kui image'il on CRITICAL leide, tõmme ebaõnnestub: Harbor keeldub andmast image'it, mida ta peab ohtlikuks, ükskõik kes seda küsib: arendaja, konveier või klaster. Kui 5.2-s CRITICAL leide polnud, õnnestub tõmme ja see on samuti õige tulemus. Lülita seade välja, muidu ei käivitu stack 5.5-s registry'st. Tootmises lisatakse aktsepteeritud leiud projekti **CVE allowlist**'i koos põhjendusega.
 
-**Robotkonto.** **Robot Accounts → New Robot Account**: nimi `podman`, aegumine 30 päeva, õigus **Repository: Pull**. Salvesta saladus kohe: Harbor näitab seda ainult ühe korra. Seda kontot kasutad 7. osas: AlmaLinuxi server vajab ainult image'i tõmbamist, mitte lükkamist ega kustutamist.
+**Robotkonto.** **Robot Accounts → New Robot Account**: nimi `podman`, aegumine 30 päeva, õigus **Repository: Pull**. Salvesta saladus kohe: Harbor näitab seda ainult ühe korra. Seda kontot kasutad lehel [Süvenemine](syvenemine.md): AlmaLinuxi server vajab ainult image'i tõmbamist, mitte lükkamist ega kustutamist.
 
 ??? success "Oodatav tulemus"
 
@@ -2029,7 +2034,7 @@ docker run --rm --network labori-seis_default labseis-kontroll:test; echo
 Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k03`.
 
 ```bash
-(cd ~/kursus && git add -A k03-docker && git commit -m "k03: valmis" && git push)
+(cd ~/kursus && git add -A k03-docker && git commit -m "k03: valmis"; git push)
 gh pr create --base main --head k03-docker --title "K3 Docker" --body "3. kohtumise praktikum"
 ```
 
