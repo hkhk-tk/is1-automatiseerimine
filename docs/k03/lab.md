@@ -62,7 +62,7 @@ git check-ignore -v .env
 
 ??? success "Oodatav tulemus"
 
-    Kaustas on mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile` ning failid `.env.example` ja `web/nginx.conf`. Mallid täidad selle praktikumi käigus. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: paroolidega fail `.env` jääb Gitist välja.
+    Kaustas on mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile` ning failid `.env.example` ja `web/nginx.conf`. Kaustas `roles/` on Harbori sertifikaat, mida vajad 1.5-s. `docker.yml` on kodutöö jaoks. Mallid täidad selle praktikumi käigus. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: paroolidega fail `.env` jääb Gitist välja.
 
 ??? warning "Kui failid puuduvad"
 
@@ -209,7 +209,7 @@ Image'i lehel on kirjas ka see, mida image käivitamiseks vajab. Ava image'i [`m
 
     ??? success "Vastus"
 
-        1. Üks kolmest muutujast `MARIADB_ROOT_PASSWORD`, `MARIADB_ALLOW_EMPTY_ROOT_PASSWORD` või `MARIADB_RANDOM_ROOT_PASSWORD`. Ilma nendeta konteiner lõpetab töö kohe.
+        1. Üks kolmest muutujast `MARIADB_ROOT_PASSWORD`, `MARIADB_ALLOW_EMPTY_ROOT_PASSWORD` või `MARIADB_RANDOM_ROOT_PASSWORD`. Ilma nendeta konteiner lõpetab töö kohe. Logi nimetab ka neljanda võimaluse, parooli räsi.
         2. `MARIADB_DATABASE`, `MARIADB_USER` ja `MARIADB_PASSWORD`.
         3. `/var/lib/mysql`.
         4. `3306`.
@@ -317,7 +317,7 @@ Konteineris käivita `cat /proc/1/comm` ja `ps`, seejärel `exit`.
 
     Esimene Ubuntu lõpetas kohe koodiga 0. Selle peaprogramm on käsurida `bash`, mis loeb käske terminalist. Ilma terminalita sisendit polnud, nii et `bash` lõpetas kohe. `-it`-ga on PID 1 `bash` ja konteiner töötab, kuni kirjutad `exit`.
 
-### 1.7 Pordid ja konteineri IP
+### 1.7 Avaldatud port
 
 Konteineril on oma võrguaadress, aga seda näeb ainult control. Sinu arvutist jõuad konteinerini ainult avaldatud pordi kaudu. `-p 8081:80` tähendab, et control'i port 8081 viib konteineri porti 80.
 
@@ -411,9 +411,10 @@ docker run --rm $HUB/alpine:3.22 getent hosts db01; echo "kood $?"
 
 Konteineri enda failid kaovad `docker rm`-iga. Andmebaas, mille andmed on konteineri sees, kaotab kõik andmed esimesel image'i uuendusel, sest uuendus tähendab alati uut konteinerit. Volume ja bind mount jäävad alles, aga käituvad õiguste poolest erinevalt.
 
-**Volume.** Kirjuta `db01` andmebaasi tabel ühe reaga (parool on `Labseis123`):
+**Volume.** Kirjuta `db01` andmebaasi tabel ühe reaga. MariaDB käivitub umbes 15 sekundit, nii et käsk ootab enne. Parool on `Labseis123`.
 
 ```bash
+sleep 15
 docker exec -it db01 mariadb -ulabseis -p labseis -e "CREATE TABLE proov (id INT); INSERT INTO proov VALUES (42);"
 ```
 
@@ -586,12 +587,12 @@ Ehita image. Siin on ehituskontekst kaust `web`, sest Dockerfile vajab ainult fa
 
 ```bash
 docker build --build-arg HUB -t labseis-web:test web
-docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E 'resolver|proxy_pass'
+docker run --rm labseis-web:test nginx -T 2>/dev/null | grep -E '^ *(resolver|proxy_pass)'
 ```
 
 ??? success "Oodatav tulemus"
 
-    Real `resolver` on `${NGINX_LOCAL_RESOLVERS}` asemel IP-aadress. See tähendab, et Nginxi image kirjutas nimeserveri aadressi faili. Rida `proxy_pass $app_upstream;` on alles. Kas veebiserver rakenduseni jõuab, näed 4. osas, kui `app01` töötab.
+    Real `resolver` on `${NGINX_LOCAL_RESOLVERS}` asemel IP-aadress, näiteks kooli nimeserverite aadressid. See tähendab, et Nginxi image kirjutas nimeserveri aadressi faili. Rida `proxy_pass $app_upstream;` on alles. Kas veebiserver rakenduseni jõuab, näed 4. osas, kui `app01` töötab.
 
 ??? warning "Kui `resolver` real on endiselt `${NGINX_LOCAL_RESOLVERS}`"
 
@@ -689,7 +690,7 @@ Ehita image. Esimesel korral laadib Maven sõltuvused alla ja see võtab mõne m
 ```bash
 docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t labseis-app:multi ..
 docker history labseis-app:multi | head -8
-docker image inspect -f '{{json .Config.Labels}}' labseis-app:multi
+docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' labseis-app:multi
 ```
 
 ??? success "Oodatav tulemus"
@@ -800,7 +801,7 @@ Ava fail redaktoris.
 nano compose.yaml
 ```
 
-Failis on rida `db01:` ja selle all `# TODO 4.2: …`. Kustuta TODO-rida ja kirjuta `db01:` alla järgmised osad. Iga rida algab neli tühikut paremal kui `db01:`, sest YAML-is näitavad taanded, mis kuhu kuulub.
+Failis on rida `db01:` ja selle all `# TODO 4.2: …`. Kustuta TODO-rida ja kirjuta `db01:` alla järgmised osad. Iga rida algab kaks tühikut paremal kui `db01:`, rea algusest seega neli tühikut. YAML-is näitavad taanded, mis kuhu kuulub, ja koodinäidetes on taanded juba õiged.
 
 1. **Kust image tuleb.** Compose ehitab image'i sinu 2.1 Dockerfile'ist. `context: ..` on sama ehituskontekst, mis 2.1-s.
 
@@ -971,7 +972,7 @@ docker compose up -d mc01 rmq01
 sleep 30; docker compose ps
 ```
 
-Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`.
+Ava brauseris `http://<control IP>:15672` ja logi sisse kasutajaga `labseis`. Parool on see, mille panid `.env`-is reale `RABBITMQ_PASSWORD`.
 
 <figure markdown="span">
   ![RabbitMQ halduse UI Overview leht, node rabbit@rmq01 töötab](assets/k03_rabbitmq_overview.png)
@@ -1097,7 +1098,7 @@ Ava `compose.yaml`. Kustuta kommentaariread `# web01:` ja selle all olev TODO-ri
 Salvesta ja käivita kõik viis teenust. `docker compose ps` näitab teenuste olekut. `curl` küsib rakenduselt veebiserveri kaudu tervist ja versiooni.
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 docker compose ps
 curl -s http://localhost:8080/health; echo
 curl -s http://localhost:8080/version; echo
@@ -1219,7 +1220,7 @@ curl -s http://localhost:8080/version; echo
 
 ??? success "Oodatav tulemus"
 
-    `pull` tõmbab kolm image'it Harborist ja stack käivitub ilma ehitamata. `/version` näitab sama SHA-d, mis on image'i sildis. Andmebaasi andmed on alles, sest `down` ilma `-v`-ta neid ei kustuta.
+    `pull` tõmbab kõik viis image'it Harborist, sinu kolm ja kaks ametlikku. Stack käivitub ilma ehitamata. `/version` näitab sama SHA-d, mis on image'i sildis. Andmebaasi andmed on alles, sest `down` ilma `-v`-ta neid ei kustuta.
 
 ??? warning "Kui tuleb viga `current image with … vulnerabilities cannot be pulled`"
 
