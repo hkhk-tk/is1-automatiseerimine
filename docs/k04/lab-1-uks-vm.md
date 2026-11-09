@@ -169,7 +169,7 @@ Lisa `test01`-le `initialization` ja `network_device` plokk ([Proxmoxi cloud-ini
 
 ??? success "Vastus"
 
-    cloud-init saab seadistuse väikeselt virtuaalselt CD-lt, millel on `user-data`, `network-config` ja `meta-data` koos `instance-id`-ga. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ega seadista võrku ja kasutajaid uuesti. Seepärast jõuab cloud-init'i draivi muudatus VM-i alles pärast `-replace`-i, mis loob VM-i uuesti.
+    cloud-init saab seadistuse väikeselt virtuaalselt CD-lt. Proxmox kirjutab selle CD uuesti alles siis, kui VM peatatakse ja uuesti käivitatakse. Töötav masin uut IP-d ei näe, nii et vana aadress kehtib edasi. Uus seadistus jõuab masinasse pärast VM-i taaskäivitust või `-replace`-i, mis loob VM-i uuesti.
 
 Siin lähevad teade "Apply complete" ja masina tegelik olek esimest korda lahku. Tofu tegi oma töö õigesti: Proxmoxi seadistus muutus ja UI näitab seda. VM-i sees pole aga midagi juhtunud, sest keegi ei käivitanud cloud-init'i uuesti.
 
