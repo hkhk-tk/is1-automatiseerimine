@@ -306,7 +306,7 @@ Tag `k03` tähistab viimast esitatud versiooni, seepärast tõstad selle uuele c
 
 ## Rikkeotsing
 
-??? note "Tabel 3.17. Osa 1 · Docker rolliga"
+??? note "Tabel 3.18. Osa 1 · Docker rolliga"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|

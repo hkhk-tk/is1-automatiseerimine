@@ -54,7 +54,7 @@ git check-ignore -v .env
 
 ??? success "Oodatav tulemus"
 
-    Kaustas on `web/nginx.conf`, `intsident/compose.yaml`, `docker.yml` ja `roles/docker/files/harbor-ca.crt`. `intsident/compose.yaml` on meelega vigane: selle parandad 6. osas. `docker.yml` ja `roles/` on kodutöö jaoks. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: fail `.env`, kuhu tulevad paroolid, jääb Gitist välja juba enne, kui sa selle lood. Kõik selle kohtumise käsud käivitad kaustas `~/kursus/k03-docker`, kui juures pole kirjas teisiti.
+    Kaustas on `.env.example`, `web/nginx.conf`, mallid `compose.yaml`, `db/Dockerfile`, `web/Dockerfile` ja `app/Dockerfile`, vigane `intsident/compose.yaml`, `docker.yml` ja `roles/docker/files/harbor-ca.crt`. Mallides on TODO-read ja need ei käivitu enne, kui oled need täitnud. `intsident/compose.yaml` on meelega vigane: selle parandad 6. osas. `docker.yml` ja `roles/` on kodutöö jaoks. `git check-ignore` näitab rida `.gitignore:…:k03-docker/.env`: fail `.env`, kuhu tulevad paroolid, jääb Gitist välja juba enne, kui sa selle lood. Kõik selle kohtumise käsud käivitad kaustas `~/kursus/k03-docker`, kui juures pole kirjas teisiti.
 
 ??? warning "Kui failid puuduvad"
 
@@ -62,11 +62,13 @@ git check-ignore -v .env
 
     ```bash
     B=https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/k03-docker
-    mkdir -p roles/docker/files intsident web
+    mkdir -p roles/docker/files intsident web db app
     curl -fsSLo docker.yml "$B/docker.yml"
     curl -fsSLo roles/docker/files/harbor-ca.crt "$B/roles/docker/files/harbor-ca.crt"
     curl -fsSLo intsident/compose.yaml "$B/intsident/compose.yaml"
-    curl -fsSLo web/nginx.conf "$B/web/nginx.conf"
+    for f in .env.example compose.yaml web/nginx.conf web/Dockerfile db/Dockerfile app/Dockerfile; do
+        curl -fsSLo "$f" "$B/$f"
+    done
     ```
 
 ### 1.2 Docker käsitsi
@@ -681,7 +683,7 @@ docker run --rm --entrypoint ls $HUB/nginx:1.30-alpine /docker-entrypoint.d
 
 ### 2.2 db/Dockerfile
 
-Andmebaasi image põhineb ametlikul MariaDB image'il ja sisaldab lisaks Labori seisu skeemi ja näidisandmeid. Dockerfile'is kirjutad ainult failide kopeerimise. Algseadistuse teeb entrypoint. Kui skeem on image'is, on andmebaasi struktuur versioonitud koos rakendusega ja iga uus keskkond saab sama alguse.
+Andmebaasi image põhineb ametlikul MariaDB image'il ja sisaldab lisaks Labori seisu skeemi ja näidisandmeid. Starteri `db/Dockerfile`-is on TODO-read: kirjutad ainult baasi ja failide kopeerimise. Algseadistuse teeb entrypoint. Kui skeem on image'is, on andmebaasi struktuur versioonitud koos rakendusega ja iga uus keskkond saab sama alguse.
 
 Nõuded ([juhiste viide](https://docs.docker.com/reference/dockerfile/)):
 
@@ -752,7 +754,7 @@ web01 on app01 ees pöördproksi. Nginx lahendab `upstream` nime ainult käivitu
 
 Konfiguratsioonifail `web/nginx.conf` on starteris valmis. Selle esimene rida `resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;` on mall: Nginx'i image'i entrypoint asendab muutuja konteineri DNS-serveri aadressiga. `set $app_upstream` ja `proxy_pass $app_upstream` panevad Nginx'i nime `app01` lahendama iga päringu ajal, mitte ainult käivitusel.
 
-Kirjuta `web/Dockerfile` nende nõuete järgi:
+Täida starteri `web/Dockerfile` nende nõuete järgi:
 
 -  `nginx:1.30-alpine` (eesliide `HUB` nagu db-s), konfiguratsioonifail kopeeritakse `/etc/nginx/templates/default.conf.template`, `ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1`;
 - `HEALTHCHECK`, mis küsib `wget`-iga `http://127.0.0.1/health` (Alpine'is curl'i pole).
@@ -937,7 +939,7 @@ Tabel 3.2 on plaan astmete kaupa: esimene aste on ehitusmasin, mis pärast ehitu
     | `FROM ${HUB}/tomcat:10.1-jre21-temurin` | `RUN`-i pole vaja (`curl` on baasis olemas ja `webapps` on tühi); `COPY --from=build` WAR → `webapps/ROOT.war`; `EXPOSE 8080`; `HEALTHCHECK` `curl -fsS http://localhost:8080/health` (`--start-period=60s`) |
     | lõpp | `ARG GIT_SHA=unknown`, `ENV GIT_SHA=${GIT_SHA}`, `LABEL org.opencontainers.image.revision="${GIT_SHA}"`, `CMD ["catalina.sh", "run"]` |
 
-Kirjuta `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/multi-stage/) tabeli järgi. Kirjuta see ise, ühe astmega näidet ära kopeeri.
+Täida starteri `app/Dockerfile` [kahes astmes](https://docs.docker.com/build/building/multi-stage/) tabeli järgi. Kirjuta see ise, ühe astmega näidet ära kopeeri.
 
 ??? example "Lahendus: `app/Dockerfile` (esimene versioon)"
 
@@ -989,79 +991,7 @@ docker run --rm --entrypoint sh labseis-app:multi -c 'ls /src 2>&1; find / -name
 
     `naive` näitab kolme teed, `multi` ainult `java` teed (JRE). `webapps` all on ainult `ROOT.war`, Tomcati näiterakendusi pole. `/src` puudub: lähtekood jäi ehitusastmesse, mida registry'sse ei lükata.
 
-### 3.4 Cache töötab ja läheb katki
-
-Cache lühendab korduva ehituse sekunditeni, aga ainult siis, kui juhiste järjekord seda lubab. Esimene muutunud kiht tühistab kõik järgnevad. CI-s tähendab purunenud cache iga commit'iga minuteid lisaaega ja uusi kihte, mis tuleb igale masinale uuesti tõmmata.
-
-Muuda üht rida mõnes Java-failis (näiteks kommentaar failis `../src/main/java/…/VersionController.java`) ja ehita uuesti sama käsuga nagu 3.2-s. Seejärel tõsta ajutiselt `ARG GIT_SHA` ja `ENV GIT_SHA` käitusastme algusesse (kohe `FROM …tomcat…` järele) ja ehita kaks korda erineva väärtusega.
-
-**Küsimus enne käsku:** kas WAR-i kopeerimise kiht (`COPY --from=build`) ehitatakse teisel korral uuesti?
-
-```bash
-docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=aaa -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|COPY --from' | head -5
-docker build --build-arg HUB -f app/Dockerfile --build-arg GIT_SHA=bbb -t labseis-app:multi .. 2>&1 | grep -E 'CACHED|COPY --from' | head -5
-```
-
-Pane read tagasi lõppu ja võta Java-faili muudatus tagasi: `git restore ../src`.
-
-??? success "Oodatav tulemus"
-
-    Esimesel katsel oli `dependency:go-offline` samm `CACHED` ja uuesti käivitusid ainult `COPY src` ja järgmised: `pom.xml`-i eraldi kopeerimine töötab. Teisel katsel tehti `COPY --from=build` iga SHA-ga uuesti, kuigi WAR ei muutunud: ka üks `ARG` vales kohas ehitab kõik järgnevad kihid uuesti, sest muutuja väärtus on kihi sisendi osa. Mida sagedamini juhis muutub, seda lähemal faili lõpule see peab olema.
-
-### 3.5 Kihid kettal: history, GraphDriver ja kirjutatav kiht
-
-Kui saladus või suur fail satub ühte kihti ja järgmine `RUN rm` selle „eemaldab“, jääb see registry'sse ja igale masinale alles. Igaüks, kes image'i tõmbab, saab kihi lahti pakkida ja faili kätte ilma konteinerit käivitamata.
-
-Vaata app-image'i kihte koos suuruse ja juhisega, kihtide arvu ja salvestusdraiverit:
-
-```bash
-docker history --format '{{.Size}}\t{{.CreatedBy}}' labseis-app:multi | head -8 | cut -c1-100
-docker image inspect -f '{{len .RootFS.Layers}} kihti' labseis-app:multi; docker info -f '{{.Driver}}'
-docker image inspect labseis-app:multi | jq '.[0].GraphDriver // "GraphDriver puudub: containerd store"'
-```
-
-Ehita proov-image, kus fail luuakse ühes kihis ja kustutatakse järgmises:
-
-```bash
-printf 'FROM %s/alpine:3.22\nRUN head -c 50000000 /dev/urandom > /suur\nRUN rm /suur\n' "$HUB" | docker build -q -t kihtproov -
-docker image ls kihtproov; docker history kihtproov | head -4
-```
-
-Käivita app konteinerina, kirjuta konteineris fail ja vaata kirjutatavat kihti `docker diff`-iga ja hostist:
-
-```bash
-docker run -d --name kiht labseis-app:multi && sleep 20
-docker exec kiht sh -c 'echo proov > /tmp/minu.txt'; docker diff kiht | head -8
-U=$(sudo grep -o 'upperdir=[^,]*' /proc/"$(docker inspect -f '{{.State.Pid}}' kiht)"/mountinfo | head -1 | cut -d= -f2)
-echo "$U"; sudo ls -l "$U/tmp"; docker rm -f kiht
-```
-
-??? success "Oodatav tulemus"
-
-    `history` näitas, et suured on ainult apt'i ja WAR-i kihid. `ENV`, `LABEL` ja `CMD` on 0 B, sest need muudavad ainult metaandmeid. `kihtproov` on üle 50 MB, kuigi Alpine ise on alla 10 MB ja `/suur` on kustutatud: 50 MB kiht on alles ja `rm` lisas paari KB suuruse kihi, mis ainult peidab faili. `docker diff` näitas `A` (lisatud) ja `C` (muudetud) ridu, ka Tomcati `work` ja `logs` muudatusi, ning rida `A /tmp/minu.txt`. Sama fail paistis hostis kirjutatava kihi kaustas. Konteineri kirjutatav kiht on lihtsalt kataloog hosti kettal ja kaob `docker rm`-iga.
-
-    `overlay2` draiveriga näitab `GraphDriver.Data` kihtide kaustu (`LowerDir`, `UpperDir`) otse. containerd'i image store'iga (`overlayfs`) välja `GraphDriver` pole ja kausta leiad konteineri mount'ide andmetest, nagu viimases plokis. See töötab mõlemaga.
-
-### 3.6 Kes on PID 1
-
-`docker stop` saadab PID 1-le SIGTERM-i ja ootab 10 sekundit. Kas Tomcat selle kätte saab, sõltub CMD vormist. Tomcat, mis ei saa SIGTERM-i, ei lõpeta pooleliolevaid päringuid ega sulge andmebaasi ühendusi. Iga uuendus katkestab siis kasutajate päringuid ja lisab 10 sekundit seisakut.
-
-```bash
-docker run -d --name appt labseis-app:multi
-docker exec appt cat /proc/1/cmdline | tr '\0' ' '; echo
-time docker stop appt
-docker rm appt
-```
-
-Muuda viimane rida ajutiselt shell-vormi `CMD catalina.sh run`, ehita, käivita uue konteinerina ja korda samu käske. Seejärel pane exec-vorm tagasi ja ehita uuesti.
-
-??? success "Oodatav tulemus"
-
-    Exec-vormiga on PID 1 `java` ja `stop` võtab paar sekundit. Shell-vormiga on PID 1 `/bin/sh -c …` ja `stop` kestab umbes 10 s. Shell ei andnud signaali edasi ja 10 sekundi pärast lõpetas Docker protsessi SIGKILL-iga. Exec-vormis sai Java signaali ja lõpetas paari sekundiga. Kui `docker logs appt` näitab pärast peatamist `Stopping service [Catalina]`, jõudis signaal kohale.
-
-    Olek `unhealthy` on siin ootuspärane: andmebaasi pole ja `/health` annab 503. Rakendus ise vastab: `docker exec appt curl -s localhost:8080/health/live`.
-
-### 3.7 Mitte-root kasutaja
+### 3.4 Mitte-root kasutaja
 
 Ametlik Tomcati image töötab root'ina, ja konteineri root on hosti root, kui user namespace'i pole (vaikimisi pole). Kui rakenduses on kaugkäivituse haavatavus, saab root'ina töötav protsess üle kirjutada Tomcati binaarid ja konfiguratsiooni. UID 10001-na saab ründaja kirjutada ainult logidesse ja ajutistesse kaustadesse.
 
@@ -1108,7 +1038,7 @@ docker image inspect -f '{{.Config.User}}' labseis-app:multi
 
     Mõni kirjutatav kaust kuulub veel root'ile.
 
-### 3.8 ENTRYPOINT ja CMD: kontroll-image
+### 3.5 ENTRYPOINT ja CMD: kontroll-image
 
 Kontroll-image on tööriist, mis teeb ühe asja ja lõpetab: küsib Labori seisult olekut. Compose'i stackis kontrollid sellega stacki seestpoolt. `ENTRYPOINT` määrab programmi ja `CMD` selle vaikeargumendid, ja mõlemat saab käsureal asendada. Sama muster on Trivy, kubectl'i ja CI image'itel. Kui sa ei tea, mis on ENTRYPOINT, ei saa sa neid konveieris õigesti kasutada ja saad vea `unknown command`.
 
@@ -1142,7 +1072,7 @@ docker rm -f appt && docker network rm k03test
 
     Esimene annab `Could not resolve host: web01` ja `exit=6`: töötas vaike-CMD. Teine annab `{"status":"UP"}`: argument asendas CMD-i. Kolmas annab `uid=65534(nobody)`: asendati programm ise. Kood 6 on curl'i kood „nime ei lahendatud“, nii et skript saab eristada nimeviga ühendusveast (7) või HTTP veast (22).
 
-### 3.9 Commit
+### 3.6 Commit
 
 Enne commit'i käivita automaatkontrolli test, mis kontrollib app-Dockerfile'i ülesehitust.
 
@@ -1201,9 +1131,9 @@ Tabel 3.3 kirjeldab valmis stacki. Read on käivitusjärjekorras. Veerg „Hosti
 
 ### 4.1 .env ja db01
 
-Alustad saladustest ja andmebaasist, sest kõik teised sõltuvad neist. `.env` hoiab paroole ja jääb Gitist välja. `.env.example` näitab, milliseid muutujaid on vaja, ja läheb Giti; automaatkontroll kasutab just seda faili. Compose loeb `.env`-i projekti kaustast ja asendab `${VAR}` viited enne, kui fail üldse valideeritakse.
+Starteri `compose.yaml`-is on db01 TODO-ga ja ülejäänud teenused kommentaaris. Täidad teenused ükshaaval: eemaldad kommentaarimärgid alles siis, kui hakkad seda teenust täitma, sest Compose kontrollib kogu faili ja kontrollid iga teenuse järel tulemust. Alustad saladustest ja andmebaasist, sest kõik teised sõltuvad neist. `.env` hoiab paroole ja jääb Gitist välja. Starteri `.env.example` näitab, milliseid muutujaid on vaja, ja on Gitis; automaatkontroll kasutab just seda faili. Compose loeb `.env`-i projekti kaustast ja asendab `${VAR}` viited enne, kui fail üldse valideeritakse.
 
-??? example "Ülesanne: `.env.example`"
+??? example "Fail `.env.example` (starteris)"
 
     ```bash
     DB_PASSWORD=muuda-mind
@@ -1228,7 +1158,7 @@ nano .env          # paroolid
 git check-ignore -v .env
 ```
 
-??? example "Ülesanne: `compose.yaml` algus ja db01"
+??? example "Ülesanne: db01 `compose.yaml`-is"
 
     Nõuded: `name: labori-seis`; teenusel `db01` on `build.context: ..`, `build.dockerfile: k03-docker/db/Dockerfile` ja argument `HUB`; image'i nimi tabeli 3.2 järgi; `environment`-is root-parool, andmebaas ja kasutaja `labseis` ja kasutaja parool; nimega volume `dbdata` kataloogis `/var/lib/mysql`; healthcheck intervalliga 10 s ja 10 kordusega.
 
@@ -2197,9 +2127,7 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `naive` ja `multi` on peaaegu sama suured | `docker history labseis-app:multi \| head -8` | käitusaste kopeerib midagi suurt build-astmest või baas on vale | `COPY --from` kopeerib selle, mis antud teel on; vale tee toob kaasa `~/.m2` või kogu `/src` |
     | kontroll-image: `Could not resolve host: web01` | `docker run` `--network` | ootuspärane testvõrgus; stacki võrgus (`labori-seis_default`) peab vastama | nimi lahendub ainult võrgus, kus see teenus on |
     | `k03 tags` FAIL app-image'i järel | `ls k03-docker/compose.yaml` | test vajab ka `compose.yaml`-i, mis tekib Compose'i lehel | test loeb ametlike image'ite tag'id Compose'i failist |
-    | `template: … map has no entry for key "GraphDriver"` | `docker info -f '{{.Driver}}'` | containerd'i image store: kasuta `jq '.[0].GraphDriver // …'` või konteineri `mountinfo`-t | containerd'i salvestusega ei ole image'il `GraphDriver` välja |
     | `grep upperdir … mountinfo`: `Permission denied` või tühi | `docker inspect -f '{{.State.Pid}}' <k>` | `sudo` puudu või konteiner ei tööta | teise protsessi `mountinfo` on loetav ainult root'ile ja ainult töötava protsessi kohta |
-    | `kihtproov` on suur, kuigi fail kustutati | `docker history kihtproov` | ootuspärane: kustutamine hilisemas kihis ei vähenda image'it | alumine kiht on muutumatu; `rm` lisab ainult whiteout-kirje |
 
 ??? note "Tabel 3.8. Osa 4 · Kogu stack Compose'iga"
 
@@ -2254,4 +2182,4 @@ Iga osa tabelit loe ülevalt alla: esimeses veerus on see, mida näed, teises k�
     | `git clone -b k03-docker`: `Remote branch not found` | `git branch --show-current` | haru on teise nimega või kloonid valest kaustast | `-b` otsib haru lähterepositooriumist täpselt selle nimega |
     | `k03 files`: `k03-docker/.env on Gitis` | `git ls-files k03-docker/.env` | fail lisati varem: `git rm --cached k03-docker/.env` | `.gitignore` ei puuduta faile, mida Git juba jälgib |
 
-Ressursid, tootmise seaded, Trivy käsurealt ja Podman on lehel [Süvenemine](syvenemine.md). Dockeri paigalduse kirjutad rolliks [kodutöös](kodutoo.md). Kogenud õppijatele on 18 lisaülesannet eraldi lehel: [Lisaülesanded](lisa.md).
+Ressursid, tootmise seaded, Trivy käsurealt, Podman ning image'i cache ja kihid on lehel [Süvenemine](syvenemine.md). Dockeri paigalduse kirjutad rolliks [kodutöös](kodutoo.md). Kogenud õppijatele on 18 lisaülesannet eraldi lehel: [Lisaülesanded](lisa.md).
