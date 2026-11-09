@@ -97,32 +97,34 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-Ilma `sudo`-ta saab Dockerit kasutada grupi `docker` liige. Muidu annab iga `docker` käsk vea `permission denied … docker.sock`. Grupiliikmesus rakendub alles uues sisselogimisseansis, seega logi pärast järgmist käsku välja ja uuesti sisse (VS Code'is **Remote-SSH: Kill VS Code Server on Host** ja ühendu uuesti).
+Docker on nüüd paigaldatud, aga `docker` käsk töötab ainult `sudo`-ga. Ilma selleta tuleb viga `permission denied … docker.sock`. Et ei peaks iga käsu ette `sudo` kirjutama, lisa oma kasutaja gruppi `docker`:
 
 ```bash
 sudo usermod -aG docker "$USER"
 ```
 
-Pärast uut sisselogimist kontrolli versioone ja teenust:
+Uus grupp hakkab kehtima alles siis, kui logid uuesti sisse. VS Code'is vajuta ++f1++, vali **Remote-SSH: Kill VS Code Server on Host** ja ühenda control'iga uuesti.
+
+Kontrolli, et kõik töötab:
 
 ```bash
-id
+id                                      # grupp docker on nimekirjas
 docker version --format 'klient {{.Client.Version}}, server {{.Server.Version}}'
-docker compose version
-systemctl is-active docker containerd
+docker compose version                  # Compose on olemas
+systemctl is-active docker containerd   # mõlemad teenused töötavad
 ```
 
 ??? success "Oodatav tulemus"
 
-    `id` näitab gruppi `docker`. Klient ja server on 28 või uuemad, `docker compose` vastab ja mõlemad teenused on `active`. `docker` käsud töötavad ilma `sudo`-ta.
+    `id` real on grupp `docker`. `docker version` näitab kliendi ja serveri versiooni, mõlemad 28 või uuemad. `docker compose version` näitab Compose'i versiooni. `systemctl` vastab kaks korda `active`.
 
-??? warning "Kui `permission denied … docker.sock`"
+??? warning "Kui tuleb ikka `permission denied … docker.sock`"
 
-    Kasutaja pole grupis `docker` või sessioon on vana. Kontrolli `id`. Vana shell ja VS Code'i server töötavad vanade gruppidega edasi, seepärast logi välja ja sisse.
+    Uus grupp ei hakanud veel kehtima. Kontrolli käsuga `id`: kui `docker` puudub, logi uuesti sisse nagu ülal kirjas. Kui see puudub ka siis, käivita `usermod` käsk uuesti.
 
-!!! warning "Grupp `docker` on root'i õigus"
+!!! warning "Grupp `docker` annab root'i õigused"
 
-    [Grupi `docker`](https://docs.docker.com/engine/install/linux-postinstall/) liige saab käivitada konteineri, mis mount'ib hosti `/`. Näiteks `docker run -v /:/host alpine chroot /host` annab root-shelli hostis ilma paroolita ja `sudo` logisse sellest midagi ei jää. Kursuse VM-is on see teadlik valik, jagatud serveris mitte.
+    Grupi `docker` liige saab Dockeri kaudu muuta kõiki hosti faile ilma parooli küsimata, nagu root. Kursuse masinas on see lubatud. Jagatud serveris lisa gruppi `docker` ainult neid, kellel on niikuinii root'i õigus.
 
 ### 1.3 Esimene konteiner
 
