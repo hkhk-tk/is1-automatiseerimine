@@ -68,11 +68,15 @@ git check-ignore -v .env
 
     Kui `git pull` ei toonud kausta `k03-docker` faile, kirjuta koolitajale. Koolitaja saadab need sinu repositooriumisse.
 
+??? warning "Kui tuleb viga `a branch named 'k03-docker' already exists`"
+
+    Haru on sul juba olemas, näiteks eelmisest katsest. Uut haru pole vaja teha. Vaheta olemasolevale harule käsuga `git switch k03-docker` ja jätka käsust `cd k03-docker`.
+
 ### 1.2 Paigalda Docker
 
 Konteinerite käivitamiseks on control'is vaja Dockerit. Seda seal veel pole, nii et paigaldad selle kõigepealt.
 
-Paigaldus käib nagu iga teise programmi puhul `apt`-iga, aga Dockeri enda paketihoidlast. Ubuntu oma pakett `docker.io` on vanem ja selles pole Compose'i, mida vajad 4. osas. Käsud on Dockeri [ametlikust juhendist](https://docs.docker.com/engine/install/ubuntu/) ja teevad kolm asja: eemaldavad vanad paketid, lisavad Dockeri paketihoidla ja paigaldavad Dockeri.
+Paigaldus käib nagu iga teise programmi puhul `apt`-iga, aga Dockeri enda paketihoidlast. Ubuntu oma pakett `docker.io` on vanem ja selles pole Compose'i, mida vajad 4. osas. Käsud on Dockeri [ametlikust juhendist](https://docs.docker.com/engine/install/ubuntu/) . Need eemaldavad vanad paketid, lisavad Dockeri paketihoidla ja paigaldavad Dockeri.
 
 ```bash
 sudo apt-get remove -y docker.io docker-compose docker-compose-v2 podman-docker containerd runc
@@ -248,7 +252,7 @@ docker pull $HUB/nginx:1.30-alpine
 docker image ls
 ```
 
-Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste tähtedega, parool `Passw0rd`. Logi sisse käsurealt ja ava brauseris <https://harbor.lab.hkhk.lan>.
+Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste tähtedega ja parool on `Passw0rd`. Logi sisse käsurealt. Docker küsib parooli eraldi, nii et see ei jää käsuajalukku. Seejärel ava brauseris <https://harbor.lab.hkhk.lan>.
 
 ```bash
 docker login harbor.lab.hkhk.lan -u <github-kasutaja>
@@ -473,10 +477,13 @@ docker ps -a
 ### 1.10 Commit
 
 ```bash
-(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker ja esimesed konteinerid"; git push -u origin k03-docker)
+cd ~/kursus
+git status --short
+git push -u origin k03-docker
+cd k03-docker
 ```
 
-Kui Git vastab `nothing to commit`, ei muutnud sa selles osas kaustas `k03-docker` ühtegi faili. Haru jõuab GitHubi ka siis.
+Selles osas tegid katseid käsurealt ja faile tavaliselt ei muutnud. Siis on `git status` tühi ja commit'i pole vaja. `git push` saadab haru `k03-docker` GitHubi.
 
 ## Osa 2 · db ja web image
 
@@ -761,7 +768,7 @@ nano .env          # paroolid
 git check-ignore -v .env
 ```
 
-Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. `HUB` on sul `.bashrc`-is, seepärast on `.env`-is sama väärtus. Kui `.env`-i muudatus ei mõju, kontrolli käsuga `echo $<MUUTUJA>`, kas see on shellis määratud.
+Kui sama muutuja on ka shellis, kehtib shelli väärtus ja `.env`-i rida ei mõju. `HUB` on sul `.bashrc`-is, seepärast on `.env`-is sama väärtus. Kui `.env`-i muudatus ei mõju, kontrolli käsuga `printenv HUB` (või muu muutuja nimega), kas see on shellis määratud. Paroolide väärtusi ära kleebi küsimustesse ega ekraanipiltidele.
 
 ??? example "Ülesanne: db01 `compose.yaml`-is"
 
@@ -1008,7 +1015,10 @@ Tag'iks saab commit'i lühike SHA, et iga image'i saaks seostada koodiga. Tag `l
 
 1.5-s logisid Harborisse sisse. Pane `.env`-is tag'iks commit'i SHA, seejärel ehita image'id ja lükka need Harborisse:
 
+Enne seda kontrolli, et kõik Dockerfile'id ja `compose.yaml` on commit'itud. Muidu ei vasta SHA image'i sisule.
+
 ```bash
+git status --short
 TAG=$(git rev-parse --short HEAD) && sed -i "s/^TAG=.*/TAG=$TAG/" .env
 grep -E '^(REGISTRY|OWNER|TAG)=' .env
 docker compose build && docker compose push
@@ -1073,15 +1083,18 @@ curl -s http://localhost:8080/version; echo
 
     Projekti seadetes on haavatava image'i tõmbamise keeld sees. Lülita see projekti **Configuration** all välja.
 
-### 5.3 Commit
+### 5.3 Kontrolli haru
+
+Selles osas muutus ainult `.env`, mis jääb Gitist välja, ja image'id registry's. Uut commit'i pole vaja, kui jälgitavad failid ei muutunud.
 
 ```bash
-(cd ~/kursus && git add k03-docker && git status --short; git commit -m "k03: image'id Harboris"; git push)
+git status --short
+git push
 ```
 
 ??? success "Oodatav tulemus"
 
-    `git status` ei näita `.env`-i ega `secrets/`-i. Kui Git vastab `nothing to commit`, on see ootuspärane, sest selles osas muutus ainult `.env`, mis jääb Gitist välja.
+    `git status` on tühi ega näita `.env`-i. `git push` vastab `Everything up-to-date`.
 
 ## Osa 6 · Enne esitamist
 
@@ -1109,12 +1122,26 @@ git status --short
 
     `build --check` ei anna hoiatusi, kuus kontrolli annavad `OK` (`build` ehitab kõik kolm image'it ja on aeglaseim), `git ls-files | grep` on tühi, `up -d` ütleb kõigi kohta `Running` või `Healthy` ja midagi ei looda uuesti. `build --check` leiab Dockerfile'i vead (näiteks shell-vormi CMD või valesti suurtähtedega kirjutatud `AS`) ilma ehitamata. Tühi `grep` tähendab, et jälgitavate failide hulgas pole nende nimedega faile. See ei tõesta, et failide sisus või varasemates commit'ides pole saladusi.
 
+??? note "Kontrollnimekiri enne esitamist"
+
+    - [ ] Kolm Dockerfile'i, `compose.yaml`, `.env.example` ja repositooriumi juure `.dockerignore` on Gitis.
+    - [ ] `.env`, paroolid ja tokenid ei ole Gitis.
+    - [ ] Kuus automaatkontrolli testi annavad `OK`.
+    - [ ] Viis teenust on `healthy` ja Labori seis avaneb brauseris.
+    - [ ] Kolm oma image'it on Harboris SHA-tag'iga.
+    - [ ] Stack käivitus registry image'itest ilma ehitamata.
+
 ## Töö esitamine
 
 Töö jõuab harusse `main` pull request'iga ja esitatakse tag'iga `k03`.
 
+Kui `git status --short` näitab veel muudatusi, salvesta need commit'ina. Kui muudatusi pole, jäta commit vahele.
+
 ```bash
-(cd ~/kursus && git add -A k03-docker && git commit -m "k03: valmis"; git push)
+cd ~/kursus
+git status --short
+git add .dockerignore k03-docker && git commit -m "k03: valmis"
+git push
 gh pr create --base main --head k03-docker --title "K3 Docker" --body "3. kohtumise praktikum"
 ```
 
