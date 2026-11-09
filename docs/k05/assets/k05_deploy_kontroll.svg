@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 260" width="800" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c62828"/></marker></defs>
+<rect width="800" height="260" fill="#ffffff"/>
+<g text-anchor="middle">
+<rect x="20" y="30" width="230" height="130" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="135" y="56" font-family="monospace" font-size="14">up -d</text><text x="135" y="84" font-weight="bold">konteiner käivitati</text>
+<text x="135" y="112" font-size="13">rakendus võib veel käivituda</text><text x="135" y="130" font-size="13">või kohe kokku kukkuda</text>
+<rect x="285" y="30" width="230" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="400" y="56" font-family="monospace" font-size="14">up -d --wait</text><text x="400" y="84" font-weight="bold">healthy</text>
+<text x="400" y="112" font-size="13">HEALTHCHECK vastab,</text><text x="400" y="130" font-size="13">aga versioon võib olla vana</text>
+<rect x="550" y="30" width="230" height="130" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="665" y="56" font-family="monospace" font-size="14">/version = GITHUB_SHA</text><text x="665" y="84" font-weight="bold">töötab uus versioon</text>
+<text x="665" y="112" font-size="13">rakendus vastab ja</text><text x="665" y="130" font-size="13">commit on sama mis konveieris</text>
+<text x="400" y="200" font-size="14">iga järgmine kontroll tõendab rohkem</text>
+<text x="400" y="235" font-size="14" fill="#c62828">sleep 20 ja curl ei tõenda midagi kindlat: vastata võib ka vana versioon</text>
+</g>
+<g stroke="#7e57c2" stroke-width="2" fill="none" marker-end="url(#a)">
+<line x1="250" y1="95" x2="281" y2="95"/><line x1="515" y1="95" x2="546" y2="95"/>
+<line x1="150" y1="180" x2="650" y2="180"/>
+</g>
+</svg>

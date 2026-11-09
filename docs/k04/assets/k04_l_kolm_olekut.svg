@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 300" width="820" font-family="Inter, Arial, sans-serif" font-size="14" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker></defs>
+<rect width="820" height="300" fill="#ffffff"/>
+<rect x="10" y="15" width="240" height="72" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="25" y="40" font-weight="bold">Kood: soovitud olek</text><text x="25" y="66" font-family="monospace" font-size="13">main.tf: dedicated = 2048</text>
+<rect x="10" y="112" width="240" height="72" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="25" y="137" font-weight="bold">State: viimati teada olek</text><text x="25" y="163" font-family="monospace" font-size="13">test01 = VM 1109, 1024 MB</text>
+<rect x="10" y="209" width="240" height="72" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+<text x="25" y="234" font-weight="bold">Proxmox: tegelik olek</text><text x="25" y="260" font-family="monospace" font-size="13">VM 1109: 1024 MB</text>
+<rect x="330" y="112" width="150" height="72" rx="8" fill="#5e35b1"/>
+<text x="405" y="142" text-anchor="middle" font-family="monospace" font-weight="bold" fill="#ffffff">tofu plan</text><text x="405" y="164" text-anchor="middle" fill="#ffffff">võrdleb</text>
+<rect x="560" y="15" width="250" height="100" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="575" y="40" font-weight="bold">Plaan</text>
+<text x="575" y="66" font-family="monospace" font-size="13">~ dedicated = 1024 -&gt; 2048</text>
+<text x="575" y="92" font-family="monospace" font-size="13">0 to add, 1 to change</text>
+<rect x="560" y="190" width="250" height="72" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="685" y="217" text-anchor="middle" font-family="monospace" font-weight="bold">tofu apply</text>
+<text x="685" y="242" text-anchor="middle" font-size="13">muudab VM-i ja kirjutab state'i</text>
+<text x="290" y="215" font-size="13" text-anchor="middle">refresh</text>
+<g stroke="#5e35b1" stroke-width="2" marker-end="url(#a)">
+<line x1="250" y1="55" x2="330" y2="122"/>
+<line x1="250" y1="148" x2="328" y2="148"/>
+<line x1="250" y1="240" x2="330" y2="176"/>
+<line x1="480" y1="140" x2="558" y2="80"/>
+<line x1="685" y1="115" x2="685" y2="188"/>
+<line x1="560" y1="272" x2="252" y2="272"/>
+</g>
+<text x="405" y="290" font-size="13" text-anchor="middle">muudab tegelikku olekut</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 300" width="840" font-family="Inter, Arial, sans-serif" font-size="14" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker></defs>
+<rect width="840" height="300" fill="#ffffff"/>
+<rect x="10" y="20" width="240" height="260" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="25" y="46" font-weight="bold">terraform.tfvars: andmed</text>
+<g font-family="monospace" font-size="13" xml:space="preserve">
+<text x="25" y="80">vms = {</text>
+<text x="25" y="106">  web01 = { ip = ".11" }</text>
+<text x="25" y="132">  app01 = { ip = ".12" }</text>
+<text x="25" y="158">  rmq01 = { ip = ".13" }</text>
+<text x="25" y="184">  mc01  = { ip = ".14" }</text>
+<text x="25" y="210">  db01  = { ip = ".15" }</text>
+<text x="25" y="236">}</text>
+</g>
+<rect x="290" y="95" width="230" height="110" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="305" y="121" font-weight="bold">main.tf: üks plokk</text>
+<g font-family="monospace" font-size="13" xml:space="preserve">
+<text x="305" y="147">resource "…_vm" "lab" {</text>
+<text x="305" y="169">  for_each = var.vms</text>
+<text x="305" y="191">  name = each.key</text>
+</g>
+<g font-family="monospace" font-size="13" xml:space="preserve">
+<rect x="570" y="20" width="260" height="40" rx="8" fill="#fff3e0" stroke="#ff9100"/><text x="585" y="45">lab["web01"]  VM 1101</text>
+<rect x="570" y="75" width="260" height="40" rx="8" fill="#fff3e0" stroke="#ff9100"/><text x="585" y="100">lab["app01"]  VM 1102</text>
+<rect x="570" y="130" width="260" height="40" rx="8" fill="#fff3e0" stroke="#ff9100"/><text x="585" y="155">lab["rmq01"]  VM 1103</text>
+<rect x="570" y="185" width="260" height="40" rx="8" fill="#fff3e0" stroke="#ff9100"/><text x="585" y="210">lab["mc01"]   VM 1104</text>
+<rect x="570" y="240" width="260" height="40" rx="8" fill="#fff3e0" stroke="#ff9100"/><text x="585" y="265">lab["db01"]   VM 1105</text>
+</g>
+<g stroke="#5e35b1" stroke-width="2" marker-end="url(#a)">
+<line x1="250" y1="150" x2="288" y2="150"/>
+<line x1="520" y1="150" x2="568" y2="40"/><line x1="520" y1="150" x2="568" y2="95"/><line x1="520" y1="150" x2="568" y2="150"/><line x1="520" y1="150" x2="568" y2="205"/><line x1="520" y1="150" x2="568" y2="260"/>
+</g>
+</svg>

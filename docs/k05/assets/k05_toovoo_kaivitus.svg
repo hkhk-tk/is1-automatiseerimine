@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="800" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c62828"/></marker></defs>
+<rect width="800" height="370" fill="#ffffff"/>
+<g text-anchor="middle">
+<rect x="20" y="20" width="220" height="60" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/><text x="130" y="45" font-weight="bold">1. sündmus</text><text x="130" y="67" font-size="14">push, pull_request, nupp</text>
+<rect x="290" y="20" width="220" height="60" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="400" y="45" font-weight="bold">2. GitHub loeb faili</text><text x="400" y="67" font-size="14">.github/workflows/ci.yml</text>
+<rect x="560" y="20" width="220" height="60" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="670" y="45" font-weight="bold">3. uus VM (runner)</text><text x="670" y="67" font-size="14">ainult selle töö jaoks</text>
+<rect x="20" y="110" width="760" height="150" rx="8" fill="#fafafa" stroke="#7e57c2" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="400" y="134" font-weight="bold" fill="#5e35b1">4. sammud töötavad runneris järjest</text>
+<rect x="40" y="150" width="165" height="54" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="122" y="173">Set up job</text><text x="122" y="193" font-size="13">action'id alla</text>
+<rect x="225" y="150" width="165" height="54" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="307" y="173">checkout</text><text x="307" y="193" font-size="13">kood VM-i</text>
+<rect x="410" y="150" width="165" height="54" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="492" y="173">setup-java</text><text x="492" y="193" font-size="13">Java 21</text>
+<rect x="595" y="150" width="165" height="54" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="677" y="173">mvn -B verify</text><text x="677" y="193" font-size="13">ehitus ja testid</text>
+<text x="400" y="230" font-size="14">iga samm lõpeb väljumiskoodiga: 0 = roheline, järgmine samm algab</text>
+<text x="400" y="250" font-size="14" fill="#c62828">muu kood = samm punane, ülejäänud sammud jäävad vahele</text>
+<rect x="110" y="292" width="280" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/><text x="250" y="317" font-weight="bold">5. GitHubi jääb alles</text><text x="250" y="339" font-size="14">logi, tulemus ja artefaktid</text>
+<rect x="430" y="292" width="260" height="60" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="560" y="317" font-weight="bold">6. VM kustutatakse</text><text x="560" y="339" font-size="14">järgmine töö saab uue</text>
+</g>
+<g stroke="#7e57c2" stroke-width="2" fill="none" marker-end="url(#a)">
+<line x1="240" y1="50" x2="286" y2="50"/><line x1="510" y1="50" x2="556" y2="50"/>
+<line x1="670" y1="80" x2="670" y2="106"/>
+<line x1="205" y1="177" x2="221" y2="177"/><line x1="390" y1="177" x2="406" y2="177"/><line x1="575" y1="177" x2="591" y2="177"/>
+<line x1="250" y1="260" x2="250" y2="288"/><line x1="560" y1="260" x2="560" y2="288"/>
+</g>
+</svg>

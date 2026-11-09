@@ -3,23 +3,23 @@
 <style>text{font-family:Inter, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.l{text-anchor:start}.ln{stroke:#7e57c2;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#ede7f6;stroke:#7e57c2;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.m{fill:#5e35b1;stroke:#5e35b1}</style>
 <rect width="100%" height="100%" fill="#ffffff"/>
 <rect class="p" x="20" y="30" width="240" height="60" rx="8"/>
-<text class="s" x="140" y="56">Host: labori-seis-mari</text>
+<text class="s" x="140" y="56">Host: labori-seis-maasikas</text>
 <text class="s" x="140" y="76">.lab.hkhk.ee</text>
 <rect class="p" x="20" y="125" width="240" height="60" rx="8"/>
-<text class="s" x="140" y="151">Host: labori-seis-jaan</text>
+<text class="s" x="140" y="151">Host: labori-seis-mtamm</text>
 <text class="s" x="140" y="171">.lab.hkhk.ee</text>
 <rect class="p" x="20" y="220" width="240" height="60" rx="8"/>
-<text class="s" x="140" y="246">http://&lt;sõlme-ip&gt;/</text>
+<text class="s" x="140" y="246">http://k3s.lab.hkhk.ee/</text>
 <text class="s" x="140" y="266">reegel puudub</text>
 <rect class="m" x="320" y="105" width="170" height="100" rx="8"/>
 <text class="t w" x="405" y="140">Traefik</text>
-<text class="s w" x="405" y="162">port 80 igal sõlmel</text>
-<text class="s w" x="405" y="182">valib Host'i järgi</text>
+<text class="s w" x="405" y="162">port 80 igal node'il</text>
+<text class="s w" x="405" y="182">valib Host-päise järgi</text>
 <rect class="o" x="550" y="30" width="230" height="60" rx="8"/>
-<text class="s" x="665" y="56">is-mari</text>
+<text class="s" x="665" y="56">is-maasikas</text>
 <text class="t" x="665" y="76">Service app01</text>
 <rect class="o" x="550" y="125" width="230" height="60" rx="8"/>
-<text class="s" x="665" y="151">is-jaan</text>
+<text class="s" x="665" y="151">is-mtamm</text>
 <text class="t" x="665" y="171">Service app01</text>
 <rect class="o" x="550" y="220" width="230" height="60" rx="8"/>
 <text class="t" x="665" y="256">404 page not found</text>

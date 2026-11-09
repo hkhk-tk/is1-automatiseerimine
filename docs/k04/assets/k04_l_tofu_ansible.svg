@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 280" width="860" font-family="Inter, Arial, sans-serif" font-size="14" fill="#212121">
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker>
+<marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/></marker>
+</defs>
+<rect width="860" height="280" fill="#ffffff"/>
+<g text-anchor="middle">
+<rect x="10" y="100" width="160" height="70" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="90" y="128" font-weight="bold">terraform.tfvars</text><text x="90" y="152" font-size="13">vajalikud masinad</text>
+<rect x="210" y="100" width="150" height="70" rx="8" fill="#5e35b1"/>
+<text x="285" y="130" font-family="monospace" font-weight="bold" fill="#ffffff">tofu apply</text><text x="285" y="152" fill="#ffffff" font-size="13">loob masinad</text>
+<rect x="420" y="15" width="200" height="70" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+<text x="520" y="43" font-weight="bold">Proxmox</text><text x="520" y="67" font-size="13">viis töötavat VM-i</text>
+<rect x="420" y="185" width="200" height="70" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="520" y="213" font-weight="bold">inventory.ini</text><text x="520" y="237" font-size="13">genereeritud, nimed ja IP-d</text>
+<rect x="670" y="185" width="180" height="70" rx="8" fill="#2e7d32"/>
+<text x="760" y="215" font-family="monospace" font-weight="bold" fill="#ffffff">ansible-playbook</text><text x="760" y="237" fill="#ffffff" font-size="13">seadistab sisu</text>
+<text x="770" y="120" font-size="13">SSH: paketid,</text><text x="770" y="138" font-size="13">failid, teenused</text>
+<text x="285" y="200" font-size="13">OpenTofu: taristu</text>
+<text x="760" y="275" font-size="13">Ansible: masina sisu</text>
+</g>
+<g stroke="#5e35b1" stroke-width="2" marker-end="url(#a)">
+<line x1="170" y1="135" x2="208" y2="135"/>
+<line x1="360" y1="120" x2="418" y2="55"/>
+<line x1="360" y1="150" x2="418" y2="215"/>
+</g>
+<g stroke="#2e7d32" stroke-width="2" marker-end="url(#g)">
+<line x1="620" y1="220" x2="668" y2="220"/>
+<line x1="720" y1="185" x2="622" y2="62"/>
+</g>
+</svg>

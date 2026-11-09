@@ -76,7 +76,7 @@ Quality gate on Sonari serveris kirjas olevate tingimuste kogum, näiteks "uue k
     - etapi nimi on täpselt `Quality Gate` ja see tuleb pärast SonarQube'i
     - samm `waitForQualityGate`, mille ERROR katkestab kogu pipeline'i ja järgmised etapid jäävad tegemata
     - ootamine on piiratud 15 minutiga (`timeout`), sest Sonar töötleb klassi raporteid ükshaaval
-    - uut credential'it pole vaja: Sonar teatab tulemuse webhookiga (loengu joonis 6.3)
+    - uut credential'it pole vaja: Sonar teatab tulemuse webhookiga (loengu joonis 6.8)
 3. Süntaksi annab **Pipeline Syntax → Snippet Generator → `waitForQualityGate`**, linnuke *Abort pipeline*.
 4. Push ja oota buildi.
 

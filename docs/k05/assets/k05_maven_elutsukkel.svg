@@ -14,7 +14,7 @@
 <text x="289" y="130" font-size="14">25 testi</text>
 <text x="399" y="130" font-size="14">labori-seis.war</text>
 <text x="509" y="160" font-size="14">JaCoCo, checkstyle</text>
-<text x="674" y="130" font-size="14">pipeline täna ei kasuta</text>
+<text x="674" y="130" font-size="14">CI-s ei kasutata</text>
 <text x="400" y="210" font-size="14">clean on eraldi elutsükkel: kustutab kausta target/</text>
 </g>
 <g stroke="#7e57c2" stroke-width="1.5" fill="none" marker-end="url(#a)">

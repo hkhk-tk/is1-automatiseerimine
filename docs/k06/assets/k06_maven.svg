@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="800" height="340" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+  <defs>
+    <marker id="nool" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="800" height="340" fill="#ffffff"/>
+
+  <rect x="20" y="40" width="190" height="60" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+  <text x="115" y="66" text-anchor="middle" font-weight="700" font-family="DejaVu Sans Mono, monospace" font-size="14">pom.xml</text>
+  <text x="115" y="88" text-anchor="middle" font-size="13">nimi, versioon, sõltuvused</text>
+  <rect x="20" y="120" width="190" height="60" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+  <text x="115" y="146" text-anchor="middle" font-weight="700" font-family="DejaVu Sans Mono, monospace" font-size="14">src/</text>
+  <text x="115" y="168" text-anchor="middle" font-size="13">Java kood ja testid</text>
+
+  <text x="515" y="26" text-anchor="middle" font-size="14">mvn verify käivitab kõik faasid järjest kuni verify'ni</text>
+  <rect x="250" y="40" width="118" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="309" y="64" text-anchor="middle" font-weight="700">compile</text>
+  <text x="309" y="84" text-anchor="middle" font-size="13">kompileerib</text>
+  <rect x="384" y="40" width="118" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="443" y="64" text-anchor="middle" font-weight="700">test</text>
+  <text x="443" y="84" text-anchor="middle" font-size="13">ühiktestid</text>
+  <rect x="518" y="40" width="118" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="577" y="64" text-anchor="middle" font-weight="700">package</text>
+  <text x="577" y="84" text-anchor="middle" font-size="13">teeb WAR-i</text>
+  <rect x="652" y="40" width="128" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="716" y="64" text-anchor="middle" font-weight="700">verify</text>
+  <text x="716" y="84" text-anchor="middle" font-size="13">katvus (JaCoCo)</text>
+  <line x1="368" y1="68" x2="380" y2="68" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="502" y1="68" x2="514" y2="68" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="636" y1="68" x2="648" y2="68" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+
+  <line x1="210" y1="70" x2="246" y2="68" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="210" y1="150" x2="248" y2="90" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+
+  <rect x="360" y="150" width="210" height="56" rx="8" fill="#ffffff" stroke="#7e57c2"/>
+  <text x="465" y="174" text-anchor="middle" font-weight="700" font-size="14">testiraport</text>
+  <text x="465" y="194" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="13">target/surefire-reports/</text>
+  <rect x="590" y="150" width="190" height="56" rx="8" fill="#5e35b1"/>
+  <text x="685" y="174" text-anchor="middle" font-weight="700" font-size="14" fill="#ffffff">WAR</text>
+  <text x="685" y="194" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="13" fill="#ffffff">target/labori-seis.war</text>
+  <line x1="443" y1="96" x2="460" y2="146" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="577" y1="96" x2="660" y2="146" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+
+  <rect x="20" y="250" width="210" height="60" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="125" y="276" text-anchor="middle" font-weight="700" font-size="14">Maven Central või Nexus</text>
+  <text x="125" y="297" text-anchor="middle" font-size="13">teekide hoidla võrgus</text>
+  <rect x="270" y="250" width="200" height="60" rx="8" fill="#ffffff" stroke="#7e57c2"/>
+  <text x="370" y="276" text-anchor="middle" font-weight="700" font-family="DejaVu Sans Mono, monospace" font-size="13">~/.m2/repository</text>
+  <text x="370" y="297" text-anchor="middle" font-size="13">kohalik vahemälu</text>
+  <line x1="230" y1="280" x2="266" y2="280" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="340" y1="250" x2="306" y2="100" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <text x="490" y="274" font-size="13" fill="#424242">Teek laaditakse alla üks kord,</text>
+  <text x="490" y="294" font-size="13" fill="#424242">järgmine build võtab selle vahemälust.</text>
+</svg>

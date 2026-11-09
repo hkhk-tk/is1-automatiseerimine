@@ -10,7 +10,7 @@
 <text x="400" y="104" font-size="13" font-style="italic">ainult haru main</text>
 <g font-size="13" font-family="monospace"><text x="400" y="128">DB_PASSWORD</text><text x="400" y="146">DB_ROOT_PASSWORD</text><text x="400" y="164">RABBITMQ_PASSWORD</text><text x="400" y="182">TEACHER_TOKEN</text></g>
 <text x="400" y="201" font-size="13">(secrets)</text>
-<rect x="150" y="240" width="250" height="52" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="275" y="262" font-weight="bold">job deploy</text><text x="275" y="283" font-size="14" font-family="monospace">environment: proxmox</text>
+<rect x="150" y="240" width="250" height="52" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="275" y="262" font-weight="bold">töö deploy</text><text x="275" y="283" font-size="14" font-family="monospace">environment: proxmox</text>
 <rect x="580" y="215" width="200" height="90" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-width="1.5"/><text x="680" y="240" font-weight="bold">.env control node'il</text><text x="680" y="264" font-size="14">umask 077</text><text x="680" y="286" font-size="14">kustutatakse lõpus</text>
 </g>
 <g stroke="#7e57c2" stroke-width="2" fill="none" marker-end="url(#a)">

@@ -7,14 +7,14 @@
 <rect class="o" x="560" y="25" width="200" height="50" rx="8"/>
 <text class="s" x="660" y="55">kubectl delete pod</text>
 <rect class="p" x="40" y="130" width="200" height="80" rx="8"/>
-<text class="t" x="140" y="163">Soovitud seis</text>
+<text class="t" x="140" y="163">Soovitud olek</text>
 <text class="s" x="140" y="185">etcd: replicas: 1</text>
 <rect class="m" x="300" y="130" width="200" height="80" rx="8"/>
 <text class="t w" x="400" y="163">Kontroller</text>
 <text class="s w" x="400" y="185">võrdleb ja tegutseb</text>
 <rect class="p" x="560" y="130" width="200" height="80" rx="8"/>
-<text class="t" x="660" y="163">Tegelik seis</text>
-<text class="s" x="660" y="185">jookseb 0 podi</text>
+<text class="t" x="660" y="163">Tegelik olek</text>
+<text class="s" x="660" y="185">töötab 0 pod'i</text>
 <line class="ln" x1="140" y1="75" x2="140" y2="128" marker-end="url(#a)"/>
 <line class="ln" x1="660" y1="75" x2="660" y2="128" marker-end="url(#a)"/>
 <line class="ln" x1="240" y1="170" x2="298" y2="170" marker-end="url(#a)"/>
@@ -22,5 +22,5 @@
 <line class="ln" x1="560" y1="170" x2="502" y2="170" marker-end="url(#a)"/>
 <text class="s" x="530" y="160">jälgib</text>
 <path class="ln" d="M400,210 V265 H660 V212" marker-end="url(#a)"/>
-<text class="s" x="530" y="288">loob puuduva podi: 1 vs 0</text>
+<text class="s" x="530" y="288">soovitud 1, tegelik 0: loob uue pod'i</text>
 </svg>

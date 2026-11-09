@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 270" width="820" font-family="Inter, Arial, sans-serif" font-size="14" fill="#212121">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker></defs>
+<rect width="820" height="270" fill="#ffffff"/>
+<g text-anchor="middle">
+<rect x="185" y="15" width="210" height="62" rx="8" fill="#ffffff" stroke="#5e35b1" stroke-dasharray="5 4"/>
+<text x="290" y="41" font-weight="bold">.terraform.lock.hcl</text><text x="290" y="62" font-size="13">versioon ja kontrollsumma</text>
+<rect x="420" y="15" width="180" height="62" rx="8" fill="#ffffff" stroke="#5e35b1"/>
+<text x="510" y="41" font-weight="bold">registry</text><text x="510" y="62" font-size="13">provider'ite hoidla</text>
+<rect x="10" y="125" width="150" height="90" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="85" y="152" font-weight="bold">kood (Gitis)</text><text x="85" y="176">main.tf</text><text x="85" y="198">variables.tf</text>
+<rect x="200" y="125" width="180" height="90" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="290" y="152" font-weight="bold">tofu</text><text x="290" y="176">loeb koodi ja state'i,</text><text x="290" y="198">arvutab plaani</text>
+<rect x="420" y="125" width="180" height="90" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="510" y="152" font-weight="bold">provider</text><text x="510" y="176">bpg/proxmox</text><text x="510" y="198">tunneb Proxmoxi API-t</text>
+<rect x="640" y="125" width="170" height="90" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+<text x="725" y="152" font-weight="bold">Proxmox VE</text><text x="725" y="176">VM-id, kettad,</text><text x="725" y="198">võrk, mallid</text>
+<text x="510" y="104" font-size="13">tofu init laadib alla</text>
+<text x="620" y="240" font-size="13">HTTPS ja API token</text>
+<text x="400" y="240" font-size="13">päringud</text>
+</g>
+<g stroke="#5e35b1" stroke-width="2" marker-end="url(#a)">
+<line x1="160" y1="170" x2="198" y2="170"/>
+<line x1="380" y1="170" x2="418" y2="170"/>
+<line x1="600" y1="170" x2="638" y2="170"/>
+<line x1="510" y1="77" x2="510" y2="88"/>
+<line x1="510" y1="110" x2="510" y2="123"/>
+</g>
+<line x1="290" y1="77" x2="290" y2="123" stroke="#5e35b1" stroke-width="1.5" stroke-dasharray="5 4"/>
+<line x1="400" y1="226" x2="400" y2="180" stroke="#9e9e9e" stroke-width="1"/>
+<line x1="620" y1="226" x2="620" y2="180" stroke="#9e9e9e" stroke-width="1"/>
+</svg>

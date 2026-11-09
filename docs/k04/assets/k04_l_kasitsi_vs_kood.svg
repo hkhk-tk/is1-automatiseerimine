@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 340" width="820" font-family="Inter, Arial, sans-serif" font-size="14" fill="#212121">
+<defs>
+<marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e65100"/></marker>
+<marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5e35b1"/></marker>
+</defs>
+<rect width="820" height="340" fill="#ffffff"/>
+<rect x="10" y="10" width="390" height="320" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/>
+<text x="205" y="38" text-anchor="middle" font-weight="bold" font-size="16">Käsitsi</text>
+<g text-anchor="middle">
+<rect x="40" y="55" width="330" height="38" rx="8" fill="#ffffff" stroke="#ff9100"/><text x="205" y="79">Tiket: on vaja uut virtuaalmasinat</text>
+<rect x="40" y="107" width="330" height="38" rx="8" fill="#ffffff" stroke="#ff9100"/><text x="205" y="131">Veebiliides: klooni mall</text>
+<rect x="40" y="159" width="330" height="38" rx="8" fill="#ffffff" stroke="#ff9100"/><text x="205" y="183">Muuda mälu ja ketast, võta IP tabelist</text>
+<rect x="40" y="211" width="330" height="38" rx="8" fill="#ff9100"/><text x="205" y="235" font-weight="bold">web01 töötab</text>
+<text x="205" y="282" font-size="13">Seadistus on kirjas ainult hüperviisoris.</text>
+<text x="205" y="304" font-size="13">Teist samasugust masinat on raske teha.</text>
+</g>
+<g stroke="#e65100" stroke-width="2" marker-end="url(#o)">
+<line x1="205" y1="93" x2="205" y2="105"/><line x1="205" y1="145" x2="205" y2="157"/><line x1="205" y1="197" x2="205" y2="209"/>
+</g>
+<rect x="420" y="10" width="390" height="320" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
+<text x="615" y="38" text-anchor="middle" font-weight="bold" font-size="16">OpenTofuga</text>
+<g text-anchor="middle">
+<rect x="450" y="55" width="330" height="38" rx="8" fill="#ffffff" stroke="#5e35b1"/><text x="615" y="79">main.tf Gitis: soovitud olek</text>
+<rect x="450" y="107" width="330" height="38" rx="8" fill="#ffffff" stroke="#5e35b1"/><text x="615" y="131">tofu plan: näitab, mis muutub</text>
+<rect x="450" y="159" width="330" height="38" rx="8" fill="#ffffff" stroke="#5e35b1"/><text x="615" y="183">tofu apply: Proxmoxi API kutsed</text>
+<rect x="450" y="211" width="330" height="38" rx="8" fill="#5e35b1"/><text x="615" y="235" font-weight="bold" fill="#ffffff">web01 töötab</text>
+<text x="615" y="282" font-size="13">Kirjeldus on Gitis koos muudatuste ajalooga.</text>
+<text x="615" y="304" font-size="13">Sama kood loob sama masina uuesti.</text>
+</g>
+<g stroke="#5e35b1" stroke-width="2" marker-end="url(#p)">
+<line x1="615" y1="93" x2="615" y2="105"/><line x1="615" y1="145" x2="615" y2="157"/><line x1="615" y1="197" x2="615" y2="209"/>
+</g>
+</svg>

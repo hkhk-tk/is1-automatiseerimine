@@ -6,7 +6,7 @@
 <text x="330" y="22" text-anchor="middle" font-size="14">VPN / tulemüür</text>
 <text x="330" y="345" text-anchor="middle" font-size="14">sissetulevaid reegleid pole, ainult väljuv HTTPS</text>
 <g text-anchor="middle">
-<rect x="40" y="60" width="210" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="145" y="87" font-weight="bold">GitHub Actions</text><text x="145" y="110" font-size="14">jobide järjekord</text>
+<rect x="40" y="60" width="210" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="145" y="87" font-weight="bold">GitHub Actions</text><text x="145" y="110" font-size="14">tööde järjekord</text>
 <rect x="40" y="220" width="210" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/><text x="145" y="247" font-weight="bold">ghcr.io</text><text x="145" y="270" font-size="14">image :sha7</text>
 <rect x="410" y="40" width="370" height="285" rx="8" fill="#fafafa" stroke="#7e57c2" stroke-width="1.5"/>
 <text x="595" y="64" font-weight="bold" fill="#5e35b1">control node</text>
@@ -23,7 +23,7 @@
 </g>
 <g font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="5" stroke-linejoin="round">
 <text x="350" y="72" text-anchor="middle">1. kas on tööd?</text>
-<text x="350" y="136" text-anchor="middle">2. job deploy</text>
+<text x="350" y="136" text-anchor="middle">2. töö deploy</text>
 <text x="318" y="180" text-anchor="end">3. docker pull</text>
 <text x="605" y="155">4. deploy samm</text>
 <text x="605" y="239">5. HEALTHCHECK</text>

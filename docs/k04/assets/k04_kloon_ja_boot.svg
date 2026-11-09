@@ -9,7 +9,7 @@
 <rect x="330" y="15" width="140" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
 <text x="400" y="45" font-weight="bold">3. cloud-init</text><text x="400" y="72">draiv ide2:</text><text x="400" y="92">user-data,</text><text x="400" y="112">network-config,</text><text x="400" y="132">meta-data</text>
 <rect x="490" y="15" width="140" height="130" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="1.5"/>
-<text x="560" y="45" font-weight="bold">4. Esimene boot</text><text x="560" y="72">cloud-init seab</text><text x="560" y="92">IP, hostinime,</text><text x="560" y="112">SSH võtme</text>
+<text x="560" y="45" font-weight="bold">4. Esimene käivitus</text><text x="560" y="72">cloud-init seab</text><text x="560" y="92">IP, hostinime,</text><text x="560" y="112">SSH võtme</text>
 <rect x="650" y="15" width="140" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
 <text x="720" y="45" font-weight="bold">5. Agent</text><text x="720" y="72">teatab IP</text><text x="720" y="92">Tofu kirjutab</text><text x="720" y="112">state'i</text>
 </g>

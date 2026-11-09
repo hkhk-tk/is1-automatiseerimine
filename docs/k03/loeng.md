@@ -68,9 +68,7 @@ Joonis seob käsurea, Docker Engine'i ja registry üheks töövooks.
     Kõik need ei ole kohustuslikud. Serveris ei ole Docker Engine'i kasutamiseks vaja Docker Desktopi, ja image'eid võib Docker Hubi asemel hoida asutuse registry's. Loengus käsitleme põhjalikumalt Engine'it, käsurida, Compose'i ja registry't. Turvatööriistad ja AI-agentide eraldamine on kursuse IS2 [loengus](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/).
 
     - [Docker Desktop](https://docs.docker.com/desktop/) ühendab Windowsis ja macOS-is Engine'i (Linuxi VM-is), CLI, Compose'i ja ehitustööriistad. Laiendused (Extensions) lisavad näiteks kettakasutuse, logide ja turvakontrolli vaate.
-    - [Docker Scout](https://docs.docker.com/scout/), [Docker Hardened Images](https://docs.docker.com/dhi/) ja [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) on ülaltoodud tabelis; neid kirjeldab kursuse IS2 [loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/).
-    - AI Governance võimaldab organisatsioonil kehtestada AI-agentidele keskseid käitus- ja ligipääsureegleid ning koguda poliitikaotsuste auditilogi.
-    - MCP Enterprise Gateway vahendab agentide ligipääsu heakskiidetud MCP-tööriistadele ja haldab nende kasutamiseks vajalikke autentimisandmeid.
+    - [Docker Scout](https://docs.docker.com/scout/), [Docker Hardened Images](https://docs.docker.com/dhi/) ja [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) on kirjeldatud kursuse IS2 [loengus](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/).
 
 ## 1. Konteiner on isoleeritud protsess
 
@@ -80,11 +78,15 @@ Serveris töötab kaks rakendust, mis vajavad erinevat Java versiooni. Kummalegi
 
 Konteinerite taga on kaks vana probleemi. Rakendus töötas arendaja masinas, aga serveris puudus mõni teek või oli selle versioon teine. Teiseks vajas iga rakendus, mida teistest eraldada taheti, oma serverit. Virtualiseerimine lahendas teise probleemi 2000. aastatel, kuid iga VM kannab kaasas terve operatsioonisüsteemi ja vajab hooldust nagu eraldi server.
 
+**Ilma konteinerita.** Java ja Tomcat paigaldatakse serverisse paketina, nagu 2. kohtumisel Ansible'iga. Kui teine rakendus vajab teist Java versiooni, tuleb kaks versiooni samasse serverisse kõrvuti seadistada või võtta teine server. Arendaja masinas võib olla teine versioon kui serveris.
+
+**Konteineriga.** Kumbki rakendus saab oma image'i, milles on sobiv Java. Serverisse paigaldatakse ainult Docker. Sama image töötab arendaja masinas ja serveris ühtemoodi, sest sõltuvused on image'i sees.
+
 ??? info "Süvenemiseks: konteinerite ajalugu"
 
     Protsessi eraldamine samas operatsioonisüsteemis on vanem kui Docker. Unixi käsk `chroot` (1979) andis protsessile oma juurkataloogi. FreeBSD jail (2000) ja Solaris Zones (2005) eraldasid lisaks protsessid, võrgu ja kasutajad. Linuxi tuuma lisandusid namespace'id järk-järgult aastatel 2002–2013. cgroup'id tulid Google'i inseneridelt ja jõudsid tuuma 2008. aastal. Samal aastal ilmus LXC, mis pani need kokku konteineriks.
 
-    Docker (2013, [esimene esitlus PyConil](https://www.youtube.com/watch?v=wW9CAH9nSLs)) uut isolatsiooni ei leiutanud: esimesed versioonid kasutasid LXC-d. Uus oli pakend. Dockerfile kirjeldab, kuidas image ehitatakse, image sisaldab rakendust koos kõigi sõltuvustega, ja registry (Docker Hub) levitab seda nagu apt-repositoorium pakette. Sama image töötab arendaja masinas, testis ja tootmises. 2015. aastal loodi [Open Container Initiative](https://opencontainers.org/about/overview/), mis kirjeldab image'i vormingu ja käitamise standardina, nii et image ei sõltu enam ühest tööriistast. Samal aastal ilmus Kubernetese esimene versioon, mis käitab konteinereid paljudes serverites (7. kohtumine). Kubernetes ei vaja Dockerit: see käivitab konteinereid otse containerd või CRI-O kaudu. Red Hat tegi 2018. aastal Podmani, mis käitab samu image'eid ilma keskse daemonita (osa 6).
+    Docker (2013, [esimene esitlus PyConil](https://www.youtube.com/watch?v=wW9CAH9nSLs)) uut isolatsiooni ei leiutanud: esimesed versioonid kasutasid LXC-d. Uus oli pakend. Dockerfile kirjeldab, kuidas image ehitatakse, image sisaldab rakendust koos kõigi sõltuvustega, ja registry (Docker Hub) levitab seda nagu apt-repositoorium pakette. Sama image töötab arendaja masinas, testis ja tootmises. 2015. aastal loodi [Open Container Initiative](https://opencontainers.org/about/overview/), mis kirjeldab image'i vormingu ja käitamise standardina, nii et image ei sõltu enam ühest tööriistast. Samal aastal ilmus Kubernetese esimene versioon, mis käitab konteinereid paljudes serverites (7. kohtumine). Kubernetes ei vaja Dockerit: see käivitab samu OCI image'eid oma käituskeskkonnaga. Red Hat tegi 2018. aastal Podmani, mis käitab samu image'eid ilma keskse daemonita (osa 6).
 
     Konteinerid muutsid ka rakenduste ülesehitust. Varem paigaldati rakendus sageli ühe suure tervikuna (**monoliit**), mida uuendati ja skaleeriti korraga. Konteinerid võimaldavad rakenduse komponente eraldi pakendada ja käitada. See toetab **mikroteenuste** arhitektuuri, kus rakendus koosneb väikestest eraldi uuendatavatest teenustest, aga mitmest konteinerist koosnev lahendus ei ole automaatselt mikroteenustel põhinev. Labori seisus töötavad rakendus ja selle abiteenused (veebiserver, andmebaas, vahemälu, järjekord) eraldi konteinerites, aga rakendus app01 ise on üks tervik. Pilves käitatakse konteinereid sageli hallatud teenusena ([Amazon ECS](https://aws.amazon.com/ecs/), [Google GKE](https://cloud.google.com/kubernetes-engine), [Azure AKS](https://azure.microsoft.com/products/kubernetes-service)), kus orkestraatorit haldab teenusepakkuja.
 
@@ -237,6 +239,22 @@ Vaikevõrgus `bridge` saab konteiner IP-aadressi hosti sisemises sillas `docker0
 
     Ressursipiirangud vajavad sama tähelepanu ka protsesside arvu puhul. Vaikimisi pole `--pids-limit`-i seatud, nii et fork-pomm või lekkiv lõimede kogum ühes konteineris ammendab hosti `pid_max`-i ja ka SSH-sessioon ei saa enam uut protsessi luua. Tootmises on mõistlik seada mälu ja protsesside piir igale teenusele. CPU piir sõltub koormusest: liiga madal `--cpus` paneb latentsuse kõikuma, sest tuum piirab CPU-aega iga 100 ms perioodi kaupa.
 
+**Leia viga.** Eesmärk on avada Nginxi leht brauseris aadressil `http://<serveri IP>:8080`. Konteiner käivitati nii:
+
+```bash
+docker run -d --name veeb nginx:1.30-alpine
+docker ps                                   # STATUS: Up
+curl -I http://localhost:8080               # curl: (7) Failed to connect to localhost port 8080
+```
+
+Konteiner töötab, aga leht ei avane. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** käsus puudub pordi avaldamine `-p`.
+    - **Õige:** `docker run -d --name veeb -p 8080:80 nginx:1.30-alpine`.
+    - **Miks:** konteiner on oma võrgus ja Nginx kuulab konteineri pordil 80. Ilma võtmeta `-p` ei suuna Docker ühtegi hosti porti konteinerisse, nii et hosti pordil 8080 ei kuula keegi. `docker ps` veerg PORTS näitab sel juhul ainult `80/tcp`, mitte `0.0.0.0:8080->80/tcp`.
+
 ??? question "Kontrolli ennast"
 
     1. Milline osa konteineri keskkonnast on konteineri oma ja milline on hostiga ühine?
@@ -252,9 +270,11 @@ Tarkvaraarenduses nimetatakse **artefaktiks** ehitamise käigus loodud tulemit, 
   <figcaption>Joonis 3.8. Ehitusartefaktid Labori seisus: WAR ja image (Talvik, 2026).</figcaption>
 </figure>
 
-Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon. Image'i puhul on vastupidi: tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse.
+**Ilma image'ita.** Playbook paigaldab rakenduse igasse serverisse eraldi. Sama playbook kahe nädala vahega võib anda erineva tulemuse, kui repositooriumisse ilmus uus paketiversioon, ja testserveris ning tootmises võivad olla eri versioonid.
 
-Arendaja ehitab image'i ja proovib selle oma masinas konteinerina läbi. Seejärel laadib ta image'i registry'sse. Testserver ja tootmisserver tõmbavad sealt täpselt sama image'i, mitte ei paigalda rakendust uuesti. Tootmises kasutatakse sama image'it, seadistus, andmed ja käituskeskkond võivad aga erineda. Seda, et sisu on sama, saab kontrollida image'i räsi ehk digest'i järgi (vt allpool „Tag ja digest“).
+**Image'iga.** Tulemus ehitatakse üks kord ja sama artefakt liigub muutmata testi ja tootmisse. Serverid ei paigalda rakendust, vaid laadivad alla valmis image'i.
+
+Arendaja ehitab image'i ja proovib selle oma masinas konteinerina läbi. Seejärel laadib ta image'i registry'sse. Testserver ja tootmisserver tõmbavad sealt täpselt sama image'i, mitte ei paigalda rakendust uuesti. Tootmises kasutatakse sama image'it, seadistus, andmed ja käituskeskkond võivad aga erineda. Seda, et sisu on sama, saab kontrollida image'i räsi ehk digest'i järgi (osa 5).
 
 <figure markdown="span">
   ![Arendaja kirjutab Dockerfile'i, build teeb image'i labori-seis-app:1.4, run käivitab selle arendaja masinas, push laadib Harborisse, testserver ja tootmisserver tõmbavad sama image'i ja käivitavad konteineri](assets/k03_yks_image.svg)
@@ -282,15 +302,35 @@ mvn package          docker build              docker run
 valmis WAR         Tomcat + JRE + WAR        töötav rakendus
 ```
 
-Ehituskontekst on kaust, mis saadetakse builder'ile (`docker build -t labseis-app:1.0 .`, punkt lõpus). Fail `.dockerignore` jätab sealt välja selle, mida image ei vaja, eriti `.env`-i ja `.git`-i.
+Ehituskontekst on kaust, mis saadetakse builder'ile (`docker build -t labseis-app:1.0 .`, punkt lõpus). Fail `.dockerignore` jätab sealt välja selle, mida image ei vaja, eriti `.env`-i ja `.git`-i. Käsk `docker build --check` kontrollib Dockerfile'i levinud vigu ilma image'it ehitamata.
+
+Lisaks kolmele juhisele kohtab Dockerfile'ides veel mõnda. Tabel 3.5 seletab need, mis on Labori seisu Dockerfile'ides.
+
+??? note "Tabel 3.5. Dockerfile'i juhised"
+
+    | Juhis | Mida teeb | Tekitab kihi |
+    |---|---|---|
+    | `FROM` | valib baas-image'i, mille peale ehitatakse | |
+    | `WORKDIR` | töökataloog järgmistele juhistele ja konteineri käivitamisel | |
+    | `COPY` | kopeerib faili ehituskontekstist (või `--from` teisest astmest) image'isse | jah |
+    | `RUN` | käivitab ehitamise ajal käsu, näiteks paketi paigalduse | jah |
+    | `ARG` | muutuja, mis kehtib ainult ehitamise ajal; väärtus antakse `docker build --build-arg NIMI=…`, näiteks `ARG HUB=docker.io/library` ja `FROM ${HUB}/nginx:…` | |
+    | `ENV` | keskkonnamuutuja, mis jääb image'isse ja on olemas ka töötavas konteineris | |
+    | `USER` | millise kasutajana järgmised juhised ja konteineri protsess töötavad | |
+    | `EXPOSE` | dokumenteerib, millist porti rakendus kuulab; porti ei avalda, selleks on `-p` | |
+    | `HEALTHCHECK` | käsk, millega Docker kontrollib, kas teenus vastab (osa 4) | |
+    | `ENTRYPOINT` | programm, mis käivitub alati; `CMD` väärtus antakse sellele argumendiks | |
+    | `CMD` | vaikimisi käsk; `docker run <image> <käsk>` asendab selle | |
+
+    Ametlike image'ite `ENTRYPOINT` on sageli skript, mis enne põhiprotsessi käivitamist teeb ettevalmistusi. Näiteks Nginxi image teeb kausta `/etc/nginx/templates/` failidest konfiguratsioonifailid, MariaDB image loob tühja andmekataloogi korral andmebaasi ja kasutaja.
 
 ### Dockerfile 2: kes ehitab WAR-i
 
-Mõlemad senised Dockerfile'id eeldavad, et `target/labori-seis.war` on juba olemas. Kes selle ehitab, ja kas ehitaja masinas peab olema sobiv JDK ja Maven? Ehitamiseks on vaja tööriistu, mida rakenduse käitamisel enam ei vajata.
+Senine Dockerfile eeldab, et `target/labori-seis.war` on juba olemas. Kes selle ehitab, ja kas ehitaja masinas peab olema sobiv JDK ja Maven? Ehitamiseks on vaja tööriistu, mida rakenduse käitamisel enam ei vajata.
 
 [Mitmeastmeline ehitus](https://docs.docker.com/build/building/multi-stage/) toob WAR-i ehitamise Dockerfile'i sisse, aga jätab kompilaatori, sõltuvuste vahemälu ja lähtekoodi eraldi ehitusastmesse. Põhiküsimus on, millised failid peavad lõppimage'isse jõudma ja milliseid vajati ainult ehitamiseks. Lõppimage'isse kopeeritakse ainult valmis WAR.
 
-Kasutaja ja õiguste seadistus jääb käitusastmesse eelmisest variandist. Ehitusaste ja ühenduskoht `COPY --from` näevad välja nii:
+Ehitusaste ja ühenduskoht `COPY --from` näevad välja nii:
 
 ```dockerfile
 FROM maven:3-eclipse-temurin-21 AS build
@@ -325,20 +365,19 @@ COPY --from=build /src/target/labori-seis.war /usr/local/tomcat/webapps/ROOT.war
     CMD ["catalina.sh", "run"]
     ```
 
-    Commit'i SHA (`GIT_SHA`, antakse `docker build --build-arg GIT_SHA=…`) on viimaste ridade seas: kui see oleks faili alguses, ehitataks iga commit'iga kõik järgnevad kihid uuesti.
+    Käitusastmes loob `useradd` süsteemikasutaja ja `USER 10001` paneb Tomcati töötama selle kasutajana, mitte root'ina. Põhjalikumalt selgitab mitte-root kasutajat kursuse IS2 [loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/). Commit'i SHA (`GIT_SHA`, antakse `docker build --build-arg GIT_SHA=…`) on viimaste ridade seas: kui see oleks faili alguses, ehitataks iga commit'iga kõik järgnevad kihid uuesti.
 
 <figure markdown="span">
   ![Ehitusaste maven-image'iga teeb WAR-faili; käitusaste tomcat-image'iga saab ainult WAR-i COPY --from abil; lõppimage'is pole Maveni ega lähtekoodi](assets/k03_multistage.svg)
   <figcaption>Joonis 3.10. Mitmeastmeline ehitus: lõppimage'isse jõuab ainult WAR (Talvik, 2026).</figcaption>
 </figure>
 
-??? note "Tabel 3.5. Kolm Dockerfile'i"
+??? note "Tabel 3.6. Kaks Dockerfile'i"
 
     | Variant | Mille eest Dockerfile vastutab | Mis jääb väljapoole |
     |---|---|---|
     | 1. valmis WAR | käituskeskkond ja rakenduse lisamine | WAR ehitatakse enne |
-    | 2. kasutaja ja õigused | lisaks käituskasutaja ja kaustade õigused | WAR ehitatakse endiselt enne |
-    | 3. mitmeastmeline | WAR-i ehitamine ja käitusimage'i koostamine | seadistus ja püsivad andmed antakse käivitamisel |
+    | 2. mitmeastmeline | WAR-i ehitamine, käitusimage'i koostamine ja käituskasutaja | seadistus ja püsivad andmed antakse käivitamisel |
 
 ### Kuidas image'i kihid ja konteineri muudatused eristuvad
 
@@ -363,17 +402,42 @@ Vastus küsimusele: ei jõua. Mõlemad konteinerid loevad samu kirjutuskaitstud 
 
 Muutumatusel on kolm tagajärge. Esiteks kaob `docker exec`-iga muudetud konfiguratsioonifail järgmise uuendusega, sest uus konteiner tuleb image'ist. Parandus läheb Dockerfile'i ja uude image'isse. Teiseks saab rakenduse versiooni tagasi vahetada (rollback) eelmise image'i käivitamisega, kui see on veel registry's ning konfiguratsioon ja andmete seis seda toetavad. Kolmandaks jääb kõik, mis kihti jõudis, sinna alatiseks. Hilisemas kihis tehtud `rm` peidab faili, aga varasemast kihist see ei kao. Image'isse kopeeritud `.env` või SSH võti on kõigil, kes image'i alla laadivad.
 
-Valmis image'i sisu ei muutu. Sama Dockerfile'i uuesti ehitamisel võib tulemus aga erineda, kui sisendid on vahepeal muutunud. Näiteks kahe nädala pärast annab sama Dockerfile teise image'i, sest `FROM` tag ja `apt-get install` tõmbavad uuemad versioonid. Korratavus vajab fikseeritud baasi digest'i ja versioonidega paketinimekirja, värskus vajab vastupidist. Kumba eelistada, on poliitika küsimus.
+Valmis image'i sisu ei muutu. Sama Dockerfile'i uuesti ehitamisel võib tulemus aga erineda, kui sisendid on vahepeal muutunud. Näiteks kahe nädala pärast annab sama Dockerfile teise image'i, sest `FROM` tag ja `apt-get install` tõmbavad uuemad versioonid. Korratavus vajab fikseeritud baasi digest'i (image'i sisu räsi) ja versioonidega paketinimekirja, värskus vajab vastupidist. Kumba eelistada, on poliitika küsimus.
+
+**Leia viga.** Eesmärk on, et rakendus avaneks aadressil `http://<serveri IP>:8080/`. Dockerfile:
+
+```dockerfile
+FROM tomcat:10.1-jre21-temurin
+COPY target/labori-seis.war /usr/local/tomcat/webapps/labori-seis.war
+CMD ["catalina.sh", "run"]
+```
+
+Konteiner töötab ja logis on `Deployment of web application archive … has finished`, aga aadress `/` annab vastuseks 404. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** WAR kopeeriti nimega `labori-seis.war`.
+    - **Õige:** `COPY target/labori-seis.war /usr/local/tomcat/webapps/ROOT.war`.
+    - **Miks:** Tomcat avab iga WAR-faili tee all, mis vastab faili nimele. `labori-seis.war` on aadressil `/labori-seis/`, juurtee `/` all avaneb ainult `ROOT.war`. Rakendus töötab, aga vales kohas.
+
+??? question "Kontrolli ennast"
+
+    1. Kumb on muutumatu, image või konteiner? Mis juhtub `docker exec`-iga tehtud muudatusega uuendamisel?
+    2. Miks ei kustuta hilisem `RUN rm .env` faili image'ist, kui varasem `COPY` selle sinna kopeeris?
 
 ## 3. Andmed ja olek väljaspool konteinerit
 
 Konteineri kirjutatav kiht kuulub selle konteineri juurde. Kui konteiner eemaldatakse, kaovad ka sinna kirjutatud failid. MariaDB uuendamine tähendab vana konteineri eemaldamist ja uue loomist uuest image'ist, seega ei saa andmebaasi andmekataloog olla ainult konteineri kirjutatavas kihis.
 
+**Ilma nimega volume'ita.** Pärast `docker rm` ja uut `docker run`-i on andmebaas tühi, sest uus konteiner alustab tühjast andmekataloogist. MariaDB image loob küll iga konteineri jaoks ise nimeta volume'i, aga uus konteiner saab uue ja tühja.
+
+**Volume'iga.** Andmekataloog `/var/lib/mysql` on volume'is, mis on konteinerist eraldi. Uus konteiner ühendab sama volume'i ja leiab sealt eelmised tabelid.
+
 ### Andmed: volume ja bind mount
 
-Andmete säilitamiseks ühendatakse konteinerisse volume või hosti kataloog. **Volume**'i loob ja haldab Docker (`local` draiveriga kataloogis `/var/lib/docker/volumes/<nimi>/_data`) ja selle elutsükkel on konteinerist lahus. **Bind mount**'i puhul määrab administraator ise, milline hosti fail või kataloog konteinerisse ühendatakse. Labori seisus peab db01 andmekataloog säilima ka siis, kui MariaDB konteiner asendatakse. Tabel 3.6 võrdleb selleks kahte võimalust.
+Andmete säilitamiseks ühendatakse konteinerisse volume või hosti kataloog. **Volume**'i loob ja haldab Docker (`local` draiveriga kataloogis `/var/lib/docker/volumes/<nimi>/_data`) ja selle elutsükkel on konteinerist lahus. **Bind mount**'i puhul määrab administraator ise, milline hosti fail või kataloog konteinerisse ühendatakse. Labori seisus peab db01 andmekataloog säilima ka siis, kui MariaDB konteiner asendatakse. Tabel 3.7 võrdleb selleks kahte võimalust.
 
-??? note "Tabel 3.6. Volume ja bind mount"
+??? note "Tabel 3.7. Volume ja bind mount"
 
     | | Volume | Bind mount |
     |---|---|---|
@@ -386,7 +450,7 @@ Andmete säilitamiseks ühendatakse konteinerisse volume või hosti kataloog. **
 
 <figure markdown="span">
   ![Konteiner db01: kirjutatav kiht kaob docker rm-iga, volume /var/lib/docker/volumes all ja bind mount hosti kataloogis jäävad alles](assets/k03_l_andmed.svg)
-  <figcaption>Joonis 3.12. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist. Joonisel on praktikumi nimed (volume `dbtest`, kaust `$HOME/k03-bind`), Compose'i näites on sama roll volume'il `dbdata` (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 3.12. Kolm kohta, kuhu konteiner saab kirjutada. Konteineri kustutamise järel jäävad alles ainult kaks neist. Joonisel on näitena volume `dbtest` ja kaust `$HOME/k03-bind`, Compose'i näites on sama roll volume'il `dbdata` (Talvik, 2026).</figcaption>
 </figure>
 
 Mõlemal juhul peavad failiõigused sobima konteineris töötava protsessi kasutajaga, aga volume ja bind mount käituvad siin erinevalt.
@@ -403,9 +467,9 @@ Käsureal on mount'i jaoks kaks kuju. `-v /tee:/data` on lühivorm, mis loob puu
 
     Enne volume'ite eemaldamist (`docker compose down -v`, `docker volume rm`, `docker volume prune`) kontrolli, milliseid volume'eid käsk puudutab ja kas taastatav varukoopia on olemas. Konteineri uuesti loomine kustutatud volume'i andmeid ei taasta.
 
-Andmebaas on ainult üks rakenduse osa. Iga osa puhul tasub küsida, mis peab juhtuma, kui konteiner asendatakse uuega. Tabel 3.7 vastab sellele Labori seisu osade kaupa.
+Andmebaas on ainult üks rakenduse osa. Iga osa puhul tasub küsida, mis peab juhtuma, kui konteiner asendatakse uuega. Tabel 3.8 vastab sellele Labori seisu osade kaupa.
 
-??? note "Tabel 3.7. Mis juhtub konteineri asendamisel"
+??? note "Tabel 3.8. Mis juhtub konteineri asendamisel"
 
     | Mis | Kust tuleb | Konteineri asendamisel |
     |---|---|---|
@@ -429,9 +493,34 @@ Logid kirjutab rakendus oma standardväljundisse ja veaväljundisse (stdout, std
 
 Kasvu piiramiseks seatakse `json-file` draiverile `max-size` ja `max-file`, kas konteineri kaupa või kõigile uutele konteineritele daemoni konfiguratsioonifailis `daemon.json`. Draiver `journald` saadab konteineri logi hosti journal'isse, kus see on teiste teenuste logide kõrval ja `journalctl`-iga filtreeritav.
 
+**Leia viga.** Eesmärk on, et db01 andmed säiliksid konteineri asendamisel. Konteiner käivitati nii:
+
+```bash
+docker volume create dbdata
+docker run -d --name db01 -e MARIADB_ROOT_PASSWORD=Passw0rd \
+  -v dbdata:/var/lib/mariadb mariadb:11.4
+```
+
+Pärast `docker rm -f db01` ja sama käsu uuesti käivitamist on andmebaas tühi, kuigi volume `dbdata` on olemas. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** volume ühendati kataloogi `/var/lib/mariadb`.
+    - **Õige:** `-v dbdata:/var/lib/mysql`.
+    - **Miks:** MariaDB image hoiab andmeid kataloogis `/var/lib/mysql`. Volume ühendati kataloogi, mida keegi ei kasuta. Andmed läksid nimeta volume'isse, mille MariaDB image iga konteineri jaoks ise loob, ja uus konteiner sai uue tühja nimeta volume'i. `docker inspect db01` jaotises `Mounts` on näha, kuhu volume ühendati.
+
+??? question "Kontrolli ennast"
+
+    1. Mis jääb alles pärast `docker rm`-i: kirjutatav kiht, volume või bind mount?
+    2. Miks on keskkonnamuutuja saladuse jaoks halb koht?
+
 ## 4. Mitu teenust Compose'iga
 
-Viie `docker run` käsuga käivitatud stacki soovitud olek on kirjas ainult shelli ajaloos. [Compose](https://docs.docker.com/compose/) kirjutab selle faili.
+Rakendus koosneb mitmest teenusest, mis peavad ühes võrgus koos töötama. **Compose** on tööriist, mis kirjeldab kõik teenused ühes YAML-failis ja käivitab need ühe käsuga.
+
+**Ilma Compose'ita.** Iga teenus käivitatakse oma `docker run` käsuga, kus on pordid, võrk, volume'id ja keskkonnamuutujad. Viie teenusega stacki soovitud olek on kirjas ainult shelli ajaloos ja uuendamisel tuleb meeles pidada õiget järjekorda.
+
+**Compose'iga.** Sama info on failis `compose.yaml`, mis on Gitis. [Compose](https://docs.docker.com/compose/) loeb faili ja viib stacki selle järgi soovitud olekusse käsuga `docker compose up -d`.
 
 `compose.yaml` kirjeldab teenused, võrgud ja volume'id. `docker compose up -d` loob puuduva teenuse, loob uuesti teenuse, mille seadistus muutus, ja jätab ülejäänu puutumata. Tulemus on idempotentne nagu playbook. Erinevus on mehhanismis: Ansible muudab olemasolevat serverit, Compose peatab vana konteineri ja loob uue. Selle aja jooksul teenus ei vasta, sest Compose ei tee järkjärgulist uuendust (rolling update).
 
@@ -476,7 +565,7 @@ volumes:
   dbdata:
 ```
 
-??? note "Tabel 3.8. Compose'i faili võtmed"
+??? note "Tabel 3.9. Compose'i faili võtmed"
 
     | Võti | Tähendus |
     |---|---|
@@ -498,7 +587,7 @@ Näite lihtsustamiseks antakse paroolid siin keskkonnamuutujatena. Failipõhist 
 
 ??? note "Teatmik: docker run ja Compose, Compose'i käsud"
 
-    *Tabel 3.9. `docker run` võtmed Compose'is*
+    *Tabel 3.10. `docker run` võtmed Compose'is*
 
     | `docker run` | `compose.yaml` |
     |---|---|
@@ -510,7 +599,7 @@ Näite lihtsustamiseks antakse paroolid siin keskkonnamuutujatena. Failipõhist 
     | `--network` | `networks:` |
     | `--restart` | `restart:` |
 
-    *Tabel 3.10. Compose'i käsud*
+    *Tabel 3.11. Compose'i käsud*
 
     | Käsk | Mida teeb |
     |---|---|
@@ -536,7 +625,7 @@ Kasutaja loodud võrgus vastab sisseehitatud DNS aadressil `127.0.0.11` teenuse 
       <figcaption>Joonis 3.14. Tootmisfaili võrgud: app01, db01 ja mc01 on ainult sisemises võrgus (Talvik, 2026).</figcaption>
     </figure>
 
-    **Nginx ja konteineri muutuv IP.** Teenuse nimi lahendub Dockeri DNS-is iga kord, kui keegi seda küsib. Nginx lahendab `proxy_pass` aadressi vaikimisi ainult käivitusel, nii et kui app01 luuakse uuesti uue IP-ga, vastab web01 kuni enda taaskäivituseni 502-ga. Lahendus: Nginx'i seadistusse lisatakse `resolver 127.0.0.11` ja aadress pannakse muutujasse, siis lahendatakse nimi uuesti.
+    **Nginx ja konteineri muutuv IP.** Teenuse nimi lahendub Dockeri DNS-is iga kord, kui keegi seda küsib. Nginx lahendab `proxy_pass` aadressi vaikimisi ainult käivitusel, nii et kui app01 luuakse uuesti uue IP-ga, vastab web01 kuni enda taaskäivituseni 502-ga. Lahendus: Nginx'i seadistusse lisatakse `resolver 127.0.0.11` ja aadress pannakse muutujasse, siis lahendatakse nimi uuesti. Ametlik Nginxi image oskab resolveri aadressi ise lisada: kui konfiguratsioonifail on kaustas `/etc/nginx/templates/` ja seatud on `NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1`, asendab image'i käivitusskript programmiga `envsubst` mallis muutuja `${NGINX_LOCAL_RESOLVERS}` konteineri DNS-serveri aadressiga.
 
 ### Millal teenus on valmis
 
@@ -576,6 +665,22 @@ Töötava stacki uurimine algab olekust ja logidest, seejärel kontrollitakse se
 
 Loe juurde: [Võrguautomaatika ja NetOps](../teemad/vorguautomaatika.md)
 
+**Leia viga.** Eesmärk on, et app01 ühenduks Compose'i stackis andmebaasiga. Failis on:
+
+```yaml
+  app01:
+    environment:
+      DB_HOST: localhost
+```
+
+`docker compose ps` näitab db01 olekut `healthy`, aga app01 logis on `Connection refused`. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** `DB_HOST: localhost`.
+    - **Õige:** `DB_HOST: db01`.
+    - **Miks:** igal konteineril on oma võrk ja `localhost` tähendab konteineri sees konteinerit ennast. app01 konteineris andmebaasi pole. Teise teenuseni jõuab teenuse nime kaudu, mille Dockeri DNS lahendab db01 aadressiks.
+
 ??? question "Kontrolli ennast"
 
     1. Kuidas leiab app01 andmebaasi ja miks mitte IP-aadressi järgi?
@@ -595,6 +700,14 @@ harbor.lab.hkhk.lan / maasikas / labori-seis-app : 1.0
 ```
 
 Kui registry aadressi pole (`nginx:alpine`), on see Docker Hub.
+
+**Tag** on image'i versiooni silt (`1.0`, `11.4`, `latest`). Sama tag'i võib hiljem panna ka teisele image'ile, nii et tag ei taga, et sisu on sama. **Digest** (`sha256:…`) on image'i sisu räsi: kui sisu muutub, muutub ka digest. `docker image ls --digests` näitab mõlemat.
+
+Kohalikult ehitatud image'il on sageli lühike nimi (`labseis-app:1.0`). Enne üleslaadimist annab `docker tag` sellele teise nime, mille alguses on registry aadress, ja `docker login <registry>` logib registry'sse sisse. Uus nimi ei tee image'ist koopiat, mõlemad nimed viitavad samale image'ile.
+
+**Ilma registry'ta.** Image tuleb teise masinasse viia failina: `docker save` pakib selle arhiiviks, `scp` kopeerib ja `docker load` laadib teises masinas sisse. Iga uue versiooni ja iga masinaga tuleb seda korrata ning keegi ei näe, milline versioon kus on.
+
+**Registry'ga.** Image laaditakse üks kord üles ja iga masin, konveier või klaster laadib selle nime järgi alla. Registry näitab, millised versioonid on olemas.
 
 Registry ei ole ainult failide hoidla. Seal otsustatakse, mis tootmisse jõuab: kes tohib image'eid üles laadida, kes alla laadida ja mida enne kontrollitakse. Seepärast on registry valik ja seadistus administraatori töö samamoodi nagu apt-repositooriumide haldus.
 
@@ -643,7 +756,7 @@ Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi a
 
     Hoidla valimisel tuleb eristada kolme küsimust: milliseid paketivorminguid on vaja, kes teenust haldab ja millised funktsioonid kuuluvad valitud väljaandesse. **Ise hallatav** (self-hosted) lahendus töötab asutuse serveris või pilve virtuaalmasinas ja serverid, varundus ning uuendused on asutuse kanda. **SaaS** tähendab, et teenust haldab pakkuja ja hind sõltub sageli ka salvestatud ja alla laaditud andmemahust.
 
-    *Tabel 3.11. Artefaktihoidlate väljaanded*
+    *Tabel 3.12. Artefaktihoidlate väljaanded*
 
     | Väljaanne | Mida hoiab | Tasuta | Ise hallatav | SaaS | Piirang |
     |---|---|---|---|---|---|
@@ -668,7 +781,7 @@ Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi a
 
     Mudel ja image ei pea olema üks artefakt. Mõnikord pakitakse väike mudel ka image'isse; see on arhitektuurivalik. Mudelifailid on sageli gigabaitides ja muutuvad teises tempos kui rakendus. Seepärast laaditakse mudel eraldi ja ühendatakse konteinerisse käivitamisel, samamoodi nagu andmebaasi andmed volume'ist.
 
-    *Tabel 3.12. Registry valik*
+    *Tabel 3.13. Registry valik*
 
     | Vajadus | Valik |
     |---|---|
@@ -687,6 +800,22 @@ Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi a
     1. Klassis on 20 õppijat ühe NAT-aadressi taga ja igaüks tõmbab kümme image'it. Mis juhtub ilma vahemäluta?
     2. Miks on `insecure-registries` halb lahendus ka siis, kui registry on sisevõrgus?
 
+**Leia viga.** Eesmärk on laadida control'is ehitatud image Harborisse projekti `maasikas`. Käsud:
+
+```bash
+docker login harbor.lab.hkhk.lan
+docker build -t labseis-app:1.0 .
+docker push labseis-app:1.0
+```
+
+Väljundi esimene rida on `The push refers to repository [docker.io/library/labseis-app]` ja push lõpeb veaga `denied: requested access to the resource is denied`. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** image'i nimes puudub registry aadress ja projekt.
+    - **Õige:** `docker tag labseis-app:1.0 harbor.lab.hkhk.lan/maasikas/labseis-app:1.0` ja siis `docker push harbor.lab.hkhk.lan/maasikas/labseis-app:1.0`.
+    - **Miks:** nimi ilma registry aadressita tähendab Docker Hubi (`docker.io/library/labseis-app`). Docker proovis laadida image'i Docker Hubi ametlike image'ite alla, kuhu tavakasutaja kirjutada ei saa. Sisselogimine Harborisse ei muuda seda, kuhu nimi viitab.
+
 ??? question "Kontrolli ennast"
 
     1. Miks ei piisa sellest, et image on ainult arendaja arvutis?
@@ -696,7 +825,7 @@ Registry'ga suhtlemisel kaitseb TLS kahte asja: klient kontrollib sertifikaadi a
 
 Docker ei ole ainus viis konteinereid käivitada. Kõik allolevad tööriistad käivitavad samu OCI image'eid, seega Docker Hubist või Harborist tõmmatud image töötab neis kõigis.
 
-??? note "Tabel 3.13. Docker ja selle alternatiivid"
+??? note "Tabel 3.14. Docker ja selle alternatiivid"
 
     | Tööriist | Mis see on | Kus seda kasutatakse |
     |---|---|---|
@@ -712,18 +841,29 @@ Podmani põhikäsud on teadlikult Dockeri omadega sarnased (`podman pull`, `podm
 
 Kohaliku Dockeri kasutamisel saadab käsurida korraldused püsivalt töötavale Docker daemonile. Podmani kohalik kasutamine samasugust keskset daemonit ei vaja: käsk loob konteineri ise ja teenusena hoiab seda töös systemd.
 
+<figure markdown="span">
+  ![Ülal käsk docker run saadab korralduse root'i õigustes kogu aeg töötavale dockerd-le, mis haldab konteinereid app01, db01 ja mc01; all käsk podman run loob konteineri mc01 ise, keskset daemonit pole ja konteinerit hoiab töös systemd teenus](assets/k03_juhtimine.svg)
+  <figcaption>Joonis 3.17. Docker juhib konteinereid daemoni kaudu, Podmanis hoiab teenust töös systemd (Talvik, 2026).</figcaption>
+</figure>
+
+**Rootful** tähendab, et konteinereid juhtiv protsess töötab root'i õigustes. Nii töötab vaikimisi paigaldatud Docker. **Rootless** tähendab, et tavakasutaja käivitab konteinerid oma õigustes ja konteiner ei saa hostis rohkem, kui see kasutaja tohib. Podman töötab rootless-režiimis ilma lisaseadistuseta, kui seda käivitab tavakasutaja.
+
+**Dockeriga.** Teenuse konteiner käivitatakse `docker run --restart unless-stopped …` või Compose'iga. Pärast masina taaskäivitust käivitab konteineri uuesti `dockerd`. Kes saab Dockerit juhtida, sel on hostis root'i õigused.
+
+**Podmaniga.** Sama image käivitatakse käsuga `podman run`. Teenuseks teeb konteineri systemd: konteineri kirjeldus on unit'i failis, `systemctl` käivitab ja peatab selle ning `journalctl` näitab logi nagu teistel teenustel. Tavakasutaja konteineril on hostis ainult selle kasutaja õigused.
+
 Selle loengu põhimõisted ei sõltu tööriistast: image, konteiner, võrk ja püsisalvestus on samad ka Podmani kasutamisel.
 
 ??? info "Süvenemiseks: rootless, SELinux ja Podmani konteiner systemd teenusena"
 
     <figure markdown="span">
       ![Ülal docker CLI, dockerd, containerd, shim, runc ja konteiner; all systemd unit'i sees podman, conmon, crun, konteiner ja pasta](assets/k03_docker_vs_podman.svg)
-      <figcaption>Joonis 3.17. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
+      <figcaption>Joonis 3.18. Docker on klient ja root-daemon. Podman käivitab konteineri ise ja lõpetab, teenust hoiab systemd (Talvik, 2026).</figcaption>
     </figure>
 
     **Daemonita mudel.** Peamine arhitektuuri erinevus on juhtimismudel. Dockeris saadab CLI käsu kesksele daemonile, mis töötab kogu aeg. `podman run -d` loob konteineri ise `crun`-iga, jätab selle juurde väikese jälgija `conmon` ja käsk ise lõpetab. Daemonita ei tähenda protsessideta: iga konteineri juures on `conmon`, nagu Dockeris `containerd-shim`. Puudub kõiki konteinereid juhtiv keskne teenus, mille taaskäivitus peataks kõik konteinerid. Piirang: pärast masina taaskäivitust ei käivita konteinerit keegi, kui seda ei tee systemd.
 
-    *Tabel 3.14. Docker ja Podman: juhtimine*
+    *Tabel 3.15. Docker ja Podman: juhtimine*
 
     | Aspekt | Docker | Podman |
     |---|---|---|
@@ -734,9 +874,9 @@ Selle loengu põhimõisted ei sõltu tööriistast: image, konteiner, võrk ja p
     | rootless | toetatud: kasutajal töötab oma `dockerd` | toetatud ilma kasutaja daemonita |
     | teenus pärast taaskäivitust | daemon ja restart-poliitika | systemd (Quadlet) |
 
-    **Kuidas rootless muudab kasutaja õigusi?** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.15 näitab, kelleks konteineri root hostis muutub.
+    **Kuidas rootless muudab kasutaja õigusi?** Rootless-režiim on olemas mõlemal, aga eri kujul. Rootless Dockeris töötab tavakasutaja oma `dockerd`. Rootless Podmanis keskset teenust pole. Turvalisuse küsimus on usalduspiir: kelle õigustes töötab juhtimiskomponent ja kelleks kaardistatakse konteineri kasutajad. Rootful Dockeri juhtimisõigus on sisuliselt hosti administraatori õigus. Rootless Podman võimaldab hallata konteinereid tavakasutaja õiguste piires. Tabel 3.16 näitab, kelleks konteineri root hostis muutub.
 
-    *Tabel 3.15. Konteineri UID 0 hostis*
+    *Tabel 3.16. Konteineri UID 0 hostis*
 
     | Käitusrežiim | Konteineri UID 0 hostis |
     |---|---|
@@ -747,7 +887,7 @@ Selle loengu põhimõisted ei sõltu tööriistast: image, konteiner, võrk ja p
 
     <figure markdown="span">
       ![Rootful Dockeris jõuab kasutaja grupist docker socket'i ja root'ina töötava dockerd kaudu konteinerini, mille UID 0 on hosti root; rootless Podmanis käivitab tavakasutaja konteineri ise ja konteineri UID 0 on hostis tema UID 1000](assets/k03_rootless.svg)
-      <figcaption>Joonis 3.18. Usalduspiir: rootful Dockeris on konteineri root hosti root, rootless Podmanis tavakasutaja (Talvik, 2026).</figcaption>
+      <figcaption>Joonis 3.19. Usalduspiir: rootful Dockeris on konteineri root hosti root, rootless Podmanis tavakasutaja (Talvik, 2026).</figcaption>
     </figure>
 
     Tavakasutaja konteinerid töötavad tema user namespace'is: konteineri UID 0 on hostis see kasutaja, ülejäänud UID-d tulevad `/etc/subuid` vahemikust. Kui ründaja pääseb konteinerist välja tavalise vea kaudu, on tal tavakasutaja õigused. See vähendab õiguste ülempiiri, aga ei kaitse andmeid, mis on konteinerisse mount'itud, ega tuuma haavatavuste eest. Piirid tulevad tuumast: port alla 1024 vajab sysctl'i `ip_unprivileged_port_start`, võrk käib kasutajaruumi `pasta` kaudu ja cgroup v2 piirangud kehtivad ainult kontrolleritega, mille systemd on kasutajale delegeerinud.
@@ -791,45 +931,50 @@ Selle loengu põhimõisted ei sõltu tööriistast: image, konteiner, võrk ja p
 
 ??? info "Süvenemiseks: Dockeri alternatiivid"
 
-    **Dockeri alternatiivid**
+    Kuna image'i vorming ja käitamine on OCI standardis kirjas, saab Dockeri osi asendada teiste tööriistadega ja image jääb samaks ([ülevaade Dockeri alternatiividest](https://spacelift.io/blog/docker-alternatives)). Alternatiiv ei asenda tavaliselt Dockerit tervikuna, vaid ühte osa: arendaja töökeskkonda, konteinerite käivitamist ühes serveris või mitme serveri haldust.
 
-    Podman ei ole ainus alternatiiv. Kuna image'i vorming ja käitamine on OCI standardis kirjas, saab Dockeri iga osa asendada teise tööriistaga ja image jääb samaks ([ülevaade Dockeri alternatiividest](https://spacelift.io/blog/docker-alternatives)). Alternatiivid ei asenda Dockerit tervikuna, vaid ühte kihti: arendaja töökeskkonda, image'i ehitamist, mootorit, madala taseme käitusaega või mitme serveri haldust.
-
-    <figure markdown="span">
-      ![Kihid ja alternatiivid: arendaja töökeskkond Docker Desktop asemel Podman Desktop, Rancher Desktop, OrbStack, Colima; image'i ehitamine BuildKit asemel Buildah; mootor dockerd asemel Podman või containerd koos nerdctl-iga; käitusaeg runc asemel crun või Kata Containers; mitu serverit Docker Swarm asemel Kubernetes, OpenShift või pilve hallatud teenused](assets/k03_alternatiivid.svg)
-      <figcaption>Joonis 3.19. Dockeri osad ja nende alternatiivid kihtide kaupa (Talvik, 2026).</figcaption>
-    </figure>
-
-    *Tabel 3.16. Dockeri alternatiivid*
+    *Tabel 3.17. Dockeri alternatiivid*
 
     | Tööriist | Mida asendab | Millal valida |
     |---|---|---|
     | [Podman](https://podman.io/) | Docker Engine ja käsurida | RHEL-i pere server, rootless, systemd teenused (Quadlet) |
-    | [containerd](https://containerd.io/) ja [nerdctl](https://github.com/containerd/nerdctl) | Docker Engine | sama käitusaeg, mida kasutavad Docker ja Kubernetes; Dockeriga sarnane käsurida |
-    | [Buildah](https://buildah.io/) | `docker build` | image'ite ehitamine konveieris ilma daemonita |
-    | runc, crun | madala taseme käitusaeg | tavaliselt ei vali kasutaja, need on mootori sees; Podman kasutab crun-i |
-    | [LXC](https://linuxcontainers.org/) | (teine konteineritüüp) | süsteemikonteiner, mida hallatakse nagu väikest serverit (Proxmoxi CT) |
-    | Podman Desktop, [Rancher Desktop](https://rancherdesktop.io/), OrbStack, Colima | Docker Desktop | arendaja Windowsi või macOS-i masin; litsentsid osas 10 |
-    | Kubernetes, OpenShift | Docker Swarm, käsitsi hallatud hostid | palju servereid, kõrgkäideldavus (7. kohtumine) |
-    | virtuaalmasin, Kata Containers | konteineri isolatsioon | tugevam eraldatus, usaldamatu kood, teine OS |
+    | [Podman Desktop](https://podman-desktop.io/), [Rancher Desktop](https://rancherdesktop.io/) | Docker Desktop | arendaja Windowsi või macOS-i masin; Docker Desktop on suuremas ettevõttes tasuline (litsentsid on kursuse IS2 loengus) |
+    | Kubernetes, OpenShift | käsitsi hallatud Dockeri hostid | palju servereid, kõrgkäideldavus (7. kohtumine) |
+    | virtuaalmasin | konteineri isolatsioon | tugevam eraldatus, usaldamatu kood, teine OS |
     | PaaS (Heroku, AWS Elastic Beanstalk, Google App Engine) | kogu käituskeskkonna haldus | meeskond ei soovi konteinereid ise hallata; hinnaks on sõltuvus teenusepakkujast |
+
+    Kubernetese käituskeskkonnad (containerd, CRI-O) ja süsteemikonteinerid (LXC) on kursuse IS2 [loengus](https://hkhk-tk.github.io/is2-automatiseerimine/k03/loeng/#muud-konteinerite-kaituskeskkonnad).
+
+**Leia viga.** Eesmärk on käivitada AlmaLinuxi serveris tavakasutajana Nginx pordil 80. Käsk:
+
+```bash
+podman run -d --name veeb -p 80:80 docker.io/library/nginx:alpine
+```
+
+Podman ei käivita konteinerit ja veateates on pordi 80 kohta `Permission denied`. Miks?
+
+??? success "Vastus"
+
+    - **Oli:** tavakasutaja proovis avaldada hosti porti 80.
+    - **Õige:** `-p 8080:80` ehk hosti port 1024 või suurem, või administraator lubab madalad pordid sysctl'iga `net.ipv4.ip_unprivileged_port_start`.
+    - **Miks:** Linuxis tohib alla 1024 pordi avada ainult root. Rootless Podman töötab tavakasutaja õigustes ja tal seda õigust pole. Rootful Docker ei anna seda viga, sest `dockerd` töötab root'ina.
 
 ??? question "Kontrolli ennast"
 
     1. Mis vahe on keskse daemoniga (Docker) ja daemonita (Podman) juhtimisel?
     2. Kas Podmani kasutamiseks peab Labori seisu rakenduse koodi ümber kirjutama? Milline osa lahendusest muutub?
 
-## Kokkuvõte
+??? abstract "Kokkuvõte"
 
-Dockerfile kirjeldab, kuidas rakenduse image ehitatakse. Image'i põhjal luuakse konteiner, milles rakendus töötab.
+    Dockerfile kirjeldab, kuidas rakenduse image ehitatakse. Image'i põhjal luuakse konteiner, milles rakendus töötab.
 
-Compose kirjeldab, kuidas rakenduse teenused koos käivitatakse: milliseid image'eid kasutatakse, kuidas teenused suhtlevad ning kust tulevad seadistus ja andmed.
+    Compose kirjeldab, kuidas rakenduse teenused koos käivitatakse: milliseid image'eid kasutatakse, kuidas teenused suhtlevad ning kust tulevad seadistus ja andmed.
 
-Konteineri võib asendada, aga püsivad andmed peavad säilima. Seetõttu hoitakse andmebaasi andmed väljaspool konteineri kirjutatavat kihti.
+    Konteineri võib asendada, aga püsivad andmed peavad säilima. Seetõttu hoitakse andmebaasi andmed väljaspool konteineri kirjutatavat kihti.
 
-Kui rakendus ei vasta, alusta konteinerite olekust ja logidest. Töötav konteiner ei tähenda veel, et rakendus on kasutusvalmis.
+    Kui rakendus ei vasta, alusta konteinerite olekust ja logidest. Töötav konteiner ei tähenda veel, et rakendus on kasutusvalmis.
 
-Rakenduse uuendamisel kasutatakse uut image'it. Enne uuenduse õnnestunuks lugemist kontrollitakse teenust ja vajaduse korral võetakse kasutusele eelmine sobiv versioon.
+    Rakenduse uuendamisel kasutatakse uut image'it. Enne uuenduse õnnestunuks lugemist kontrollitakse teenust ja vajaduse korral võetakse kasutusele eelmine sobiv versioon.
 
 ??? question "Kontrolli ennast: kogu loeng"
 

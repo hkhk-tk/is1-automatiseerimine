@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 330" width="800" height="330" font-family="Inter, Arial, sans-serif" font-size="15" fill="#212121">
+  <defs>
+    <marker id="nool" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/>
+    </marker>
+    <marker id="noolA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ff9100"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="800" height="330" fill="#ffffff"/>
+
+  <rect x="20" y="70" width="170" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="105" y="96" text-anchor="middle" font-weight="700">Maven agendil</text>
+  <text x="105" y="118" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="13">-s settings.xml</text>
+
+  <rect x="230" y="16" width="330" height="184" rx="10" fill="#fafafa" stroke="#5e35b1" stroke-width="2"/>
+  <text x="246" y="40" font-weight="700">group maven-public</text>
+  <text x="246" y="58" font-size="13" fill="#424242">üks aadress mitme repositooriumi ees</text>
+  <rect x="246" y="70" width="298" height="56" rx="8" fill="#ffffff" stroke="#7e57c2"/>
+  <text x="262" y="94" font-weight="700" font-size="14">proxy maven-central</text>
+  <text x="262" y="114" font-size="13">koopia internetist laaditud teekidest</text>
+  <rect x="246" y="134" width="298" height="56" rx="8" fill="#ffffff" stroke="#7e57c2"/>
+  <text x="262" y="158" font-weight="700" font-size="14">hosted maven-releases</text>
+  <text x="262" y="178" font-size="13">asutuse enda teegid</text>
+
+  <rect x="610" y="70" width="170" height="56" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="695" y="94" text-anchor="middle" font-weight="700">Maven Central</text>
+  <text x="695" y="114" text-anchor="middle" font-size="13">internetis</text>
+
+  <line x1="190" y1="102" x2="226" y2="102" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <text x="208" y="94" text-anchor="middle" font-size="13">loeb</text>
+  <line x1="544" y1="98" x2="606" y2="98" stroke="#ff9100" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#noolA)"/>
+  <text x="695" y="150" text-anchor="middle" font-size="13" fill="#424242">laaditakse ainult siis,</text>
+  <text x="695" y="168" text-anchor="middle" font-size="13" fill="#424242">kui koopiat veel pole</text>
+
+  <rect x="20" y="236" width="170" height="64" rx="8" fill="#5e35b1"/>
+  <text x="105" y="262" text-anchor="middle" font-weight="700" fill="#ffffff">Jenkins</text>
+  <text x="105" y="284" text-anchor="middle" font-size="13" fill="#ffffff">etapp Nexus</text>
+  <rect x="230" y="236" width="330" height="64" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+  <text x="246" y="262" font-weight="700" font-size="14">hosted labori-seis</text>
+  <text x="246" y="284" font-size="13">release: sama versiooni üle ei kirjutata</text>
+  <line x1="190" y1="268" x2="226" y2="268" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <text x="208" y="260" text-anchor="middle" font-size="13">WAR</text>
+  <text x="580" y="262" font-size="13" fill="#424242">WAR on alles ka siis,</text>
+  <text x="580" y="282" font-size="13" fill="#424242">kui build kustutati</text>
+</svg>

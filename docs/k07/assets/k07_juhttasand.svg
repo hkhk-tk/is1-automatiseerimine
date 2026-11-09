@@ -7,7 +7,7 @@
 <text class="s" x="85" y="192">control node</text>
 <text class="s" x="85" y="210">HTTPS :6443</text>
 <rect class="p" x="190" y="30" width="310" height="320" rx="8" fill-opacity="0.6"/>
-<text class="t" x="345" y="55">Juhttasand (igal k3s serveril)</text>
+<text class="t" x="345" y="55">Control plane (k3s serveril)</text>
 <rect class="o" x="205" y="75" width="130" height="50" rx="8"/>
 <text class="s" x="270" y="105">scheduler</text>
 <rect class="o" x="355" y="75" width="130" height="50" rx="8"/>
@@ -16,9 +16,9 @@
 <text class="t w" x="345" y="190">API server</text>
 <rect class="o" x="275" y="260" width="140" height="60" rx="8"/>
 <text class="t" x="345" y="285">etcd</text>
-<text class="s" x="345" y="305">soovitud seis</text>
+<text class="s" x="345" y="305">soovitud olek</text>
 <rect class="o" x="540" y="30" width="250" height="320" rx="8" fill-opacity="0.6"/>
-<text class="t" x="665" y="55">Sõlm (k3s-1 … 3)</text>
+<text class="t" x="665" y="55">Node (k3s-1 … 3)</text>
 <rect class="p" x="585" y="95" width="160" height="50" rx="8"/>
 <text class="s" x="665" y="125">kubelet</text>
 <rect class="p" x="585" y="185" width="160" height="50" rx="8"/>
