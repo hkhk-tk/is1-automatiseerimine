@@ -4,22 +4,45 @@ tags:
   - secrets
 ---
 
-# 5. Triggerid, saladused ja environment
+# 5. Käsitsi käivitus ja saladused
 
-Deploy töötab, aga seda ei saa veel hallata: sa ei otsusta, millal see toimub, paroolid on failis `~/k03.env` ja keegi ei tea, mis juhtub, kui kaks inimest vajutavad korraga. Need on küsimused, mida küsib iga audit ja iga intsidendi järelanalüüs.
+Deploy töötab, aga seda ei saa veel hallata: sa ei saa seda käivitada ilma commit'ita ja paroolid on failis `~/k03.env`. Need on küsimused, mida küsib iga audit ja iga intsidendi järelanalüüs.
 
-Lõpus käivitub pipeline ka nupust ja ajakavaga, paroolid on environment'i secret'ites ja `~/k03.env` on control node'ilt kadunud. Korraga käivitub ainult üks deploy ja PR-i vana käivitus katkeb, kui tuleb uus.
+Lõpus käivitub pipeline ka nupust, paroolid on environment'i secret'ites ja `~/k03.env` on control node'ilt kadunud.
 
-**Kui teed seda tööl iga päev:** workflow'l on `workflow_dispatch` sisendiga `deploy` ja `schedule`, `gh secret list --env proxmox` näitab nelja nime, environment lubab ainult main'i ja `~/k03.env` on kustutatud. Kui see on sul juba korras, mine otse etappi „[Üks deploy korraga](#uks-deploy-korraga)“.
+**Kui teed seda tööl iga päev:** workflow'l on `workflow_dispatch` sisendiga `deploy`, `gh secret list --env proxmox` näitab nelja nime, environment lubab ainult main'i ja `~/k03.env` on kustutatud. Kui see on sul juba korras, mine edasi [esitamise](lab-8-esitamine.md) juurde. Ajakava, environment'i piiri katse, käsitsi kinnitus ja üks deploy korraga on IS2 süvenemises [Deploy haldus](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#osa-5-deploy-haldus).
 
 ## Käsitsi käivitus sisendiga
 
-Lisad workflow'le nupu, millega saab deploy käivitada ilma commit'ita. Sisend `deploy` on meie käsitsi kinnitus privaatses repos (vt allpool "Käsitsi kinnitus").
+Lisad workflow'le nupu, millega saab deploy käivitada ilma commit'ita. Sisend `deploy` on meie käsitsi kinnitus privaatses repos. Kinnituse teised viisid on IS2 süvenemise etapis [Käsitsi kinnitus](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#kasitsi-kinnitus-sinu-repo-jargi).
 
 Ilma nuputa tähendab "deploy uuesti" tühja commit'i, mis risustab ajalugu ja käivitab kõik kontrollid. Sisendi kontroll takistab ka juhuslikku klikki: deploy toimub ainult siis, kui keegi kirjutab sõna välja.
 
 1. Lisa `on:` alla [`workflow_dispatch:`](https://docs.github.com/actions/reference/workflows-and-actions/events-that-trigger-workflows) sisendiga `deploy` (`type: string`, `default: ""`).
 2. Muuda deploy job'i `if:` nii, et see käivitub kas push'il main'i või siis, kui `inputs.deploy == 'deploy'`.
+
+    ??? example "Lahendus: trigger ja tingimus"
+
+        ```yaml
+        on:
+          push:
+            branches: [main, k05-actions]
+          pull_request:
+            branches: [main]
+          workflow_dispatch:
+            inputs:
+              deploy:
+                description: "Kirjuta deploy, et paigaldada"
+                type: string
+                default: ""
+        ```
+
+        Job'is `deploy`:
+
+        ```yaml
+            if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.deploy == 'deploy'
+        ```
+
 3. Vii muudatus main'i, siis käivita workflow kaks korda: tühja sisendiga ja sõnaga `deploy`.
 
     ```bash
@@ -39,20 +62,6 @@ Ilma nuputa tähendab "deploy uuesti" tühja commit'i, mis risustab ajalugu ja k
 Tühja sisendiga käivitus tegi kõik peale deploy, mis tähendab, et nupp sobib ka lihtsalt "ehita uuesti" jaoks. Sõnaga käivitus paigaldas sama commit'i uuesti, ja see on kasulik siis, kui keegi muutis serveris midagi käsitsi ja tahad minna tagasi teadaolevasse olekusse. Nupp on näha ainult siis, kui `workflow_dispatch` on vaikeharul: seepärast pidi muudatus enne main'i jõudma.
 
 **Edasi saad minna, kui** tühja sisendiga käivituses on `deploy` hall (*skipped*) ja sõnaga `deploy` töötas see roheliselt.
-
-## Ajakava
-
-Lisad ajastatud käivituse, mis kontrollib koodi ka siis, kui keegi ei push'i. Uus CVE tuleb sõltuvusse ka ilma commit'ita. Cron on UTC-s ja käivitub ainult vaikeharul.
-
-Repo, mida keegi kuu aega ei puuduta, on kuu aega skännimata. Ajastatud käivitus muudab Trivy andmebaasi uuendused nähtavaks, ilma et peaksid ise meeles pidama.
-
-1. Lisa `schedule:` cron'iga tööpäevadeks varahommikul, minut mitte `0` (nt `"17 4 * * 1-5"`).
-2. Lisa `image` job'ile `if: github.event_name != 'schedule'`. Deploy jääb siis ise vahele, sest ta vajab image'it.
-3. Kontrolli lokaalselt: `actionlint; echo $?`
-
-Minut, mis pole `0`, on viisakus: täistunnil käivituvad tuhandete repositooriumide workflow'd ja GitHub võib neid edasi lükata. Image'i ja deploy'd ajastatud käivitus ei vaja, sest kood pole muutunud; uus image samast koodist oleks ainult uus tag ilma uue sisuta. Kui ajastatud käivitust järgmisel päeval pole, vaata kõigepealt, kas `schedule:` on main'is, sest teistel harudel GitHub seda ei loe.
-
-**Edasi saad minna, kui** `actionlint` annab `0`. Esimest ajastatud käivitust, kus töötavad ainult build, compat ja security, näed järgmisel tööpäeval.
 
 ## Environment, secret'id ja muutujad
 
@@ -83,6 +92,59 @@ Fail `~/k03.env` on täna kolmes kohas: control node'i kodukaustas, runner'i tö
     - `if:` push-tingimusse lisaks `&& vars.DEPLOY_ENABLED == 'true'`
     - `cp ~/k03.env .env` asemel samm, mis kirjutab `.env`-i (`umask 077`, `printf`); väärtused saab samm `env:` kaudu: neli secret'it ja `vars.REGISTRY`, `vars.OWNER`
     - lõppu samm `if: always()`, mis kustutab `.env`
+
+    ??? example "Lahendus: job `deploy` environment'iga"
+
+        ```yaml
+          deploy:
+            needs: image
+            if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true') || inputs.deploy == 'deploy'
+            runs-on: [self-hosted, linux, labseis]
+            environment: proxmox
+            timeout-minutes: 10
+            permissions:
+              contents: read
+              packages: read
+            defaults:
+              run:
+                working-directory: k03-docker
+            steps:
+              - uses: actions/checkout@v5
+              - uses: docker/login-action@v4
+                with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+              - name: .env secret'itest
+                env:
+                  DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+                  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+                  RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+                  TEACHER_TOKEN: ${{ secrets.TEACHER_TOKEN }}
+                  REGISTRY: ${{ vars.REGISTRY }}
+                  OWNER: ${{ vars.OWNER }}
+                run: |
+                  umask 077
+                  printf '%s=%s\n' \
+                    DB_ROOT_PASSWORD "$DB_ROOT_PASSWORD" DB_PASSWORD "$DB_PASSWORD" \
+                    RABBITMQ_PASSWORD "$RABBITMQ_PASSWORD" TEACHER_TOKEN "$TEACHER_TOKEN" \
+                    REGISTRY "$REGISTRY" OWNER "$OWNER" > .env
+              - name: Deploy
+                env:
+                  APP_IMAGE: ${{ needs.image.outputs.ref }}
+                run: |
+                  docker compose pull app01
+                  docker compose up -d --no-build --wait --wait-timeout 180 app01
+                  docker compose restart web01
+              - name: Kontroll /version
+                run: |
+                  docker compose exec -T app01 curl -fsS http://localhost:8080/version | tee version.json
+                  grep -q "\"commit\":\"$GITHUB_SHA\"" version.json || { echo "::error::vale versioon"; exit 1; }
+              - name: Koristus
+                if: always()
+                run: rm -f .env
+        ```
+
 5. Vii muudatus main'i ja kui deploy on roheline, kustuta koopia: `rm ~/k03.env`
 
 <!-- EKRAANIPILT: repo Settings → Environments → proxmox; näha Deployment branches and tags: Selected branches → main ja Environment secrets nimekiri (4 nime, väärtusi ei näe). Pärast environment'i seadistamist.
@@ -94,74 +156,9 @@ Fail `~/k03.env` on täna kolmes kohas: control node'i kodukaustas, runner'i tö
 
 > `compose.yaml` nõuab ka `REGISTRY` ja `OWNER`: ilma nendeta ebaõnnestub `docker compose up` ka siis, kui käivitad ainult app01.
 
-Paroolid jõuavad sammu `env:` kaudu, mitte `run:` teksti sisse, seepärast on logis näha käsk ilma väärtusteta. Kui kirjutaksid `${{ secrets.DB_PASSWORD }}` otse `run:`-i, paneks GitHub väärtuse skripti teksti ja see jääks runner'i ajutisse skriptifaili. `if: always()` koristus eemaldab `.env`-i ka ebaõnnestunud deploy järel. Runner'i töökausta kontroll näitas, et ilma koristuseta jääb fail sinna.
+Paroolid jõuavad sammu `env:` kaudu, mitte `run:` teksti sisse, seepärast on logis näha käsk ilma väärtusteta. Kui kirjutaksid `${{ secrets.DB_PASSWORD }}` otse `run:`-i, paneks GitHub väärtuse skripti teksti ja see jääks runner'i ajutisse skriptifaili. `if: always()` koristus eemaldab `.env`-i ka ebaõnnestunud deploy järel. Ilma koristuseta jääks fail runner'i töökausta järgmise job'ini.
 
-**Edasi saad minna, kui** `gh secret list --env proxmox` näitab nelja nime ilma väärtusteta, deploy käivitub nagu enne, repo lehel on paremal *Deployments → proxmox* ja logis on `.env` sammu käsurida ilma paroolideta.
-
-## Proovi environment'i piiri
-
-Kontrollid, kas haru piirang kehtib. Käivitad deploy harult `k05-actions`, kuigi environment lubab ainult main'i. Ootus on, et GitHub keeldub enne, kui ükski samm runner'il algab.
-
-Kui piirang ei kehti, saab iga haru autor oma koodi koos tootmise paroolidega sinu serveris käivitada.
-
-1. Käivita deploy oma harult.
-
-    ```bash
-    gh workflow run ci --ref k05-actions -f deploy=deploy
-    gh run watch
-    ```
-
-2. Ava käivituse deploy job ja leia teade, miks see ei käivitunud.
-3. Kontrolli, et runner'i töökaustas pole `.env`-i: `find ~/actions-runner/_work -name .env -path '*k03-docker*'`
-
-Deploy ebaõnnestus teatega `Branch "k05-actions" is not allowed to deploy to proxmox` ja runner ei saanud tööd üldse. See tähendab, et secret'id ei lahkunud GitHubist: kontroll toimub enne, kui job runner'ile antakse. Tühi `find` kinnitab, et ka eelmise deploy fail on koristatud. Kui deploy oleks käivitunud, puudub environment'il haru piirang või on job'il `environment:` rida puudu.
-
-**Edasi saad minna, kui** deploy job on punane haru piirangu teatega, runner'i logis pole selle käivituse job'i ja `find` on tühi.
-
-## Käsitsi kinnitus: sinu repo järgi
-
-Valid, kuidas deploy enne käivitumist inimese otsust ootab. *Required reviewers* töötab GitHubi Free ja Team plaanil ainult avalikus repos. Self-hosted runner sobib aga ainult privaatsesse reposse.
-
-Need kaks nõuet on vastuolus ja tööl lahendatakse see tavaliselt Enterprise plaaniga. Laboris kasutame nuppu: tulemus on sama, inimene otsustab enne deploy'd, aga kontroll on kirjas workflow's, mitte environment'i seadetes.
-
-| Repo | Kinnitus |
-|---|---|
-| privaatne (Classroom 50 vaikimisi) | `workflow_dispatch` sisend `deploy` + `DEPLOY_ENABLED=false`, kui tahad ainult käsitsi |
-| avalik või Enterprise | environment `proxmox` → *Required reviewers* → sina ise |
-
-*Tabel L5.1. Kinnituse viis repo nähtavuse järgi.*
-
-1. Vaata oma repo nähtavust: `gh repo view --json visibility --jq .visibility`
-2. Vali tabelist oma variant ja proovi see läbi: privaatses repos `gh variable set DEPLOY_ENABLED --body false`, siis tühi commit main'i, siis nupp sõnaga `deploy`.
-3. Pane `DEPLOY_ENABLED` tagasi `true`-ks.
-
-Muutujaga `DEPLOY_ENABLED=false` jäi push'i deploy vahele, aga nupp töötas: automaatne tee on kinni, käsitsi tee lahti. Nii käitub ka külmutusperiood tööl, kui enne puhkust või suurt üritust ei taheta automaatseid muudatusi. Muutuja on repo seadetes, seega muudad käitumist ilma commit'ita ja muutus on GitHubi auditilogis näha.
-
-**Edasi saad minna, kui** ühes käivituses jäi deploy vahele või ootas ja teises käivitus see pärast sinu otsust.
-
-## Üks deploy korraga
-
-Paned deploy järjekorda, et kaks käivitust ei teeks sama stack'iga korraga midagi. Kaks paralleelset `docker compose up`-i samas kaustas jätavad stack'i ettearvamatusse olekusse. [`concurrency`](https://docs.github.com/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) grupis on korraga üks töötav ja üks ootav töö.
-
-Kaks kiiret merge'i järjest on tavaline olukord. Ilma järjekorrata võib vanem deploy lõppeda hiljem ja tootmisse jääb eelmine versioon, kuigi mõlemad käivitused on rohelised.
-
-1. Nõuded workflow'le:
-    - deploy job'il on concurrency-grupp `deploy-proxmox`, mis ei katkesta poolikut deploy'd
-    - igal job'il on `timeout-minutes`
-    - workflow tasemel grupp katkestab sama PR-i vana käivituse, aga main'i push'i ja nupu käivitused ei oota ega katkesta üksteist (grupi nimi peab sõltuma sündmusest; avaldiste süntaks: [`${{ }}` operaatorid](https://docs.github.com/actions/reference/workflows-and-actions/expressions))
-2. Kontrolli `actionlint`-iga ja vii muudatus main'i. **Ennusta:** mis juhtub kolme kiiresti järjest käivitatud deploy'ga? Siis käivita need.
-
-    ```bash
-    for i in 1 2 3; do gh workflow run ci --ref main -f deploy=deploy; sleep 5; done
-    gh run list -w ci -L 3 --json databaseId,status,conclusion
-    ```
-
-3. Vaata kolme käivituse deploy job'i olekut ning algus- ja lõpuaega (*Actions* → käivitus → deploy).
-4. PR-il: tee kaks push'i kiiresti järjest harule `k05-actions` ja vaata, mis juhtub esimese PR-i käivitusega.
-
-Kui ootav on juba olemas, asendab uus selle ja vana ootaja tühistatakse. See on deploy puhul õige, sest viimane soov on ainus, millel on tähtsust. `cancel-in-progress: false` tähendab, et poolik deploy lõpetatakse alati, sest katkestatud `compose up` jätab stack'i kõige halvemasse olekusse. PR-il tühistati vana käivitus, sest selle tulemus polnud enam kellelegi vajalik.
-
-**Edasi saad minna, kui** teine deploy oli *Pending*, kuni esimene lõppes, või tühistati kolmanda tõttu, ükski kahest deploy'st ei käivitunud samal ajal, PR-i esimene käivitus on *Cancelled* ja `bash autograde/check.sh k05 deploy` annab `OK`.
+**Edasi saad minna, kui** `gh secret list --env proxmox` näitab nelja nime ilma väärtusteta, deploy käivitub nagu enne, repo lehel on paremal *Deployments → proxmox*, logis on `.env` sammu käsurida ilma paroolideta ja `bash autograde/check.sh k05 deploy` annab `OK`.
 
 ## Miks see nii töötab
 
@@ -171,16 +168,10 @@ Kui ootav on juba olemas, asendab uus selle ja vana ootaja tühistatakse. See on
 
     **Compose'i interpoleerimine.** Compose asendab muutujad (`${REGISTRY:?}`, `${OWNER:?}`) kogu failis enne, kui valib käivitatava teenuse.
 
-    **Concurrency-grupp.** Workflow tasemel grupp, mille nimes on `github.run_id`, on igal PR-ivälisel käivitusel unikaalne. Seega main'i käivitused ei oota üksteist ja järjekorda hoiab ainult deploy job'i grupp.
-
     **Environment.** Environment on GitHubi objekt, millel on oma secret'id, muutujad ja protection rule'id: haru piirang, kuni 6 ülevaatajat ja ooteaeg kuni 30 päeva. Secret võib olla kuni 48 KB ja environment'is on neid kuni 100.
 
     **Repo tasemel secret.** Repo tasemel secret on seevastu kättesaadav igale workflow'le igas harus. Erand on forgist tulnud PR-id ja Dependaboti käivitused, mis tavalisi secret'eid ei saa. Seetõttu on tootmiskeskkonna paroolid environment'is ja repo tasemel on ainult need secret'id, mida vajab iga job.
 
-    **Ajakava avalikus repos.** Avalikus repos lülitab GitHub `schedule:` sündmuse välja, kui repos pole 60 päeva jooksul tegevust olnud. Kui öine käivitus on vaikselt kadunud, vaata Actions lehelt, kas workflow on *disabled*.
-
     **Muutujad `vars`.** Muutujad (`vars`) sobivad seadetele, mida tahad muuta ilma commit'ita, näiteks `DEPLOY_ENABLED`. Organisatsiooni repos salvestub nende muutmine organisatsiooni auditilogisse.
 
-    **Logi maskeerimine.** GitHub asendab logis secret'i väärtuse tärnidega ainult siis, kui väärtus ilmub täpselt sellisena, nagu see salvestati. Maskeerimine on tekstiasendus, mitte kaitse: iga teisendus, lõikamine või kodeerimine (näiteks base64) annab väärtuse, mida GitHub ei tunne. Sellest tuleneb kaks reeglit. Ära väljasta secret'it logisse, ka mitte kontrolli eesmärgil. Kui secret on mõnes logis teisendatud kujul nähtav, loe see lekkinuks ja vaheta see välja, sest logi võivad lugeda ka teised. `gh run delete` eemaldab logi, kuid ei muuda olematuks seda, et keegi võis logi juba näha.
-
-Kui jõudsid kiiremini: [Lisaülesanded → 14. Sama WAR app01 VM-ile](lisa.md#14-sama-war-app01-vm-ile), viid sama WAR-i app01 VM-ile Ansible'iga, parool secret'ist ajutises failis.
+Kui jõudsid kiiremini: [Lisaülesanded → 14. Sama WAR app01 VM-ile](https://hkhk-tk.github.io/is2-automatiseerimine/k05/lisa/#14-sama-war-app01-vm-ile), viid sama WAR-i app01 VM-ile Ansible'iga, parool secret'ist ajutises failis.

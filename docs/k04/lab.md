@@ -6,47 +6,45 @@ tags:
   - Ansible
 ---
 
-# 4. kohtumine · Praktikum: OpenTofu (Terraform) Proxmoxis
+# Praktikum: OpenTofu (Terraform) Proxmoxis
 
-Kolmel eelmisel kohtumisel seadistasid masinaid, mille loomine polnud kuskil kirjas. Täna kirjeldad koodina ka masinate loomise. Koolitaja kustutas enne seda kohtumist sinu web01…db01, control node jäi alles. Kohtumise lõpuks loob üks käsk `./up.sh` kogu Labori seisu nullist uuesti: OpenTofu loob viis VM-i ja Ansible seadistab need 2. kohtumise rollidega.
+Kolmel eelmisel kohtumisel seadistasid masinaid, mille loomine polnud kuskil kirjas. Täna kirjeldad koodina ka masinate loomise. Koolitaja kustutas enne seda kohtumist sinu web01…db01, control node jäi alles. Kohtumise lõpuks loob OpenTofu muutujate põhjal viis VM-i ja kirjutab neist Ansible'i inventory, mille järgi Ansible jõuab kõigi viie masinani.
 
-!!! info "Selle korra töö"
-    - **Masin:** control node `ssh kasutaja@10.10.<nr>.10`, töökaust `~/labori-seis/k04-tofu`, märkmed `k04-tofu/NOTES.md`
-    - **Sihtmasinad:** web01, app01, rmq01, mc01, db01 (lood ise koodist), Proxmoxi UI `https://<koolitaja antud aadress>:8006` (`<github>@pve`)
-    - **Esitamine:** haru `k04-tofu` → PR → merge → tag `k04`
-    - **Ülesanded:** issue `K4` sinu repositooriumis, märkeruut iga osa kohta
-    - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga)
-    - **Eelmisest korrast vaja:** `main`-is 2. kohtumise kaust `k02-ansible/` (`site.yml`, `ansible.cfg`, rollid, roll `common` ootab cloud-init'i), Vault'i parool
-    - **Koolitajalt:** `~/.config/is1/proxmox.env` (ajutine API token, kehtib 5. kohtumise eelõhtuni) ja `~/.config/is1/s3.env` control node'il
-    - **Packer:** paigaldad golden image'i osas control node'ile (HashiCorpi apt-paketihoidla), pluginad `hashicorp/proxmox` ja `hashicorp/ansible`
+**Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
+
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa küsimusele käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
+
+??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
+
+    **Saad valmis kujul:** starteris tühja kausta `k04-tofu/` ja kausta `k02-ansible/`, kuhu Tofu kirjutab inventory. Starteri `.gitignore` hoiab state'i, `terraform.tfvars`-i, plaanifailid ja `.terraform/` kausta Gitist väljas. Koolitaja pani control node'ile faili `~/.config/is1/proxmox.env`, kus on ajutine API token ja sinu `IS1_*` väärtused. Token kehtib 5. kohtumise eelõhtuni. Proxmoxis on Ubuntu 24.04 ja AlmaLinux 9 mallid tag'iga `template`. Eelmiste kohtumiste tööd see praktikum ei vaja: alustad harust `main`.
+
+    **Teed ise:** kirjutad kaustas `~/kursus/k04-tofu` OpenTofu koodi, mis loob kõigepealt ühe VM-i ja siis muutujate põhjal viis, kirjutad Tofu väljundist Ansible'i inventory ja esitad töö harust `k04-tofu` PR-i ja tag'iga `k04`. Proxmoxi UI-s (`https://<koolitaja antud aadress>:8006`, kasutaja `<github>@pve`) näed, mida kood lõi. Ülesanded on repositooriumi issue's `K4`.
+
+    **Kui midagi läks katki:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. `tofu destroy` kustutab kõik VM-id, mille kood lõi, ja järgmine `tofu apply` loob need uuesti. Kui `apply` ütleb `vm_id ... already exists`, on samal ID-l vana VM alles: vaata Proxmoxi UI-s oma pool'i.
+
+??? abstract "Õpiväljundid"
+
+    1. Kirjutad OpenTofu koodi, mis leiab malli data source'iga ja loob sellest VM-i koos cloud-init'i võrgu ja SSH-võtmega.
+    2. Loed enne `apply`-d plaanist, kas VM muudetakse kohapeal (`~`) või tehakse uuesti (`-/+`).
+    3. Kirjeldad viit VM-i muutujate ja `for_each`-iga ning annad nende IP-d output'iga välja.
+    4. Genereerid Tofu väljundist Ansible'i inventory ja kontrollid Ansible'iga, et kõik viis masinat vastavad.
+    5. Kontrollid töö automaatkontrolli testidega ja esitad selle.
 
 ??? info "Testitud versioonid ja dokumentatsioon"
-    OpenTofu 1.12.6 (S3 lukk `use_lockfile` vajab 1.10+), `bpg/proxmox` 0.115.x, `hashicorp/local` 2.5.x, Proxmox VE 8.x / 9.x, mallid Ubuntu 24.04 ja AlmaLinux 9 GenericCloud Base, S3 backend Garage. Lisaülesannetes `kreuzwerker/docker` `~> 3.6`, `hashicorp/helm` `~> 3.0`, Terraform 1.7+ (`terraform test` koos `mock_provider`-iga), Conftest 0.62 (OPA 1.6).
 
-    [OpenTofu](https://opentofu.org/docs/) · [bpg/proxmox provider](https://registry.terraform.io/providers/bpg/proxmox/latest/docs) · [Packer](https://developer.hashicorp.com/packer/docs) · [Terraform](https://developer.hashicorp.com/terraform/docs) · [Proxmox VE](https://pve.proxmox.com/pve-docs/)
+    OpenTofu 1.12.6, `bpg/proxmox` 0.115.x, `hashicorp/local` 2.5.x, Proxmox VE 8.x / 9.x, mallid Ubuntu 24.04 ja AlmaLinux 9 GenericCloud Base.
 
-Iga osa käib sama rütmiga: kirjutad koodi, **ennustad**, mida plaan näitab, loed plaani, teed `apply` ja kontrollid tulemust mujalt kui Tofust (UI, VM-i sees, Ansible, `/health`). Kui juhendis on **Ennusta:**, mõtle vastus enne käsu käivitamist läbi ja võrdle siis tulemusega. Mitu sammu on katsed, mille plaani ainult loed: need näitavad, mida Tofu teeks, ilma et midagi katki läheks. Otsused (drift, intsident) kirjutad faili `NOTES.md`, sest koolitaja küsib nende põhjuseid.
+    [OpenTofu](https://opentofu.org/docs/) · [bpg/proxmox provider](https://registry.terraform.io/providers/bpg/proxmox/latest/docs) · [Terraform](https://developer.hashicorp.com/terraform/docs) · [Proxmox VE](https://pve.proxmox.com/pve-docs/)
 
-## Mis on kohustuslik
-
-| Osa | Mis | Millal |
-|---|---|---|
-| Kohtumise ajal | [Üks VM koodist](lab-1-uks-vm.md), [Viis VM-i muutujatega](lab-2-viis-vmi.md), [Moodul, moved ja state](lab-3-moodul-state.md), [Üks käsk](lab-4-uks-kask.md) | kohtumise ajal |
-| Võib lõpetada pärast kohtumist | [Elutsükkel ja kaitsed](lab-5-elutsukkel.md), [Import, drift ja keskkonnad](lab-6-import-drift.md), [Golden image Packeriga](lab-7-kuldne-mall.md), [Intsident: state ja tegelikkus](lab-8-intsident.md) | VPN-i kaudu enne 5. kohtumist, sest siis token aegub; intsidendi muudatused teeb koolitaja sinu pool'is, nii et anna talle enne märku |
-| Esitamine | tag `k04` `main`-i commit'il pärast merge'i ([Esitamine](lab-9-esitamine.md)) | esimene tag kohtumise lõpus; hilisem töö uue commit'iga ja `git tag -f k04` |
-
-*Tabel 1. Kohustuslik osa ja ajakava.*
+Iga osa käib sama rütmiga: kirjutad koodi, **ennustad**, mida plaan näitab, loed plaani, teed `apply` ja kontrollid tulemust mujalt kui Tofust (Proxmoxi UI, `ssh`, Ansible). Kui juhendis on **Ennusta:**, mõtle vastus enne käsu käivitamist läbi ja võrdle siis tulemusega.
 
 ## Osad
 
-1. [Üks VM koodist](lab-1-uks-vm.md): provider, data source, `test01` mallist, Task History, `~` vs `-/+`, cloud-init, `-replace` ja host key kontroll.
-2. [Viis VM-i muutujatega](lab-2-viis-vmi.md): `variables`, `validation`, `for_each` ja VM-i identiteet, `count`-i lõks, avaldised `tofu console`-is, salvestatud plaan, output'id ja `sensitive`, `tofu test`.
-3. [Moodul, moved ja state](lab-3-moodul-state.md): `modules/vm` ilma uuesti loomata, state S3-s, lukk ja mahajäänud luku vabastamine.
-4. [Üks käsk](lab-4-uks-kask.md): inventory Tofu väljundist, `up.sh` ja selle kaitse, stack nullist ja `/health` UP.
-5. [Elutsükkel ja kaitsed](lab-5-elutsukkel.md): `protection` ja kes seda näeb, `prevent_destroy`, `ignore_changes`, `create_before_destroy`, `check` ja `precondition`.
-6. [Import, drift ja keskkonnad](lab-6-import-drift.md): käsitsi loodud VM koodi alla, `-refresh-only` ja otsus, dev-workspace eraldi state'iga.
-7. [Golden image Packeriga](lab-7-kuldne-mall.md): `labseis-base-<kuupäev>` koodist, proov dev-is, rmq01 uuel mallil enne teisi, malli ja cloud-init'i kaalumine.
-8. [Intsident: state ja tegelikkus](lab-8-intsident.md): kolm lahknevust leitud, otsused ja kokkuvõte kirjas, plaan tühi.
-9. [Esitamine](lab-9-esitamine.md): kontrollid, värske kloon, PR, tag `k04`, automaatse hindaja tulemus.
+1. [Üks VM koodist](lab-1-uks-vm.md): provider, data source, `test01` mallist, `~` ja `-/+`, cloud-init, `-replace` ja host key kontroll.
+2. [Viis VM-i muutujatega](lab-2-viis-vmi.md): failid ja muutujad, `for_each`, output'id ja `sensitive`.
+3. [Inventory Tofu väljundist](lab-4-uks-kask.md): `templatefile()`, `local_file` ja Ansible'i `ping` viiele masinale.
+4. [Esitamine](lab-9-esitamine.md): kontrollid, PR, tag `k04` ja automaatkontrolli tulemus.
 
 Veaotsing: [Abi](abi.md).
+
+Kursusel IS2 jätkub sama kood: [süvenemine](https://hkhk-tk.github.io/is2-automatiseerimine/k04/syvenemine/) (`validation`, `tofu test`, skript `up.sh`), [moodul ja state S3-s](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lab-3-moodul-state/), [elutsükkel ja kaitsed](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lab-5-elutsukkel/), [import ja drift](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lab-6-import-drift/), [golden image Packeriga](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lab-7-kuldne-mall/), [intsident](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lab-8-intsident/), [lisaülesanded](https://hkhk-tk.github.io/is2-automatiseerimine/k04/lisa/) ja [AWS-i kodutöö](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k04-aws/).

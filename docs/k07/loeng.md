@@ -2,25 +2,27 @@
 tags:
   - Kubernetes
   - k3s
-  - Helm
   - Argo CD
   - GitOps
-  - SRE
+  - Loeng
 ---
 
-# 7. kohtumine · Orkestreerimine, GitOps ja töökindlus: loeng
+# Loeng: Kubernetes ja GitOps
 
-6\. kohtumisel ehitasid tarneahela, mille lõpus on testitud image registry's. Nüüd viid sama Labori seisu Kubernetese klastrisse. Kubernetes hoiab soovitud olekut pidevalt: kontrollerid võrdlevad kirjeldust tegeliku olekuga ja kõrvaldavad vahe. Sama mõte kandub GitOps'i (soovitud olek on Gitis) ja töökindlusse (SLO ütleb, milline on soovitud olek kasutaja vaates).
+6\. kohtumisel ehitasid tarneahela, mille lõpus on testitud image registry's. Nüüd viid sama Labori seisu Kubernetese klastrisse. Kubernetes hoiab soovitud olekut pidevalt: kontrollerid võrdlevad kirjeldust tegeliku olekuga ja kõrvaldavad vahe. Sama mõte kandub GitOpsi, kus soovitud olek on kirjas Gitis.
 
 ??? abstract "Õpiväljundid"
 
     Pärast kohtumist oskad:
 
     - selgitada control loop'i abil, miks Kubernetes taastab kustutatud pod'i ise;
-    - eristada requests'e ja limits'e ning startup-, readiness- ja liveness-probe'i ülesandeid;
-    - võrrelda push- ja pull-tüüpi deploy'd ja valida GitOps'i sync policy olukorra järgi;
-    - kavandada klastri versiooniuuendust node'i kaupa;
-    - sõnastada teenusele SLI ja SLO, arvutada error budget'i ja otsustada selle järgi, kas deploy'd jätkata.
+    - nimetada Labori seisu jaoks vajalikud objektid ja selgitada, kuidas need label'ite kaudu seotud on;
+    - eristada readiness- ja liveness-probe'i ülesandeid;
+    - võrrelda push- ja pull-tüüpi deploy'd ning selgitada Argo CD sync policy't.
+
+??? info "Mida see loeng ei käsitle"
+
+    Requests'ide ja limits'ide valik, katkestuseta uuendus, NetworkPolicy, Helm ja Kustomize, GitOpsi riskid, klastri versiooniuuendus, SRE ja sündmuspõhine automaatika on kursuse IS2 [loengus](https://hkhk-tk.github.io/is2-automatiseerimine/k07/loeng/).
 
 ## 1. Soovitud olek ja control loop
 
@@ -44,22 +46,33 @@ Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) o
 
 Ansible'i playbook on samuti deklaratiivne, vahe on ajas. Ansible rakendab soovitud oleku siis, kui playbook'i käivitad, ja käsitsi tehtud muudatus püsib järgmise käivituseni. Kubernetese kontrollerid töötavad pidevalt: käsitsi muudetud pod'i kirjutab kontroller sekunditega üle. Muudatus tuleb teha kirjeldusse.
 
-Control plane on samasugune jagatud ressurss nagu andmebaasiserver. Iga node'i kubelet ja iga kontroller hoiab API serveriga avatud ühendust, nii et uus tööriist, mis teeb API-le palju päringuid, võib koormata kogu klastrit. OpenAI 2024. aasta detsembri katkestus algas just nii: uus telemeetriateenus käivitus korraga kõigil node'idel ja koormas control plane'i üle ([OpenAI incident report](https://status.openai.com/incidents/ctrsv3lwd797)). Seepärast tuuakse uus DaemonSet node'idele lainetena, mitte kõigile korraga.
+Compose ja Kubernetes kirjeldavad mõlemad soovitud olekut YAML-is. Erinevad on hostide arv ja see, kes teenuse rikke korral uuesti käivitab.
 
-## 2. Objektid, label'id ja ressursid
+??? note "Tabel 7.1. Compose ja Kubernetes"
+
+    | | Docker Compose | Kubernetes |
+    |---|---|---|
+    | Hostid | üks | mitu node'i |
+    | Kui host kaob | teenused seisavad, kuni host on tagasi | pod'id luuakse teistele node'idele |
+    | Kirjeldus | `compose.yaml` | YAML-manifestid, igas üks või mitu objekti |
+    | Sõltuvused | `depends_on` | init-konteiner ja readiness-probe |
+    | Väljast ligipääs | hosti port | Service ja Ingress |
+    | Kus kasutatakse | arendaja arvuti, üks server | [k3s](https://docs.k3s.io/) väikeses klastris, hallatud klaster pilves (EKS, AKS, GKE), OpenShift |
+
+## 2. Objektid ja label'id
 
 VM-idel oli db01 kindel masin kindla IP-ga. Klastris on pod ajutine: iga uus pod saab uue nime ja uue IP. Kubernetes lahendab selle objektidega, mis on omavahel seotud ainult **label'ite** kaudu:
 
-| Objekt | Mida teeb |
-|---|---|
-| [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) | kirjeldab, mitu koopiat millisest pod'i mallist peab töötama; iga mallimuudatuse jaoks loob uue ReplicaSet'i |
-| ReplicaSet | hoiab koopiate arvu |
-| [Service](https://kubernetes.io/docs/concepts/services-networking/service/) | annab pod'ide hulgale püsiva nime ja IP; liiklus läheb kõigile sobiva label'iga Ready pod'idele |
-| ConfigMap, Secret | seadistus ja saladused |
-| PersistentVolumeClaim | kettaruum, mis jääb alles ka siis, kui pod asendatakse |
-| Namespace | eraldab meeskondade (meie kursusel õppijate) objektid |
+??? note "Tabel 7.2. Põhiobjektid."
 
-*Tabel 7.1. Põhiobjektid.*
+    | Objekt | Mida teeb |
+    |---|---|
+    | [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) | kirjeldab, mitu koopiat millisest pod'i mallist peab töötama; iga mallimuudatuse jaoks loob uue ReplicaSet'i |
+    | ReplicaSet | hoiab koopiate arvu |
+    | [Service](https://kubernetes.io/docs/concepts/services-networking/service/) | annab pod'ide hulgale püsiva nime ja IP; liiklus läheb kõigile sobiva label'iga Ready pod'idele |
+    | ConfigMap, Secret | seadistus ja saladused |
+    | PersistentVolumeClaim | kettaruum, mis jääb alles ka siis, kui pod asendatakse |
+    | Namespace | eraldab meeskondade (meie kursusel õppijate) objektid |
 
 Iga objekti välju näed käsuga `kubectl explain`, näiteks `kubectl explain deployment.spec.replicas`.
 
@@ -70,7 +83,7 @@ Iga objekti välju näed käsuga `kubectl explain`, näiteks `kubectl explain de
 
 Label'i viga ei anna veateadet. Kui Service'i selektoris on `app: web` ja pod'il `app: web01`, luuakse mõlemad objektid edukalt, aga Service on tühi. Secret on ainult base64-kodeeritud ja salvestatakse etcd-s vaikimisi krüpteerimata. Õigus `list secrets` annab kõigi namespace'i Secret'ite väärtused, mitte ainult nimed.
 
-Node'i jagavad paljud pod'id, nii et keegi peab otsustama, kuhu uus pod mahub. [`requests`](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) on reserveering: scheduler paneb pod'i ainult node'ile, kuhu requests'ide summa veel mahub, tegelikku kasutust arvestamata. `limits` on lagi, mille jõustab kernel.
+Node'i jagavad paljud pod'id, nii et keegi peab otsustama, kuhu uus pod mahub. [`requests`](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) on reserveering: scheduler paneb pod'i ainult node'ile, kuhu requests'ide summa veel mahub. `limits` on lagi, mille jõustab kernel. Koolitaja klastris nõuab sinu namespace'i kvoot, et igal konteineril oleks `requests` kirjas.
 
 ```yaml
 resources:
@@ -81,56 +94,41 @@ resources:
     memory: 512Mi
 ```
 
-Mälu ja CPU limiit käituvad erinevalt. Mälulimiidi ületanud protsessi tapab OOM killer ja konteiner lõpeb koodiga 137 (`OOMKilled`). CPU limiit ei tapa, vaid aeglustab: `cpu: 500m` lubab 50 ms protsessoriaega iga 100 ms kohta ja ülejäänud aja protsess ootab. See avaldub latentsusena, mitte veana, seepärast jätavad paljud meeskonnad CPU-le ainult requests'i.
-
-Requests'ide valik on sama kompromiss, mida VMware'i administraator teeb ülebroneerimisega. Liiga väikesed requests'id pakivad node'id täis ja mälupuuduse korral tõstab kubelet pod'e välja. Liiga suured jätavad node'id pooltühjaks. Mõistlik algus on mõõdetud kasutus väikese varuga. Namespace'i tasandil paneb [ResourceQuota](https://kubernetes.io/docs/concepts/policy/resource-quotas/) requests'idele ülempiiri ja LimitRange annab vaikeväärtused pod'idele, kus requests puudub. Mälupuuduse korral tõstetakse esimesena välja pod'id, millel requests puudub, viimasena need, mille requests võrdub limits'iga. Andmebaasile tasub anda võrdsed väärtused.
-
-## 3. Probe'id ja võrk: kes saab liiklust
+## 3. Probe'id ja Ingress: kes saab liiklust
 
 Töötav protsess ei tähenda töötavat teenust: Tomcat võib rakendust veel lahti pakkida või lõim on lukus. Seepärast kontrollib kubelet konteinerit kolme eri [probe'iga](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/):
 
-| Probe | Küsimus | Kui ei vasta |
-|---|---|---|
-| startup | kas käivitus on läbi? | teisi probe'e veel ei tehta |
-| readiness | kas pod võtab praegu liiklust? | pod eemaldatakse Service'i lõpp-punktidest |
-| liveness | kas protsess on kinni jäänud? | kubelet taaskäivitab konteineri |
+??? note "Tabel 7.3. Kolm probe'i ja nende tagajärg."
 
-*Tabel 7.2. Kolm probe'i ja nende tagajärg.*
+    | Probe | Küsimus | Kui ei vasta |
+    |---|---|---|
+    | startup | kas käivitus on läbi? | teisi probe'e veel ei tehta |
+    | readiness | kas pod võtab praegu liiklust? | pod eemaldatakse Service'i lõpp-punktidest |
+    | liveness | kas protsess on kinni jäänud? | kubelet taaskäivitab konteineri |
 
 Levinud viga on panna liveness kontrollima andmebaasi. Kui andmebaas läheb hetkeks maha, ebaõnnestub kõigi pod'ide liveness korraga ja kubelet taaskäivitab kõik konteinerid. Iga järgmise ebaõnnestumise järel kasvab ooteaeg (CrashLoopBackOff) kuni viie minutini, nii et pod'id ootavad ka siis, kui andmebaas on juba tagasi. Andmebaasi kättesaadavus kuulub readiness'i alla: pod jääb ellu, aga liiklust ei saa.
 
-Readiness'ile toetub ka **rolling update**. Uus ReplicaSet kasvab ühe pod'i kaupa ja vana kahaneb alles siis, kui uus pod on Ready. Kui uus versioon Ready'ks ei saa, jääb uuendus pooleli ja vana versioon teenindab edasi. Kubernetes ise muudatust tagasi ei pööra: rollback'i teeb inimene (`kubectl rollout undo`), pipeline või GitOps'i tööriist.
-
-<figure markdown="span">
-  ![Rolling update: uus ReplicaSet kasvab, vana kahaneb](assets/k07_rolling_update.svg)
-  <figcaption>Joonis 7.4. Rolling update kahe ReplicaSet'i vahel. Vana pod läheb ära alles pärast seda, kui uus on Ready.</figcaption>
-</figure>
-
-Rolling update võib anda 502 vastuseid ka siis, kui probe'id on õiged. Kui pod lõpetatakse, saab konteiner SIGTERM'i ja samal ajal eemaldatakse pod lõpp-punktidest. Eemaldus jõuab igale node'ile mõne hetkega, nii et kui rakendus sulgub kohe, saavad selle aja jooksul saabunud päringud vea. Lahendus on `preStop` hook, mis ootab mõned sekundid, ja rakendus, mis lõpetab pooleliolevad päringud ([Pod termination](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination)). Load balancer'i taga töötanud admin tunneb seda kui serveri `drain`-olekut enne hooldust.
+Compose'i `depends_on`-i Kubernetesis ei ole. Selle asemel ootab pod sõltuvusi **init-konteineris**: see käivitub enne rakenduse konteinerit ja lõpetab alles siis, kui andmebaas ja järjekord vastavad ([Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)).
 
 Väljast jõuab liiklus klastrisse **Ingress**'i kaudu. Ingress-kontroller (k3s-is Traefik) valib Service'i HTTP `Host`-päise järgi. Tundmatu host saab vastuse 404, rakendus ilma Ready pod'ita 503.
 
 <figure markdown="span">
   ![Traefik suunab päringud Host-päise järgi õige namespace'i Service'ile](assets/k07_ingress.svg)
-  <figcaption>Joonis 7.5. Ingress-kontroller valib Service'i Host-päise järgi.</figcaption>
+  <figcaption>Joonis 7.4. Ingress-kontroller valib Service'i Host-päise järgi.</figcaption>
 </figure>
 
-Klastri sisevõrk on vaikimisi lame: iga pod jõuab iga pod'ini. [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) lubab ainult nimetatud ühendused, kuid selle jõustab võrgulaiendus (CNI). Kui CNI seda ei toeta, objekt luuakse ja midagi ei blokeerita. NetworkPolicy tugineb label'itele, seega on see tõhus ainult koos RBAC-iga, mis ei luba suvaliste label'itega pod'e luua.
+## 4. GitOps
 
-## 4. Helm, Kustomize ja GitOps
+Kui kaks admini teevad samal ajal `kubectl apply` erinevatest kaustadest, on klastris see, mida viimane saatis. Kui keegi parandab midagi `kubectl edit`-iga, on klastris midagi, mida Gitis pole. Sellist erinevust soovitud ja tegeliku oleku vahel nimetatakse **triiviks** (drift). [GitOps](https://opengitops.dev/) lahendab selle nii: soovitud olek on kirjas Gitis ja klastris töötav agent ([Argo CD](https://argo-cd.readthedocs.io/en/stable/) või Flux) loeb selle ise ja viib klastri sellega kooskõlla. See on sama control loop ühe taseme võrra kõrgemal.
 
-Valmis tarkvara, näiteks monitooring või andmebaasi operaator, tähendab kümneid manifeste ja iga keskkond vajab veidi erinevaid väärtusi. [Helm](https://helm.sh/docs/) koostab **chart**'i mallidest values-faili põhjal manifestid. Iga paigaldus on **release**, mille ajalugu hoitakse namespace'is ja rollback loob vanast revisjonist uue revisjoni. `helm upgrade` ilma values-failita paneb väärtused tagasi chart'i vaikeväärtustele ja eelmise paigalduse `--set` väärtused kaovad märkamatult. Seepärast hoitakse väärtused failis ja Gitis ning chart'i versioon lukustatakse nagu image'i tag. Oma rakenduse manifestidele lisavad paljud meeskonnad keskkonnapõhised muudatused [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)'iga ilma mallideta.
+??? note "Tabel 7.4. Push- ja pull-mudel."
 
-Kui kaks admini teevad samal ajal `kubectl apply` erinevatest kaustadest, on klastris see, mida viimane saatis. Kui keegi parandab midagi `kubectl edit`-iga, on klastris midagi, mida Gitis pole. [GitOps](https://opengitops.dev/) lahendab selle nii: soovitud olek on kirjas Gitis ja klastris töötav agent ([Argo CD](https://argo-cd.readthedocs.io/en/stable/) või Flux) loeb selle ise ja viib klastri sellega kooskõlla. See on sama control loop ühe taseme võrra kõrgemal.
-
-| | Push: CI teeb deploy | Pull: GitOps'i agent |
-|---|---|---|
-| Klastri võti | CI runner'il | klastri sees |
-| Käsitsi muudatus | jääb märkamata | nähtav triivina |
-| Rollback | uus pipeline'i käivitus | `git revert` |
-| Kus on kirjas, mis töötab | pipeline'i logis | Giti ajaloos |
-
-*Tabel 7.3. Push- ja pull-mudel.*
+    | | Push: CI teeb deploy | Pull: GitOps'i agent |
+    |---|---|---|
+    | Klastri võti | CI runner'il | klastri sees |
+    | Käsitsi muudatus | jääb märkamata | nähtav triivina |
+    | Rollback | uus pipeline'i käivitus | `git revert` |
+    | Kus on kirjas, mis töötab | pipeline'i logis | Giti ajaloos |
 
 CI ehitab ja testib image'i ning kirjutab Giti uue tag'i, kuid klastrisse tal ligipääsu ei ole. Tag peab olema muutumatu, näiteks commit'i SHA: `:latest` ei muutu Gitis kunagi ja agent ei näe põhjust midagi teha. Argo CD sync policy koosneb kolmest eraldi otsusest:
 
@@ -145,76 +143,22 @@ syncPolicy:
 
 Argo CD näitab kahte olekut. **Sync status** ütleb, kas klaster vastab Gitile, **health status**, kas rakendus töötab. Olematu image'i tag annab oleku Synced ja Degraded: Argo tegi oma töö, viga on Gitis. `kubectl rollout undo` siin ei aita, sest agent taastab Gitis kirjeldatud oleku. Rollback tehakse `git revert`-iga, nii et igal klastri muudatusel on commit, autor ja põhjus.
 
-GitOps'il on oma hind. Argo CD-l on tavaliselt laiad õigused kõigis klastrites, mida ta haldab, nii et see on ründaja jaoks sama väärtuslik sihtmärk nagu 6. kohtumise Jenkins ([CVE-2022-24348](https://nvd.nist.gov/vuln/detail/CVE-2022-24348)). Teine küsimus on Giti ülesehitus: kas keskkonnad on harud või kaustad. Enamik meeskondi kasutab ühte haru ja keskkonnakaustu, kus keskkondade vahe on nähtav ühe `diff`-iga. Sama mõtet järgis Ansible'i `group_vars`: üks kood, keskkonna erinevus eraldi failis.
+Praktikumis annad Labori seisu Argo CD-le, muudad soovitud olekut Gitis ja vaatad, kuidas Argo käsitsi tehtud muudatuse tagasi pöörab.
 
-## 5. Klastri elutsükkel ja CloudOps
+??? info "Loe juurde"
 
-Kubernetes annab välja umbes kolm minor-versiooni aastas ja iga versioon saab parandusi umbes 14 kuud ([Releases](https://kubernetes.io/releases/)). Klaster, mida ei uuendata, on aasta pärast ilma turvaparandusteta, nii et uuendus on sama korrapärane töö nagu OS-i patch'imine.
+    [Orkestreerimine ja automatiseerimine](../teemad/orkestreerimine.md) · [Kubernetese klastrihaldus](../teemad/kubernetes-klastrihaldus.md)
 
-Järjekorra määrab [version skew policy](https://kubernetes.io/releases/version-skew-policy/). Kõigepealt uuendatakse control plane, ühe minor-versiooni kaupa. Node'ide kubelet võib olla mõne versiooni võrra vanem, nii et node'id uuendatakse hiljem, lainetena: `kubectl cordon` keelab node'ile uued pod'id ja `kubectl drain` tõstab olemasolevad mujale. Drain arvestab [PodDisruptionBudget'it](https://kubernetes.io/docs/tasks/run-application/configure-pdb/): kui rakendusel peab olema vähemalt kaks töötavat koopiat, ootab drain, kuni see on tagatud. Enne uuendust kontrolli, kas mõni manifest kasutab eemaldatavaid API-versioone, ja tee etcd'st varukoopia.
+??? abstract "Kokkuvõte"
 
-Reddit uuendas 2023. aasta märtsis klastri 1.23 pealt 1.24 peale ja oli 314 minutit maas ([You Broke Reddit](https://www.reddit.com/r/RedditEng/comments/11xx5o0/you_broke_reddit_the_piday_outage/)). 1.24 eemaldas node'idelt label'i, millele toetus aastaid tagasi käsitsi tehtud võrguseadistus. Seda seadistust polnud koodis ja selle autorid olid ettevõttest lahkunud. Uuendus oli korrektne, aga koodist mööda tehtud muudatus muutis selle riskantseks.
-
-Klastri sertifikaadid kehtivad tavaliselt aasta ja uuenevad koos klastri uuendusega. Klaster, mis töötab aasta ilma uuenduseta, lakkab ühel päeval vastamast. Aegumist tasub jälgida monitooringus samamoodi nagu veebiserveri sertifikaati.
-
-**Hallatud klaster** (EKS, AKS, GKE) võtab sinult üle control plane'i ja etcd. Node'ide uuendus, lisad (võrk, Ingress, salvestus), RBAC ja kulu jäävad sinule ning uuenduste tempo määrab pakkuja. Pilveressursside igapäevast käitamist nimetatakse **CloudOps**'iks. Mahtu lisab automaatselt [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) või Karpenter siis, kui pod jääb requests'ide tõttu `Pending` olekusse, ja kulu arvutatakse requests'ide, mitte kasutuse järgi. Paisutatud requests on pilves otsene arve.
-
-## 6. SRE: mõõdetud töökindlus
-
-Öine alert ütleb, et node'i CPU on 90%. Valvaja ei tea, kas kasutaja kannatab, ja hommikul selgub, et ei kannatanud. Teisel ööl on kõik näidikud rohelised, aga pool päringutest annab 502.
-
-[SRE](https://sre.google/sre-book/service-level-objectives/) mõõdab töökindlust kasutaja vaatest:
-
-- **SLI** on suhe: edukate sündmuste arv kõigist, näiteks HTTP vastused alla 500 ja kiiremad kui 300 ms. SLI-d mõõdetakse sealt, kust teenust kasutatakse (Ingress-kontrollerist või välisest kontrollist), mitte pod'i seest.
-- **SLO** on sihtväärtus ajaaknas, näiteks 99,9% 30 päeva jooksul.
-- **Error budget** on lubatud viga, 1 − SLO. 99,9% puhul on see 0,1% päringutest ehk ühtlase liikluse korral umbes 43 minutit kuus.
-
-Eelarve muudab vaidluse „kas teeme reedel deploy“ arvuks: kui eelarvet on alles, võib riskida, kui see on otsas, muudatused peatatakse ja aeg kulub töökindluse parandamisele. Selle reegli peab juhtkond enne kokku leppima. Iga lisanduv üheksa maksab mitu korda rohkem: 99,99% jätab kuus umbes 4 minutit, mis on vähem kui ühe käsitsi rollback'i aeg. ITIL-i taustaga admin võib error budget'it vaadata kui muudatuste nõukogu (CAB) mõõdetud kriteeriumi.
-
-Alert ei põhine lävendil, vaid sellel, kui kiiresti eelarve kulub (**burn rate**). Kiirus 1 kulutab eelarve täpselt akna lõpuks, 14,4 kulutab tunniga 2% kuu eelarvest. Valvaja kutsutakse siis, kui kiirust näitavad nii pikk kui ka lühike aken, et lühike piik ei ajaks kedagi öösel üles ([Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/)):
-
-```promql
-# 99,9% SLO, kiirus 14,4: nii pikk kui ka lühike aken üle piiri
-(sum(rate(traefik_service_requests_total{code=~"5.."}[1h]))
-  / sum(rate(traefik_service_requests_total[1h])) > 14.4 * 0.001)
-and
-(sum(rate(traefik_service_requests_total{code=~"5.."}[5m]))
-  / sum(rate(traefik_service_requests_total[5m])) > 14.4 * 0.001)
-```
-
-**Toil** on käsitsi tehtav, korduv ja automatiseeritav töö, mis kasvab koos teenusega: sertifikaadi käsitsi uuendamine, öine pod'i taaskäivitus, kettaruumi koristamine. Kui toil'i mõõdad valvelogist, tead, mida automatiseerida esimesena ([Eliminating Toil](https://sre.google/sre-book/eliminating-toil/)).
-
-Kui eelarve kulus rikke tõttu, järgneb süüdistusteta **postmortem**: ajajoon, mõju SLO-le, soodustanud tegurid ja tegevused koos omanikuga. Kubernetes hoiab sündmusi (Events) vaikimisi ainult tund aega, nii et öise rikke kohta on hommikul vähe tõendeid. Events tuleb jooksvalt logisüsteemi saata.
-
-## 7. Signaalist tegevuseni: sündmuspõhine automaatika ja AI
-
-Kubernetes taastab ise kõik, mis kuulub tema mudelisse: taaskäivitab konteineri, asendab pod'i ja viib pod'id kadunud node'ilt mujale. Täis ketas, aeguv sertifikaat või väline teenus jäävad sellest välja. Seal töötab **sündmuspõhine automaatika**: Alertmanager saadab alerdi webhook'iga reeglimootorile, näiteks [ansible-rulebook](https://ansible.readthedocs.io/projects/rulebook/en/latest/)'ile, mis käivitab tingimuse järgi heakskiidetud playbook'i. Otsus on reegli autori poolt eelnevalt tehtud ja eskalatsioon inimesele on reeglis kirjas.
-
-Riskid on tuttavad. Automaatne restart võib peita põhjust, kuni see kasvab suuremaks, ja kahe reegli vastandlikud tegevused tekitavad tsükli. Seepärast on tegevus idempotentne, kontrollib enne olekut uuesti, sellel on käivituste arvu piir ja iga käivitus läheb ticket'isse. Piirid peavad olema tööriistas endas: AWS-i S3 2017. aasta katkestuse põhjus oli heakskiidetud käsk vale sisendiga, ja pärast seda muutis AWS tööriista nii, et see ei luba minna alla miinimummahu ([Summary of the Amazon S3 Service Disruption](https://aws.amazon.com/message/41926/)).
-
-**AIOps** seob signaalid kokku, nii et 200 alerti muutuvad üheks intsidendiks, ja leiab anomaaliad, millele keegi lävendit ei pannud. AI-agendid lähevad edasi ja pakuvad parandust. Teada probleemi lahendab odavamalt ja ennustatavamalt tavaline playbook. Enne kui agent tohib klastris midagi muuta, peab paigas olema kolm asja:
-
-1. **Tegevuste loend:** agent valib testitud playbook'ide seast, mitte ei koosta käske ise.
-2. **Piirid:** oma ServiceAccount, Role ainult vajalike õigustega ühes namespace'is, ohtlik tegevus ootab inimese kinnitust. Mida agent tohib, näitab `kubectl auth can-i --list --as=system:serviceaccount:ops:agent`.
-3. **Audit:** API serveri [audit log](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/) näitab, milline identiteet mida muutis.
-
-Agent, kes loeb logisid, loeb ka teksti, mille ründaja sinna kirjutas, nii et logist tulnud „juhist“ ei tohi kunagi täita.
-
-Iseseisvaks lugemiseks: [Orkestreerimine ja automatiseerimine](../teemad/orkestreerimine.md) · [Kubernetese klastrihaldus](../teemad/kubernetes-klastrihaldus.md) · [Site Reliability Engineering](../teemad/sre.md) · [Sündmuspõhine automaatika](../teemad/sundmuspohine-automaatika.md) · [AI ja automatiseerimine](../teemad/ai-ja-automatiseerimine.md).
-
-## Kokkuvõte
-
-- **Soovitud olek:** muuda kirjeldust, mitte töötavat pod'i. Kontroller kirjutab käsitsi muudatuse üle.
-- **Label'id:** vale selektor annab vaikselt tühja Service'i. Requests määrab paigutuse, limits'i jõustab kernel.
-- **Probe'id:** andmebaasi kontroll kuulub readiness'i, mitte liveness'i alla.
-- **GitOps:** rollback tehakse `git revert`-iga. Synced tähendab ainult, et klaster vastab Gitile, mitte et rakendus töötab.
-- **Klastri elutsükkel:** control plane ühe minor-versiooni kaupa, node'id drain'iga PodDisruptionBudget'i piires.
-- **SLO:** mõõda kasutaja vaatest, alerdi burn rate'i järgi ja lepi enne kokku, mis juhtub, kui eelarve on otsas.
-- **Sündmus ja AI:** alert käivitab ainult heakskiidetud ja piiratud tegevust, agendil on oma identiteet ja audit.
+    - **Soovitud olek:** muuda kirjeldust, mitte töötavat pod'i. Kontroller kirjutab käsitsi muudatuse üle.
+    - **Label'id:** vale selektor annab vaikselt tühja Service'i. Requests määrab, kuhu pod paigutatakse.
+    - **Probe'id:** andmebaasi kontroll kuulub readiness'i, mitte liveness'i alla.
+    - **GitOps:** rollback tehakse `git revert`-iga. Synced tähendab ainult, et klaster vastab Gitile, mitte et rakendus töötab.
 
 ## Kontrolli ennast
 
-??? question "Kolleeg parandas tootmises vea `kubectl edit deploy/app` abil ja kõik töötas. Tund hiljem oli viga tagasi. Mis võis juhtuda?"
+??? question "Tootmises parandati viga käsuga `kubectl edit deploy/app` ja kõik töötas. Tund hiljem oli viga tagasi. Mis võis juhtuda?"
     Soovitud olekut hoiab keegi teine: GitOps agent `selfHeal`-iga, järgmine pipeline'i deploy või Helmi upgrade. Kõik kirjutavad käsitsi muudatuse üle. Parandus tuleb teha sinna, kus soovitud olek on kirjas, tavaliselt Giti.
 
 ??? question "Rakenduse liveness-probe kontrollib `/health`, mis teeb päringu andmebaasi. Andmebaasi hoolduse ajal (2 minutit) taaskäivitati kõik rakenduse pod'id mitu korda. Mida muudad?"
@@ -222,9 +166,3 @@ Iseseisvaks lugemiseks: [Orkestreerimine ja automatiseerimine](../teemad/orkestr
 
 ??? question "Argo CD näitab rakendust olekus Synced ja Degraded. Kas Argo tegi vea?"
     Ei. Klaster vastab Gitile, aga rakendus ei tööta, näiteks Gitis on olematu image'i tag. Parandus on `git revert` või uus commit.
-
-??? question "Teenuse SLO on 99,9% 30 päeva aknas, liiklus on ühtlane. Eilne vigane deploy andis 20 minutit ainult 5xx vastuseid. Kas reedene deploy võib minna?"
-    Kuu eelarve on umbes 43 minutit, eilne rike kulutas sellest ligi poole. Kui eelarve poliitika lubab deploy'd ainult siis, kui eelarvet on üle poole alles, ootab reedene muudatus. Otsus tuleb poliitikast, mitte tundest.
-
-??? question "AI-agent pakub öise rikke korral ise `kubectl delete pvc` ja tal on selleks õigus olemas. Mis on valesti?"
-    Tegevus ei ole heakskiidetud raamatukogus ja õigused on liiga laiad. Agendi Role peab lubama ainult raamatukogu tegevusteks vajalikke verb'e, pöördumatu tegevus vajab inimese kinnitust ja audit log peab näitama agendi identiteeti.

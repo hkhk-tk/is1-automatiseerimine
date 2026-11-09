@@ -31,7 +31,7 @@ flowchart TB
 
 Ansible ja Kubernetes on mõlemad deklaratiivsed, aga erinevad ajas. Ansible viib hosti soovitud olekusse siis, kui playbook'i käivitad, ja lõpetab. Kubernetese kontroller võrdleb olekut pidevalt. Seepärast sobib Ansible node'i tasemele: paketid, kerneli parameetrid, containerd'i seadistus, k3s-i paigaldus ([k3s-ansible](https://github.com/k3s-io/k3s-ansible)) või kubeadm-klaster ([Kubespray](https://kubespray.io/)). Klastri sees tasub objektid anda kontrollerile. `kubernetes.core.k8s` moodul oskab manifesti klastrisse saata, aga pärast playbook'i lõppu ei paranda keegi drift'i. Kui sama objekti haldavad nii Ansible kui ka Argo CD, kirjutavad nad üksteise muudatusi üle.
 
-Hea koostöö näide on node'i patch'imine. Ansible võtab node'id ükshaaval (`serial: 1`), teeb `kubectl drain`, uuendab paketid, taaskäivitab masina, ootab, kuni node on `Ready`, ja teeb `uncordon`. Drain austab PodDisruptionBudget'it, nii et Kubernetes ise ütleb, millal järgmise node'iga jätkata tohib ([7. kohtumise loeng, ptk 5](../k07/loeng.md#5-klastri-elutsukkel-ja-cloudops)). Ansible'i Operator SDK läheb teist teed: playbook käivitub klastri sees kontrollerina ja seda kutsutakse iga kord, kui CRD objekt muutub.
+Hea koostöö näide on node'i patch'imine. Ansible võtab node'id ükshaaval (`serial: 1`), teeb `kubectl drain`, uuendab paketid, taaskäivitab masina, ootab, kuni node on `Ready`, ja teeb `uncordon`. Drain austab PodDisruptionBudget'it, nii et Kubernetes ise ütleb, millal järgmise node'iga jätkata tohib ([IS2 7. kohtumise loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k07/loeng/#klastri-elutsukkel-ja-cloudops)). Ansible'i Operator SDK läheb teist teed: playbook käivitub klastri sees kontrollerina ja seda kutsutakse iga kord, kui CRD objekt muutub.
 
 Sertifikaatide puhul on vaikeväärtused erinevad. kubeadm-i klientsertifikaadid kehtivad aasta ja `kubeadm upgrade` uuendab need; `kubeadm certs check-expiration` näitab tähtaegu ([kubeadm-i dokumentatsioon](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)). Klaster, mida uuendatakse vähemalt kord aastas, ei jõua sertifikaatide aegumiseni. k3s-i sertifikaadid kehtivad samuti 365 päeva, aga uuenevad k3s-i käivitumisel, kui aegumiseni on vähem kui 120 päeva. CA kehtib 10 aastat ja seda automaatselt ei uuendata ([k3s certificate](https://docs.k3s.io/cli/certificate)). Kui k3s-i node'i pole aasta jooksul taaskäivitatud, võivad selle sertifikaadid seega ikkagi aeguda.
 
@@ -60,7 +60,7 @@ Chick-fil-A käitab igas restoranis väikest Kubernetese klastrit: kolm väikest
 
 Mudel lahendab kolm edge'i probleemi korraga. Klaster ei pea olema väljast ligipääsetav, kõigi restoranide soovitud olek on Gitis loetav ja katkenud ühendus tähendab ainult seda, et uus soovitud olek jõuab kohale hiljem.
 
-Sama kehtib ka ühe suure klastri puhul: Redditi 2023. aasta katkestus pärast klastri uuendust tulenes koodist mööda tehtud seadistusest ([7. kohtumise loeng](../k07/loeng.md#5-klastri-elutsukkel-ja-cloudops)).
+Sama kehtib ka ühe suure klastri puhul: Redditi 2023. aasta katkestus pärast klastri uuendust tulenes koodist mööda tehtud seadistusest ([IS2 7. kohtumise loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k07/loeng/#klastri-elutsukkel-ja-cloudops)).
 
 ## Snowflake-klaster, etcd kvoorum ja kaks kontrollerit
 

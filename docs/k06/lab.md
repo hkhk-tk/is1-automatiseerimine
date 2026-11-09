@@ -9,36 +9,34 @@ tags:
 # 6. kohtumine · Praktikum: Jenkins, SonarQube ja Nexus
 
 !!! info "Selle korra töö"
-    - **Masin:** control node, repositoorium `~/labori-seis`, töökaust `k06-jenkins/`, tõendid PR-i kirjeldusse
-    - **Sihtmasinad:** `jenkins.lab.hkhk.ee:8080`, `sonar.lab.hkhk.ee:9000`, `nexus.lab.hkhk.ee:8081` (VPN); administraatori osas oma sandbox-Jenkins control node'il (`:8090`)
+    - **Masin:** control node, kursuse repositoorium, töökaust `k06-jenkins/`
+    - **Sihtmasinad:** `jenkins.lab.hkhk.ee:8080`, `sonar.lab.hkhk.ee:9000`, `nexus.lab.hkhk.ee:8081` (VPN)
     - **Esitamine:** haru `k06-jenkins` → PR → merge → tag `k06`
     - **Edenemine:** [laboritahvel](http://is126.kaaren.lab.hkhk.lan) (VPN-iga)
     - **Vaja koolitajalt:** neli parooli (Jenkins, agendi saladus, Sonar, Nexus); kasutajanimi = GitHubi nimi väiketähtedega, allpool `<gh>`
-    - **Eelmisest korrast:** `main` sellisena, nagu see oli GitHub Actionsi kohtumise lõpus (`pom.xml`, `src/`, `autograde/`), 3. kohtumisest `k03-docker/compose.yaml` ja `k03-docker/app/Dockerfile`, control node'il töötav VPN ja Docker
-    - **Testitud:** Jenkins LTS 2.580.x, Java 21, Maven 3.9.16, SonarQube Community Build 26.9 (andmebaas PostgreSQL 17), SonarScanner for Maven 5.8.0.7211, Nexus CE 3.96.4, Tomcat 10.1 (`tomcat:10.1-jre21-temurin`), sandboxi image `jenkins/jenkins:lts-jdk21`, Docker 29, Ubuntu 24.04
-    - **Dokumentatsioon:** [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/syntax/) · [Jenkins Configuration as Code](https://www.jenkins.io/projects/jcasc/) · [SonarQube](https://docs.sonarsource.com/sonarqube-community-build/) · [Nexus Repository](https://help.sonatype.com/en/repository-types.html)
+    - **Testitud:** Jenkins LTS 2.580.x, Java 21, Maven 3.9.16, SonarQube Community Build 26.9 (andmebaas PostgreSQL 17), SonarScanner for Maven 5.8.0.7211, Nexus CE 3.96.4, Tomcat 10.1 (`tomcat:10.1-jre21-temurin`), Docker 29, Ubuntu 24.04
+    - **Dokumentatsioon:** [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/syntax/) · [SonarQube](https://docs.sonarsource.com/sonarqube-community-build/) · [Nexus Repository](https://help.sonatype.com/en/repository-types.html)
 
-Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonari quality gate peatab halva koodi ja sama WAR läheb Nexusesse ja Docker image'isse. Avaldamine toimub ainult põhiharult ja testkeskkonda paigaldatakse ainult inimese kinnitusel. Oma sandbox-Jenkinsi seadistad koodist, uuendad selle pluginat ja taastad selle varukoopiast.
+Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonari quality gate peatab halva koodi ning sama WAR läheb Nexusesse ja Docker image'isse. Esimese buildi käivitad käsitsi lihtsas Freestyle jobis, seejärel kirjutad kõik sammud Jenkinsfile'i ja lased commit'il buildi ise käivitada.
 
-Selle kohtumise ülesanded on issue'na sinu repositooriumis: igal moodulil on märkeruut, mille märgid tehtuks, kui moodul on valmis. Kui juhendis on **Ennusta:**, ütle vastus enne käsu käivitamist naabrile või mõtle see läbi ja võrdle siis tulemusega.
+??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
 
-## Mis on kohustuslik
+    **Saad valmis kujul:** starteri `main` haru rakenduse koodiga (`pom.xml`, `src/`), automaatkontrolli `autograde/` ja kaustas `k06-jenkins/` agendi paigaldusskripti `jenkins-agent.sh`. Klassi Jenkinsis on sinu folder `<gh>`, node `<gh>` ja job `labori-seis`, Sonaris projekt `labori-seis-<gh>` ja Nexuses repositoorium `labori-seis`. Varasemate kohtumiste tööd see praktikum ei vaja: alustad harust `main`.
 
-| Osa | Mis | Millal |
-|---|---|---|
-| Kohtumise ajal | [Agent ja esimene pipeline](lab-1-agent.md), [Triggerid, options ja post](lab-2-triggerid.md), [Quality gate ja Nexus](lab-3-sonar-nexus.md), [Image, paralleel ja deploy](lab-4-image-deploy.md) | kohtumisel |
-| Võib lõpetada pärast kohtumist | [Jenkins koodina](lab-5-jenkins-koodina.md), [Õigused, varundus ja taaste](lab-6-haldus.md), [Neli punast buildi](lab-7-neli-punast.md); tõendid PR-i kirjeldusse; [Esitamise](lab-8-esitamine.md) kontrollid uuesti pärast viimast commit'i | pärast kohtumist VPN-i kaudu, sest koolitaja Jenkins, Sonar ja Nexus on VPN-i taga |
-| Hindamise eeltingimus | tag `k06` `main`-i commit'il pärast merge'i ja GitHubis näha (`git ls-remote --tags origin`); tulemus ilmub Classroom 50-s ([Esitamine](lab-8-esitamine.md)) | esimene tag kohtumise lõpus; hilisem töö uue commit'iga ja `git tag -f k06` |
+    **Teed ise:** ühendad control node'i agendiks, kirjutad `Jenkinsfile`'i, `settings.xml`-i ja `Dockerfile`'i, lisad credential'id ning esitad töö tag'iga `k06`.
+
+    **Docker:** etapp Docker image vajab control node'il Dockerit. Kui `docker version` annab vea, paigalda Docker 3. kohtumise praktikumi [osa 1.2](../k03/lab.md#12-docker-kasitsi) järgi enne agendi paigaldust.
+
+    **Kui midagi läks katki:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. Agendi teenuse taaskäivitab `sudo systemctl restart jenkins-agent`.
+
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa küsimusele käsk ja kogu veateade tekstina. Enne saatmist eemalda paroolid ja tokenid.
 
 ## Moodulid
 
-1. [Agent ja esimene pipeline](lab-1-agent.md): agent on roheline, taastub ise pärast `kill -9`, Build ja Test töötavad sinu masinas.
-2. [Triggerid, options ja post](lab-2-triggerid.md): commit käivitab buildi ise, käivituse põhjus on API-st loetav, buildil on piirid ja workspace tühjeneb.
-3. [Quality gate ja Nexus](lab-3-sonar-nexus.md): quality gate peatab halva koodi, versioonitud WAR on Nexuses, `sha1sum` klapib ja üle kirjutada ei saa.
-4. [Image, paralleel ja deploy](lab-4-image-deploy.md): Nexus ja image paralleelselt, avaldamine ainult põhiharult, deploy kinnitusega, konteineris sama WAR.
-5. [Jenkins koodina](lab-5-jenkins-koodina.md): sandboxi pluginad `plugins.txt`-is, seaded JCasC failist, vigane fail leitud logist.
-6. [Õigused, varundus ja taaste](lab-6-haldus.md): naabri folder on kinni, pluginauuendus varukoopiaga, taaste teise konteinerisse ja ilma võtmeta.
-7. [Neli punast buildi](lab-7-neli-punast.md): neli riket leitud väljast sisse liikudes, parandused commit'idena, kaks rohelist buildi järjest, intsidendi jäetud image'id ja versioonid leitud.
-8. [Esitamine](lab-8-esitamine.md): repositoorium ja kaust klapivad, kontrollid, PR, tag `k06`, automaatse hindaja tulemus.
+1. [Agent ja esimene pipeline](lab-1-agent.md): agent on roheline, Freestyle job näitab, kes ja kus ehitab, Build ja Test töötavad sinu masinas.
+2. [Triggerid](lab-2-triggerid.md): commit käivitab buildi ise.
+3. [Quality gate ja Nexus](lab-3-sonar-nexus.md): quality gate peatab halva koodi ja versioonitud WAR on Nexuses.
+4. [Image samast WAR-ist](lab-4-image-deploy.md): pipeline ehitab Docker image'i samast WAR-ist.
+5. [Esitamine](lab-5-esitamine.md): PR, tag `k06` ja automaatse hindaja tulemus.
 
-Veaotsing: [Abi](abi.md).
+Veaotsing: [Abi](abi.md). Süvenemine, sandbox-Jenkins, haldus, intsident ja lisaülesanded on kursusel IS2: [Jenkins, SonarQube ja Nexus lähemalt](https://hkhk-tk.github.io/is2-automatiseerimine/k06/syvenemine/).

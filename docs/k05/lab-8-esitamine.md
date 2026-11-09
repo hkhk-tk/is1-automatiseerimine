@@ -4,13 +4,13 @@ tags:
   - Hindamine
 ---
 
-# 8. Esitamine
+# 6. Esitamine
 
 Ülevaataja näeb ainult repot ja Actionsi ajalugu. Kui kontroll käis ainult sinu masinas või parool jäi faili, ei tea ta sellest enne, kui see kuskil välja tuleb.
 
 Lõpus on töö `main`-is, tag `k05` on käivitanud automaatse hindaja ja tulemus on GitHubi Releases all.
 
-**Kui teed seda tööl iga päev:** `for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done` annab kuus `OK`-d ja `gh secret list --env proxmox` näitab nelja nime. Kui see on sul juba korras, mine otse etappi „[Esimene Dependaboti PR](#esimene-dependaboti-pr)“.
+**Kui teed seda tööl iga päev:** `for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done` annab kuus `OK`-d ja `gh secret list --env proxmox` näitab nelja nime. Kui see on sul juba korras, mine otse etappi „[PR, merge ja tag](#pr-merge-ja-tag)“.
 
 ## Enne esitamist
 
@@ -24,46 +24,17 @@ test -e ~/k03.env && echo "k03.env alles" || echo "k03.env kustutatud"
 for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done
 ```
 
-Seejärel GitHubi pool: secret'id, Dependabot, runner ja tühi `git status`.
+Seejärel GitHubi pool: secret'id, runner ja tühi `git status`.
 
 ```bash
 gh secret list --env proxmox
-gh pr list --author 'app/dependabot' --state all -L 5
 gh api 'repos/{owner}/{repo}/actions/runners' --jq '.runners[] | [.name, .status] | @tsv'
 git status --short
 ```
 
-> Kui Dependabot pole veel ühtegi PR-i avanud, vaata *Insights → Dependency graph → Dependabot*: seal on viimase kontrolli aeg ja võimalik viga failis `.github/dependabot.yml`.
-
 Tühi `git ls-files | grep` tähendab, et ükski tuntud saladusfail pole Gitis. See ei tõesta, et saladusi pole üldse, aga `hygiene` kontroll otsib lisaks tokenite ja paroolide mustreid workflow failidest. `k03.env kustutatud` kinnitab, et control node'il on paroolid ainult seal, kus stack neid vajab. Kui mõni kontroll annab siin `FAIL`, annab sama ka automaatne hindaja, seega paranda kohe.
 
 **Edasi saad minna, kui** `mvn` ja `actionlint` annavad `0`, `git ls-files | grep` on tühi, `k03.env kustutatud`, kõik kuus kontrolli annavad `OK`, `gh secret list` näitab nelja nime, runner on `online` ja `git status` on tühi.
-
-## Esimene Dependaboti PR
-
-Vaatad läbi ühe Dependaboti PR-i nii, nagu teeksid seda tööl iga nädal: mida see muudab, mida CI selle kohta ütles ja kas julged selle merge'ida. Dependaboti PR-i käivitus saab ainult lugemisõigusega tokeni ega näe Actionsi secret'eid: Dependabotil on oma secret'id.
-
-Automaatne uuendus, mida keegi ei vaata, on sama risk kui uuendus, mida ei tehta: üks muudab tootmist ilma otsuseta, teine jätab augud lahti. Sinu töö on otsustada, CI töö on anda otsuseks andmed.
-
-1. Leia avatud Dependaboti PR. Kui ühtegi pole, käivita kontroll käsitsi: *Insights → Dependency graph → Dependabot* → ökosüsteemi rida → *Check for updates*.
-
-    ```bash
-    gh pr list --author 'app/dependabot' --state open
-    ```
-
-2. Vaata ühe PR-i muudatust ja kontrolle (asenda `<nr>`).
-
-    ```bash
-    gh pr diff <nr> | grep -E '^[-+][^-+]'
-    gh pr checks <nr>
-    ```
-
-3. Vaata, mis versioon mis versiooniks muutus, kas see on patch, minor või major ja kas kõik kontrollid on rohelised. Kirjuta oma otsus (merge või mitte) ühe lausega PR-i kommentaariks.
-4. Kui otsustasid merge'ida, tee seda ja kontrolli deploy'd: `/version` peab võrduma uue `origin/main`-iga.
-
-Action'i PR-is muutub SHA ja kommentaar koos, Maveni PR-is versiooninumber pom'is. Deploy PR-il ei käivitunud, sest `if:` lubab ainult push'i main'i, seega ei saanud Dependaboti kood sinu serverisse ilma sinu merge'ita. Major-versiooni hüpe on koht, kus loed muudatuste logi, isegi kui CI on roheline, sest testid ei kata kogu käitumist. Kui ükski PR ei tulnud ka pärast käsitsi kontrolli, on kõik juba uusimad või on `dependabot.yml` vigane: sama lehe viga ütleb, kumb.
-
-**Edasi saad minna, kui** ühel Dependaboti PR-il on sinu kommentaar otsusega või Dependabot kontrollis ja uuendusi polnud.
 
 ## PR, merge ja tag
 

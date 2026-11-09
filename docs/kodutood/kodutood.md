@@ -17,11 +17,11 @@ Konto, regioon, kulu, võtmed ja koristus: **[AWS-i reeglid](aws-reeglid.md)**.
 |---|---|---|---|
 | 1 | konto ja ohutus, sama playbook EC2-l | IAM-kasutaja, eelarvehäired, `training.yml` EC2-l `changed=0` | [k01-aws.md](k01-aws.md) |
 | 2 | samad rollid EC2-l | EC2 grupis `veeb`, `site.yml` teine käivitus `changed=0` | [k02-aws.md](k02-aws.md) |
-| 3 | image ECR-i, Compose EC2-l | Compose EC2-l, app01 image ECR-ist | [k03-aws.md](k03-aws.md) |
-| 4 | VPC + SG + EC2 OpenTofuga, väljund → Ansible | üks `apply` + playbook → `UP` | [k04-aws.md](k04-aws.md) |
-| 5 | GitHub Actions: ECR push ja deploy kinnitusega | kinnitatud deploy, `/version` = SHA | [k05-aws.md](k05-aws.md) |
-| 6 | Jenkins: image ECR-i ja deploy EC2-le | `input`-iga deploy, võti agendil | [k06-aws.md](k06-aws.md) |
-| 7 | k3s EC2-l, samad manifestid | Labori seis k3s-is, rollback töötab | [k07-aws.md](k07-aws.md) |
+| 3 | image ECR-i, Compose EC2-l | Compose EC2-l, app01 image ECR-ist | [k03-aws.md](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k03-aws/) |
+| 4 | VPC + SG + EC2 OpenTofuga, väljund → Ansible | üks `apply` + playbook → `UP` | [IS2: k04-aws](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k04-aws/) |
+| 5 | GitHub Actions: ECR push ja deploy kinnitusega | kinnitatud deploy, `/version` = SHA | [k05-aws.md](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k05-aws/) |
+| 6 | Jenkins: image ECR-i ja deploy EC2-le | `input`-iga deploy, võti agendil | [IS2: k06-aws](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k06-aws/) |
+| 7 | k3s EC2-l, samad manifestid | Labori seis k3s-is, rollback töötab | [IS2: k07-aws](https://hkhk-tk.github.io/is2-automatiseerimine/kodutood/k07-aws/) |
 
 *Tabel 1. Kodutööd kohtumiste kaupa.*
 

@@ -7,39 +7,34 @@
   <rect x="0" y="0" width="800" height="260" fill="#ffffff"/>
 
   <rect x="16" y="16" width="768" height="44" rx="8" fill="#ede7f6" stroke="#7e57c2"/>
-  <text x="400" y="43" text-anchor="middle" font-size="13">agent { label GH } · tools { maven3, jdk21 } · triggers { pollSCM } · options { buildDiscarder }</text>
+  <text x="400" y="43" text-anchor="middle" font-size="13">agent { label GH } · tools { maven3, jdk21 } · environment · triggers { pollSCM }</text>
 
   <g text-anchor="middle">
-    <rect x="16" y="100" width="96" height="56" rx="8" fill="#5e35b1"/>
-    <text x="64" y="133" fill="#ffffff" font-weight="700">Build</text>
-    <rect x="128" y="100" width="96" height="56" rx="8" fill="#5e35b1"/>
-    <text x="176" y="133" fill="#ffffff" font-weight="700">Test</text>
-    <rect x="240" y="100" width="96" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
-    <text x="288" y="133" font-weight="700">Checkstyle</text>
-    <rect x="352" y="100" width="96" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
-    <text x="400" y="133" font-weight="700">SonarQube</text>
-    <rect x="464" y="100" width="96" height="56" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
-    <text x="512" y="125" font-weight="700">Quality</text>
-    <text x="512" y="143" font-weight="700">Gate</text>
-    <rect x="576" y="100" width="96" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
-    <text x="624" y="133" font-weight="700">Nexus</text>
-    <rect x="688" y="100" width="96" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
-    <text x="736" y="125" font-weight="700">Docker</text>
-    <text x="736" y="143" font-weight="700">image</text>
-
-    <text x="120" y="180" font-size="13">plokk 26</text>
-    <text x="400" y="180" font-size="13">plokk 28</text>
-    <text x="624" y="180" font-size="13">plokk 29</text>
-    <text x="736" y="180" font-size="13">plokk 30</text>
+    <rect x="16" y="100" width="112" height="56" rx="8" fill="#5e35b1"/>
+    <text x="72" y="133" fill="#ffffff" font-weight="700">Build</text>
+    <rect x="147" y="100" width="112" height="56" rx="8" fill="#5e35b1"/>
+    <text x="203" y="133" fill="#ffffff" font-weight="700">Test</text>
+    <rect x="278" y="100" width="112" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+    <text x="334" y="133" font-weight="700">SonarQube</text>
+    <rect x="409" y="100" width="112" height="56" rx="8" fill="#fff3e0" stroke="#ff9100" stroke-width="2"/>
+    <text x="465" y="125" font-weight="700">Quality</text>
+    <text x="465" y="143" font-weight="700">Gate</text>
+    <rect x="540" y="100" width="112" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+    <text x="596" y="133" font-weight="700">Nexus</text>
+    <rect x="671" y="100" width="112" height="56" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+    <text x="727" y="125" font-weight="700">Docker</text>
+    <text x="727" y="143" font-weight="700">image</text>
+    <text x="137.5" y="180" font-size="13">1. moodul</text>
+    <text x="465" y="180" font-size="13">3. moodul</text>
+    <text x="727" y="180" font-size="13">4. moodul</text>
   </g>
 
-  <line x1="112" y1="128" x2="125" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
-  <line x1="224" y1="128" x2="237" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
-  <line x1="336" y1="128" x2="349" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
-  <line x1="448" y1="128" x2="461" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
-  <line x1="560" y1="128" x2="573" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
-  <line x1="672" y1="128" x2="685" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="128" y1="128" x2="144" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="259" y1="128" x2="275" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="390" y1="128" x2="406" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="521" y1="128" x2="537" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
+  <line x1="652" y1="128" x2="668" y2="128" stroke="#7e57c2" stroke-width="2" marker-end="url(#nool)"/>
 
   <rect x="16" y="200" width="768" height="44" rx="8" fill="#fff3e0" stroke="#ff9100"/>
-  <text x="400" y="227" text-anchor="middle" font-size="13">post · always: image'ite koristus, cleanWs() · success: archiveArtifacts</text>
+  <text x="400" y="227" text-anchor="middle" font-size="13">post · cleanup: docker image prune, cleanWs()</text>
 </svg>

@@ -8,13 +8,11 @@ tags:
 
 Kui buildid töötavad controlleris või ühisel agendil, jagavad kõik jobid sama kasutajat, ketast, `~/.m2`-te ja credential'eid ning ühe meeskonna Maven võtab teise mälu. Seepärast on klassi Jenkinsis controlleris 0 executorit ja ükski sinu build ei käivitu enne, kui sinu control node on agendina ühendatud. Agendi seadistad nagu iga teise Linuxi teenuse: oma kasutaja, saladus failis, systemd unit ja logi. Seejärel kirjutad Jenkinsfile'i, mis ütleb, kus build töötab, kust kood tuleb ja mis etappidest töö koosneb. Lõpuks ehitab ja testib Jenkins Labori seisu sinu masinas kasutajana `jenkins`.
 
-**Kui teed seda tööl iga päev:** agent ühendub `jenkins-agent.sh`-ga esimesel katsel (`journalctl -u jenkins-agent -n 5` näitab `Connected`) ja executorite mõju buildi järjekorrale on sulle tuttav. Kui see on sul juba korras, mine otse etappi [„Katkesta agent ja vaata, kuidas see taastub“](#katkesta-agent-ja-vaata-kuidas-see-taastub).
-
 ## Valmista control node ette
 
-Töö käib eraldi harul, et `main` jääks samaks, nagu see oli GitHub Actionsi kohtumise lõpus. Abiskriptid on värskes `main`-is olemas.
+Töö käib eraldi harul, et `main` jääks samaks. Agendi paigaldusskript `k06-jenkins/jenkins-agent.sh` on starteri `main`-is olemas.
 
-Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docker build` ja hiljem sinu oma sandbox-Jenkins. Kui 3. kohtumise stack jääb tööle, saab Maven buildi keskel `OutOfMemoryError`-i, mis näeb välja nagu koodiviga.
+Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner ja `docker build`. Kui 3. kohtumise stack töötab, saab Maven buildi keskel `OutOfMemoryError`-i, mis näeb välja nagu koodiviga.
 
 1. Loo töö haru.
 
@@ -24,28 +22,29 @@ Control node'il on 4 GB RAM. Täna töötavad seal Maven, Sonari skanner, `docke
     ls k06-jenkins/
     ```
 
-2. Kui `jenkins-agent.sh`, `trigger-jenkins.sh`, `intsident.sh` või `klass-jenkins.yaml` puudub, võta see avalikust rakenduse repositooriumist.
+2. Kui `jenkins-agent.sh` puudub, võta see avalikust rakenduse repositooriumist.
 
     ```bash
-    base=https://raw.githubusercontent.com/hkhk-tk/labori-seis/main/deploy/ci
-    for f in jenkins-agent.sh trigger-jenkins.sh intsident.sh; do curl -fsSL -o "k06-jenkins/$f" "$base/$f"; done
-    curl -fsSL -o k06-jenkins/klass-jenkins.yaml "$base/casc/klass-jenkins.yaml"
-    chmod +x k06-jenkins/*.sh
+    curl -fsSL -o k06-jenkins/jenkins-agent.sh https://raw.githubusercontent.com/hkhk-tk/labori-seis/main/deploy/ci/jenkins-agent.sh
+    chmod +x k06-jenkins/jenkins-agent.sh
     ```
 
-3. Peata Labori seisu Compose stack, vaata vaba mälu ja proovi VPN-i.
+3. Kui 3. kohtumise Compose stack töötab, peata see. Seejärel vaata vaba mälu ja proovi VPN-i.
 
     ```bash
-    docker compose -f k03-docker/compose.yaml stop
+    docker ps --format '{{.Names}}'
+    [ -f k03-docker/compose.yaml ] && docker compose -f k03-docker/compose.yaml stop
     free -m | head -2
     curl -sI http://jenkins.lab.hkhk.ee:8080/login | head -1
     ```
 
-> Kui `curl` ei anna vastust `200`, ei ole VPN-ühendus aktiivne. Kui GitHub Actionsi deploy käivitas stacki mujalt, näitab `docker ps` projekti nime.
+??? success "Oodatav tulemus"
 
-`HTTP/1.1 200` tähendab, et sinu masin jõuab controllerini ja kõik edasised ühendused saavad alata sinu poolt. Kui `free -m` näitab vaba mälu alla 2 GB ka pärast stacki peatamist, otsi `docker ps` ja `ps aux --sort=-rss | head` abil, mis veel mälu hoiab.
+    `curl` annab `HTTP/1.1 200`: sinu masin jõuab controllerini ja kõik edasised ühendused saavad alata sinu poolt. `docker ps` ei näita Labori seisu konteinereid ja `free -m` näitab vaba mälu vähemalt 2 GB.
 
-**Edasi saad minna, kui** `git branch --show-current` on `k06-jenkins`, `curl` annab `HTTP/1.1 200` ja `docker ps` ei näita Labori seisu konteinereid.
+??? warning "Kui `curl` ei vasta või mälu on vähe"
+
+    Kui `curl` ei anna vastust `200`, ei ole VPN-ühendus aktiivne. Kui `free -m` näitab vaba mälu alla 2 GB, otsi `docker ps` ja `ps aux --sort=-rss | head` abil, mis veel mälu hoiab. Kui GitHub Actionsi deploy käivitas stacki mujalt, näitab `docker ps` projekti nime.
 
 ## Logi klassi Jenkinsisse
 
@@ -61,7 +60,7 @@ Sul on klassis tavakasutaja konto ja Role-based Authorization Strategy näitab s
 </figure>
 -->
 
-Kui avalehel on ainult sinu folder, töötab rolli regex nii, nagu loengu joonis 6.5 näitab. Kui näed rohkem, on muster liiga lai ja sellest tuleb koolitajale kohe öelda, sest naabri folderit proovides testid just seda piiri.
+Kui avalehel on ainult sinu folder, töötab rolli muster õigesti. Kui näed rohkem, on muster liiga lai ja sellest tuleb koolitajale kohe öelda.
 
 **Edasi saad minna, kui** näed ainult folderit `<gh>` ja selles jobi `labori-seis`.
 
@@ -80,7 +79,7 @@ Ava [**Manage Jenkins → Nodes**](https://www.jenkins.io/doc/book/managing/node
 
 Saladus on node'i identiteet. Kes saladust teab, saab sinu nime all agendi ühendada ja sinu jobid hakkavad töötama tema masinas koos sinu credential'itega.
 
-1. Loe `k06-jenkins/jenkins-agent.sh` läbi ja kirjuta PR-i kirjeldusse kolm vastust: mis kasutaja luuakse, kuhu saladus salvestatakse ja mis käsk jääb systemd teenusesse.
+1. Loe `k06-jenkins/jenkins-agent.sh` läbi.
 2. Käivita skript.
 
     ```bash
@@ -94,6 +93,10 @@ Saladus on node'i identiteet. Kes saladust teab, saab sinu nime all agendi ühen
     journalctl -u jenkins-agent -n 5 --no-pager
     ```
 
+??? question "Mis kasutaja skript loob, kuhu saladus salvestatakse ja mis käsk jääb systemd teenusesse?"
+
+    Skript loob süsteemikasutaja `jenkins` kodukaustaga `/opt/jenkins`. Saladus läheb faili `/opt/jenkins/secret` õigustega ainult omanikule. Teenus `jenkins-agent` käivitab `java -jar /opt/jenkins/agent.jar -url … -name <gh> -secret @/opt/jenkins/secret -webSocket`, nii et saladus ei paista protsessiloendis.
+
 > Kui logis on `Failed to connect` või 403, on saladus vale või node'i nimi ei kattu (`<gh>` väiketähtedega, täpselt nagu Nodes all). `Connection refused` tähendab, et VPN-ühendus puudub.
 
 Logirida `Connected` ütleb, et WebSocketi ühendus on loodud ja controller tunneb sinu node'i ära. Roheline node ja kaks vaba executorit tähendavad, et Jenkins võib nüüd sinu masinasse korraga kaks buildi saata. Kui teenus on `active`, aga node punane, töötab protsess, aga ühendus ei õnnestu: vastus on siis journal'is, mitte Jenkinsi lehel.
@@ -102,61 +105,21 @@ Logirida `Connected` ütleb, et WebSocketi ühendus on loodud ja controller tunn
 
 ## Vaata, kes ja kus ehitab
 
-Enne pipeline'i teed Freestyle jobi, mis ainult kirjeldab oma keskkonda: mis kasutajana ja kus build töötab ning mitu buildi korraga mahub. Jenkinsfile'i muutja käivitab koodi selle kasutaja õigustes, nii et agendi kasutaja õigused on sisuliselt iga arendaja õigused sellel masinal.
+Enne pipeline'i teed ühe buildi käsitsi lihtsas Freestyle jobis, mis ainult kirjeldab oma keskkonda: mis kasutajana ja kus build töötab. Jenkinsfile'i muutja käivitab koodi selle kasutaja õigustes, nii et agendi kasutaja õigused on sisuliselt iga arendaja õigused sellel masinal.
 
 1. Folderis `<gh>`: **New Item → `kes-olen` → Freestyle project**.
 2. *Restrict where this project can be run*: label `<gh>`.
 3. *Build Steps → Execute shell*:
 
     ```bash
-    whoami; id; pwd; df -h .; ls -la
-    sleep 30
+    whoami; id; pwd; df -h .
     ```
 
-4. **Ennusta:** agendil on kaks executorit. Mis juhtub kolmanda buildiga? Vajuta **Build Now** kolm korda järjest ja vaata vasakult *Build Executor Status*'t.
-5. Ava esimese buildi **Console Output** ja kirjuta PR-i neli vastust: kasutaja, kaust, vaba ruum, mitu buildi töötas korraga.
+4. Vajuta **Build Now** ja ava buildi **Console Output**.
 
-<!-- EKRAANIPILT: folderi mari-tamm vaade, vasakul Build Executor Status ja Build Queue ajal, kui kes-olen kolm buildi on käivitatud (sleep 30): kaks töötamas, üks "Waiting for next available executor". Sammu 26.3 keskel.
-<figure markdown="span">
-  ![Build Executor Status: kaks buildi töötavad, kolmas ootab järjekorras](assets/k06_executorid.png)
-  <figcaption>Joonis L6.3. Kaks executorit on hõivatud, kolmas build ootab.</figcaption>
-</figure>
--->
+??? success "Oodatav tulemus"
 
-Konsool näitab, et build on lihtsalt protsess kasutaja `jenkins` all kaustas `/opt/jenkins/workspace/...`. Executorite arv on node'i mahupiir: kolmas build ei saa kohta ja ootab, isegi kui masinal oleks CPU-d üle. Executorite arvu seab koolitaja node'i seadistuses. Kui see oleks suurem, töötaksid kõik kolm korraga ja 5. moodulis, kui kõrval töötab sandbox-Jenkins, saaks 4 GB mälu kiiresti otsa.
-
-**Edasi saad minna, kui** kaks buildi töötasid korraga ja kolmas ootas ("Waiting for next available executor"), konsoolis on kasutaja `jenkins`, kaust `/opt/jenkins/workspace/<gh>/kes-olen` ja `sudo` puudub.
-
-## Katkesta agent ja vaata, kuidas see taastub
-
-Nüüd katkestad agendi keset buildi, nagu teeks uuenduse järel taaskäivitus või OOM killer, ja vaatad, mis juhtub buildiga ja kas teenus tuleb ise tagasi.
-
-**Ennusta:** kas pooleli olev Freestyle build jätkub pärast agendi tagasitulekut ja kas systemd taaskäivitab agendi pärast `kill -9`?
-
-1. Vaata, millise käsuga agent töötab ja kas saladus paistab protsessiloendis.
-
-    ```bash
-    ps -o user,pid,rss,args -u jenkins | cut -c1-160
-    ```
-
-2. Vajuta jobis `kes-olen` **Build Now** ja peata agent selle ajal, kui `sleep 30` käib. Kui jätsid eelmise etapi vahele, tee job enne: Freestyle, label `<gh>`, samm `sleep 30`.
-
-    ```bash
-    sudo systemctl stop jenkins-agent
-    ```
-
-3. Vaata buildi konsooli lõppu ja Nodes lehte. Siis käivita agent uuesti: `sudo systemctl start jenkins-agent`.
-4. Tapa agendi protsess nii, nagu OOM killer seda teeks, ja vaata, kas systemd toob selle tagasi.
-
-    ```bash
-    sudo pkill -9 -u jenkins -f agent.jar
-    sleep 15; systemctl status jenkins-agent --no-pager | head -5
-    journalctl -u jenkins-agent --since "-1min" --no-pager | grep -E 'Connected|Main process'
-    ```
-
-`ps` väljundis on `-secret @/opt/jenkins/secret`: Remoting loeb väärtuse failist. Freestyle'i samm on agendi protsessi alamprotsess ja katkeb koos sellega. Pipeline'i `sh` käivitub durable-task wrapperiga, mis kirjutab väljundi ja väljumiskoodi faili, ning pipeline ootab agendi tagasitulekut. Kas skript jätkab töötamist, sõltub sellest, kas systemd tapab peatamisel kogu cgroup'i (`KillMode`). `kill -9` järel tõi agendi tagasi `Restart=on-failure`.
-
-**Edasi saad minna, kui** katkestatud build lõppes punasena (FAILURE või ABORTED) ja konsoolis on teade ühenduse kadumise kohta, pärast `pkill -9` oli agent 15 sekundi pärast uuesti `active` ja Nodes all roheline ning PR-i kirjelduses on kaks lauset: mis juhtus buildiga ja miks systemd agendi tagasi tõi.
+    Konsoolis on kasutaja `jenkins`, kaust `/opt/jenkins/workspace/<gh>/kes-olen` ja `id` väljundis pole gruppi `sudo`. Build on lihtsalt protsess kasutaja `jenkins` all sinu masinas.
 
 ## Anna Jenkinsile lugemisõigus repositooriumile
 
@@ -176,11 +139,11 @@ Folderi tasemel credential on nähtav ainult selle folderi jobidele. Globaalne c
 
 Deklaratiivse Jenkinsfile'i ülaosas on direktiivid, mis kehtivad kogu pipeline'ile (`agent`, `tools`, `options`), all on etapid, mida Graph View eraldi näitab.
 
-Kohtumise lõpuks on Jenkinsfile'is need etapid (joonis L6.4) ja Nexus ning Docker image töötavad paralleelselt. Joonist loe ülevalt alla: ülemised plokid kehtivad kogu pipeline'ile, keskel olevad etapid käivituvad järjest ja `post` käivitub alati lõpus, sõltumata tulemusest.
+Kohtumise lõpuks on Jenkinsfile'is need etapid (joonis L6.4). Joonist loe ülevalt alla: ülemised plokid kehtivad kogu pipeline'ile, keskel olevad etapid käivituvad järjest ja `post` käivitub alati lõpus, sõltumata tulemusest.
 
 <figure markdown="span">
-  ![Jenkinsfile'i seitse etappi järjest: Build, Test, Checkstyle, SonarQube, Quality Gate, Nexus, Docker image; üleval seadistusplokid, all post](assets/k06_jenkinsfile_etapid.svg)
-  <figcaption>Joonis L6.4. Jenkinsfile'i etapid ja plokid, kus iga etapp lisandub.</figcaption>
+  ![Jenkinsfile'i kuus etappi järjest: Build, Test, SonarQube, Quality Gate, Nexus, Docker image; üleval seadistusplokid, all post](assets/k06_jenkinsfile_etapid.svg)
+  <figcaption>Joonis L6.4. Jenkinsfile'i etapid ja moodulid, kus iga etapp lisandub (Talvik, 2026).</figcaption>
 </figure>
 
 1. Loo `k06-jenkins/Jenkinsfile` ([deklaratiivne süntaks](https://www.jenkins.io/doc/book/pipeline/syntax/)). Faili algus:
@@ -229,6 +192,17 @@ Teise etapi kirjutad ise. Nõuded:
 - etapil oma `post { always { … } }`, selles `junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'`
 - süntaksi leiad jobi menüüst **Pipeline Syntax → Snippet Generator** või [sammude viitest](https://www.jenkins.io/doc/pipeline/steps/)
 
+??? example "Lahendus: etapp Test"
+
+    Etapp tuleb plokki `stages` etapi Build järele.
+
+    ```groovy
+            stage('Test') {
+                steps { sh 'mvn -B verify -Dcheckstyle.failOnViolation=false' }
+                post { always { junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml' } }
+            }
+    ```
+
 `verify` käivitab testid ja teeb JaCoCo raporti, mida Sonar hiljem koodi katvuse jaoks vajab. `junit` teeb Surefire'i XML-ist Jenkinsi testiraporti ja trendi. `post { always }` on etapi sees, sest raport peab tulema ka siis, kui testid ebaõnnestuvad.
 
 Kontrolli faili automaatse hindaja testidega ja salvesta Jenkinsfile repositooriumi:
@@ -241,22 +215,6 @@ git add k06-jenkins/Jenkinsfile && git commit -m "k06: Jenkinsfile build + test"
 
 > Teade `Tool type "maven" does not have an install of "MAVEN3.9"` tähendab, et tööriista nimi on kopeeritud mujalt. Kui build ootab teatega "Waiting for next available executor on '<gh>'", on agent offline.
 
-Testitulemuste graafik ilmub alles teise buildi järel, sest trend vajab vähemalt kahte punkti. Kaks `OK`-i tähendavad, et automaatne hindaja näeb failis etappe, testiraportit, labeliga agenti ja tööriistu. Automaatne hindaja ei näe, kas build roheline oli: seda tõestab sinu ekraanipilt.
+Testitulemuste graafik ilmub alles teise buildi järel, sest trend vajab vähemalt kahte punkti. Kaks `OK`-i tähendavad, et automaatne hindaja näeb failis etappe, testiraportit, labeliga agenti ja tööriistu. Automaatne hindaja ei näe, kas build oli roheline: seda näed Jenkinsis.
 
 **Edasi saad minna, kui** Build ja Test on rohelised, jobi lehel on testitulemuste graafik ja mõlemad kontrollid annavad `OK`.
-
-**Selle mooduli tõend:** commit `k06: Jenkinsfile build + test`; PR-i kirjelduses avalehe ekraanipilt, agendi `systemctl` ja `journalctl` väljund, kolm vastust `jenkins-agent.sh` kohta, neli vastust `kes-olen` jobist, kaks lauset agendi katkestuse kohta, Credentials lehe ja Graph View ekraanipilt, `stages` ja `agent` `OK`.
-
-## Miks see nii töötab
-
-**Agent ühendub ise.** WebSocketi režiimis piisab tulemüüris väljuvast ühendusest controlleri HTTP-pordile (klassis 8080).
-
-**WebSocket.** WebSocketi režiim (`-webSocket`, Jenkinsis alates 2.217) kasutab sama HTTP-porti nagu veebiliides, nii et eraldi TCP agendiporti (vaikimisi 50000) ei ole vaja avada. Proksi peab laskma läbi HTTP `Upgrade`-päringu ja hoidma pikaajalist ühendust.
-
-**Jenkins teenusena.** Ubuntu paketis on `JENKINS_HOME` kaust `/var/lib/jenkins`, ametlikus konteineris volume `/var/jenkins_home`. Paketi versioonist 2.335 alates seadistab Jenkinsit systemd unit ja `/etc/default/jenkins` enam ei loeta: `JAVA_OPTS` ja port lähevad `systemctl edit jenkins` abil override'i. Ilma `-Xmx`-ita võtab JVM heap'iks veerandi masina või cgroup'i mälust.
-
-**Viisard ja Jenkinsi URL.** Esimesel käivitusel küsib seadistusviisard algparooli failist `secrets/initialAdminPassword`, pakub pluginaid ja küsib Jenkinsi URL-i. URL läheb muutujasse `BUILD_URL`, e-kirjadesse, agentide ühenduslinkidesse ja GitHubi commit-staatuste linkidesse ning on salvestatud failis `jenkins.model.JenkinsLocationConfiguration.xml`.
-
-**Pipeline script job'is.** Pipeline'i skripti võib kirjutada ka otse job'i seadistusse (*Pipeline script*). Siis on see job'i `config.xml`-is, mitte repositooriumis, ja haru ehitab selle hetke skriptiga, mitte sellega, mis oli harul.
-
-Lisaülesanne [4. Jenkinsfile'i kontroll enne push'i](lisa.md#4-jenkinsfilei-kontroll-enne-pushi): kontrollid Jenkinsfile'i süntaksit API kaudu.
