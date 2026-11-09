@@ -1239,67 +1239,29 @@ git push
 
     `git status` on tühi ja `git push` vastab `Everything up-to-date`.
 
-## Osa 6 · Enne esitamist
+## Osa 6 · Kontrolli ja esita
 
-Automaatkontroll vaatab sinu faile GitHubis ja käivitab kuus testi. Enne esitamist käivita samad testid ise, siis näed vead kohe ja saad need parandada.
-
-**Eesmärk:** kõik kuus testi annavad `OK` ja paroolid pole Gitis.  
-**Kus:** control, kaust `~/kursus`.
-
-### 6.1 Käivita kõik testid
-
-Käivita testid ükshaaval. Test `build` ehitab kõik kolm image'it ja võtab kõige rohkem aega.
+Enne esitamist käivita kõik kuus automaatkontrolli testi korraga. Neid samu teste käivitab GitHub pärast esitamist. Test `build` ehitab kõik kolm image'it ja võtab kõige rohkem aega.
 
 ```bash
 cd ~/kursus
-bash autograde/check.sh k03 files
-bash autograde/check.sh k03 compose
-bash autograde/check.sh k03 deps
-bash autograde/check.sh k03 multistage
-bash autograde/check.sh k03 tags
-bash autograde/check.sh k03 build
+for t in files compose deps multistage tags build; do bash autograde/check.sh k03 $t; done
 ```
 
 ??? success "Oodatav tulemus"
 
-    Iga test prindib `OK`. Kui mõni test annab vea, ütleb see, mis puudu on. Paranda fail, salvesta see GitHubi nagu 4.6-s ja käivita test uuesti.
+    Kuus rida `OK`. Kui mõni test annab vea, ütleb see, mis puudu on. Paranda fail ja käivita testid uuesti.
 
-### 6.2 Kontrolli, et paroolid pole Gitis
-
-`git ls-files` näitab kõiki faile, mis on Gitis. Otsi nende hulgast faile, mille nimes on `env`.
+Saada töö GitHubi ja pane sellele silt (tag) `k03`. Kui silt jõuab GitHubi, käivitab automaatkontroll testid ja tulemuse näed mõne minuti pärast Classroom 50-s.
 
 ```bash
-git ls-files | grep env
-```
-
-??? success "Oodatav tulemus"
-
-    Väljundis on ainult `k03-docker/.env.example`. Faili `k03-docker/.env` seal ei ole, sest Git jätab selle välja. Kui `.env` on nimekirjas, eemalda see Gitist käsuga `git rm --cached k03-docker/.env` ja salvesta muudatus.
-
-??? note "Kontrollnimekiri enne esitamist"
-
-    - [ ] Kolm Dockerfile'i, `compose.yaml`, `.env.example` ja repositooriumi juure `.dockerignore` on Gitis.
-    - [ ] `.env`, paroolid ja tokenid ei ole Gitis.
-    - [ ] Kuus automaatkontrolli testi annavad `OK`.
-    - [ ] Viis teenust on `healthy` ja rakendus Labori seis avaneb brauseris.
-    - [ ] Kolm oma image'it on Harboris SHA-tag'iga.
-    - [ ] Stack käivitus registry image'itest ilma ehitamata.
-
-## Töö esitamine
-
-Esitamiseks saada viimased muudatused GitHubi ja pane tööle silt (tag) `k03`. Kui silt jõuab GitHubi, käivitab automaatkontroll testid.
-
-```bash
-cd ~/kursus
 git status --short
 git push
 git tag k03
 git push origin k03
 ```
 
-Kui `git status` näitab veel muudatusi, salvesta need enne käskudega `git add .dockerignore k03-docker` ja `git commit -m "k03: valmis"`.
-
-Tulemuse näed Classroom 50-s mõne minuti pärast.
+Kui `git status` näitab veel muudatusi, salvesta need enne käskudega `git add .dockerignore k03-docker` ja `git commit -m "k03: valmis"`. `git status` ei tohi näidata faili `.env`.
 
 ??? warning "Kui parandad tööd pärast esitamist"
 
@@ -1364,7 +1326,7 @@ Iga tabeli esimeses veerus on see, mida näed. Teises veerus on käsk, mis näit
     | `k03 deps`: `port on hostis avatud` | `docker compose config \| grep -B3 published` | app01, db01 või mc01 all on `ports:` | test nõuab, et väljast oleks nähtav ainult web01 |
     | healthcheck toruga ei tööta | `docker inspect -f '{{json .State.Health.Log}}' <k>` | `CMD` kuju ei käivita shelli: kasuta `CMD-SHELL` | `CMD` käivitab programmi otse ja `\|` läheb talle argumendina |
 
-??? note "Tabel 3.7. Osa 6 · Enne esitamist ja töö esitamine"
+??? note "Tabel 3.7. Osa 6 · Kontrolli ja esita"
 
     | Mida näed | Kontrolli | Tõenäoline põhjus | Miks see juhtub |
     |---|---|---|---|
