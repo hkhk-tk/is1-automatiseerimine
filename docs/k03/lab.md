@@ -258,9 +258,11 @@ Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste
 docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 ```
 
+Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks projekti, mida vajad. Ava `dockerhub` ja vali **Repositories**. Seal on `library/nginx`, mille just tõmbasid: Harbor laadis selle Docker Hubist ja hoiab nüüd alles. Sinu oma projekt on veel tühi. Veebiliidese kohta loe lähemalt [Harbori kasutusjuhendist](https://goharbor.io/docs/2.14.0/working-with-projects/).
+
 ??? success "Oodatav tulemus"
 
-    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
+    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` vastab `Login Succeeded`. Veebiliideses näed projekti `dockerhub` koos image'iga `library/nginx` ja oma tühja projekti. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
 
 ??? warning "Kui `x509: certificate signed by unknown authority`"
 
@@ -1032,7 +1034,7 @@ docker tag "$W:$TAG" "$W:k03" && docker image ls "$W"
 docker push "$W:k03"
 ```
 
-Ava Harboris oma projekt ja vali **Repositories**.
+Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labori-seis-app` ja seejärel image'i real. Veerg **Vulnerabilities** näitab, mitu turvaauku Trivy image'ist leidis. Harbor skannib iga image'i kohe pärast push'i.
 
 <figure markdown="span">
   ![Harbori projekti Repositories vaade kolme repositooriumiga labori-seis-app, labori-seis-db ja labori-seis-web](assets/k03_harbor_repositories.png)
