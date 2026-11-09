@@ -68,7 +68,7 @@ git check-ignore -v .env
 
     Kui `git pull` ei toonud kausta `k03-docker` faile, kirjuta koolitajale. Koolitaja saadab need sinu repositooriumisse.
 
-### 1.2 Docker käsitsi
+### 1.2 Paigalda Docker
 
 Docker Engine paigaldatakse Dockeri enda apt-repositooriumist. Ubuntu pakett `docker.io` on vanem ja Compose'i pluginat seal pole. Paigalda Docker [ametliku juhendi](https://docs.docker.com/engine/install/ubuntu/) järgi: eemalda vanad paketid, lisa repositooriumi võti ja repositoorium ning paigalda paketid.
 
@@ -456,7 +456,7 @@ docker ps -a
 ### 1.10 Commit
 
 ```bash
-(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker käsitsi ja konteinerid"; git push -u origin k03-docker)
+(cd ~/kursus && git add k03-docker && git commit -m "k03: Docker ja esimesed konteinerid"; git push -u origin k03-docker)
 ```
 
 Kui Git vastab `nothing to commit`, ei muutnud sa selles osas kaustas `k03-docker` ühtegi faili. Haru jõuab GitHubi ka siis.

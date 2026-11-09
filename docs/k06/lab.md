@@ -25,7 +25,7 @@ Kohtumise lõpuks ehitab koolitaja Jenkins iga commit'i sinu enda agendil, Sonar
 
     **Teed ise:** ühendad control node'i agendiks, kirjutad `Jenkinsfile`'i, `settings.xml`-i ja `Dockerfile`'i, lisad credential'id ning esitad töö tag'iga `k06`.
 
-    **Docker:** etapp Docker image vajab control node'il Dockerit. Kui `docker version` annab vea, paigalda Docker 3. kohtumise praktikumi [osa 1.2](../k03/lab.md#12-docker-kasitsi) järgi enne agendi paigaldust.
+    **Docker:** etapp Docker image vajab control node'il Dockerit. Kui `docker version` annab vea, paigalda Docker 3. kohtumise praktikumi [osa 1.2](../k03/lab.md#12-paigalda-docker) järgi enne agendi paigaldust.
 
     **Kui midagi läks katki:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. Agendi teenuse taaskäivitab `sudo systemctl restart jenkins-agent`.
 
