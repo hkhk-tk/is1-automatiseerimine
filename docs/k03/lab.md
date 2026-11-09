@@ -792,23 +792,80 @@ git check-ignore -v .env
 
 ### 4.2 Andmebaas Compose'iga
 
-Compose'i fail kirjeldab sama, mida 1.8-s kirjutasid käsku `docker run`. Vahe on selles, et iga valik on failis oma real ja fail jääb alles. Starteri `compose.yaml`-is on projekti nimi ja volume'ide loend juba olemas. Sinu töö on täita teenus `db01`, kus on praegu TODO-rida.
+Selles sammus kirjeldad andmebaasi `db01` failis `compose.yaml`. See on sama andmebaas, mille käivitasid 1.8-s käsuga `docker run`. Nüüd on iga seade failis oma real.
 
-Tabel näitab, kuhu iga 1.8 käsu osa Compose'i failis läheb.
+Ava fail redaktoris.
 
-| `docker run` 1.8-s | `compose.yaml`-is teenuse `db01` all |
-|---|---|
-| `--name db01` | teenuse nimi `db01:` |
-| `$HUB/mariadb:11.4` | `build:` sinu `db/Dockerfile`-ist, ehituskontekst `..` ja argument `HUB` |
-| `-e MARIADB_ROOT_PASSWORD=Juur123` jne | `environment:` all, paroolid kujul `${DB_ROOT_PASSWORD:?}` failist `.env` |
-| `-v dbtest:/var/lib/mysql` | `volumes:` all `- dbdata:/var/lib/mysql` |
-| `--network labnet` | pole vaja, Compose teeb võrgu ise |
+```bash
+nano compose.yaml
+```
 
-Lisaks on failis kaks uut asja. `image:` annab ehitatud image'ile nime, millega see 5. osas Harborisse läheb. `healthcheck:` kontrollib iga 10 sekundi järel, kas andmebaas vastab (käsk on tabelis 3.2).
+Failis on rida `db01:` ja selle all `# TODO 4.2: …`. Kustuta TODO-rida ja kirjuta `db01:` alla järgmised osad. Iga rida algab neli tühikut paremal kui `db01:`, sest YAML-is näitavad taanded, mis kuhu kuulub.
 
-??? example "Lahendus: `db01`"
+1. **Kust image tuleb.** Compose ehitab image'i sinu 2.1 Dockerfile'ist. `context: ..` on sama ehituskontekst, mis 2.1-s.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            build:
+              context: ..
+              dockerfile: k03-docker/db/Dockerfile
+              args:
+                HUB: ${HUB:-docker.io/library}
+        ```
+
+2. **Image'i nimi.** Selle nimega läheb image 5. osas Harborisse. Väärtused tulevad `.env`-ist.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            image: ${REGISTRY:?}/${OWNER:?}/labori-seis-db:${TAG:-dev}
+        ```
+
+3. **Muutujad.** Samad, mis 1.8-s võtmega `-e`, aga paroolid tulevad `.env`-ist.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            environment:
+              MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
+              MARIADB_DATABASE: labseis
+              MARIADB_USER: labseis
+              MARIADB_PASSWORD: ${DB_PASSWORD:?}
+        ```
+
+4. **Andmed volume'is.** Sama, mis 1.8-s võti `-v`. Volume `dbdata` on faili lõpus juba olemas.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            volumes:
+              - dbdata:/var/lib/mysql
+        ```
+
+5. **Tervisekontroll.** Compose kontrollib iga 10 sekundi järel, kas andmebaas vastab. Teised teenused ootavad seda.
+
+    ??? example "Näita koodi"
+
+        ```yaml
+            healthcheck:
+              test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+              interval: 10s
+              retries: 10
+        ```
+
+Salvesta klahvidega Ctrl+O ja Enter ning sulge Ctrl+X-ga. Kontrolli, kas fail on korras.
+
+```bash
+docker compose config -q && echo OK
+```
+
+Kui tuleb viga, on tõenäoliselt mõni taane vale. Võrdle oma faili tervikuga.
+
+??? example "Lahendus: `db01` tervikuna"
 
     ```yaml
+    services:
       db01:
         build:
           context: ..
@@ -829,9 +886,7 @@ Lisaks on failis kaks uut asja. `image:` annab ehitatud image'ile nime, millega 
           retries: 10
     ```
 
-    Taanded on YAML-is olulised: iga tase on kaks tühikut paremal. `${DB_ROOT_PASSWORD:?}` võtab väärtuse `.env`-ist ja katkestab käivituse, kui see puudub. `${HUB:-docker.io/library}` kasutab vaikeväärtust, kui `HUB` pole määratud.
-
-Käivita ainult andmebaas ja vaata selle olekut.
+Käivita andmebaas ja vaata selle olekut.
 
 ```bash
 docker compose up -d --build db01
