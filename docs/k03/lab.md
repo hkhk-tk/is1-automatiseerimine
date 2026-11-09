@@ -491,13 +491,19 @@ Rakenduse failid `pom.xml`, `src/` ja `db/` on repositooriumi juures. Neid sa ei
     └── compose.yaml  .env.example     ← 4. osa
 ```
 
-### 2.1 db/Dockerfile
+### 2.1 Andmebaasi image
 
-Andmebaasi image on ametlik MariaDB image, millele lisad rakenduse tabelid ja näidisandmed. MariaDB loob need ise esimesel käivitusel, kui SQL-failid on kaustas `/docker-entrypoint-initdb.d/`. Starteri `db/Dockerfile`-is on TODO-read, mille täidad nende nõuete järgi ([Dockerfile'i juhised](https://docs.docker.com/reference/dockerfile/)).
+Selles sammus teed andmebaasi image'i. See on ametlik MariaDB, millesse lisad rakenduse tabelid ja näidisandmed. Kui sellest image'ist konteiner käivitada, on andmebaas kohe tabelitega valmis.
 
-- baas `mariadb:11.4`, eesliide tuleb ehituse argumendist `HUB` vaikeväärtusega `docker.io/library`;
-- `db/schema.sql` ja `db/seed.sql` lähevad kausta `/docker-entrypoint-initdb.d/` nii, et skeem käivitub enne andmeid (failid käivitatakse failinimede tähestikulises järjekorras);
-- failide kopeerimiseks kasuta juhist `COPY`.
+Tabelid ja andmed on repositooriumis kahes failis, `db/schema.sql` (tabelid) ja `db/seed.sql` (andmed). MariaDB image käivitab esimesel käivitusel ise kõik SQL-failid, mis on kaustas `/docker-entrypoint-initdb.d/`. Sinu Dockerfile peab need kaks faili sinna kopeerima.
+
+Ava starteri fail `db/Dockerfile` ja täida TODO-read. Dockerfile'is on vaja kolme asja.
+
+1. Aluseks võta image `mariadb:11.4`. Nime eesliide tuleb argumendist `HUB`, mille vaikeväärtus on `docker.io/library`.
+2. Kopeeri `db/schema.sql` kausta `/docker-entrypoint-initdb.d/`.
+3. Kopeeri sinna ka `db/seed.sql`. Tabelid peavad tekkima enne andmeid. MariaDB käivitab failid tähestiku järjekorras, nii et pane failinimede ette numbrid `01-` ja `02-`.
+
+Dockerfile'i juhiste kohta loe [Dockerfile'i juhendist](https://docs.docker.com/reference/dockerfile/).
 
 ??? example "Lahendus: `k03-docker/db/Dockerfile`"
 
@@ -508,7 +514,7 @@ Andmebaasi image on ametlik MariaDB image, millele lisad rakenduse tabelid ja n�
     COPY db/seed.sql /docker-entrypoint-initdb.d/02-seed.sql
     ```
 
-    `ARG` enne `FROM`-i on ainuke juhis, mis tohib olla `FROM`-ist eespool. Argument kehtib ainult `FROM` real. Numbrid failinimede ees panevad paika järjekorra.
+    `ARG` määrab muutuja, mida saab ehitamisel muuta. `FROM` ütleb, millise image'i peale ehitatakse. `COPY` kopeerib faili repositooriumist image'isse.
 
 Ehita image ja proovi see käivitada. Käsu lõpus olev `..` on **ehituskontekst**, kaust, mille failid Docker ehitusele kaasa annab. Siin on see repositooriumi juur, sest Dockerfile kopeerib sealt kausta `db/`. `--build-arg HUB` võtab baasimage'i eesliite sinu muutujast `HUB`.
 
@@ -519,13 +525,15 @@ sleep 20; docker exec dbt mariadb -uroot -px labseis -e "SHOW TABLES;"
 docker rm -f dbt
 ```
 
+Viimane käsk kustutab testkonteineri, sest seda edaspidi vaja pole.
+
 ??? success "Oodatav tulemus"
 
-    `SHOW TABLES` näitab nelja tabelit: course, lab, result, student. Mõlemad SQL-failid käivitusid ja õiges järjekorras: seed kirjutab tabelitesse, mille skeem lõi. Vale järjekorra korral lõpeks konteineri esimene käivitus veaga `Table doesn't exist`. Volume jääks siis pooleldi algseadistatuks ja järgmine käivitus jätaks init-skriptid vahele.
+    `SHOW TABLES` näitab nelja tabelit `course`, `lab`, `result` ja `student`. See tähendab, et MariaDB käivitas mõlemad SQL-failid õiges järjekorras. Kui järjekord oleks vale, lõpetaks konteiner veaga `Table doesn't exist`, sest andmeid prooviti kirjutada tabelitesse, mida veel polnud.
 
-??? warning "Kui `\"/db/schema.sql\": not found`"
+??? warning "Kui tuleb viga `\"/db/schema.sql\": not found`"
 
-    Kontekst pole repositooriumi juur: viimane argument `..` peab osutama kaustale `~/kursus`.
+    Docker ei leidnud faili, sest ehituskontekst oli vale. Kontrolli, et käsu viimane argument on `..` ja et käivitad käsu kaustas `~/kursus/k03-docker`.
 
 ### 2.2 web/Dockerfile ja Nginx'i mall
 
