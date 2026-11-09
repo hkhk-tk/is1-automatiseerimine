@@ -43,7 +43,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 Paigaldad Dockeri käsitsi, käivitad esimese konteineri ja tutvud Docker Hubi ning kursuse registry Harboriga. Seejärel käivitad konteinerid ilma Compose'ita ja vaatad hostist, kus on konteineri protsess, piirangud, port ja andmed. Docker ei too uusi tuuma mehhanisme: konteiner on hostis tavaline protsess, mida piiravad cgroup'id ja nftables'i reeglid.
 
 **Eesmärk:** Docker töötab control'is, image'id tulevad Harbori kaudu ja oskad konteinereid käivitada, peatada ja eemaldada.  
-**Kontroll:** `docker run --rm $HUB/hello-world` töötab ilma `sudo`-ta.  
+**Kontroll:** `docker run --rm $HUB/hello-world` prindib `Hello from Docker!`: Docker töötab ja image tuli Harbori vahemälu kaudu.  
 **Kus:** control, kaust `~/kursus/k03-docker`, konteinerid käsitsi ilma Compose'ita.
 
 ### 1.1 Haru ja failid
@@ -95,7 +95,7 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-Ilma `sudo`-ta saab Dockerit kasutada grupi `docker` liige. Grupiliikmesus rakendub alles uues sisselogimisseansis, seega logi pärast järgmist käsku välja ja uuesti sisse (VS Code'is **Remote-SSH: Kill VS Code Server on Host** ja ühendu uuesti).
+Ilma `sudo`-ta saab Dockerit kasutada grupi `docker` liige. Muidu annab iga `docker` käsk vea `permission denied … docker.sock`. Grupiliikmesus rakendub alles uues sisselogimisseansis, seega logi pärast järgmist käsku välja ja uuesti sisse (VS Code'is **Remote-SSH: Kill VS Code Server on Host** ja ühendu uuesti).
 
 ```bash
 sudo usermod -aG docker "$USER"
