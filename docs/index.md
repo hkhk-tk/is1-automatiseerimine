@@ -76,7 +76,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
 -   <span class="paev-nr">03 · Konteinerid</span>
 
-    **Docker ja Compose**
+    **Docker ja Podman**
 
     Pakid rakenduse koos vajaliku käituskeskkonnaga konteinerisse.
 
