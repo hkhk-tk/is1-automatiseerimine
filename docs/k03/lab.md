@@ -216,7 +216,7 @@ Image'i lehel on kirjas ka see, mida image käivitamiseks vajab. Ava image'i [`m
 
 ### 1.5 Harbor: kursuse registry
 
-Docker Hub piirab, mitu image'it saab ühelt IP-aadressilt tunnis tõmmata ([Docker Hubi piirangud](https://docs.docker.com/docker-hub/usage/)). Kogu klass on interneti poole ühe kooli IP-aadressi taga ja ühe stacki jaoks on vaja kümmekond image'it. Kui piir saab täis, ebaõnnestuvad kõigi tõmbed korraga veaga `toomanyrequests`. Seepärast on kursusel oma registry **Harbor**.
+Kogu klass läheb internetti ühe kooli IP-aadressi kaudu. Docker Hub piirab, mitu image'it saab ühelt aadressilt tunnis tõmmata ([piirangud](https://docs.docker.com/docker-hub/usage/)), ja klassi peale saab see piir kiiresti täis. Seepärast on kursusel oma registry **Harbor**. See hoiab Docker Hubi image'ide koopiaid ja sinna saad panna ka oma image'id.
 
 ??? note "Tabel 3.1. Docker Hub ja Harbor"
 
@@ -228,12 +228,7 @@ Docker Hub piirab, mitu image'it saab ühelt IP-aadressilt tunnis tõmmata ([Doc
     | Tõmmete piir | piiratud tõmmete arv IP-aadressi kohta | piirangut pole |
     | Haavatavuste skänn | ainult tasulises paketis | Trivy skannib iga image'i |
 
-Harboris on kahte liiki projekte.
-
-- **`dockerhub`** on avalik **pull-through cache** ehk vahemälu. Esimene tõmme laeb image'i Docker Hubist ja Harbor hoiab selle alles. Järgmised tõmbed tulevad juba Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
-- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Privaatset projekti näevad ja kasutavad ainult selle liikmed. Sinu projekti tegi koolitaja ja sina oled selle administraator. Sinna lükkad 5. osas oma image'id.
-
-Harbor kasutab HTTPS-i. Selle sertifikaadi on allkirjastanud kursuse oma sertifitseerimiskeskus (CA), mida Ubuntu ei tunne. Ilma selleta keeldub Docker Harboriga ühendust võtmast. CA on starteris failina `roles/docker/files/harbor-ca.crt`. Järgmised käsud kopeerivad selle kahte kohta, Dockerile ja kogu süsteemile, et ka `curl` Harborit usaldaks.
+**Usalda Harborit.** Harbori sertifikaadi on teinud kursuse oma sertifitseerimiskeskus (CA), mida Ubuntu ei tunne. Kopeeri CA fail Dockerile ja süsteemile ning kontrolli ühendust.
 
 ```bash
 sudo mkdir -p /etc/docker/certs.d/harbor.lab.hkhk.lan
@@ -243,7 +238,7 @@ sudo update-ca-certificates
 curl -s https://harbor.lab.hkhk.lan/api/v2.0/ping; echo
 ```
 
-Et vahemälu pikka nime ei peaks iga kord kirjutama, pane eesliide muutujasse `HUB`. Kõik selle praktikumi käsud kasutavad seda muutujat.
+**Tõmba image Harborist.** Docker Hubi image'id on Harboris projektis `dockerhub`. Nende nime ees on pikk eesliide, mille paned muutujasse `HUB`. Selle praktikumi käsud kasutavad seda muutujat.
 
 ```bash
 echo 'export HUB=harbor.lab.hkhk.lan/dockerhub/library' >> ~/.bashrc
@@ -252,17 +247,17 @@ docker pull $HUB/nginx:1.30-alpine
 docker image ls
 ```
 
-Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste tähtedega ja parool on `Passw0rd`. Logi sisse käsurealt. Docker küsib parooli eraldi, nii et see ei jää käsuajalukku. Seejärel ava brauseris <https://harbor.lab.hkhk.lan>.
+**Logi sisse.** Sul on Harboris konto ja oma privaatne projekt. Mõlema nimi on sinu GitHubi kasutajanimi väikeste tähtedega ja parool on `Passw0rd`. Docker küsib parooli eraldi.
 
 ```bash
 docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 ```
 
-Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks projekti, mida vajad. Ava `dockerhub` ja vali **Repositories**. Seal on `library/nginx`, mille just tõmbasid. Harbor laadis selle Docker Hubist ja hoiab nüüd alles. Sinu oma projekt on veel tühi. Veebiliidese kohta loe lähemalt [Harbori kasutusjuhendist](https://goharbor.io/docs/2.14.0/working-with-projects/).
+Ava brauseris <https://harbor.lab.hkhk.lan> ja logi samade andmetega sisse. Lehel **Projects** on projekt `dockerhub`, kus on äsja tõmmatud `library/nginx`, ja sinu oma projekt. Oma projekti näevad ainult selle liikmed ja sinna paned 5. osas oma image'id.
 
 ??? success "Oodatav tulemus"
 
-    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` vastab `Login Succeeded`. Veebiliideses näed projekti `dockerhub` koos image'iga `library/nginx` ja oma tühja projekti.
+    `curl` vastab `Pong`. `docker image ls` näitab Nginxi kahe nimega, `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`, ja ID on mõlemal sama. `docker login` vastab `Login Succeeded`. Veebiliideses on projekt `dockerhub` koos image'iga `library/nginx` ja sinu tühi projekt.
 
 ??? warning "Kui `x509: certificate signed by unknown authority`"
 
@@ -271,10 +266,6 @@ Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks proje
 ??? warning "Kui brauser hoiatab sertifikaadi eest"
 
     Brauser ei tunne kursuse CA-d. Brauseris võid hoiatuse kõrvale jätta või importida faili `roles/docker/files/harbor-ca.crt` oma arvutis usaldatud juursertifikaatide hulka (Windowsis topeltklõps, **Install Certificate**, **Local Machine**, **Trusted Root Certification Authorities**). Kui nimi `harbor.lab.hkhk.lan` sinu arvutis ei avane, kasuta aadressi <https://192.168.125.42>.
-
-??? info "Miks mitte `registry-mirrors`?"
-
-    Dockeri `daemon.json` võti `registry-mirrors` suunab Docker Hubi tõmbed teise serverisse, aga ainult sellisesse, kus image'id on juurtasemel (`/v2/library/nginx`). Harbori vahemälu on projekti all (`/dockerhub/library/nginx`), ja seda Docker ei toeta. Podman toetab, seda näed kursusel [IS2](https://hkhk-tk.github.io/is2-automatiseerimine/k03/syvenemine/#osa-4-sama-teenus-podmaniga). Seepärast on Dockeri image'ite nimes eesliide `$HUB`. GitHubi automaatkontroll Harborit ei näe (see on VPN-i taga) ja kasutab vaikimisi `docker.io/library`.
 
 ### 1.6 Elutsükkel ja PID 1
 
