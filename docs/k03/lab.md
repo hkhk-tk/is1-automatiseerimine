@@ -76,7 +76,7 @@ git check-ignore -v .env
 
 Konteinerite käivitamiseks on control'is vaja Dockerit. Seda seal veel pole, nii et paigaldad selle kõigepealt.
 
-Paigaldus käib nagu iga teise programmi puhul `apt`-iga, aga Dockeri enda paketihoidlast. Ubuntu oma pakett `docker.io` on vanem ja selles pole Compose'i, mida vajad 4. osas. Käsud on Dockeri [ametlikust juhendist](https://docs.docker.com/engine/install/ubuntu/) . Need eemaldavad vanad paketid, lisavad Dockeri paketihoidla ja paigaldavad Dockeri.
+Paigaldus käib nagu iga teise programmi puhul `apt`-iga, aga Dockeri enda paketihoidlast. Ubuntu oma pakett `docker.io` on vanem ja selles pole Compose'i, mida vajad 4. osas. Käsud on Dockeri [ametlikust juhendist](https://docs.docker.com/engine/install/ubuntu/). Need eemaldavad vanad paketid, lisavad Dockeri paketihoidla ja paigaldavad Dockeri.
 
 ```bash
 sudo apt-get remove -y docker.io docker-compose docker-compose-v2 podman-docker containerd runc
