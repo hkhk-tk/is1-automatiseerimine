@@ -70,7 +70,9 @@ git check-ignore -v .env
 
 ### 1.2 Paigalda Docker
 
-Docker Engine paigaldatakse Dockeri enda apt-repositooriumist. Ubuntu pakett `docker.io` on vanem ja Compose'i pluginat seal pole. Paigalda Docker [ametliku juhendi](https://docs.docker.com/engine/install/ubuntu/) järgi: eemalda vanad paketid, lisa repositooriumi võti ja repositoorium ning paigalda paketid.
+Konteinerite käivitamiseks on control'is vaja Dockerit. Seda seal veel pole, nii et paigaldad selle kõigepealt.
+
+Paigaldus käib nagu iga teise programmi puhul `apt`-iga, aga Dockeri enda paketihoidlast. Ubuntu oma pakett `docker.io` on vanem ja selles pole Compose'i, mida vajad 4. osas. Käsud on Dockeri [ametlikust juhendist](https://docs.docker.com/engine/install/ubuntu/) ja teevad kolm asja: eemaldavad vanad paketid, lisavad Dockeri paketihoidla ja paigaldavad Dockeri.
 
 ```bash
 sudo apt-get remove -y docker.io docker-compose docker-compose-v2 podman-docker containerd runc
@@ -81,7 +83,7 @@ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyring
 sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
 
-Fail `docker.sources` seob repositooriumi võtmega: sellest repositooriumist võetakse pakette ainult selle võtme allkirjaga.
+Nüüd lisa paketihoidla. Fail `docker.sources` ütleb `apt`-ile, kust Dockeri pakette võtta, ja lubab ainult Dockeri võtmega allkirjastatud pakette.
 
 ```bash
 sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
