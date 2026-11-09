@@ -216,7 +216,7 @@ Image'i lehel on kirjas ka see, mida image käivitamiseks vajab. Ava image'i [`m
 
 ### 1.5 Harbor: kursuse registry
 
-Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksul. Kogu klass on kooli ühe NAT-aadressi taga ja ühe stacki ehitus tõmbab kümmekond image'it, nii et piir saab täis juba esimese tunni jooksul. Siis ebaõnnestuvad kõigi tõmbed korraga veaga `toomanyrequests`. Seepärast on kursusel oma registry **Harbor**.
+Docker Hub piirab, mitu image'it saab ühelt IP-aadressilt tunnis tõmmata ([Docker Hubi piirangud](https://docs.docker.com/docker-hub/usage/)). Kogu klass on interneti poole ühe kooli IP-aadressi taga ja ühe stacki jaoks on vaja kümmekond image'it. Kui piir saab täis, ebaõnnestuvad kõigi tõmbed korraga veaga `toomanyrequests`. Seepärast on kursusel oma registry **Harbor**.
 
 ??? note "Tabel 3.1. Docker Hub ja Harbor"
 
@@ -225,15 +225,15 @@ Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksu
     | Asukoht | internetis, haldab Docker Inc. | laborivõrgus, kursuse VM |
     | Kes näeb | kõik | ainult kursus (VPN-iga) |
     | Sisu | ametlikud ja kasutajate image'id | sinu image'id ja Docker Hubi image'ite koopiad |
-    | Tõmmete piir | 100 anonüümset tõmmet IP kohta 6 tunni jooksul | piirangut pole |
+    | Tõmmete piir | piiratud tõmmete arv IP-aadressi kohta | piirangut pole |
     | Haavatavuste skänn | ainult tasulises paketis | Trivy skannib iga image'i |
 
-Harboris on kahte liiki projekte:
+Harboris on kahte liiki projekte.
 
-- **`dockerhub`** on avalik **pull-through cache** (vahemälu). Esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tõmbed tulevad Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
+- **`dockerhub`** on avalik **pull-through cache** ehk vahemälu. Esimene tõmme laeb image'i Docker Hubist ja Harbor hoiab selle alles. Järgmised tõmbed tulevad juba Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
 - **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Privaatset projekti näevad ja kasutavad ainult selle liikmed. Sinu projekti tegi koolitaja ja sina oled selle administraator. Sinna lükkad 5. osas oma image'id.
 
-Harbori sertifikaadi on allkirjastanud kursuse oma CA, mida Ubuntu ei tunne. Docker usaldab registry't, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail, et ka `curl` ja Trivy Harborit usaldaksid. CA on starteris failina `roles/docker/files/harbor-ca.crt`.
+Harbor kasutab HTTPS-i. Selle sertifikaadi on allkirjastanud kursuse oma sertifitseerimiskeskus (CA), mida Ubuntu ei tunne. Ilma selleta keeldub Docker Harboriga ühendust võtmast. CA on starteris failina `roles/docker/files/harbor-ca.crt`. Järgmised käsud kopeerivad selle kahte kohta, Dockerile ja kogu süsteemile, et ka `curl` Harborit usaldaks.
 
 ```bash
 sudo mkdir -p /etc/docker/certs.d/harbor.lab.hkhk.lan
@@ -258,11 +258,11 @@ Harbori konto on sul olemas. Kasutajanimi on sinu GitHubi kasutajanimi väikeste
 docker login harbor.lab.hkhk.lan -u <github-kasutaja>
 ```
 
-Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks projekti, mida vajad. Ava `dockerhub` ja vali **Repositories**. Seal on `library/nginx`, mille just tõmbasid: Harbor laadis selle Docker Hubist ja hoiab nüüd alles. Sinu oma projekt on veel tühi. Veebiliidese kohta loe lähemalt [Harbori kasutusjuhendist](https://goharbor.io/docs/2.14.0/working-with-projects/).
+Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks projekti, mida vajad. Ava `dockerhub` ja vali **Repositories**. Seal on `library/nginx`, mille just tõmbasid. Harbor laadis selle Docker Hubist ja hoiab nüüd alles. Sinu oma projekt on veel tühi. Veebiliidese kohta loe lähemalt [Harbori kasutusjuhendist](https://goharbor.io/docs/2.14.0/working-with-projects/).
 
 ??? success "Oodatav tulemus"
 
-    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` vastab `Login Succeeded`. Veebiliideses näed projekti `dockerhub` koos image'iga `library/nginx` ja oma tühja projekti. `docker login` ütleb `Login Succeeded`. Harboris näed projekte `dockerhub` ja oma projekti, mis on veel tühi.
+    `curl` vastab `Pong` ilma sertifikaadi veata. `docker image ls` näitab sama Nginxi kahe nimega: `nginx` ja `harbor.lab.hkhk.lan/dockerhub/library/nginx`. ID on mõlemal sama, sest vahemälu andis edasi sama image'i. `docker login` vastab `Login Succeeded`. Veebiliideses näed projekti `dockerhub` koos image'iga `library/nginx` ja oma tühja projekti.
 
 ??? warning "Kui `x509: certificate signed by unknown authority`"
 
@@ -278,22 +278,22 @@ Logi samade andmetega sisse ka veebiliidesesse. Lehel **Projects** on kaks proje
 
 ### 1.6 Elutsükkel ja PID 1
 
-Konteiner töötab seni, kuni töötab tema esimene protsess (PID 1). Kui see lõpetab, lõpetab ka konteiner. Kui seda ei tea, otsid viga valest kohast: teenus näib ebaõnnestuvat, aga tegelikult lõpetas käivitusskript oma töö.
+Konteineris töötab üks peaprogramm. Linuxis on selle protsessi number 1 (PID 1). Konteiner töötab seni, kuni töötab see programm. Kui programm lõpetab, peatub ka konteiner. Seda on hea teada, sest peatunud konteiner ei tähenda alati viga. Vahel lõpetas programm lihtsalt oma töö.
 
-**Esiplaanil ja taustal.** Käivita Nginx esiplaanil. Terminal jääb Nginxi logi näitama, lõpeta Ctrl+C-ga:
+**Esiplaanil ja taustal.** Käivita Nginx esiplaanil. Terminal jääb siis Nginxi logi näitama. Lõpeta see klahvidega Ctrl+C.
 
 ```bash
 docker run --name fg $HUB/nginx:1.30-alpine
 ```
 
-Käivita teine Nginx taustal (`-d`) ja ava hosti port 8081 konteineri pordile 80 (`-p`):
+Käivita teine Nginx taustal. Võti `-d` jätab terminali vabaks ja `-p 8081:80` suunab control'i pordi 8081 konteineri porti 80.
 
 ```bash
 docker run -d --name veeb -p 8081:80 $HUB/nginx:1.30-alpine
 docker ps -a
 ```
 
-Peata konteiner ja käivita see uuesti:
+Peata konteiner ja käivita see uuesti.
 
 ```bash
 docker stop veeb
@@ -303,9 +303,9 @@ docker ps
 
 ??? success "Oodatav tulemus"
 
-    `fg` on olekus `Exited`, sest Ctrl+C lõpetas Nginxi. `veeb` on pärast `start`-i jälle `Up` sama konteineri ID-ga: `stop` peatab protsessi, aga konteiner ja selle failid jäävad alles.
+    `fg` on olekus `Exited`, sest Ctrl+C lõpetas Nginxi. `veeb` on pärast `start`-i jälle `Up` ja konteineri ID on sama. `stop` peatab programmi, aga konteiner ja selle failid jäävad alles.
 
-**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`? 1.5-s nägid, et sama Nginxi image on masinas kahe nimega. Eemalda kõigepealt Docker Hubi nimi, siis Harbori nimi:
+**Image ja konteiner.** **Küsimus enne käsku:** kas image'i saab kustutada, kui seda kasutab peatatud konteiner `fg`? 1.5-s nägid, et sama Nginxi image on masinas kahe nimega. Eemalda kõigepealt Docker Hubi nimi ja siis Harbori nimi.
 
 ```bash
 docker rmi nginx:1.30-alpine
@@ -315,34 +315,32 @@ docker rmi $HUB/nginx:1.30-alpine
 
 ??? success "Oodatav tulemus"
 
-    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama ID-d Harbori nime all edasi: kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
+    Esimene `rmi` ütleb ainult `Untagged: nginx:1.30-alpine` ja `image ls` näitab sama ID-d Harbori nime all edasi. Kui image'il on mitu nime, eemaldab `rmi` ainult ühe nime. Teine `rmi` annab vea `conflict` konteineri ID-ga, sest see on image'i viimane nimi ja konteiner kasutab image'i kihte ka peatatuna. Image'i saab kustutada alles siis, kui kõik seda kasutavad konteinerid on kustutatud.
 
-**Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta:
+**Konteiner, mis lõpetab kohe.** Käivita Ubuntu image ilma käsuta.
 
 ```bash
 docker run $HUB/ubuntu:24.04
 docker ps -a
 ```
 
-Käivita sama image interaktiivselt (`-it`):
+Käivita sama image nüüd nii, et saad selle sees käske anda. Võti `-it` ühendab sinu terminali konteineriga.
 
 ```bash
 docker run -it --rm $HUB/ubuntu:24.04 bash
 ```
 
-Konteineris käivita `cat /proc/1/comm` ja `ps`, siis `exit`.
+Konteineris käivita `cat /proc/1/comm` ja `ps`, seejärel `exit`.
 
 ??? success "Oodatav tulemus"
 
-    Esimene Ubuntu lõpetas kohe koodiga 0: bash ilma terminalita sai sisendist kohe faililõpu ja väljus. `-it`-ga on PID 1 `bash`.
+    Esimene Ubuntu lõpetas kohe koodiga 0. Selle peaprogramm on käsurida `bash`, mis loeb käske terminalist. Ilma terminalita sisendit polnud, nii et `bash` lõpetas kohe. `-it`-ga on PID 1 `bash` ja konteiner töötab, kuni kirjutad `exit`.
 
 ### 1.7 Pordid ja konteineri IP
 
-Konteiner saab IP-aadressi hosti sisemises sillas `docker0`. Selle aadressi poole saab pöörduda ainult hostist. Väljast jõuab konteinerini ainult avaldatud pordi kaudu (`-p`), mille jaoks Docker kirjutab NAT-reegli.
+Konteineril on oma võrguaadress, aga seda näeb ainult control. Sinu arvutist jõuad konteinerini ainult avaldatud pordi kaudu. `-p 8081:80` tähendab, et control'i port 8081 viib konteineri porti 80.
 
-Tootmisserveris tähendab see, et `-p 8081:80` avab pordi kõigile, kes hostini jõuavad. Tavapärase UFW seadistusega hosti tulemüür seda ei peata, sest Dockeri NAT-reegel rakendub enne UFW reegleid. Seepärast kontrolli avatud porte teisest masinast.
-
-Proovi hostiporti control'ist ja oma arvutist:
+Proovi hostiporti kõigepealt control'is.
 
 ```bash
 curl -sI http://localhost:8081 | head -1
@@ -357,9 +355,13 @@ Ava oma arvuti brauseris (VPN-iga) `http://<control IP>:8081`.
 
 ??? success "Oodatav tulemus"
 
-    `curl` ja brauser saavad vastuseks `200 OK` ja Nginxi tervituslehe. Konteinerini jõuab väljast ainult avaldatud pordi kaudu, mille `-p 8081:80` avas.
+    `curl` saab vastuseks `200 OK` ja brauser näitab Nginxi tervituslehte.
 
-Eemalda katse konteinerid:
+!!! warning "Avaldatud port on avatud kõigile"
+
+    `-p 8081:80` avab pordi kõigile, kes control'ini jõuavad. Ubuntu tulemüür UFW seda ei peata, sest Docker lisab oma võrgureeglid UFW reeglitest mööda. Serveris avalda ainult need pordid, mida on tõesti vaja, ja kontrolli neid teisest masinast.
+
+Eemalda katse konteinerid.
 
 ```bash
 docker rm -f veeb fg
