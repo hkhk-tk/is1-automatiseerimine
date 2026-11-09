@@ -231,7 +231,7 @@ Docker Hub lubab ühelt IP-aadressilt 100 anonüümset tõmmet kuue tunni jooksu
 Harboris on kahte liiki projekte:
 
 - **`dockerhub`** on avalik **pull-through cache** (vahemälu). Esimene tõmme laeb image'i Docker Hubist ja hoiab seda alles, järgmised tõmbed tulevad Harborist. Image'i nimi on siis `harbor.lab.hkhk.lan/dockerhub/library/nginx:1.30-alpine`.
-- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Sinna lükkad 5. osas oma image'id.
+- **Sinu projekt** kannab sinu GitHubi kasutajanime ja on privaatne. Privaatset projekti näevad ja kasutavad ainult selle liikmed. Sinu projekti tegi koolitaja ja sina oled selle administraator. Sinna lükkad 5. osas oma image'id.
 
 Harbori sertifikaadi on allkirjastanud kursuse oma CA, mida Ubuntu ei tunne. Docker usaldab registry't, kui CA on kaustas `/etc/docker/certs.d/<registry nimi>/`. Süsteemi usaldatud sertifikaatide hulka läheb sama fail, et ka `curl` ja Trivy Harborit usaldaksid. CA on starteris failina `roles/docker/files/harbor-ca.crt`.
 
