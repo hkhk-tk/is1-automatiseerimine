@@ -821,6 +821,34 @@ git check-ignore -v .env
 
     Teisel kohtumisel hoidsid samu paroole Ansible Vaultis. Vault on krüpteeritud ja selle võib Gitti panna, `.env` on tavaline tekst ja peab Gitist välja jääma. Compose Ansible Vaulti lugeda ei oska. Kodutöös teeb Ansible `.env`-i Vaulti paroolidest.
 
+??? tip "Tootmises: paroolid OpenBaost"
+
+    `.env` sobib arenduseks ja laboriks, aga parool on seal avatekstina kettal. Tootmises hoitakse paroolid saladuste hoidlas, näiteks HashiCorp Vaultis või selle vabas harus OpenBao. Paroolid tuuakse sealt alles käivitamise ajal ja kettale neid ei jää. Kursusel on OpenBao aadressil <https://openbao.lab.hkhk.lan:8200> ja sul on seal konto. Kasutajanimi on sinu GitHubi kasutajanimi ja parool `Passw0rd`. Sa näed seal ainult oma teed `kv/<kasutaja>/`.
+
+    Paigalda OpenBao käsurea tööriist `bao`, kui seda veel pole, ja logi sisse.
+
+    ```bash
+    command -v bao || (cd /tmp && curl -fsSLO https://github.com/openbao/openbao/releases/download/v2.7.1/openbao_2.7.1_linux_amd64.deb && sudo apt install -y ./openbao_2.7.1_linux_amd64.deb)
+    export BAO_ADDR=https://openbao.lab.hkhk.lan:8200
+    bao login -method=userpass username=<github-kasutaja>
+    ```
+
+    Pane paroolid OpenBaosse. Kasuta samu paroole, mis on sinu `.env`-is, muidu ei pääse rakendus olemasolevasse andmebaasi.
+
+    ```bash
+    bao kv put -mount=kv <github-kasutaja>/k03 DB_PASSWORD=… DB_ROOT_PASSWORD=… RABBITMQ_PASSWORD=… TEACHER_TOKEN=…
+    ```
+
+    Käivitamisel loe paroolid OpenBaost ajutisse faili, anna see Compose'ile ja kustuta fail kohe. Teine `--env-file` kirjutab `.env`-i paroolid üle.
+
+    ```bash
+    (umask 077; bao kv get -mount=kv -format=json <github-kasutaja>/k03 | jq -r '.data.data | to_entries[] | "\(.key)=\(.value)"' > /tmp/paroolid.env)
+    docker compose --env-file .env --env-file /tmp/paroolid.env up -d
+    rm /tmp/paroolid.env
+    ```
+
+    OpenBao veebiliideses näed oma saladust teel `kv/<github-kasutaja>/k03`. OpenBao kirjutab iga päringu auditilogisse, nii et on näha, kes millal parooli luges.
+
 ### 4.2 Andmebaas Compose'iga
 
 Selles sammus kirjeldad andmebaasi `db01` failis `compose.yaml`. See on sama andmebaas, mille käivitasid 1.8-s käsuga `docker run`. Nüüd on iga seade failis oma real.
