@@ -430,6 +430,7 @@ docker run -d --name db01 --network labnet -v dbtest:/var/lib/mysql \
 Kontrolli, kas rida on alles, ja vaata, kus andmed hostis asuvad:
 
 ```bash
+sleep 15
 docker exec -it db01 mariadb -ulabseis -p labseis -e "SELECT * FROM proov;"
 docker inspect -f '{{json .Mounts}}' db01 | jq
 ```
@@ -846,6 +847,8 @@ git check-ignore -v .env
     docker compose --env-file .env --env-file /tmp/paroolid.env up -d
     rm /tmp/paroolid.env
     ```
+
+    Kui `docker compose` ei saanud paroole, oli fail `/tmp/paroolid.env` tühi. Kontrolli enne `compose`-i käsuga `wc -l < /tmp/paroolid.env`, see peab näitama `4`. `0` tähendab, et `bao` ei saanud saladust lugeda. Siis logi uuesti sisse.
 
     OpenBao veebiliideses näed oma saladust teel `kv/<github-kasutaja>/k03`. OpenBao kirjutab iga päringu auditilogisse, nii et on näha, kes millal parooli luges.
 

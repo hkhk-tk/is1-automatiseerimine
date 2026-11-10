@@ -219,6 +219,8 @@ ansible-playbook docker.yml --check --diff
 
     Paketid, teenus, grupp ja CA failid on juba soovitud olekus ja jäävad `ok`. `changed` on ainult failid, mille sisu erineb käsitsi tehtust, näiteks `daemon.json`-i vorming (tühikud ja reavahetused) või repositooriumi faili võtmete järjekord. `--diff` näitab iga erinevuse rida.
 
+    Kui Trivy pole veel paigaldatud, lõpeb `--check` ülesandes `Trivy` veaga `No package matching 'trivy' is available`. Kontrollirežiim ei lisa paketihoidlat päriselt, nii et paketti ei leita. Päris käivitus paigaldab Trivy.
+
 Rakenda roll kaks korda ja kontrolli tulemust:
 
 ```bash
@@ -232,7 +234,7 @@ trivy --version | head -1
 
 ??? success "Oodatav tulemus"
 
-    Esimene käivitus lõpeb `failed=0`, teine `changed=0`. Kui `daemon.json` muutus, taaskäivitas handler Dockeri ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. Harbor vastab `Pong` ja Trivy versioon on alles.
+    Esimene käivitus lõpeb `failed=0`, teine `changed=0`. Kui `daemon.json` muutus, taaskäivitas handler Dockeri ja stack käivitus uuesti tänu `restart: unless-stopped`-ile. Harbor vastab `Pong` ja `trivy --version` näitab versiooni.
 
 ??? warning "Kui esimene käivitus peatus vea tõttu ja `daemon.json` on muutunud, aga Docker kasutab vana seadet"
 
@@ -261,8 +263,8 @@ trivy --version | head -1
 Roll paigaldab Dockeri, aga stack käivitati siiani käsuga `docker compose up -d`. Moodul [`community.docker.docker_compose_v2`](https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_compose_v2_module.html) käivitab sama `compose.yaml`-i Ansible'ist ja annab `changed` ainult siis, kui mõni teenus luuakse uuesti. Moodul on kollektsioonis `community.docker`:
 
 ```bash
-ansible-galaxy collection install community.docker
-ansible-doc community.docker.docker_compose_v2 | grep -A3 -E '^ +(project_src|state|wait)'
+ansible-galaxy collection install 'community.docker:>=4.0.0,<5.0.0'
+ansible-doc community.docker.docker_compose_v2 | grep -A3 -E '^[-=] (project_src|state|wait)'
 ```
 
 Kirjuta fail `stack.yml`: esimene play rakendab rolli `docker`, teine käivitab stacki kaustast `~/kursus/k03-docker` ja ootab, kuni teenused on `healthy`. Play käivitub kasutajana `kasutaja`, mitte root'ina, sest `.env` ja image'id on selle kasutaja omad.
