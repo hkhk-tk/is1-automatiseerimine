@@ -371,7 +371,7 @@ curl -s localhost:8080/health; echo
 (cd ~/kursus && git tag -f k03 && git push -f origin k03)
 ```
 
-Tag `k03` tähistab viimast esitatud versiooni, seepärast tõstad selle uuele commit'ile. Tulemuse näed Classroom 50-s.
+Tag `k03` tähistab viimast esitatud versiooni, seepärast tõstad selle uuele commit'ile. Tulemuse näed Classroom 50-s. Kodutöö tähtaeg on enne 4. kohtumist, 21.11 kell 10.00.
 
 ## Rikkeotsing
 
