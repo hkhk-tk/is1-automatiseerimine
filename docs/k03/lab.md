@@ -1261,9 +1261,9 @@ Ava Harboris oma projekt ja vali **Repositories**. Klõpsa repositooriumil `labo
 
     `grep` näitab sinu Harbori aadressi, kasutajanime ja SHA-d. `push` lõpeb ilma veata. Harboris on kolm repositooriumi `labori-seis-app`, `labori-seis-db` ja `labori-seis-web`, igaühel silt sinu SHA-ga.
 
-??? warning "Kui tuleb viga `denied: requested access to the resource is denied`"
+??? warning "Kui tuleb viga `denied: requested access to the resource is denied` või `401 Unauthorized`"
 
-    `.env`-is on `OWNER` vale või logisid 1.5-s sisse teise kasutajana. Mõlemad peavad olema sinu GitHubi kasutajanimi väikeste tähtedega.
+    `.env`-is on `OWNER` vale või logisid 1.5-s sisse teise kasutajana. Mõlemad peavad olema sinu GitHubi kasutajanimi väikeste tähtedega. Vea tekstis on näha, millisesse projekti Docker image'it lükkab: `harbor.lab.hkhk.lan/<projekt>/labori-seis-…`. Kui projekti nimi erineb sinu kasutajanimest, paranda `.env`-is rida `OWNER`, siis ehita image'id uuesti ja lükka need Harborisse (`docker compose build` ja `docker compose push`).
 
 ??? warning "Kui tuleb viga `x509: certificate signed by unknown authority`"
 
