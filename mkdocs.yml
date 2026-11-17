@@ -111,13 +111,8 @@ nav:
           - Kodutöö: k03/kodutoo.md
       - 4. kohtumine · OpenTofu (Terraform):
           - Loeng: k04/loeng.md
-          - Praktikum:
-              - k04/lab.md
-              - 1. Üks VM koodist: k04/lab-1-uks-vm.md
-              - 2. Viis VM-i muutujatega: k04/lab-2-viis-vmi.md
-              - 3. Inventory Tofu väljundist: k04/lab-4-uks-kask.md
-              - 4. Esitamine: k04/lab-9-esitamine.md
-              - Abi: k04/abi.md
+          - Praktikum: k04/lab.md
+          - Abi: k04/abi.md
       - 5. kohtumine · GitHub Actions:
           - Loeng: k05/loeng.md
           - Praktikum:

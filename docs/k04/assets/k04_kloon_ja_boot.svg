@@ -3,7 +3,7 @@
 <rect width="800" height="230" fill="#ffffff"/>
 <g text-anchor="middle">
 <rect x="10" y="15" width="140" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
-<text x="80" y="45" font-weight="bold">1. Kloon</text><text x="80" y="72">mall 9000 →</text><text x="80" y="92">VM 1101</text><text x="80" y="112">(full clone)</text>
+<text x="80" y="45" font-weight="bold">1. Kloon</text><text x="80" y="72">mall 1116 →</text><text x="80" y="92">VM 4301</text><text x="80" y="112">(lingitud kloon)</text>
 <rect x="170" y="15" width="140" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>
 <text x="240" y="45" font-weight="bold">2. Riistvara</text><text x="240" y="72">CPU, RAM,</text><text x="240" y="92">ketas, võrk</text>
 <rect x="330" y="15" width="140" height="130" rx="8" fill="#ede7f6" stroke="#5e35b1" stroke-width="1.5"/>

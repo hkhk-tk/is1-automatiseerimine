@@ -54,8 +54,8 @@ Skript on **imperatiivne**: see ütleb samm-sammult, mida teha. Proxmoxi käsure
 
 ```bash
 # Imperatiivne: iga käivitus teeb samad sammud uuesti
-qm clone 9000 1101 --name web01 --full
-qm set 1101 --memory 2048
+qm clone 1116 4301 --name web01
+qm set 4301 --memory 2048
 ```
 
 OpenTofu kood on **deklaratiivne**: see kirjeldab soovitud lõppolekut ja tööriist arvutab ise, milliseid samme selleks vaja on.
@@ -64,9 +64,9 @@ OpenTofu kood on **deklaratiivne**: see kirjeldab soovitud lõppolekut ja töör
 # Deklaratiivne: kirjeldab tulemust
 resource "proxmox_virtual_environment_vm" "web" {
   name      = "web01"
-  vm_id     = 1101
-  node_name = "pve1"
-  clone  { vm_id = 9000 }
+  vm_id     = 4301
+  node_name = "SR630V3-1"
+  clone  { vm_id = 1116 }
   memory { dedicated = 2048 }
 }
 ```
@@ -85,7 +85,7 @@ OpenTofu ei klõpsa veebiliideses. See kasutab **API-t** (application programmin
 
     Avalikus sektoris kohustuslik [E-ITS](https://eits.ria.ee/) nõuab muudatuste haldust. Kui taristu on koodis, on vastus küsimusele „kes, millal ja miks muutis“ Giti ajaloos ja PR-is ning muudatuse kirjeldus on plaani väljund, mitte vaba tekst tiketis.
 
-**Leia viga.** Skript `uus-vm.sh` lõi eile masina web01. Täna lisati skripti teisele reale suurem mälu (`--memory 4096`) ja skript käivitati uuesti. See lõppes veateatega, et VM 1101 on juba olemas, ja mälu ei muutunud. Mis on valesti?
+**Leia viga.** Skript `uus-vm.sh` lõi eile masina web01. Täna lisati skripti teisele reale suurem mälu (`--memory 4096`) ja skript käivitati uuesti. See lõppes veateatega, et VM 4301 on juba olemas, ja mälu ei muutunud. Mis on valesti?
 
 ??? success "Vastus"
 
@@ -140,16 +140,20 @@ terraform {
 provider "proxmox" {}           # ühenduse andmed tulevad keskkonnast
 
 data "proxmox_virtual_environment_vms" "ubuntu" {
-  tags = ["template", "ubuntu"]  # leia mall tag'ide järgi
+  tags = ["tem.ubuntuserver-1026"]  # leia mall tag'i järgi
+  filter {
+    name   = "template"
+    values = [true]                 # ainult mallid, mitte kloonid
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "test01" {
   name      = "test01"
-  vm_id     = 1109
-  node_name = "pve1"
+  vm_id     = 4309
+  node_name = "SR630V3-1"
   clone {
     vm_id = data.proxmox_virtual_environment_vms.ubuntu.vms[0].vm_id
-    full  = true
+    full  = false
   }
 }
 ```
@@ -209,13 +213,13 @@ Provider `bpg/proxmox` loeb ühenduse andmed keskkonnamuutujatest `PROXMOX_VE_EN
 
 ### Data source
 
-**Data source** (plokk `data`) loeb olemasolevat objekti ega loo midagi. Kursusel leiab data source malli tag'ide `template` ja `ubuntu` järgi. **Mall** (template) on virtuaalmasin, mida ei käivitata: sellest tehakse koopiaid. Malli ID võiks kirjutada koodi otse (`vm_id = 9000`), aga kui keegi teeb uue malli ja kustutab vana, ebaõnnestub järgmine loomine. Tag'i järgi otsing leiab uue malli.
+**Data source** (plokk `data`) loeb olemasolevat objekti ega loo midagi. Kursusel leiab data source kooli Ubuntu malli tag'i `tem.ubuntuserver-1026` järgi. Sama tag'i pärivad ka mallist tehtud kloonid, seepärast otsitakse ainult malle (`template = true`). **Mall** (template) on virtuaalmasin, mida ei käivitata: sellest tehakse koopiaid. Malli ID võiks kirjutada koodi otse (`vm_id = 1116`), aga kui keegi teeb uue malli ja kustutab vana, ebaõnnestub järgmine loomine. Tag'i järgi otsing leiab uue malli.
 
 **Leia viga.** Fail `main.tf` töötas ja kood läks GitHubi. Paar tundi hiljem tühistati token ja `tofu plan` annab veateate `401 authentication failure`.
 
 ```hcl
 provider "proxmox" {
-  endpoint  = "https://192.168.125.10:8006/"
+  endpoint  = "https://192.168.124.200:8006/"
   api_token = "mtamm@pve!tofu=1f0c5a2e-…"
   insecure  = true
 }
@@ -289,7 +293,7 @@ Malli vahetus annab asenduse:
   # proxmox_virtual_environment_vm.test01 must be replaced
 -/+ resource "proxmox_virtual_environment_vm" "test01" {
       ~ clone {
-          ~ vm_id = 9000 -> 9001 # forces replacement
+          ~ vm_id = 1116 -> 1114 # forces replacement
         }
     }
 
@@ -366,7 +370,7 @@ Plan: 1 to add, 0 to change, 1 to destroy.
 
 ### Miks tööriist vajab mälu
 
-Koodis on `test01`, Proxmoxis on VM ID-ga 1109. OpenTofu peab teadma, et need on sama objekt. Nimi ei sobi seose aluseks, sest kaks VM-i võivad kanda sama nime ja nime saab veebiliideses muuta.
+Koodis on `test01`, Proxmoxis on VM ID-ga 4309. OpenTofu peab teadma, et need on sama objekt. Nimi ei sobi seose aluseks, sest kaks VM-i võivad kanda sama nime ja nime saab veebiliideses muuta.
 
 Ansible ei vaja sellist mälu: see küsib igal käivitusel masinalt, mis seal on. Selle hind on, et koodist eemaldatud asi jääb masinasse alles, sest Ansible ei tea, et see kunagi olemas oli. OpenTofu peab koodist eemaldatud VM-i kustutama ja selleks peab ta meeles pidama, mida ta on loonud.
 
@@ -390,7 +394,7 @@ Ansible ei vaja sellist mälu: see küsib igal käivitusel masinalt, mis seal on
       "type": "proxmox_virtual_environment_vm",
       "name": "test01",
       "instances": [
-        { "attributes": { "id": "1109", "name": "test01", "node_name": "pve1" } }
+        { "attributes": { "id": "4309", "name": "test01", "node_name": "SR630V3-1" } }
       ]
     }
   ]
@@ -466,18 +470,17 @@ Plokk `proxmox_virtual_environment_vm` näeb välja nagu üks objekt, aga selle 
   <figcaption>Joonis 4.5. VM-i loomine mallist. Kolm esimest sammu teeb Proxmox API kaudu, neljas samm käib VM-i sees (Talvik, 2026).</figcaption>
 </figure>
 
-**Kloon** on malli koopia. Täielik kloon (`full = true`) kopeerib malli ketta ja uus VM ei sõltu mallist. Lingitud kloon (linked clone) kasutab malli ketast alusena ja salvestab ainult erinevused: see on kiirem, aga malli ei saa kustutada, kuni kloonid on olemas.
+**Kloon** on malli koopia. Täielik kloon (`full = true`) kopeerib malli ketta ja uus VM ei sõltu mallist. Lingitud kloon (linked clone, `full = false`) kasutab malli ketast alusena ja salvestab ainult erinevused: see valmib sekunditega, aga malli ei saa kustutada, kuni kloonid on olemas. Täielik kloon hoiab ketta kopeerimise ajal kettahoidla lukus. Kui klassis kloonivad paljud korraga, ootavad kloonid üksteise järel ja osa neist aegub, seepärast kasutatakse kursusel lingitud klooni.
 
 ### cloud-init: seadistus esimesel käivitusel
 
-Mallist tehtud masinal on malli hostinimi, IP-aadressi pole ja SSH-võtit pole. Neid pole mõtet mallis hoida, sest igal masinal on need erinevad. Plokk `initialization` annab need väärtused ette: IP-aadress, lüüs, DNS, kasutaja ja avalik võti.
+Mallist tehtud masinal on malli hostinimi ja SSH-võtit pole. Neid pole mõtet mallis hoida, sest igal masinal on need erinevad. Plokk `initialization` annab need väärtused ette: võrgu seadistus, kasutaja ja avalik võti. Kooli võrgus jagab IP-aadresse DHCP, nii et koodis on `address = "dhcp"` ja masina tegeliku aadressi teatab hiljem agent.
 
 ```hcl
 initialization {
   ip_config {
     ipv4 {
-      address = "192.168.125.19/24"
-      gateway = "192.168.125.1"
+      address = "dhcp"
     }
   }
   user_account {
@@ -495,17 +498,17 @@ Proxmox teeb neist väikese virtuaalse CD-draivi, millel on failid `user-data`, 
 
 === "cloud-init'iga"
 
-    IP-aadress ja võti on koodis. Masin tuleb käivitudes kohe õige aadressiga võrku ja SSH-ühendus töötab võtmega.
+    Võrgu seadistus ja võti on koodis. Masin tuleb käivitudes võrku ja SSH-ühendus töötab võtmega.
 
 ### Muudatus töötavas masinas
 
-cloud-init töötab masina käivitumisel. Kui olemasoleva VM-i plokis `initialization` muuta IP-aadressi, näitab plaan `~` ja `apply` muudab Proxmoxi seadistust. Töötava masina sees ei muutu midagi, sest keegi ei käivitanud cloud-init'i uuesti. Teade `Apply complete!` tähendab, et Proxmoxi seadistus muutus, mitte et masin on uue aadressiga.
+cloud-init töötab masina käivitumisel. Kui olemasoleva VM-i plokki `initialization` muuta, näitab plaan `~`: Proxmox kirjutab uue cloud-init'i CD ja provider taaskäivitab VM-i. Käivitusel näeb cloud-init, et seadistus on muutunud, ja rakendab selle.
 
-Kõige kindlam viis on teha masin uuesti: `tofu apply -replace=<aadress>` loob VM-i uuesti ja näitab asendust kohe plaanis. Uus masin loeb cloud-init'i andmed esimesel käivitusel nagu iga teine koodist loodud masin.
+Nii parandatud masin on siiski olnud vahepeal teistsugune kui kood. Kõige kindlam viis kontrollida, et kood kirjeldab masinat täielikult, on teha masin uuesti: `tofu apply -replace=<aadress>` loob VM-i uuesti ja näitab asendust kohe plaanis.
 
 ??? info "Süvenemiseks: millal cloud-init uuesti töötab"
 
-    cloud-init eristab masinaid `meta-data` failis oleva `instance-id` järgi. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ja jätab esimese käivituse sammud vahele. Proxmox arvutab `instance-id` cloud-init'i seadistuse räsist ja kirjutab draivi uuesti VM-i käivitamisel. Seega jõuab muudatus masinasse alles pärast VM-i peatamist ja käivitamist ning cloud-init peab masinat siis uueks: seadistab selle uuesti ja teeb ka uued SSH host key'd. Vaata [cloud-init'i dokumentatsiooni](https://docs.cloud-init.io/en/latest/explanation/instancedata.html) ja Proxmoxi lehte [Cloud-Init Support](https://pve.proxmox.com/wiki/Cloud-Init_Support).
+    cloud-init eristab masinaid `meta-data` failis oleva `instance-id` järgi. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ja jätab esimese käivituse sammud vahele. Proxmox arvutab `instance-id` cloud-init'i seadistuse räsist ja kirjutab draivi uuesti VM-i käivitamisel. Seega jõuab muudatus masinasse alles pärast VM-i taaskäivitust, mille provider teeb ise, ja cloud-init peab masinat siis uueks: seadistab selle uuesti ja teeb ka uued SSH host key'd. Vaata [cloud-init'i dokumentatsiooni](https://docs.cloud-init.io/en/latest/explanation/instancedata.html) ja Proxmoxi lehte [Cloud-Init Support](https://pve.proxmox.com/wiki/Cloud-Init_Support).
 
 ### Uus masin, uus host key
 
@@ -519,17 +522,17 @@ Iga uus masin teeb esimesel käivitusel endale uue SSH **host key** (masina võt
 
 Sage põhjus on CPU tüüp. AlmaLinux 9 vajab protsessori käsustikku x86-64-v2, aga provider'i vaikimisi CPU tüüp `qemu64` seda ei paku ja masina käivitus katkeb. Lahendus on `cpu { type = "x86-64-v2-AES" }`. Konsoolis on veateade näha, OpenTofu näitab ainult agendi ootamise ajapiirangut.
 
-**Leia viga.** test01 IP-aadress muudeti koodis `.19` pealt `.29` peale. Plaan näitas `~ update in-place`, `apply` lõppes teatega `Apply complete! Resources: 0 added, 1 changed, 0 destroyed.` Ühendus `ssh kasutaja@192.168.125.29` ei vasta, vana aadress `.19` vastab. Mis on valesti?
+**Leia viga.** Andmebaasi masina koodis muudeti plokis `clone` rida `full = false` reaks `full = true`, et masin ei sõltuks mallist. Plaani kokkuvõte oli `Plan: 1 to add, 0 to change, 1 to destroy.` ja `apply` tehti kohe. Pärast seda on andmebaas tühi. Mis on valesti?
 
 ??? success "Vastus"
 
-    **Mida taheti:** anda masinale uus IP-aadress.
+    **Mida taheti:** muuta masin mallist sõltumatuks.
 
-    **Mis oli:** `apply` muutis Proxmoxis cloud-init'i seadistust, aga töötav masin oli cloud-init'i juba käivitamisel läbi teinud ja kasutab edasi vana aadressi.
+    **Mis oli:** kloonimise viisi saab valida ainult VM-i loomisel. Plaan näitas `-/+ destroy and then create replacement` ja rida `# forces replacement`: vana VM koos kettaga kustutati ja tehti uus.
 
-    **Õige:** `tofu apply -replace=proxmox_virtual_environment_vm.test01`. Masin tehakse uuesti ja loeb uue aadressi esimesel käivitusel. Pärast seda kustuta vana host key (`ssh-keygen -R`) ja võrdle uue võtme sõrmejälge konsoolis.
+    **Õige:** loe enne `apply`-d plaani kokkuvõtet. `1 to destroy` andmebaasi masina juures tähendab, et enne on vaja andmetest varukoopiat või teist lahendust.
 
-    **Miks:** cloud-init seadistab masina käivitumisel. OpenTofu muudab Proxmoxi objekti, mitte töötavat operatsioonisüsteemi.
+    **Miks:** OpenTofu teeb selle, mida kood nõuab. Kui argumenti ei saa töötaval VM-il muuta, on ainus viis VM uuesti teha.
 
 ## 6. Muutujad ja for_each: üks plokk, viis masinat
 
@@ -595,7 +598,7 @@ resource "proxmox_virtual_environment_vm" "lab" {
 Iga objekti aadress on nüüd kujul `proxmox_virtual_environment_vm.lab["web01"]`. VM-i identiteet on OpenTofu jaoks võti `web01`, mitte järjekorranumber ega Proxmoxi ID. Uus rida `terraform.tfvars`-is on uus masin ja olemasolevad jäävad puutumata.
 
 <figure markdown="span">
-  ![terraform.tfvars-is on viis kirjet web01 kuni db01; main.tf-is on üks plokk for_each = var.vms; tulemuseks viis aadressi lab["web01"] kuni lab["db01"] ja VM-id 1101 kuni 1105](assets/k04_l_for_each.svg)
+  ![terraform.tfvars-is on viis kirjet web01 kuni db01; main.tf-is on üks plokk for_each = var.vms; tulemuseks viis aadressi lab["web01"] kuni lab["db01"] ja VM-id 4301 kuni 4305](assets/k04_l_for_each.svg)
   <figcaption>Joonis 4.7. Andmed on failis <code>terraform.tfvars</code>, kood on üks plokk ja <code>for_each</code> teeb igast kirjest ühe VM-i (Talvik, 2026).</figcaption>
 </figure>
 
@@ -666,18 +669,18 @@ Mõlemad oskavad teise tööd osaliselt. Ansible'il on moodulid VM-ide loomiseks
 output "hosts" {
   value = {
     for name, vm in proxmox_virtual_environment_vm.lab :
-    name => split("/", vm.initialization[0].ip_config[0].ipv4[0].address)[0]
+    name => vm.ipv4_addresses[1][0]
   }
 }
 ```
 
-Avaldis `for … : nimi => väärtus` teeb igast VM-ist kirje „nimi → IP“ ja `split("/", …)[0]` eemaldab aadressist võrgumaski. Väärtus tuleb ressursist, mitte muutujast `var.vms`. Nii on väljundis ainult masinad, mis on tegelikult loodud.
+Avaldis `for … : nimi => väärtus` teeb igast VM-ist kirje „nimi → IP“. `ipv4_addresses` on iga võrguliidese aadresside nimekiri, mille teatas agent. Esimene liides on `lo`, seega on masina IP teise liidese esimene aadress `[1][0]`. Väärtus tuleb ressursist, mitte muutujast `var.vms`. Nii on väljundis ainult masinad, mis on tegelikult loodud.
 
 Kui väljund viitab tundlikule muutujale, keeldub OpenTofu plaanist, kuni väljundile pole lisatud `sensitive = true`. Tundlikkus levib: kõik, mis tuleb tundlikust väärtusest, on samuti tundlik. `sensitive` peidab väärtuse ekraanilt, aga state'is on see endiselt lihttekstina.
 
 ### Inventory OpenTofu väljundist
 
-2\. kohtumisel kirjutati Ansible'i inventory käsitsi. Kui masinad tulevad koodist, on IP-aadressid juba failis `terraform.tfvars` ja käsitsi koopia läheb varem või hiljem lahku. Lahendus on lasta OpenToful inventory ise kirjutada.
+2\. kohtumisel kirjutati Ansible'i inventory käsitsi. Kui masinad tulevad koodist, teab OpenTofu nende IP-aadresse agendi kaudu ja käsitsi koopia läheb varem või hiljem lahku: iga uus masin saab DHCP-st uue aadressi. Lahendus on lasta OpenToful inventory ise kirjutada.
 
 Funktsioon `templatefile()` täidab malli muutujatega ja ressurss `local_file` (provider `hashicorp/local`) kirjutab tulemuse faili. Malli süntaks on OpenTofu oma: `${ … }` asendab väärtuse ja `%{ for … }` kordab ridu. Ansible'i Jinja2 mallides on samad asjad kujul `{{ … }}` ja `{% for %}`.
 
