@@ -208,8 +208,8 @@ Teise etapi kirjutad ise. Nõuded:
 Kontrolli faili automaatse hindaja testidega ja salvesta Jenkinsfile repositooriumi:
 
 ```bash
-bash autograde/check.sh k06 stages
-bash autograde/check.sh k06 agent
+bash autograde/check.sh jenkins stages
+bash autograde/check.sh jenkins agent
 git add k06-jenkins/Jenkinsfile && git commit -m "k06: Jenkinsfile build + test" && git push
 ```
 

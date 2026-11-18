@@ -10,7 +10,7 @@ tags:
 
 | Reegel | Miks |
 |---|---|
-| Oma konto, **[Free plan](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html)** | Free planil kaardilt raha ei võeta. Kui krediit ($100 + kuni $100) või 6 kuud saab otsa, konto suletakse. Paid planil hakatakse pärast krediiti kaarti debiteerima. |
+| Oma konto, **[Free plan](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html)** | Uue konto loomisel ei küsi AWS enamasti makseviisi. Kui küsib, ei võeta Free planil kaardilt raha. Kui krediit ($100 + kuni $100) või 6 kuud saab otsa, konto suletakse. Paid planil hakatakse pärast krediiti kaarti debiteerima. |
 | Ära liitu AWS Organizationsiga ega vajuta "Upgrade plan" | Mõlemad muudavad konto tasuliseks. Kodutöödes kasutatavad teenused on Free planil olemas. |
 | Ainult **eu-north-1** | Unustatud masinad on siis ühes regioonis, mitte viies. Koristusskript vaatab eu-north-1 ja us-east-1. |
 | Ainult t3.micro ja t3.small | [Free Tier eligible](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html), x86 (Labori seisu image on amd64). |

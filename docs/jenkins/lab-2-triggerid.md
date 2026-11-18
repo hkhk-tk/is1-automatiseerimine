@@ -38,7 +38,7 @@ Ilma `H`-ta teeksid kõik jobid oma `git ls-remote`-i samal sekundil: sada jobi 
 Kontrolli faili automaatse hindaja testiga:
 
 ```bash
-bash autograde/check.sh k06 triggers
+bash autograde/check.sh jenkins triggers
 ```
 
 ??? success "Oodatav tulemus"

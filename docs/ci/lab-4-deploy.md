@@ -92,7 +92,7 @@ Registry on piir CI ja CD vahel: kõik, mis on registry's, on testitud ja deploy
 
 `needs: [build, security]` tähendab, et image tehakse alles siis, kui testid ja skänn on läbi. Tag sha7 on see, mida deploy kasutab, `latest` on ainult inimesele mugavuseks. Kui deploy kasutaks `latest`-i, ei saaks sa kunagi kindel olla, mis versioon parasjagu töötab.
 
-**Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga) ja `bash autograde/check.sh k05 structure` annab `OK`.
+**Edasi saad minna, kui** *Packages* all on pakett sinu repo nimega ja tag'iga, mis võrdub `git rev-parse --short=7 HEAD`-iga (main'il on `latest` sama digest'iga) ja `bash autograde/check.sh ci structure` annab `OK`.
 
 ## Runner control node'ile, ohutult
 

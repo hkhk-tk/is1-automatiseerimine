@@ -11,7 +11,7 @@ Roheline build ütleb ainult, et build õnnestub. See ei ütle, kas sõltuvustes
 
 Osa lõpuks skännib teine job sõltuvusi build'iga samal ajal, Trivy action on SHA-ga fikseeritud ja igal job'il on ainult talle vajalikud tokeni õigused.
 
-**Kui teed seda tööl iga päev:** job `security` on olemas, igal job'il on oma `permissions:` ja `bash autograde/check.sh k05 hygiene` annab `OK`. Kui see on sul juba korras, mine edasi [image'i ja deploy](lab-4-deploy.md) juurde. Compat-matrix, vahemälu, kõik action'id SHA-ga ja Dependabot on IS2 süvenemises [Turvaskänn ja sõltuvused lähemalt](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#osa-3-turvaskann-ja-soltuvused-lahemalt).
+**Kui teed seda tööl iga päev:** job `security` on olemas, igal job'il on oma `permissions:` ja `bash autograde/check.sh ci hygiene` annab `OK`. Kui see on sul juba korras, mine edasi [image'i ja deploy](lab-4-deploy.md) juurde. Compat-matrix, vahemälu, kõik action'id SHA-ga ja Dependabot on IS2 süvenemises [Turvaskänn ja sõltuvused lähemalt](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#osa-3-turvaskann-ja-soltuvused-lahemalt).
 
 ## Turvaskänn eraldi job'ina
 
@@ -110,8 +110,8 @@ Trivy intsidendi pahatahtlik kood kasutas just seda tokenit. Kui tokenil on kirj
 3. Tee push ja kontrolli.
 
     ```bash
-    bash autograde/check.sh k05 hygiene
-    bash autograde/check.sh k05 actionlint
+    bash autograde/check.sh ci hygiene
+    bash autograde/check.sh ci actionlint
     ```
 
 <!-- EKRAANIPILT: Actions → käivitus pärast permissions muudatust → job build → Set up job laiendatud; näha plokk "GITHUB_TOKEN Permissions" ridadega Contents: read ja Metadata: read.

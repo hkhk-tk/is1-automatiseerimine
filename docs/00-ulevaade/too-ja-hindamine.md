@@ -15,10 +15,10 @@ Classroom 50 loob sulle repositooriumi `<klassiruum>-labori-seis-<github>`.
 | `k02-ansible/` | 2 |
 | `k03-docker/`, `.dockerignore` | 3 |
 | `k04-tofu/` | 4 |
-| `.github/workflows/` | 5 (`ci.yml`), 7 (`gitops.yml`) |
-| `k06-jenkins/` | 6 |
-| `k07-k8s/` | 7 (starteris mustandid) |
-| `cloud/` | AWS kodutööd |
+| `k05-k8s/` | 5 |
+| `k06-aws/` | 6 |
+| `cloud/` | AWS-i koristuse kontroll ja AWS kodutööd |
+| `.github/workflows/`, `k06-jenkins/`, `k07-k8s/` | lisaülesanded |
 
 *Tabel 0.4. Repositooriumi kaustad.*
 
@@ -47,6 +47,8 @@ Kui pead pärast tag'i midagi parandama, tee uus commit ja seejärel `git tag -f
 | HK6 | 7 | lõputest, Kubernetes ja GitOps |
 
 *Tabel 0.5. Hindamiskriteeriumid. Numbrid tulevad õppekavast, seepärast on HK3 4. ja HK4 3. kohtumisel.*
+
+Kursuse lõpetamiseks peab olema esitatud vähemalt 80% praktikumidest. Viimasel kohtumisel saad pooleli jäänud praktikumid lõpuni teha.
 
 Automaatne hindaja annab iga kohtumise tag'ile kuni 100 punkti. Tag'i `k03` puhul arvestatakse ainult 3. kohtumise
 teste ja hilisemate kohtumiste testide tulemus on `SKIP`. Kas rakendus Proxmoxis ja klastris töötab, näeb koolitaja rakendusest Labori seis, kuhu `check.sh` tulemused saadab.

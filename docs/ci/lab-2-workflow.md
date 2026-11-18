@@ -15,7 +15,7 @@ Joonis L5.1 näitab valmis pipeline'i. Vasakul on sündmused (push, PR, nupp, aj
   <figcaption>Joonis L5.1. Valmis pipeline: job'id, nende tingimused ja masinad, kus need töötavad.</figcaption>
 </figure>
 
-**Kui teed seda tööl iga päev:** kirjuta job `build` otse valmis (checkout, setup-java 21 `cache: maven`-iga, `mvn -B verify`, WAR artefaktina `if-no-files-found: error`-iga, triggerid `push` ja `pull_request`) ja `bash autograde/check.sh k05 build && bash autograde/check.sh k05 actionlint` annab kaks `OK`-d. Kui see on sul juba korras, mine edasi [Trivy ja õiguste](lab-3-trivy-matrix.md) juurde. Teavitus, ajapiir ja YAML-vea katse on IS2 süvenemises [Workflow lähemalt](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#osa-2-workflow-lahemalt).
+**Kui teed seda tööl iga päev:** kirjuta job `build` otse valmis (checkout, setup-java 21 `cache: maven`-iga, `mvn -B verify`, WAR artefaktina `if-no-files-found: error`-iga, triggerid `push` ja `pull_request`) ja `bash autograde/check.sh ci build && bash autograde/check.sh ci actionlint` annab kaks `OK`-d. Kui see on sul juba korras, mine edasi [Trivy ja õiguste](lab-3-trivy-matrix.md) juurde. Teavitus, ajapiir ja YAML-vea katse on IS2 süvenemises [Workflow lähemalt](https://hkhk-tk.github.io/is2-automatiseerimine/k05/syvenemine/#osa-2-workflow-lahemalt).
 
 ## Üks job, kolm sammu
 
@@ -128,12 +128,12 @@ Katkise YAML-iga faili GitHub ei käivita üldse ja käivituse lehel on siis ain
 2. Kontrolli sama automaatse hindaja testiga.
 
     ```bash
-    bash autograde/check.sh k05 actionlint
+    bash autograde/check.sh ci actionlint
     ```
 
 actionlint kontrollib ka seda, mida YAML-i parser ei näe, näiteks olematuid sisendeid ja vigaseid `${{ }}` avaldisi. Edaspidi käivita `actionlint` enne iga push'i: nii jääb vahele üks ring push'i, ootamise ja punase käivitusega.
 
-**Edasi saad minna, kui** `actionlint` annab `0` ja `check.sh k05 actionlint` annab `OK`.
+**Edasi saad minna, kui** `actionlint` annab `0` ja `check.sh ci actionlint` annab `OK`.
 
 ## Ka PR-il
 
@@ -164,7 +164,7 @@ Kui kontroll käivitub alles pärast merge'i, on katkine kood juba kõigi teiste
 
 PR-i kontroll vastab küsimusele "kas main jääb pärast seda merge'i roheliseks". Seepärast võib PR olla punane ka siis, kui sinu haru push'i käivitus on roheline: keegi muutis vahepeal main'i. Kui näed PR-il kahte kontrolli (push ja pull_request), on see normaalne, sest mõlemad sündmused käivitasid sama workflow.
 
-**Edasi saad minna, kui** PR-il on kontroll `ci / build` roheline ja `bash autograde/check.sh k05 build` annab `OK`.
+**Edasi saad minna, kui** PR-il on kontroll `ci / build` roheline ja `bash autograde/check.sh ci build` annab `OK`.
 
 ## WAR artefaktina
 

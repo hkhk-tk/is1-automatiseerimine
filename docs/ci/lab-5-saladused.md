@@ -158,7 +158,7 @@ Fail `~/k03.env` on täna kolmes kohas: control node'i kodukaustas, runner'i tö
 
 Paroolid jõuavad sammu `env:` kaudu, mitte `run:` teksti sisse, seepärast on logis näha käsk ilma väärtusteta. Kui kirjutaksid `${{ secrets.DB_PASSWORD }}` otse `run:`-i, paneks GitHub väärtuse skripti teksti ja see jääks runner'i ajutisse skriptifaili. `if: always()` koristus eemaldab `.env`-i ka ebaõnnestunud deploy järel. Ilma koristuseta jääks fail runner'i töökausta järgmise job'ini.
 
-**Edasi saad minna, kui** `gh secret list --env proxmox` näitab nelja nime ilma väärtusteta, deploy käivitub nagu enne, repo lehel on paremal *Deployments → proxmox*, logis on `.env` sammu käsurida ilma paroolideta ja `bash autograde/check.sh k05 deploy` annab `OK`.
+**Edasi saad minna, kui** `gh secret list --env proxmox` näitab nelja nime ilma väärtusteta, deploy käivitub nagu enne, repo lehel on paremal *Deployments → proxmox*, logis on `.env` sammu käsurida ilma paroolideta ja `bash autograde/check.sh ci deploy` annab `OK`.
 
 ## Miks see nii töötab
 

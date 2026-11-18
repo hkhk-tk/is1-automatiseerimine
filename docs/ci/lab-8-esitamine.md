@@ -10,7 +10,7 @@ tags:
 
 Lõpus on töö `main`-is, tag `k05` on käivitanud automaatse hindaja ja tulemus on GitHubi Releases all.
 
-**Kui teed seda tööl iga päev:** `for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done` annab kuus `OK`-d ja `gh secret list --env proxmox` näitab nelja nime. Kui see on sul juba korras, mine otse etappi „[PR, merge ja tag](#pr-merge-ja-tag)“.
+**Kui teed seda tööl iga päev:** `for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh ci "$c"; done` annab kuus `OK`-d ja `gh secret list --env proxmox` näitab nelja nime. Kui see on sul juba korras, mine otse etappi „[PR, merge ja tag](#pr-merge-ja-tag)“.
 
 ## Enne esitamist
 
@@ -21,7 +21,7 @@ mvn -B -q verify; echo "mvn $?"
 actionlint; echo "actionlint $?"
 git ls-files | grep -E '(^|/)\.env$|k03\.env|\.pem$|id_rsa'
 test -e ~/k03.env && echo "k03.env alles" || echo "k03.env kustutatud"
-for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh k05 "$c"; done
+for c in files actionlint build structure deploy hygiene; do bash autograde/check.sh ci "$c"; done
 ```
 
 Seejärel GitHubi pool: secret'id, runner ja tühi `git status`.
@@ -47,10 +47,7 @@ git switch k05-actions && git merge main && git push
 git log --oneline main..k05-actions
 gh pr create --fill --base main && gh pr checks --watch && gh pr merge --merge
 git switch main && git pull
-git tag k05 && git push origin k05
 ```
-
-> Parandus pärast esitust: uus commit `main`-i, siis `git tag -f k05 && git push -f origin k05`.
 
 `git ls-remote --tags origin` näitab, millised tag'id on GitHubis. Viimane merge käivitas veel ühe deploy, seega tootmises töötab täpselt see commit, millele tag osutab. Kui deploy pärast viimast merge'i ebaõnnestus, paranda see enne automaatse hindaja tulemuse vaatamist, sest koolitaja vaatab ka Actions vaadet.
 

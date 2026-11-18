@@ -36,7 +36,7 @@ Kontrolli faili:
 
 ```bash
 grep -c mvn k06-jenkins/Dockerfile
-bash autograde/check.sh k06 files
+bash autograde/check.sh jenkins files
 ```
 
 `ARG GIT_SHA` on viimane, sest `ARG`-i väärtuse muutus tühistab cache'i alates esimesest reast, mis seda kasutab. Faili alguses ehitaks see iga commit'iga ka `apt-get` kihi uuesti.
@@ -76,7 +76,7 @@ bash autograde/check.sh k06 files
 ```bash
 docker image ls labori-seis
 docker inspect --format '{{.Config.Env}}' labori-seis:<tag> | tr ' ' '\n' | grep GIT_SHA
-bash autograde/check.sh k06 docker
+bash autograde/check.sh jenkins docker
 ```
 
 ??? success "Oodatav tulemus"

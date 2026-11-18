@@ -25,7 +25,7 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 <circle class="core" cx="180" cy="150" r="52"/><text class="t" x="180" y="146" text-anchor="middle">Rakendus</text><text class="s" x="180" y="164" text-anchor="middle">sinu teenus</text>
 <rect class="box" x="115" y="8" width="130" height="48" rx="10"/><text class="b" x="180" y="29" text-anchor="middle">Paigaldus</text><text class="s" x="180" y="46" text-anchor="middle">Bash · Ansible</text>
 <rect class="box" x="230" y="126" width="124" height="48" rx="10"/><text class="b" x="292" y="147" text-anchor="middle">Taristu</text><text class="s" x="292" y="164" text-anchor="middle">OpenTofu</text>
-<rect class="box" x="115" y="244" width="130" height="48" rx="10"/><text class="b" x="180" y="265" text-anchor="middle">Tarne</text><text class="s" x="180" y="282" text-anchor="middle">Actions · Jenkins</text>
+<rect class="box" x="115" y="244" width="130" height="48" rx="10"/><text class="b" x="180" y="265" text-anchor="middle">Tarne</text><text class="s" x="180" y="282" text-anchor="middle">Actions · Argo CD</text>
 <rect class="box" x="6" y="126" width="124" height="48" rx="10"/><text class="b" x="68" y="147" text-anchor="middle">Käitus</text><text class="s" x="68" y="164" text-anchor="middle">Docker · Kubernetes</text>
 </svg>
 </figure>
@@ -41,16 +41,16 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 ## Kursuse teekond
 
 <figure style="max-width:760px;margin:.2em auto .6em" class="lx" markdown="0">
-<svg viewBox="0 0 760 105" role="img" aria-label="Kursuse teekond: 1 Bash ja Ansible, 2 Ansible, 3 Konteinerid, 4 Taristu, 5 Tarneahel, 6 Jenkins, 7 Kubernetes" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 760 105" role="img" aria-label="Kursuse teekond: 1 Bash ja Ansible, 2 Ansible, 3 Konteinerid, 4 Taristu, 5 Kubernetes, 6 AWS, 7 Lõpetamine" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .ln{stroke:var(--md-default-fg-color--lighter);stroke-width:2}.lx .c{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.5}.lx .on{fill:var(--md-primary-fg-color);stroke:var(--md-primary-fg-color)}.lx .n{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .non{fill:var(--md-primary-bg-color);font-size:15px;font-weight:700}.lx .t{fill:var(--md-default-fg-color);font-size:13px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:11.5px}</style>
 <line class="ln" x1="54" y1="30" x2="706" y2="30"/>
 <a href="k01/"><circle class="c on" cx="54" cy="30" r="20"/><text class="non" x="54" y="35" text-anchor="middle">1</text><text class="t" x="54" y="72" text-anchor="middle">Bash</text><text class="s" x="54" y="89" text-anchor="middle">ja Ansible</text></a>
 <a href="k02/"><circle class="c on" cx="163" cy="30" r="20"/><text class="non" x="163" y="35" text-anchor="middle">2</text><text class="t" x="163" y="72" text-anchor="middle">Ansible</text><text class="s" x="163" y="89" text-anchor="middle">mitu masinat</text></a>
 <a href="k03/loeng/"><circle class="c on" cx="271" cy="30" r="20"/><text class="non" x="271" y="35" text-anchor="middle">3</text><text class="t" x="271" y="72" text-anchor="middle">Konteinerid</text><text class="s" x="271" y="89" text-anchor="middle">Docker, Podman</text></a>
 <a href="k04/loeng/"><circle class="c on" cx="380" cy="30" r="20"/><text class="non" x="380" y="35" text-anchor="middle">4</text><text class="t" x="380" y="72" text-anchor="middle">Taristu</text><text class="s" x="380" y="89" text-anchor="middle">OpenTofu</text></a>
-<a href="k05/loeng/"><circle class="c on" cx="489" cy="30" r="20"/><text class="non" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Tarneahel</text><text class="s" x="489" y="89" text-anchor="middle">GitHub Actions</text></a>
-<a href="k06/loeng/"><circle class="c on" cx="597" cy="30" r="20"/><text class="non" x="597" y="35" text-anchor="middle">6</text><text class="t" x="597" y="72" text-anchor="middle">Jenkins</text><text class="s" x="597" y="89" text-anchor="middle">kvaliteedivärav</text></a>
-<a href="k07/loeng/"><circle class="c on" cx="706" cy="30" r="20"/><text class="non" x="706" y="35" text-anchor="middle">7</text><text class="t" x="706" y="72" text-anchor="middle">Kubernetes</text><text class="s" x="706" y="89" text-anchor="middle">GitOps</text></a>
+<a href="k05/loeng/"><circle class="c on" cx="489" cy="30" r="20"/><text class="non" x="489" y="35" text-anchor="middle">5</text><text class="t" x="489" y="72" text-anchor="middle">Kubernetes</text><text class="s" x="489" y="89" text-anchor="middle">k3s</text></a>
+<a href="k06/loeng/"><circle class="c on" cx="597" cy="30" r="20"/><text class="non" x="597" y="35" text-anchor="middle">6</text><text class="t" x="597" y="72" text-anchor="middle">Pilv</text><text class="s" x="597" y="89" text-anchor="middle">AWS</text></a>
+<a href="k07/"><circle class="c on" cx="706" cy="30" r="20"/><text class="non" x="706" y="35" text-anchor="middle">7</text><text class="t" x="706" y="72" text-anchor="middle">Lõpetamine</text><text class="s" x="706" y="89" text-anchor="middle">praktikumid</text></a>
 </svg>
 </figure>
 
@@ -90,29 +90,29 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 
     [Ava õppepäev →](k04/loeng.md)
 
--   <span class="paev-nr">05 · Tarneahel</span>
+-   <span class="paev-nr">05 · Klaster</span>
 
-    **GitHub Actions**
+    **Kubernetes k3s-is**
 
-    Töövoog, mis kontrollib muudatusi ning ehitab ja tarnib kokkulepitud tingimustel.
+    Paigaldad oma klastri, käivitad rakenduse mitme koopiana ja kirjeldad selle YAML-failides.
 
     [Ava õppepäev →](k05/loeng.md)
 
--   <span class="paev-nr">06 · Kvaliteet</span>
+-   <span class="paev-nr">06 · Pilv</span>
 
-    **Jenkins, SonarQube ja Nexus**
+    **AWS käsurealt**
 
-    Pipeline kvaliteediväravaga ja versioonitud artefakt.
+    Kaitsed AWS-i konto, lood masina käsurealt ja OpenTofuga ning seadistad selle Ansible'iga.
 
     [Ava õppepäev →](k06/loeng.md)
 
--   <span class="paev-nr">07 · Klaster</span>
+-   <span class="paev-nr">07 · Lõpetamine</span>
 
-    **Kubernetes ja GitOps**
+    **Praktikumid lõpuni**
 
-    Rakendus töötab klastris ja Git on tõe allikas.
+    Teed lõpuni praktikumid, mis jäid pooleli. GitHub Actions, Jenkins ja Argo CD on lisaülesannetes.
 
-    [Ava õppepäev →](k07/loeng.md)
+    [Ava õppepäev →](k07/index.md)
 
 </div>
 

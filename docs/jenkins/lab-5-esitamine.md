@@ -13,7 +13,7 @@ Töö jõuab `main`-i ja tag `k06` käivitab automaatse hindaja. Automaatne hind
 Käivita kõik kohtumise kontrollid ja vaata, et töökaust on puhas.
 
 ```bash
-for t in files stages agent quality nexus secrets triggers docker; do bash autograde/check.sh k06 $t; done
+for t in files stages agent quality nexus secrets triggers docker; do bash autograde/check.sh jenkins $t; done
 git status --short k06-jenkins
 ```
 
@@ -23,14 +23,12 @@ git status --short k06-jenkins
 
 ## PR, merge ja tag
 
-Automaatne hindaja otsib tag'i `k06` `main`-i commit'il pärast merge'i, mitte haru commit'il.
 
 ```bash
 git push
 gh pr create --base main --head k06-jenkins --title "K6 Jenkins" --body "Jenkinsfile, settings.xml ja Dockerfile"
 gh pr merge --merge
 git switch main && git pull
-git tag k06 && git push origin k06
 ```
 
 Automaatne hindaja käivitub tag'i push'i peale, nii et ainult kohalik tag ei käivita midagi. Job ehitab ainult haru `k06-jenkins`. Kui tahad pärast merge'i ehitada ka `main`-i, muuda jobi *Branch Specifier*.

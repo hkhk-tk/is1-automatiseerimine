@@ -11,8 +11,8 @@ tags:
 | [2. kohtumine · Sama kontroll kõigil hostidel](#2-kohtumine-sama-kontroll-koigil-hostidel-systemd-timerina) | [2. kohtumise praktikum](../k02/lab.md) · Ansible, systemd | iga host taaskäivitab oma teenuse ise |
 | [3. kohtumine · Konteinerite tervis ja Uptime Kuma](#3-kohtumine-konteinerite-tervis-ja-uptime-kuma) | [3. kohtumise praktikum](../k03/lab.md) · Docker, Compose | `unhealthy` jõuab Labori seisu ja Kumasse |
 | [4. kohtumine · Drift-valvur](#4-kohtumine-drift-valvur) | [4. kohtumise praktikum](../k04/lab.md) · OpenTofu | käsitsi muudatus Proxmoxis annab FAIL-i |
-| [5. kohtumine · Kontroll väljast](#5-kohtumine-kontroll-valjast-schedule-workflow) | [5. kohtumise praktikum](../k05/lab.md) · GitHub Actions | ajastatud workflow, punane jooks rikke korral |
-| [6. kohtumine · Öine kontroll ajalooga](#6-kohtumine-oine-kontroll-ajalooga) | [6. kohtumise praktikum](../k06/lab.md) · Jenkins | Test Result Trend kolme käivitusega |
+| [5. kohtumine · Kontroll väljast](#5-kohtumine-kontroll-valjast-schedule-workflow) | [GitHub Actionsi praktikum](../ci/lab.md) · GitHub Actions | ajastatud workflow, punane jooks rikke korral |
+| [6. kohtumine · Öine kontroll ajalooga](#6-kohtumine-oine-kontroll-ajalooga) | [Jenkinsi praktikum](../jenkins/lab.md) · Jenkins | Test Result Trend kolme käivitusega |
 | [7. kohtumine · Kubernetes valvab ise](#7-kohtumine-kubernetes-valvab-ise) | [7. kohtumise praktikum](../k07/lab.md) · kubectl | restart ja tühi endpoint näidatud |
 
 *Tabel 1. Monitooringu ülesanded kohtumiste kaupa.*
@@ -181,7 +181,7 @@ shellcheck k04-tofu/drift-watch.sh
 
 ## 5. kohtumine · Kontroll väljast: `schedule` workflow
 
-**Eeldus:** [5. kohtumise praktikum](../k05/lab.md) (self-hosted runner) · **Esita:** `.github/workflows/smoke.yml`
+**Eeldus:** [GitHub Actionsi praktikum](../ci/lab.md) (self-hosted runner) · **Esita:** `.github/workflows/smoke.yml`
 
 Kõik seni tehtud kontrollid käivituvad samast võrgust. Kasutaja pöördub teenuse poole väljastpoolt ja võib näha probleeme, mida sisemised kontrollid ei märka.
 
@@ -212,7 +212,7 @@ gh run list --workflow smoke.yml
 
 ## 6. kohtumine · Öine kontroll ajalooga
 
-**Eeldus:** [6. kohtumise praktikum](../k06/lab.md) (agent label'iga) · **Esita:** `k06-jenkins/Jenkinsfile.nightly`
+**Eeldus:** [Jenkinsi praktikum](../jenkins/lab.md) (agent label'iga) · **Esita:** `k06-jenkins/Jenkinsfile.nightly`
 
 Labori seis näitab praegust olekut. Nädala trendist näed, millal ja kui tihti mõni teenus maas oli.
 

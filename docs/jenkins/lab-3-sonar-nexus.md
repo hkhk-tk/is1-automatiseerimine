@@ -95,7 +95,7 @@ Quality gate on Sonari serveris kirjas olevate tingimuste kogum, näiteks "uue k
 Kontrolli faili automaatse hindaja testiga:
 
 ```bash
-bash autograde/check.sh k06 quality
+bash autograde/check.sh jenkins quality
 ```
 
 > Kui etapp ootab ajapiirini, ei jõudnud webhook kohale. See ei ole Jenkinsfile'i viga: anna koolitajale teada, et ta kontrolliks Sonaris *Webhooks → Recent deliveries*.
@@ -216,8 +216,8 @@ Release-repositoorium ei luba sama versiooni üle kirjutada. Versioon `<pom.vers
 Kontrolli faili testidega ja salvesta töö GitHubi:
 
 ```bash
-bash autograde/check.sh k06 nexus
-bash autograde/check.sh k06 secrets
+bash autograde/check.sh jenkins nexus
+bash autograde/check.sh jenkins secrets
 git add k06-jenkins/ && git commit -m "k06: sonar + quality gate + nexus" && git push
 ```
 

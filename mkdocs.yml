@@ -113,37 +113,37 @@ nav:
           - Loeng: k04/loeng.md
           - Praktikum: k04/lab.md
           - Abi: k04/abi.md
-      - 5. kohtumine · GitHub Actions:
+      - 5. kohtumine · Kubernetes:
           - Loeng: k05/loeng.md
-          - Praktikum:
-              - k05/lab.md
-              - 1. Maven: k05/lab-1-maven.md
-              - 2. Esimene workflow: k05/lab-2-workflow.md
-              - 3. Trivy ja õigused: k05/lab-3-trivy-matrix.md
-              - 4. Image ja deploy: k05/lab-4-deploy.md
-              - 5. Käsitsi käivitus ja saladused: k05/lab-5-saladused.md
-              - 6. Esitamine: k05/lab-8-esitamine.md
-              - Abi: k05/abi.md
-      - 6. kohtumine · Jenkins, SonarQube ja Nexus:
+          - Praktikum: k05/lab.md
+          - Abi: k05/abi.md
+      - 6. kohtumine · AWS käsurealt:
           - Loeng: k06/loeng.md
+          - Praktikum: k06/lab.md
+          - AWS-i reeglid: kodutood/aws-reeglid.md
+      - 7. kohtumine · Lõpetamine: k07/index.md
+  - Lisaülesanded:
+      - GitHub Actions:
+          - Loeng: ci/loeng.md
           - Praktikum:
-              - k06/lab.md
-              - 1. Agent ja esimene pipeline: k06/lab-1-agent.md
-              - 2. Triggerid: k06/lab-2-triggerid.md
-              - 3. Quality gate ja Nexus: k06/lab-3-sonar-nexus.md
-              - 4. Image samast WAR-ist: k06/lab-4-image-deploy.md
-              - 5. Esitamine: k06/lab-5-esitamine.md
-              - Abi: k06/abi.md
-      - 7. kohtumine · Kubernetes:
-          - Loeng: k07/loeng.md
-          - Praktikum: k07/lab.md
-  - Pilv (AWS):
-      - Enne alustamist:
-          - Üldjuhend: kodutood/kodutood.md
-          - Reeglid, kulud ja koristus: kodutood/aws-reeglid.md
-      - Kodutööd:
-          - K1 · EC2 ja websetup.sh: kodutood/k01-aws.md
-          - K2 · Ansible EC2-del: kodutood/k02-aws.md
+              - ci/lab.md
+              - 1. Maven: ci/lab-1-maven.md
+              - 2. Esimene workflow: ci/lab-2-workflow.md
+              - 3. Trivy ja õigused: ci/lab-3-trivy-matrix.md
+              - 4. Image ja deploy: ci/lab-4-deploy.md
+              - 5. Käsitsi käivitus ja saladused: ci/lab-5-saladused.md
+              - 6. Esitamine: ci/lab-8-esitamine.md
+              - Abi: ci/abi.md
+      - Jenkins, SonarQube ja Nexus:
+          - Loeng: jenkins/loeng.md
+          - Praktikum:
+              - jenkins/lab.md
+              - 1. Agent ja esimene pipeline: jenkins/lab-1-agent.md
+              - 2. Triggerid: jenkins/lab-2-triggerid.md
+              - 3. Quality gate ja Nexus: jenkins/lab-3-sonar-nexus.md
+              - 4. Image samast WAR-ist: jenkins/lab-4-image-deploy.md
+              - 5. Esitamine: jenkins/lab-5-esitamine.md
+              - Abi: jenkins/abi.md
   - Teemad:
       - Alused:
           - IT-automatiseerimine: teemad/it-automatiseerimine.md
