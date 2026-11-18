@@ -18,7 +18,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 !!! warning "Konto tee enne tundi"
 
-    Osa 1 tee kodus enne kohtumist. Konto kinnitamine võib võtta tunde ja kahe-etapiline sisselogimine vajab telefoni. Kui sul on varem olnud AWS-i konto, ei saa sa Free plani: kirjuta sellest koolitajale enne tundi.
+    Osa 1 tee kodus enne kohtumist [AWS-i konto juhendi](aws-konto.md) järgi. Konto kinnitamine võib võtta tunde ja kahe-etapiline sisselogimine vajab telefoni. Kui sul on varem olnud AWS-i konto, loe juhendi viimast lõiku.
 
 ??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
 

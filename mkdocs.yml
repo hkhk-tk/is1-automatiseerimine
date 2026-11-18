@@ -119,6 +119,7 @@ nav:
           - Abi: k05/abi.md
       - 6. kohtumine · AWS käsurealt:
           - Loeng: k06/loeng.md
+          - AWS-i konto: k06/aws-konto.md
           - Praktikum: k06/lab.md
           - AWS-i reeglid: kodutood/aws-reeglid.md
       - 7. kohtumine · Lõpetamine: k07/index.md
