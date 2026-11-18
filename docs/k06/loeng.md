@@ -110,6 +110,21 @@ Seepärast kasutatakse võimalusel **ajutisi sessioone**. Käsk `aws login` logi
     | `aws login`, SSO | mõned tunnid | inimene käsureal |
     | roll | kuni tund, uueneb ise | EC2 masin, Lambda, GitHub Actions |
 
+### Kuidas OpenTofu AWS-i sisse logib
+
+OpenTofu ise sisse ei logi. AWS-i provider otsib volitusi kindlas järjekorras ja kasutab esimesi, mis leiab. Turvaline on see viis, kus koodis ja kettal pole püsivat võtit ja provider saab ajutise sessiooni.
+
+??? note "Tabel 6.4. Kust AWS-i provider volitused võtab"
+
+    | Järjekord | Kust | Turvaline? |
+    |---|---|---|
+    | 1 | `access_key` ja `secret_key` plokis `provider "aws"` | ei: võti on koodis ja läheb Giti |
+    | 2 | keskkonnamuutujad `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | ainult siis, kui võtmed on ajutised |
+    | 3 | profiil failis `~/.aws/config`, nimi muutujast `AWS_PROFILE` | jah, kui profiil annab ajutised võtmed (`aws login`, SSO) |
+    | 4 | EC2 masina või GitHub Actionsi roll | jah: ajutised võtmed uuenevad ise |
+
+Praktikumis logib `aws login` brauseri kaudu sisse ja profiil `labseis` küsib sellest sessioonist ajutised võtmed. Kui sessioon aegub, annab `tofu plan` vea `ExpiredToken` ja tuleb uuesti sisse logida. Providerisse saab lisada ka plokki `assume_role`, nii et OpenTofu vahetab sinu sessiooni piiratud õigustega rolli vastu. Täpsemalt: [AWS-i provideri autentimine](https://search.opentofu.org/provider/hashicorp/aws/latest#authentication-and-configuration).
+
 ### SSO ja IAM Identity Center
 
 Ettevõttes on sageli kümneid AWS-i kontosid: arendus, test, tootmine ja iga meeskonna oma. Kui igal kontol oleks oma IAM-kasutajad, peaks lahkunud töötaja kustutama igalt kontolt eraldi. **SSO** (single sign-on) tähendab, et inimene logib sisse ühe korra ettevõtte kontoga, näiteks Microsoft Entra ID või Google'i kontoga, ja saab sealt ligi kõikidele kontodele, kuhu tal on õigus. Kui töötaja lahkub, suletakse üks konto.
