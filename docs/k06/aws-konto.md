@@ -12,7 +12,7 @@ tags:
 
     1. Ära vajuta kunagi **Upgrade plan**.
     2. Ära vajuta **Activate advanced features** ega **Continue with advanced features**. Need viivad tasulisele plaanile.
-    3. Ära liitu AWS Organizationsiga.
+    3. Ära lisa organisatsiooni teisi kontosid ega vajuta **Create project**. AWS loob uuele kontole ise organisatsiooni ja IAM Identity Centeri (konto seadetes **Additional info**). See on normaalne ja seal ei pea midagi muutma.
 
     Kui krediit või kuus kuud saab otsa, suletakse konto ise ja arvet ei tule.
 
