@@ -122,7 +122,9 @@ nav:
           - AWS-i konto: k06/aws-konto.md
           - Praktikum: k06/lab.md
           - AWS-i reeglid: kodutood/aws-reeglid.md
-      - 7. kohtumine · Lõpetamine: k07/index.md
+      - 7. kohtumine · GitLab CI ja lõpetamine:
+          - Praktikum: k07/gitlab.md
+          - Lõpetamine: k07/index.md
   - Lisaülesanded:
       - GitHub Actions:
           - Loeng: ci/loeng.md

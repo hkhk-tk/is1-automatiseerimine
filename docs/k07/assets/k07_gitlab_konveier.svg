@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 330" width="800">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<style>text{font-family:Inter, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.ln{stroke:#7e57c2;stroke-width:2;fill:none}.p{fill:#ede7f6;stroke:#7e57c2;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.m{fill:#5e35b1;stroke:#5e35b1}.g{fill:#e8f5e9;stroke:#43a047;stroke-width:1.5}.b{fill:none;stroke:#9e9e9e;stroke-width:1.5;stroke-dasharray:6 4}</style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<rect class="o" x="30" y="40" width="170" height="60" rx="8"/>
+<text class="t" x="115" y="66">Sina</text>
+<text class="s" x="115" y="86">git push</text>
+<rect class="p" x="315" y="40" width="170" height="60" rx="8"/>
+<text class="t" x="400" y="66">GitLab</text>
+<text class="s" x="400" y="86">.gitlab-ci.yml</text>
+<line class="ln" x1="200" y1="70" x2="313" y2="70" marker-end="url(#a)"/>
+<text class="s" x="257" y="60">muudatus</text>
+<rect class="b" x="30" y="140" width="570" height="160" rx="10"/>
+<text class="s" x="80" y="162">control</text>
+<rect class="m" x="50" y="180" width="130" height="90" rx="8"/>
+<text class="t w" x="115" y="215">Runner</text>
+<text class="s w" x="115" y="238">sinu kasutaja</text>
+<line class="ln" x1="400" y1="100" x2="130" y2="178" marker-end="url(#a)"/>
+<text class="s" x="235" y="122">töö</text>
+<rect class="g" x="215" y="195" width="105" height="60" rx="8"/>
+<text class="t" x="267" y="222">lint</text>
+<text class="s" x="267" y="242">kontrollib</text>
+<rect class="g" x="345" y="195" width="105" height="60" rx="8"/>
+<text class="t" x="397" y="222">deploy</text>
+<text class="s" x="397" y="242">ansible</text>
+<rect class="g" x="475" y="195" width="105" height="60" rx="8"/>
+<text class="t" x="527" y="222">check</text>
+<text class="s" x="527" y="242">curl</text>
+<line class="ln" x1="180" y1="225" x2="213" y2="225" marker-end="url(#a)"/>
+<line class="ln" x1="320" y1="225" x2="343" y2="225" marker-end="url(#a)"/>
+<line class="ln" x1="450" y1="225" x2="473" y2="225" marker-end="url(#a)"/>
+<rect class="p" x="640" y="180" width="140" height="90" rx="8"/>
+<text class="t" x="710" y="210">web01</text>
+<text class="s" x="710" y="232">leht :8081</text>
+<text class="s" x="710" y="252">ja motd</text>
+<line class="ln" x1="397" y1="255" x2="397" y2="290" />
+<line class="ln" x1="397" y1="290" x2="700" y2="290" />
+<line class="ln" x1="700" y1="290" x2="700" y2="272" marker-end="url(#a)"/>
+<text class="s" x="560" y="284">SSH</text>
+</svg>
