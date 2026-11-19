@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker></defs>
+<style>text{font-family:Inter, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.ln{stroke:#7e57c2;stroke-width:2;fill:none}.p{fill:#ede7f6;stroke:#7e57c2;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.m{fill:#5e35b1;stroke:#5e35b1}.g{fill:#e8f5e9;stroke:#43a047;stroke-width:1.5}.b{fill:none;stroke:#ff9100;stroke-width:1.5;stroke-dasharray:6 4}</style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<rect class="o" x="30" y="40" width="190" height="90" rx="8"/>
+<text class="t" x="125" y="72">control</text>
+<text class="s" x="125" y="94">main.tf</text>
+<text class="s" x="125" y="114">tofu apply</text>
+<rect class="b" x="300" y="20" width="470" height="260" rx="10"/>
+<text class="s" x="535" y="42">AWS, regioon eu-north-1 (Stockholm)</text>
+<rect class="p" x="330" y="60" width="180" height="70" rx="8"/>
+<text class="t" x="420" y="90">security group</text>
+<text class="s" x="420" y="112">SSH ja HTTP sinu IP-lt</text>
+<rect class="m" x="560" y="60" width="180" height="110" rx="8"/>
+<text class="t w" x="650" y="90">EC2 masin</text>
+<text class="s w" x="650" y="112">t3.micro, Ubuntu</text>
+<text class="s w" x="650" y="132">user_data: nginx</text>
+<text class="s w" x="650" y="152">„Tere pilvest!“</text>
+<rect class="g" x="330" y="190" width="180" height="70" rx="8"/>
+<text class="t" x="420" y="220">krediit</text>
+<text class="s" x="420" y="242">~2 senti tunnis</text>
+<line class="ln" x1="220" y1="85" x2="328" y2="95" marker-end="url(#a)"/>
+<text class="s" x="270" y="78">API</text>
+<line class="ln" x1="510" y1="95" x2="558" y2="105" marker-end="url(#a)"/>
+<line class="ln" x1="600" y1="170" x2="512" y2="220" marker-end="url(#a)"/>
+<text class="s" x="610" y="215">kulub, kuni töötab</text>
+<line class="ln" x1="125" y1="130" x2="125" y2="225" />
+<line class="ln" x1="125" y1="225" x2="328" y2="225" marker-end="url(#a)"/>
+<text class="s" x="215" y="215">tofu destroy peatab kulu</text>
+</svg>
