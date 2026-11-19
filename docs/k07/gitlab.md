@@ -34,9 +34,16 @@ Kõigepealt käivitad playbook'i ise. Siis tead, mida konveier hiljem sinu eest 
 **Kontroll:** `curl http://<web01 IP>:8081` näitab rida `Kohv on olemas.`.  
 **Kus:** brauser ja control, kaust `~/kursus/k07-gitlab`.
 
-### 1.1 Logi GitLabi sisse
+### 1.1 Loo GitLabi konto
 
-Ava <https://gitlab.lab.hkhk.lan>. Kasutajanime ja algse parooli said e-kirjaga. Esimesel sisselogimisel küsib GitLab uut parooli.
+Kursuse GitLab töötab kooli sisevõrgus. Konto teed ise.
+
+1. Ava <https://gitlab.lab.hkhk.lan> ja vajuta **Register now**.
+2. Kasutajanimeks kirjuta sama nimi nagu GitHubis. E-postiks kirjuta oma kooli aadress `…@hkhk.edu.ee`, sest teiste aadressidega kontot luua ei saa.
+3. Vali parool ja vajuta **Register**. GitLab võib küsida rolli ja eesmärki: vali sobiv ja jätka.
+
+??? success "Oodatav tulemus"
+    Oled sisse logitud ja paremal üleval on sinu kasutajanimi.
 
 ??? warning "Kui aadress ei avane"
     VPN-iga sülearvuti ei pruugi nime `gitlab.lab.hkhk.lan` leida. Ava <https://192.168.100.56> ja nõustu sertifikaadi hoiatusega. Control'is töötab nimi alati.
