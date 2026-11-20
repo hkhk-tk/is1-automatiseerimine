@@ -45,15 +45,15 @@ Iga osa käib sama rütmiga: kirjutad koodi, mõtled enne käsku läbi, mida pla
 
 ## Osa 1 · Token ja haru
 
-Tofu räägib Proxmoxiga API kaudu ja iga päring vajab tokenit. Token on failis `~/.config/is1/proxmox.env` keskkonnamuutujatena. Provider loeb ühenduse andmed keskkonnast, nii et token ei satu ühtegi faili, mis läheb Giti.
+Tofu suhtleb Proxmoxiga API kaudu ja iga päring vajab tokenit. Token on failis `~/.config/is1/proxmox.env` keskkonnamuutujatena. Provider loeb ühenduse andmed keskkonnast, nii et token ei satu ühtegi faili, mis läheb Giti.
 
 **Eesmärk:** muutujad on laaditud, `tofu` on paigaldatud ja töötad harus `k04-tofu`.  
-**Kontroll:** `echo $IS1_POOL` näitab `is1-<perenimi>` ja `tofu version` näitab vähemalt 1.12.  
+**Kontroll:** `echo $IS1_POOL` näitab `is1-<perenimi>`, `tofu version` näitab versiooni 1.10 või uuemat ja `git branch --show-current` näitab `k04-tofu`.  
 **Kus:** control, kaust `~/kursus`.
 
-### 1.1 Lae muutujad
+### 1.1 Laadi muutujad
 
-Käsk `source` loeb faili praegusesse shelli. Muutujad kehtivad ainult selles terminalis: uues terminalis tuleb `source` uuesti teha.
+Käsk `source` loeb faili praegusesse shelli. Failis on read kujul `export NIMI=väärtus`, seega jõuavad muutujad ka programmini `tofu`. Muutujad kehtivad ainult selles terminalis ja uues terminalis tuleb `source` uuesti teha.
 
 ```bash
 ls -l ~/.config/is1/proxmox.env
@@ -63,43 +63,65 @@ env | grep -E '^IS1_' | sort
 
 ??? success "Oodatav tulemus"
 
-    Faili õigused on `-rw-------`: faili saad lugeda ainult sina. `env` näitab viit rida: `IS1_BRIDGE=vmbr0`, `IS1_DATASTORE=local-zfs`, `IS1_NODE=SR630V3-1`, `IS1_POOL=is1-<perenimi>` ja `IS1_VMID_BASE=43x0`. Sinu VM-ide numbrid on `IS1_VMID_BASE` + 1 kuni 9.
+    Faili õigused on `-rw-------`: faili saad lugeda ainult sina. `env` näitab viit rida: `IS1_BRIDGE=vmbr0`, `IS1_DATASTORE=local-zfs`, `IS1_NODE=SR630V3-1`, `IS1_POOL=is1-<perenimi>` ja `IS1_VMID_BASE=43x0`. Sinu VM-ide numbrid on `IS1_VMID_BASE` + 1 kuni 9. See kontroll ei näita veel, kas token töötab. Seda näed osas 2.
 
 ??? warning "Kui faili ei ole"
 
     Kirjuta koolitajale. Tokenit ei saa ise teha, see luuakse sinu jaoks.
 
-Et ei peaks iga uue terminali juures `source`-i meeles pidama, lisa see `~/.bashrc`-i lõppu:
+??? tip "Muutujad iga uue terminaliga"
 
-```bash
-echo 'source ~/.config/is1/proxmox.env' >> ~/.bashrc
-```
+    Kui lisad `source`-i rea faili `~/.bashrc`, laaditakse muutujad igas uues terminalis. Käsk lisab rea ainult siis, kui seda failis veel pole:
+
+    ```bash
+    grep -qxF 'source ~/.config/is1/proxmox.env' ~/.bashrc || echo 'source ~/.config/is1/proxmox.env' >> ~/.bashrc
+    ```
 
 !!! warning "Token jääb faili proxmox.env"
 
-    Ära kopeeri tokenit `.tf`- ega `.tfvars`-faili, ekraanipildile ega küsimusse. Automaatkontroll otsib tokeni mustrit kõigist `k04-tofu/` failidest. Kui token jõuab GitHubi, tühistab koolitaja selle ja annab uue.
+    Ära kopeeri tokenit `.tf`- ega `.tfvars`-faili, ekraanipildile ega küsimusse. Ära käivita käsku `env` ilma `grep`-ita, sest siis on väljundis ka token. Automaatkontroll otsib tokeni mustrit kõigist `k04-tofu/` failidest. Kui token jõuab GitHubi, tühistab koolitaja selle ja annab uue.
 
 ### 1.2 Paigalda OpenTofu
 
-OpenTofu on üks programm, mis paigaldatakse deb-paketihoidlast. [Ametlik skript](https://opentofu.org/docs/intro/install/) lisab paketihoidla ja paigaldab paketi. Loe skript enne käivitamist läbi: käivitad selle `sudo`-ga.
+Kontrolli kõigepealt, kas OpenTofu on juba olemas:
 
 ```bash
-tofu version || {
-  curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
-  less install-opentofu.sh
-  sudo bash install-opentofu.sh --install-method deb
-}
+tofu version
+```
+
+Kui näed versiooni 1.10 või uuemat, jätka osaga 1.3. Kui tuleb `command not found`, paigalda OpenTofu.
+
+OpenTofu paigaldatakse deb-paketihoidlast. [Ametlik skript](https://opentofu.org/docs/intro/install/) lisab paketihoidla ja paigaldab paketi. Skript käivitatakse `sudo`-ga, seega vaata see enne läbi. Otsi skriptist kohta, kus lisatakse paketihoidla `packages.opentofu.org`, ja käsku `apt-get install`, mis paigaldab paketi `tofu`. Programmist `less` väljud klahviga `q`.
+
+```bash
+cd ~
+curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
+less install-opentofu.sh
+sudo bash install-opentofu.sh --install-method deb
 tofu version
 ```
 
 ??? success "Oodatav tulemus"
 
-    `OpenTofu v1.13.x` ja `on linux_amd64`. Kui `tofu` oli juba olemas, näed versiooni kohe ja paigaldust ei tehta.
+    `OpenTofu v1.13.x` ja `on linux_amd64`.
 
-### 1.3 Tee haru
+??? warning "Kui paigaldus ebaõnnestub"
+
+    Ära proovi järjest teisi paigaldusviise. Kirjuta küsimusse käsk, mille käivitasid, ja kogu veateade tekstina.
+
+### 1.3 Loo haru
+
+Enne haru vahetamist kontrolli, et varasemas töös pole commit'imata muudatusi:
 
 ```bash
-cd ~/kursus && git switch main && git pull
+cd ~/kursus
+git status
+```
+
+Kui väljund ütleb `working tree clean`, jätka. Kui seal on muudetud faile, ära kustuta neid. Tee neist commit oma eelmises harus või küsi koolitajalt.
+
+```bash
+git switch main && git pull
 git switch -c k04-tofu
 mkdir -p k04-tofu/01-alused
 git branch --show-current
