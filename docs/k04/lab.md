@@ -19,13 +19,13 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 ??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
 
-    **Saad valmis kujul:** control'is on fail `~/.config/is1/proxmox.env`, kus on Proxmoxi aadress, sinu ajutine API token ja sinu väärtused: pool, sõlm ja VM-ide numbrite algus. Token kehtib 5. kohtumise eelõhtuni. Proxmoxis on kooli mallid Ubuntu 24.04 ja AlmaLinux 9. Repositooriumi `.gitignore` hoiab state'i, `terraform.tfvars`-i ja kausta `.terraform/` Gitist väljas. OpenTofu osa jaoks eelmiste kohtumiste masinaid vaja ei ole: alustad harust `main`. Osas 9 kirjutab Tofu inventory 2. kohtumise kausta `k02-ansible`. Kui seda kausta sinu repositooriumis pole, loob Tofu selle ise.
+    **Saad valmis kujul:** control'is on fail `~/.config/is1/proxmox.env`, kus on Proxmoxi aadress, sinu ajutine API token ja sinu väärtused: pool, sõlm ja VM-ide numbrite algus. Token kehtib 5. kohtumise eelõhtuni. Proxmoxis on kooli mallid Ubuntu 24.04 ja AlmaLinux 9. Repositooriumi `.gitignore` hoiab state'i, `terraform.tfvars`-i ja kausta `.terraform/` Gitist väljas. OpenTofu osas eelmiste kohtumiste masinaid ei kasutata ja alustad harust `main`. Osas 9 kirjutab Tofu inventory 2. kohtumise kausta `k02-ansible`. Kui seda kausta sinu repositooriumis pole, loob Tofu selle ise.
 
     **Teed ise:** kirjutad kausta `~/kursus/k04-tofu` OpenTofu koodi, mis loob kõigepealt ühe VM-i ja siis muutujate põhjal viis, kirjutad Tofu väljundist Ansible'i inventory ja esitad töö tag'iga `k04`. Proxmoxi veebiliideses `https://192.168.124.200:8006` näed oma kooli kontoga, mida kood lõi.
 
-    **Kui koodifail läks katki:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. See ei muuda Proxmoxi VM-e.
+    **Kui koodifailis on viga:** `git restore <fail>` toob faili tagasi viimase commit'i kujul. See ei muuda Proxmoxi VM-e.
 
-    **Kui VM-id tuleb uuesti teha:** `tofu destroy` kustutab selle kausta state'is olevad VM-id ja järgmine `tofu apply` loob need uuesti. Loe kustutamise plaan enne `yes`-i läbi. Sinu control'it ja eelmiste kohtumiste masinaid see ei puuduta, sest need ei ole selle kausta state'is.
+    **Kui VM-id on vaja uuesti luua:** `tofu destroy` kustutab selle kausta state'is olevad VM-id ja järgmine `tofu apply` loob need uuesti. Loe kustutamise plaan enne `yes`-i läbi. Sinu control'it ja eelmiste kohtumiste masinaid see ei puuduta, sest need ei ole selle kausta state'is.
 
 ??? abstract "Õpiväljundid"
 
@@ -264,7 +264,7 @@ tofu plan
 
 ??? success "Oodatav tulemus"
 
-    `No changes. Your infrastructure matches the configuration.` Järgmise osaga jätka alles siis, kui see nii on.
+    `No changes. Your infrastructure matches the configuration.` Jätka järgmise osaga alles siis, kui plaan ütleb `No changes`.
 
 ## Osa 4 · Muuda kohapeal või asenda
 
@@ -378,7 +378,7 @@ ssh -o ConnectTimeout=5 kasutaja@$(tofu output -raw ip) hostname
 
 ??? success "Oodatav tulemus"
 
-    `apply` lisab ainult output'i. `ssh` küsib kõigepealt, kas hostivõtit usaldada. Vasta `yes`. Seejärel annab `Permission denied (publickey,password)`: sinu võtit VM-is veel ei ole. Kui SSH küsib hoopis parooli, katkesta `Ctrl+C`-ga. Selles sammus on oodatud, et võtmega sisse ei saa.
+    `apply` lisab ainult output'i. `ssh` küsib kõigepealt, kas hostivõtit usaldada. Vasta `yes`. Seejärel annab `Permission denied (publickey,password)`: sinu võtit VM-is veel ei ole. Kui SSH küsib hoopis parooli, katkesta `Ctrl+C`-ga. Selles sammus ei peagi võtmega sisse saama.
 
 ### 5.2 Lisa võti
 
@@ -421,7 +421,7 @@ ssh kasutaja@$(tofu output -raw ip) hostname
 
 ??? warning "Kui `ssh` ei vasta või annab `REMOTE HOST IDENTIFICATION HAS CHANGED`"
 
-    Taaskäivitus võtab kuni minuti. Proovi uuesti. Kui hoiatus räägib muutunud hostivõtmest, tegi cloud-init masinale uue võtme: `ssh-keygen -R $(tofu output -raw ip)` kustutab vana. Kui SSH ikka ei vasta, vaata VM-i konsooli veebiliideses ja ära jätka enne, kui ühendus töötab.
+    Taaskäivitus võtab kuni minuti. Proovi uuesti. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme. Vana võtme kustutab `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, vaata VM-i konsooli veebiliideses. Jätka alles siis, kui ühendus töötab.
 
 Vaata veebiliideses `test01` vahekaarti **Cloud-Init**: seal on kasutaja, võti ja `ip=dhcp`, mille Tofu kirjutas.
 
@@ -452,7 +452,7 @@ ssh kasutaja@$(tofu output -raw ip) hostname
 `test01` oli katse. Kood jääb alles, sest viis VM-i tulevad sama kujuga. VM kustutatakse koodiga ja Giti läheb ainult see, mis sinna kuulub: kood ja lukufail, mitte state ega `.terraform/`.
 
 **Eesmärk:** `test01` on kustutatud ja kood on Gitis.  
-**Kontroll:** `tofu state list` ei näita enam `proxmox_virtual_environment_vm.test01`-it ja `git status --short` ei näita state'i ega `.terraform/`-i.  
+**Kontroll:** `tofu state list` ei näita enam ressurssi `proxmox_virtual_environment_vm.test01` ja `git status --short` ei näita state'i ega `.terraform/`-i.  
 **Kus:** control, sama kaust.
 
 ```bash
@@ -466,7 +466,7 @@ git commit -m "k04: test01 mallist, cloud-init ja asendus"
 
 ??? success "Oodatav tulemus"
 
-    `destroy` ütleb `Destroy complete! Resources: 1 destroyed.` `state list` ei näita enam `test01`-it: Tofu ei halda enam ühtki VM-i. `git check-ignore` näitab mõlema tee kohta `.gitignore`-i rida.
+    `destroy` ütleb `Destroy complete! Resources: 1 destroyed.` `state list` ei näita enam `test01`. Tofu ei halda ühtki VM-i. `git check-ignore` näitab mõlema tee kohta `.gitignore`-i rida.
 
 ## Osa 7 · Viis VM-i muutujatega
 
@@ -688,7 +688,7 @@ tofu plan
 
 ??? success "Oodatav tulemus"
 
-    Plaan ütleb `Plan: 1 to add` ja aadress on `proxmox_virtual_environment_vm.lab["web01"]`. Võti `web01` on VM-i identiteet Tofu jaoks, mitte järjekorranumber ega Proxmoxi number. Data source loeb ainult Ubuntu malli. Pärast `apply`-d on Proxmoxis `web01` ja teine plaan ütleb `No changes`. Ülejäänud neli masinat lisa alles siis, kui see õnnestus.
+    Plaan ütleb `Plan: 1 to add` ja aadress on `proxmox_virtual_environment_vm.lab["web01"]`. Võti `web01` on VM-i identiteet Tofu jaoks, mitte järjekorranumber ega Proxmoxi number. Data source loeb ainult Ubuntu malli. Pärast `apply`-d on Proxmoxis `web01` ja teine plaan ütleb `No changes`. Ülejäänud neli masinat lisa alles pärast seda.
 
 ??? warning "Kui tuleb `Reference to undeclared input variable` ja `Did you mean`"
 
@@ -723,7 +723,7 @@ tofu state list
 
 ??? success "Oodatav tulemus"
 
-    Plaan ütleb `Plan: 4 to add, 0 to change, 0 to destroy.`: olemasolevat web01-t ei muudeta. Data source loeb nüüd ka AlmaLinuxi malli. Tofu loob neli VM-i korraga. Kestus sõltub kooli Proxmoxi koormusest ja suurema osa ajast ootab Tofu, et agent teataks IP-aadressi. Teine `plan` ütleb `No changes` ja `state list` näitab viit `lab[...]` aadressi.
+    Plaan ütleb `Plan: 4 to add, 0 to change, 0 to destroy.`: olemasolevat web01-t ei muudeta. Data source loeb nüüd ka AlmaLinuxi malli. Tofu loob neli VM-i korraga. Kestus sõltub Proxmoxi koormusest. Suurema osa ajast ootab Tofu, kuni agent teatab IP-aadressi. Teine `plan` ütleb `No changes` ja `state list` näitab viit `lab[...]` aadressi.
 
 ## Osa 8 · Tulemus output'iga välja
 
@@ -808,7 +808,7 @@ Inventory mall kasutab Tofu malli süntaksit, mitte Jinjat: tsükkel on `%{ for 
 
 ### 9.2 Grupid ja fail
 
-Grupid tulevad VM-i väljast `group` ja distrost. Avaldis kasutab ressursist tulnud `local.hosts`-i, nii et inventory sõltub VM-idest: Tofu kirjutab selle alles siis, kui masinad on olemas. Avaldise võid võtta valmis kujul. Oluline on tulemus: iga masin on oma rolli grupis ja distro grupis, näiteks db01 gruppides `db` ja `alma`.
+Grupid tulevad VM-i väljast `group` ja distrost. Avaldis kasutab ressursist tulnud `local.hosts`-i, nii et inventory sõltub VM-idest: Tofu kirjutab selle alles siis, kui masinad on olemas. Avaldise võid võtta valmis kujul. Oluline on tulemus: iga masin on oma rolli grupis ja distributsiooni grupis, näiteks db01 gruppides `db` ja `alma`.
 
 ??? example "Ülesanne: grupid `locals.tf`-i ja fail `inventory.tf`"
 
@@ -837,7 +837,7 @@ Grupid tulevad VM-i väljast `group` ja distrost. Avaldis kasutab ressursist tul
     }
     ```
 
-`apply` kirjutab üle faili `k02-ansible/inventory.ini`. 2. kohtumise käsitsi kirjutatud fail on Gitis alles, nii et seda ei pea eraldi varundama.
+`apply` kirjutab faili `k02-ansible/inventory.ini` üle. 2. kohtumisel käsitsi kirjutatud fail on Gitis alles, seega ei pea seda eraldi varundama.
 
 ```bash
 echo 'local.groups' | tofu console
@@ -869,7 +869,7 @@ ansible-inventory -i inventory.ini --graph
 
 ??? warning "Kui tuleb `Host key verification failed`"
 
-    Käivita käsk koos `ANSIBLE_HOST_KEY_CHECKING=False`-iga. Seadet ära lisa püsivalt faili `ansible.cfg`.
+    Käivita käsk koos `ANSIBLE_HOST_KEY_CHECKING=False`-iga. Ära lisa seda seadet püsivalt faili `ansible.cfg`.
 
 ## Osa 10 · Esitamine
 
@@ -912,7 +912,7 @@ git switch main && git pull
 git tag k04 && git push origin k04
 ```
 
-Tulemuse näed mõne minuti pärast Classroom 50-s. Automaatkontroll näeb ainult koodi: töötavad masinad näitas sulle osa 9 `ping`.
+Tulemuse näed mõne minuti pärast Classroom 50-s. Automaatkontroll kontrollib ainult koodi. Masinate töötamist kontrollisid osas 9 käsuga `ping`.
 
 ??? warning "Kui pead pärast esitamist parandama"
 

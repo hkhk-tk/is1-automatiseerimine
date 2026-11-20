@@ -565,7 +565,9 @@ variable "proxmox_api_token" {
 
 Tüüp `map(object({...}))` tähendab nimega kirjete kogumit, kus igal kirjel on samad väljad. `optional(number, 10)` lubab välja ära jätta ja annab siis väärtuse 10. Väärtused on failis `terraform.tfvars`, mille OpenTofu loeb automaatselt. See sarnaneb Ansible'i failidega `group_vars` ja `host_vars`: seal on väärtused ja playbook kasutab neid.
 
-Fail `terraform.tfvars` sisaldab keskkonna andmeid ja jääb Gitist välja. Giti läheb näidis `terraform.tfvars.example`, millest igaüks teeb oma koopia. Tokeni muutujal on `sensitive = true` ja väärtus tuleb keskkonnamuutujast `TF_VAR_proxmox_api_token`: OpenTofu loeb iga keskkonnamuutuja kujul `TF_VAR_<nimi>` muutuja väärtuseks. Provider'i juures luges provider tokeni otse keskkonnamuutujast `PROXMOX_VE_API_TOKEN`. Kui ühenduse andmed on muutujates, on koodist näha, mida provider vajab, ja `sensitive = true` hoiab tokeni väljundist eemal. Fail `proxmox.env` annab mõlemad, nii et juurde ei pea midagi lisama.
+Fail `terraform.tfvars` sisaldab keskkonna andmeid ja jääb Gitist välja. Giti läheb näidis `terraform.tfvars.example`, millest igaüks teeb oma koopia. Tokeni muutujal on `sensitive = true` ja väärtus tuleb keskkonnamuutujast `TF_VAR_proxmox_api_token`. OpenTofu loeb iga keskkonnamuutuja kujul `TF_VAR_<nimi>` muutuja väärtuseks.
+
+Peatükis 2 võttis provider tokeni otse keskkonnamuutujast `PROXMOX_VE_API_TOKEN`. Muutujatega on koodist näha, milliseid ühenduse andmeid provider vajab, ja `sensitive = true` ei lase tokenit väljundisse. Fail `proxmox.env` sisaldab mõlemat muutujat, seega ei pea midagi lisama.
 
 **Locals** (plokk `locals`) on koodi sees arvutatud väärtused, mida väljast üle kirjutada ei saa, näiteks kõigi masinate ühised tag'id. Koodis viidatakse neile kujul `local.nimi`.
 
@@ -654,7 +656,7 @@ Mõlemad tööriistad kirjeldavad soovitud olekut, aga eri tasemel. OpenTofu hal
     | | OpenTofu | Ansible |
     |---|---|---|
     | Haldab | API objektid: VM, ketas, võrk, DNS | masina sisu: paketid, failid, teenused, kasutajad |
-    | Loodud objektide arvestus | state: teab, mida on loonud | puudub, küsib igal käivitusel masinalt |
+    | Mida mäletab | state'i abil teab, mida on loonud | puudub, küsib igal käivitusel masinalt |
     | Koodist eemaldatud objekt | kustutatakse | jääb alles |
     | Ühendus | hüperviisori või pilve API | SSH masinasse |
     | Sobib kõige paremini | loomine, asendus, mahavõtmine | seadistus, paigad, muudatused masinate kaupa |
@@ -767,7 +769,7 @@ db01 loomine ebaõnnestus, sest tokenil puudus õigus salvestuskohale. Inventory
     | plaan | `+` loob, `~` muudab kohapeal, `-/+` asendab, `-` kustutab; loe esmalt `-/+` ja `-` |
     | state | seob koodi aadressi Proxmoxi objektiga; ei lähe Giti, saladused on seal lihttekstina |
     | triiv | muudatus koodist mööda; järgmine `apply` võtab selle tagasi, kui seda koodi ei pane |
-    | cloud-init | seadistab masina esimesel käivitumisel; muudatus rakendub pärast taaskäivitust, kindlaim kontroll on `-replace` |
+    | cloud-init | seadistab masina esimesel käivitumisel; muudatus rakendub pärast taaskäivitust, kõige kindlam kontroll on `-replace` |
     | muutujad ja `for_each` | andmed failis `terraform.tfvars`, üks plokk teeb igast kirjest objekti, identiteet on võti |
     | väljund ja inventory | väärtus ressursist, `templatefile()` ja `local_file` kirjutavad Ansible'i inventory |
     | jaotus | OpenTofu loob masinad, Ansible seadistab nende sisu |
