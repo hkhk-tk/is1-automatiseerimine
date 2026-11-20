@@ -22,19 +22,17 @@ tags:
 
 ## 1. Seitse kohtumist
 
-**1. kohtumine.** Tegid web01-le kausta ja faili kõigepealt käsitsi, siis Bashi skriptiga ja lõpuks Ansible'i playbook'iga. Skript tegi teisel käivitusel kõik uuesti. Playbook vaatas, mis on juba õige, ja teisel käivitusel oli `changed=0`.
+| Kohtumine | Mida automatiseerimise kohta õpid | Tööriist on ainult vahend |
+|---|---|---|
+| 1 | Korduv käsitsi töö muutub skriptiks. Skript kordab käske, aga soovitud olekut kirjeldav tööriist muudab ainult seda, mis on vaja. | Bash, Ansible |
+| 2 | Seadistus on kood: seda saab taaskasutada, saladused hoitakse koodist eraldi ja muudatus käib järjekorras: kontroll, eelvaade, üks masin, siis kõik. | Ansible |
+| 3 | Rakendus pakitakse muutumatuks artefaktiks. Viga ei parandata töötavas konteineris, vaid see asendatakse uuega. Andmed ja seadistus hoitakse eraldi. | Docker |
+| 4 | Taristu on kood. Enne muudatust vaadatakse plaani ja state teab, mis on loodud. | OpenTofu |
+| 5 | Kirjeldatakse soovitud olek ja süsteem hoiab seda ise: kustutatud osa tuleb ise tagasi. | Kubernetes |
+| 6 | Pilv on API: masin tekib koodist ja kaob koodiga. Koristus kuulub automaatika juurde, sest tööle jäänud masin maksab. CI kontrollib iga muudatust. | AWS, GitHub Actions |
+| 7 | Server muutub ainult Giti kaudu: konveier on värav, mis peatab vea, ja muudatus vaadatakse merge request'is üle. Push- ja pull-mudel. | GitLab CI, Argo CD |
 
-**2. kohtumine.** Playbook kasvas rollideks ja üks käsk seadistas viis masinat: andmebaasi, vahemälu, järjekorra, rakenduse ja veebiserveri. Paroolid läksid Vaulti ja Gitis olid need krüpteeritud kujul.
-
-**3. kohtumine.** Pakkisid sama rakenduse image'iks, mille silt on commit'i SHA. Uut versiooni ei paigaldatud töötavasse konteinerisse: tehti uus image ja vana konteiner asendati.
-
-**4. kohtumine.** Viis virtuaalmasinat tekkisid OpenTofu koodist. Enne iga muudatust näitas `tofu plan`, mis luuakse, muudetakse või kustutatakse. OpenTofu kirjutas masinate IP-d 2. kohtumise inventory'sse.
-
-**5. kohtumine.** Kirjutasid Kubernetesele, et töötama peab kolm pod'i. Kui pod'i kustutasid, tegi Kubernetes uue, sest tegelik olek ei vastanud enam kirjeldatule.
-
-**6. kohtumine.** AWS-i masin tekkis OpenTofu koodist ja kadus käsuga `tofu destroy`, enne kui see jõudis krediiti kulutada. GitHub Actions kontrollis iga push'i järel, et OpenTofu kood on vormindatud ja korrektne.
-
-**7. kohtumine.** Web01 lehe muutis konveier. Katkine YAML ei jõudnud serverisse, sest lint peatas konveieri. Muudatus läks `main`-i alles pärast merge request'i.
+*Tabel 7.1. Mida iga kohtumine automatiseerimise kohta õpetas.*
 
 ??? question "Kontrolli ennast"
     1. Mis juhtus 1. kohtumise skripti ja playbook'i teisel käivitusel?
