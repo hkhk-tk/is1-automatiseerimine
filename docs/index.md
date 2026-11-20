@@ -119,14 +119,14 @@ Kursusel on seitse kohtumist ja igal kohtumisel kasvab sama automaatika. Alustad
 ## Kuidas õpid
 
 <figure style="max-width:760px;margin:.2em auto" class="lx" markdown="0">
-<svg viewBox="0 0 760 70" role="img" aria-label="Loe, vaata näidet, tee laboris, kontrolli, esita" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 760 70" role="img" aria-label="Loe, vaata näidet, tee praktikumis, kontrolli, esita" xmlns="http://www.w3.org/2000/svg">
 <style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .b{fill:var(--md-default-fg-color);font-size:14px;font-weight:600}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .h{fill:var(--md-default-fg-color--light)}</style>
 <defs><marker id="lxo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
 <rect class="box" x="5" y="12" width="128" height="44" rx="8"/><text class="b" x="69" y="39" text-anchor="middle">Loe</text>
 <line class="a" x1="133" y1="34" x2="155" y2="34" marker-end="url(#lxo)"/>
 <rect class="box" x="157" y="12" width="128" height="44" rx="8"/><text class="b" x="221" y="39" text-anchor="middle">Vaata näidet</text>
 <line class="a" x1="285" y1="34" x2="307" y2="34" marker-end="url(#lxo)"/>
-<rect class="box" x="309" y="12" width="140" height="44" rx="8"/><text class="b" x="379" y="39" text-anchor="middle">Tee laboris</text>
+<rect class="box" x="309" y="12" width="140" height="44" rx="8"/><text class="b" x="379" y="39" text-anchor="middle">Tee praktikumis</text>
 <line class="a" x1="449" y1="34" x2="471" y2="34" marker-end="url(#lxo)"/>
 <rect class="hi" x="473" y="12" width="128" height="44" rx="8"/><text class="b" x="537" y="39" text-anchor="middle">Kontrolli</text>
 <line class="a" x1="601" y1="34" x2="623" y2="34" marker-end="url(#lxo)"/>
