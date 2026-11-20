@@ -6,86 +6,66 @@ tags:
 
 # Loeng: kursuse kokkuvõte
 
-Seitsmel kohtumisel tegid sama laboriga järjest rohkem automaatikat: kõigepealt kirjutasid käsud skripti, lõpuks muutis serverit ainult konveier. Tööriistad vahetusid, aga nende taga on viis põhimõtet, mis kehtivad ka järgmise tööriista kohta.
+1\. kohtumisel tegid web01-le kausta ja faili nelja käsuga. Täna muutis web01 lehte konveier, kui sina tegid push'i. Vahepeal oli iga kohtumine üks samm sinnapoole, et masinaid ei seadistata käsitsi.
 
 ??? abstract "Õpiväljundid"
     Pärast kokkuvõtet oskad:
 
-    - selgitada iga kohtumise kohta, mida see automatiseerimise juures muutis;
-    - nimetada viis põhimõtet, mis on kõigi kursuse tööriistade taga;
-    - eristada konveierit, mis surub muudatuse serverisse, ja tööriista, mis tõmbab selle Gitist ise;
-    - hinnata oma töökoha mõne käsitsi tehtava ülesande kohta, millise põhimõtte järgi seda automatiseerida.
-
-## 1. Mida iga kohtumine muutis
-
-Iga kohtumine võttis ühe käsitsi tehtud töö ja tegi sellest koodi. Kaardil on kohtumise number, mida see automatiseerimise juures muutis, ja kaldkirjas tööriist, millega seda tegid. Tööriist on vahend: sama mõte kehtib ka järgmise tööriista kohta, mida töökohas kasutad.
+    - selgitada iga kohtumise kohta, mida see muutis masinate seadistamise viisis;
+    - selgitada, miks käsitsi tehtud muudatus serveris järgmisel käivitusel kaob;
+    - eristada konveierit, mis viib muudatuse serverisse, ja tööriista, mis tõmbab selle Gitist ise.
 
 <figure markdown="span">
-  ![Mõttekaart: keskel Automatiseerimine, kood Gitis, kontroll enne. Ümber seitse kohtumist: 1 skript, käsitsi töö muutub koodiks, Bash ja Ansible; 2 seadistus, soovitud olek ja paroolid eraldi, rollid ja Vault; 3 pakend, asenda, ära paranda, Docker; 4 taristu, plaan enne muudatust, OpenTofu; 5 klaster, süsteem hoiab olekut ise, Kubernetes; 6 pilv ja CI, loo, kontrolli, korista, AWS ja Actions; 7 konveier, server muutub ainult Gitist, GitLab CI](assets/k07_kursuse_pilt.svg)
-  <figcaption>Joonis 7.3. Seitse kohtumist ja mida igaüks automatiseerimise juures muutis (Talvik, 2026).</figcaption>
+  ![Mõttekaart: keskel automatiseerimine, seitse kohtumist. Ümber: 1 Bash ja Ansible, sama fail käsitsi, skriptiga ja playbook'iga; 2 rollid, üks käsk seadistab kogu labori; 3 Docker, uus versioon on uus konteiner; 4 OpenTofu, VM-id koodist, enne plaan; 5 Kubernetes, kustutatud pod tuleb tagasi; 6 AWS ja Actions, masin tekib ja kaob koodiga; 7 GitLab CI, web01 muutub push'iga](assets/k07_kursuse_pilt.svg)
+  <figcaption>Joonis 7.3. Seitse kohtumist sama laboriga (Talvik, 2026).</figcaption>
 </figure>
 
+## 1. Seitse kohtumist
+
+**1. kohtumine.** Tegid web01-le kausta ja faili kõigepealt käsitsi, siis Bashi skriptiga ja lõpuks Ansible'i playbook'iga. Skript tegi teisel käivitusel kõik uuesti. Playbook vaatas, mis on juba õige, ja teisel käivitusel oli `changed=0`.
+
+**2. kohtumine.** Playbook kasvas rollideks ja üks käsk seadistas viis masinat: andmebaasi, vahemälu, järjekorra, rakenduse ja veebiserveri. Paroolid läksid Vaulti ja Gitis olid need krüpteeritud kujul.
+
+**3. kohtumine.** Pakkisid sama rakenduse image'iks, mille silt on commit'i SHA. Uut versiooni ei paigaldatud töötavasse konteinerisse: tehti uus image ja vana konteiner asendati.
+
+**4. kohtumine.** Viis virtuaalmasinat tekkisid OpenTofu koodist. Enne iga muudatust näitas `tofu plan`, mis luuakse, muudetakse või kustutatakse. OpenTofu kirjutas masinate IP-d 2. kohtumise inventory'sse.
+
+**5. kohtumine.** Kirjutasid Kubernetesele, et töötama peab kolm pod'i. Kui pod'i kustutasid, tegi Kubernetes uue, sest tegelik olek ei vastanud enam kirjeldatule.
+
+**6. kohtumine.** AWS-i masin tekkis OpenTofu koodist ja kadus käsuga `tofu destroy`, enne kui see jõudis krediiti kulutada. GitHub Actions kontrollis iga push'i järel, et OpenTofu kood on vormindatud ja korrektne.
+
+**7. kohtumine.** Web01 lehe muutis konveier. Katkine YAML ei jõudnud serverisse, sest lint peatas konveieri. Muudatus läks `main`-i alles pärast merge request'i.
+
 ??? question "Kontrolli ennast"
-    1. Mis vahe on 1. kohtumise Bashi skriptil ja Ansible'i playbook'il, kui mõlemad paigaldavad nginxi?
-    2. Miks ei parandata vigast konteinerit selle sees?
+    1. Mis juhtus 1. kohtumise skripti ja playbook'i teisel käivitusel?
+    2. Miks ei paigaldata uut versiooni töötavasse konteinerisse?
 
     ??? success "Vastused"
-        1. Skript käivitab käsud iga kord uuesti. Playbook kirjeldab soovitud olekut ja teine käivitus annab `changed=0`.
-        2. Konteiner tehakse image'ist. Käsitsi parandus kaob järgmisel asendamisel ja keegi ei tea, mis seal muudeti. Parandus läheb Dockerfile'i ja tehakse uus image.
+        1. Skript käivitas kõik käsud uuesti. Playbook võrdles faili soovitud olekuga ja ei muutnud midagi: `changed=0`.
+        2. Konteiner tehakse image'ist. Konteineris tehtud muudatus kaob järgmisel asendamisel ja keegi ei tea, mis seal muudeti. Uus versioon on uus image ja uus konteiner.
 
-## 2. Viis põhimõtet
+## 2. Käsitsi muudatus
 
-**Git on tõe allikas.** Kõik, mida masinatega tehakse, on kirjas repositooriumis: rollid, Dockerfile, OpenTofu kood, töövoog ja konveier. Kui server kaob, tehakse see koodist uuesti. Giti ajaloost näeb, kes ja millal muutis.
-
-**Kirjelda olekut, mitte käske.** Ansible, OpenTofu ja Kubernetes saavad teada, milline olek peab olema, ja võrdlevad seda tegelikuga. Sama kood teist korda ei muuda midagi.
-
-**Kontrolli enne serverit.** Lint, `tofu plan`, `fmt -check` ja merge request leiavad vea enne, kui see serverisse jõuab. 7. kohtumisel peatas lint katkise YAML-i ja leht jäi puutumata.
-
-**Asenda, ära paranda käsitsi.** Image, pod ja pilvemasin tehakse uuesti, mitte ei parandata töötavas masinas. Käsitsi muudatus on see, mida koodis ei ole ja mis järgmisel korral kaob.
-
-**Korista ja jälgi.** Automaatika ei lõpe loomisega. Tööle jäänud pilvemasin maksab, unustatud token on oht. `tofu destroy`, koristusskript ja konveieri logi on töö osa.
+Kõigil kohtumistel oli sama muster: kood Gitis kirjeldab, milline masin peab olema, ja tööriist teeb masina selliseks. Käsitsi tehtud muudatust koodis ei ole. Seepärast kaob see järgmisel käivitusel: Ansible kirjutab faili üle, Kubernetes asendab pod'i ja OpenTofu plaan näitab erinevust.
 
 ??? question "Kontrolli ennast"
-    Keegi logib serverisse sisse ja muudab nginxi seadistust käsitsi, sest „nii on kiirem“. Mis juhtub järgmise konveieri käivitusega ja millist põhimõtet see rikub?
+    Keegi logib web01-sse sisse ja muudab K7 lehe teksti käsitsi, sest nii on kiirem. Mis juhtub järgmise konveieri käivitusega?
 
     ??? success "Vastus"
-        Konveier käivitab Ansible'i, mis kirjutab faili koodis oleva sisuga üle. Käsitsi muudatus kaob. See rikub põhimõtet „Git on tõe allikas“: muudatus peab minema koodi ja läbi konveieri.
+        Deploy käivitab Ansible'i, mis kirjutab lehe malli järgi uuesti. Käsitsi muudatus kaob. Kui tekst peab muutuma, tuleb muuta koodi või GitLabi muutujat `TEADE`.
 
-## 3. Push ja pull
+## 3. Konveier viib, Argo CD tõmbab
 
-7\. kohtumise konveier **surub** muudatuse serverisse: GitLabi runner ühendub SSH-ga web01-ga ja käivitab Ansible'i. Selleks peab konveieril olema ligipääs serverile.
+7\. kohtumise konveier ühendub web01-ga SSH-ga ja käivitab Ansible'i. Muudatuse viib serverisse konveier ja selleks on runneril serveri võti.
 
-Kubernetese juures kasutatakse sageli vastupidist mudelit. [Argo CD](https://argo-cd.readthedocs.io/) töötab klastris, jälgib Giti repositooriumi ja **tõmbab** muudatused ise. Kui keegi muudab klastris midagi käsitsi, taastab Argo CD Gitis kirjas oleva oleku. Seda nimetatakse **GitOps**'iks. Klastri võtmeid ei pea CI-le andma, sest klaster küsib Gitilt ise.
+Kubernetese klastrites kasutatakse sageli teist viisi. [Argo CD](https://argo-cd.readthedocs.io/en/stable/) töötab klastri sees, vaatab Giti repositooriumi ja tõmbab muudatused ise. Kui keegi muudab klastris midagi käsitsi, taastab Argo CD selle, mis on Gitis. Seda nimetatakse **GitOps**'iks. Konveier ei vaja klastri võtit, sest klaster küsib Gitilt ise.
 
-??? note "Tabel 7.2. Push ja pull"
-    | | Push (GitLab CI, GitHub Actions) | Pull (Argo CD) |
+??? note "Tabel 7.2. Konveier ja Argo CD"
+    | | Konveier (GitLab CI, GitHub Actions) | Argo CD |
     |---|---|---|
-    | Kes muudatuse teeb | konveier ühendub serveriga | tööriist klastris tõmbab Gitist |
-    | Mida konveier vajab | ligipääs serverile (SSH-võti, token) | ainult Giti |
-    | Käsitsi muudatus serveris | jääb alles kuni järgmise käivituseni | parandatakse kohe |
-    | Sobib | serverid, VM-id, pilveressursid | Kubernetese klastrid |
+    | Kes muudatuse teeb | runner ühendub serveriga | Argo CD klastris tõmbab Gitist |
+    | Mida konveier vajab | serveri SSH-võtit või tokenit | ainult ligipääsu Gitile |
+    | Käsitsi muudatus serveris | jääb alles järgmise käivituseni | taastatakse kohe |
+    | Kus kasutatakse | serverid, VM-id, pilveressursid | Kubernetese klastrid |
 
-Kubernetese osa (5. kohtumine) lisaülesandes saad Argo CD oma k3s klastrisse paigaldada.
-
-## 4. Sinu töökohal
-
-Automatiseerida tasub tööd, mis kordub, mida tehakse mitmes kohas samamoodi ja mille vea hind on suur. Alusta väikesest: üks käsitsi tehtav samm skriptiks, siis soovitud olekuks, siis konveierisse.
-
-??? question "Kontrolli ennast"
-    Igal esmaspäeval loob administraator uuele töötajale kasutaja kolmes süsteemis. Millise põhimõtte järgi alustaksid ja mis oleks esimene samm?
-
-    ??? success "Üks võimalik vastus"
-        Kõigepealt kirjuta sammud skripti (1. kohtumine). Siis kirjelda kasutajad failis, mille järgi tööriist teeb soovitud oleku (2. kohtumine). Lõpuks pane fail Giti ja konveier, mis kontrollib ja rakendab muudatuse (7. kohtumine). Uue töötaja lisamine on siis üks rida koodis ja merge request.
-
-??? abstract "Kokkuvõte"
-    | Põhimõte | Kus kursusel |
-    |---|---|
-    | Git on tõe allikas | rollid, Dockerfile, OpenTofu, töövoog, konveier |
-    | Kirjelda olekut | Ansible, OpenTofu, Kubernetes |
-    | Kontrolli enne serverit | lint, plan, fmt, merge request |
-    | Asenda, ära paranda | image, pod, pilvemasin |
-    | Korista ja jälgi | destroy, koristusskript, logid |
-
-??? info "Loe juurde"
-    - [Argo CD](https://argo-cd.readthedocs.io/en/stable/): GitOps tööriista dokumentatsioon.
-    - Kursuse [teemade lehed](../teemad/it-automatiseerimine.md): automatiseerimise strateegia, mida ja millises järjekorras automatiseerida.
+5\. kohtumise lisaülesandes saad Argo CD oma k3s klastrisse paigaldada.
