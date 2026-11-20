@@ -115,7 +115,7 @@ git branch --show-current
 
 ## Osa 2 · Mall data source'iga
 
-Esimene kood ei loo midagi, ainult leiab malli. Nii proovid provider'i ja tokeni ära enne, kui midagi saab katki minna. Kui see osa õnnestub, on võrk, TLS, token ja õigused korras.
+Esimene kood ei loo midagi, ainult leiab malli. Nii proovid provider'i ja tokeni ära enne, kui midagi saab katki minna. Kui see osa õnnestub, töötab ühendus Proxmoxi API-ga ja token tohib malli andmeid lugeda. VM-i loomise õigust kontrollid järgmises osas.
 
 **Mall** on VM, mida ei käivitata: sellest tehakse koopiaid. Malli numbri võiks kirjutada koodi otse, aga kui koolitaja teeb uue malli ja kustutab vana, ebaõnnestub järgmine loomine. **Data source** ehk plokk `data` otsib olemasolevat objekti tingimuste järgi ega loo midagi.
 
@@ -264,7 +264,7 @@ tofu plan
 
 ??? success "Oodatav tulemus"
 
-    `No changes. Your infrastructure matches the configuration.`
+    `No changes. Your infrastructure matches the configuration.` Järgmise osaga jätka alles siis, kui see nii on.
 
 ## Osa 4 · Muuda kohapeal või asenda
 
@@ -723,7 +723,7 @@ tofu state list
 
 ??? success "Oodatav tulemus"
 
-    Plaan ütleb `Plan: 4 to add, 0 to change, 0 to destroy.`: olemasolevat web01-t ei muudeta. Data source loeb nüüd ka AlmaLinuxi malli. Tofu loob neli VM-i korraga ja `apply` võtab umbes minuti, millest suurema osa ootab Tofu agenti. Teine `plan` ütleb `No changes` ja `state list` näitab viit `lab[...]` aadressi.
+    Plaan ütleb `Plan: 4 to add, 0 to change, 0 to destroy.`: olemasolevat web01-t ei muudeta. Data source loeb nüüd ka AlmaLinuxi malli. Tofu loob neli VM-i korraga. Kestus sõltub kooli Proxmoxi koormusest ja suurema osa ajast ootab Tofu, et agent teataks IP-aadressi. Teine `plan` ütleb `No changes` ja `state list` näitab viit `lab[...]` aadressi.
 
 ## Osa 8 · Tulemus output'iga välja
 

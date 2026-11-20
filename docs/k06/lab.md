@@ -697,7 +697,7 @@ git tag k06 && git push origin k06
 
     Sinu repositooriumi kontrollskript on vana. Uuenda see: `curl -fsSL https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/autograde/check.sh -o autograde/check.sh`.
 
-Tulemuse näed paari minuti pärast GitHubis: repositoorium → **Releases**.
+Tulemuse näed mõne minuti pärast Classroom 50-s.
 
 ## Lisaülesanded
 

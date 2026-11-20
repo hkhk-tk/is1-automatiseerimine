@@ -554,7 +554,7 @@ git switch main && git pull
 git tag k05 && git push origin k05
 ```
 
-Tulemuse näed paari minuti pärast GitHubis: repositoorium → **Releases**.
+Tulemuse näed mõne minuti pärast Classroom 50-s.
 
 ??? warning "Kui pead pärast esitamist parandama"
 
