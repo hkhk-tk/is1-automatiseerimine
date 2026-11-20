@@ -8,7 +8,7 @@ tags:
 
 # Loeng: taristu koodina OpenTofuga
 
-3\. kohtumisel pakkisid teenused image'itesse ja käivitasid need Compose'iga, aga virtuaalmasinad, millel need töötasid, olid loodud käsitsi. Täna kirjeldad koodina ka masinate loomise: OpenTofu loob Proxmoxis muutujate põhjal viis virtuaalmasinat ja kirjutab neist Ansible'i inventory.
+3\. kohtumisel pakkisid teenused image'itesse ja käivitasid need Compose'iga, aga virtuaalmasinad, millel need töötasid, olid loodud käsitsi. Täna kirjeldad koodina ka masinate loomist: OpenTofu loob Proxmoxis muutujate põhjal viis virtuaalmasinat ja kirjutab neist Ansible'i inventory.
 
 ??? abstract "Õpiväljundid"
 
@@ -29,11 +29,11 @@ Uus virtuaalmasin tehakse sageli tiketi alusel. Administraator kloonib Proxmoxi 
 
 Sellist masinat nimetatakse lumehelbeks (snowflake server): see on ainulaadne ja teist täpselt samasugust on raske teha. Kui masin katki läheb, tuleb selle seadistus vanadest tiketitest ja mälust kokku otsida.
 
-**Provisioning** tähendab kõiki samme, mis viivad ressursi olematusest kasutatavaks: virtuaalmasin, ketas, võrk, IP-aadress, DNS-kirje, ligipääs ja esimene käivitus. 1. kohtumisel nägid cloud-init'i, mis teeb masina sees provisioning'u viimase sammu: seab hostinime, kasutaja ja SSH-võtme.
+**Provisioning** tähendab kõiki samme, mida on vaja, et uus ressurss oleks kasutatav: virtuaalmasin, ketas, võrk, IP-aadress, DNS-kirje, ligipääs ja esimene käivitus. 1. kohtumisel nägid cloud-init'i, mis teeb masina sees provisioning'u viimase sammu: seab hostinime, kasutaja ja SSH-võtme.
 
 ### Taristu koodina
 
-**Taristu koodina** (IaC, infrastructure as code) tähendab, et masinate, ketaste ja võrkude kirjeldus on tekstifailides Gitis ning tööriist loob nende järgi tegeliku taristu. Mõte on tuttav Ansible'ist. Playbook kirjeldab, milline peab olema masina sisu, OpenTofu kood kirjeldab, millised masinad peavad olemas olema. Muudatus on commit ja ülevaatus, mitte klõps veebiliideses.
+**Taristu koodina** (IaC, infrastructure as code) tähendab, et masinate, ketaste ja võrkude kirjeldus on tekstifailides Gitis ning tööriist loob nende järgi tegeliku taristu. Mõte on tuttav Ansible'ist. Playbook kirjeldab, milline peab olema masina sisu, OpenTofu kood kirjeldab, millised masinad peavad olemas olema. Muudatus tehakse commit'iga ja see vaadatakse enne rakendamist üle.
 
 <figure markdown="span">
   ![Vasakul käsitsi: tiket, veebiliideses kloonimine, mälu ja IP käsitsi, masin töötab, seadistus ainult hüperviisoris. Paremal OpenTofuga: main.tf Gitis, tofu plan, tofu apply, masin töötab, kirjeldus Gitis](assets/k04_l_kasitsi_vs_kood.svg)
@@ -123,7 +123,7 @@ Kogukond tegi viimasest MPL-litsentsiga versioonist haru (fork), mida arendataks
 
 ### Keel ja plokid
 
-Kood kirjutatakse keeles **HCL** (HashiCorp Configuration Language) failidesse laiendiga `.tf`. OpenTofu loeb kõik kausta `.tf` failid kokku üheks tervikuks ja failinimi tähendust ei kanna. Jaotus failidesse (`main.tf`, `variables.tf`, `outputs.tf`) on inimese jaoks. Ansible'i YAML-is näitab struktuuri taane, HCL-is looksulud.
+Kood kirjutatakse keeles **HCL** (HashiCorp Configuration Language) failidesse laiendiga `.tf`. OpenTofu käsitleb kõiki kausta `.tf`-faile ühe tervikuna ja failinimi tähendust ei kanna. Jaotus failidesse (`main.tf`, `variables.tf`, `outputs.tf`) on inimese jaoks. Ansible'i YAML-is näitab struktuuri taane, HCL-is looksulud.
 
 Kood koosneb plokkidest. Ploki alguses on tüüp ja nimed, looksulgudes on argumendid kujul `nimi = väärtus`.
 
@@ -172,12 +172,12 @@ Plokil `resource` on kaks nime: ressursi tüüp (`proxmox_virtual_environment_vm
     | `locals` | koodi sees arvutatud väärtus | `local.common_tags` |
     | `output` | väljund teistele tööriistadele ja inimesele | masinate IP-aadressid |
 
-### Provider: kuidas OpenTofu Proxmoxiga räägib
+### Provider: kuidas OpenTofu Proxmoxiga suhtleb
 
 OpenTofu ise ei tea Proxmoxist midagi. **Provider** on eraldi programm (plugin), mis tunneb ühe süsteemi API-t: Proxmoxi, AWS-i, GitHubi või kohalikke faile. Kursusel on Proxmoxi jaoks provider [`bpg/proxmox`](https://search.opentofu.org/provider/bpg/proxmox/latest) ja failide kirjutamiseks `hashicorp/local`. Võrdlus Ansible'iga: kogu (collection) lisab Ansible'ile mooduleid, provider lisab OpenTofule ressursitüüpe.
 
 <figure markdown="span">
-  ![Kood läheb tofu-le, tofu annab päringud provider'ile bpg/proxmox, provider räägib Proxmoxiga HTTPS-i ja API tokeniga; tofu init laadib provider'i registry'st ja kirjutab versiooni lukufaili](assets/k04_l_provider.svg)
+  ![Kood läheb tofu-le, tofu annab päringud provider'ile bpg/proxmox, provider suhtleb Proxmoxiga HTTPS-i ja API tokeniga; tofu init laadib provider'i registry'st ja kirjutab versiooni lukufaili](assets/k04_l_provider.svg)
   <figcaption>Joonis 4.2. OpenTofu, provider ja Proxmox. Provider tuleb registry'st ja lukufail hoiab selle versiooni (Talvik, 2026).</figcaption>
 </figure>
 
@@ -249,7 +249,7 @@ provider "proxmox" {
 
 ### Käsud järjekorras
 
-OpenTofuga töötamine käib alati samas järjekorras. Kolm esimest käsku kontrollivad koodi ega pöördu Proxmoxi poole, kaks viimast räägivad Proxmoxiga.
+Praktikumis kasutad iga muudatuse juures sama käskude järjekorda. Kolm esimest käsku kontrollivad koodi ega pöördu Proxmoxi poole, kaks viimast pöörduvad Proxmoxi API poole.
 
 <figure markdown="span">
   ![Viis sammu: tofu fmt, tofu init, tofu validate töötavad ainult koodiga; tofu plan ja tofu apply kasutavad Proxmoxi API-t; tofu destroy kustutab kõik, mille kood lõi](assets/k04_l_toovoog.svg)
@@ -312,7 +312,7 @@ Kas muudatus on `~` või `-/+`, otsustab provider. Iga argumendi juures on provi
 
     Enne `apply`-d loetakse plaanist esmalt read `must be replaced` ja `will be destroyed` ning kokkuvõtte arv `to destroy`. Kui seal on midagi ootamatut, vastatakse `no` ja muudatus jagatakse osadeks.
 
-### Plaan on ennustus
+### Mida plaan näitab ja mida mitte
 
 Plaan põhineb sellel, mida provider teab Proxmoxi reeglitest. Kõike see ette ei näe. Olematu node'i nimi või puuduv õigus läbib plaani ja ebaõnnestub alles `apply` ajal. `apply` ei ole tehing: kui viiest masinast said valmis kolm, jäävad need alles ja järgmine `apply` teeb ülejäänud kaks.
 
@@ -420,7 +420,7 @@ Leitud triivi kohta on kaks otsust: muudatus läheb koodi või kood võtab selle
 
 ### Miks state Giti ei lähe
 
-State'is on kõik atribuudid lihttekstina, ka paroolid ja tokenid, kui mõni ressurss neid kasutab. Kaks inimest, kes muudavad state'i eri harudes, saavad JSON-i ühendamisel konflikti, mida keegi lahendada ei oska. Seepärast on `.gitignore`-is read `*.tfstate`, `*.tfstate.*` ja `.terraform/`.
+State'is on kõik atribuudid lihttekstina, ka paroolid ja tokenid, kui mõni ressurss neid kasutab. Kaks inimest, kes muudavad state'i eri harudes, saavad JSON-i ühendamisel konflikti. Käsitsi ühendatud state võib kaotada seose koodi ja masinate vahel. Seepärast on `.gitignore`-is read `*.tfstate`, `*.tfstate.*` ja `.terraform/`.
 
 Meeskonnas hoitakse state'i **remote backendis**, näiteks S3-ühilduvas objektihoidlas või PostgreSQL-is, koos **lukuga**, mis ei lase kahel käivitusel korraga kirjutada ([state](https://opentofu.org/docs/language/state/)). See on kursuse IS2 teema. Kursusel on state control node'i kaustas ja seda kaitstakse nagu andmebaasi: piiratud ligipääs ja varukoopia.
 
@@ -508,11 +508,11 @@ Nii parandatud masin on siiski olnud vahepeal teistsugune kui kood. Kõige kindl
 
 ??? info "Süvenemiseks: millal cloud-init uuesti töötab"
 
-    cloud-init eristab masinaid `meta-data` failis oleva `instance-id` järgi. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ja jätab esimese käivituse sammud vahele. Proxmox arvutab `instance-id` cloud-init'i seadistuse räsist ja kirjutab draivi uuesti VM-i käivitamisel. Seega jõuab muudatus masinasse alles pärast VM-i taaskäivitust, mille provider teeb ise, ja cloud-init peab masinat siis uueks: seadistab selle uuesti ja teeb ka uued SSH host key'd. Vaata [cloud-init'i dokumentatsiooni](https://docs.cloud-init.io/en/latest/explanation/instancedata.html) ja Proxmoxi lehte [Cloud-Init Support](https://pve.proxmox.com/wiki/Cloud-Init_Support).
+    cloud-init eristab masinaid `meta-data` failis oleva `instance-id` järgi. Kui `instance-id` on sama mis eelmisel käivitusel, peab cloud-init masinat juba seadistatuks ja jätab esimese käivituse sammud vahele. Proxmox arvutab `instance-id` cloud-init'i seadistuse räsist ja kirjutab draivi uuesti VM-i käivitamisel. Seega jõuab muudatus masinasse alles pärast VM-i taaskäivitust, mille provider teeb ise, ja cloud-init peab masinat siis uueks: seadistab selle uuesti ja teeb ka uued SSH hostivõtmed. Vaata [cloud-init'i dokumentatsiooni](https://docs.cloud-init.io/en/latest/explanation/instancedata.html) ja Proxmoxi lehte [Cloud-Init Support](https://pve.proxmox.com/wiki/Cloud-Init_Support).
 
-### Uus masin, uus host key
+### Uus masin, uus hostivõti
 
-Iga uus masin teeb esimesel käivitusel endale uue SSH **host key** (masina võtme), mille järgi SSH-klient masina ära tunneb. Kui samal IP-aadressil on varem olnud teine masin, mäletab fail `~/.ssh/known_hosts` vana võtit ja SSH keeldub ühendusest teatega `REMOTE HOST IDENTIFICATION HAS CHANGED`. See hoiatus kaitseb olukorra eest, kus keegi teine esineb serverina.
+Iga uus masin teeb esimesel käivitusel endale uue SSH **hostivõtme** (host key), mille järgi SSH-klient masina ära tunneb. Kui samal IP-aadressil on varem olnud teine masin, mäletab fail `~/.ssh/known_hosts` vana võtit ja SSH keeldub ühendusest teatega `REMOTE HOST IDENTIFICATION HAS CHANGED`. See hoiatus kaitseb olukorra eest, kus keegi teine esineb serverina.
 
 `ssh-keygen -R <ip>` kustutab vana võtme. Enne uue võtme usaldamist võrreldakse selle **sõrmejälge** (fingerprint, võtme lühike räsi) kanalist, mis ei käi läbi sama võrgu. Proxmoxi veebiliidese konsool on selline kanal: cloud-init kirjutab esimese käivituse lõpus konsooli ploki `BEGIN SSH HOST KEY FINGERPRINTS`.
 
@@ -549,8 +549,8 @@ variable "vms" {
   description = "Loodavad masinad: võti on hostinimi"
   type = map(object({
     vm_id  = number
-    ip     = string
     distro = string
+    cores  = number
     memory = number
     disk   = optional(number, 10)
     group  = string
@@ -565,7 +565,7 @@ variable "proxmox_api_token" {
 
 Tüüp `map(object({...}))` tähendab nimega kirjete kogumit, kus igal kirjel on samad väljad. `optional(number, 10)` lubab välja ära jätta ja annab siis väärtuse 10. Väärtused on failis `terraform.tfvars`, mille OpenTofu loeb automaatselt. See sarnaneb Ansible'i failidega `group_vars` ja `host_vars`: seal on väärtused ja playbook kasutab neid.
 
-Fail `terraform.tfvars` sisaldab keskkonna andmeid ja jääb Gitist välja. Giti läheb näidis `terraform.tfvars.example`, millest igaüks teeb oma koopia. Tokeni muutujal on `sensitive = true` ja väärtus tuleb keskkonnamuutujast `TF_VAR_proxmox_api_token`: OpenTofu loeb iga keskkonnamuutuja kujul `TF_VAR_<nimi>` muutuja väärtuseks.
+Fail `terraform.tfvars` sisaldab keskkonna andmeid ja jääb Gitist välja. Giti läheb näidis `terraform.tfvars.example`, millest igaüks teeb oma koopia. Tokeni muutujal on `sensitive = true` ja väärtus tuleb keskkonnamuutujast `TF_VAR_proxmox_api_token`: OpenTofu loeb iga keskkonnamuutuja kujul `TF_VAR_<nimi>` muutuja väärtuseks. Provider'i juures luges provider tokeni otse keskkonnamuutujast `PROXMOX_VE_API_TOKEN`. Kui ühenduse andmed on muutujates, on koodist näha, mida provider vajab, ja `sensitive = true` hoiab tokeni väljundist eemal. Fail `proxmox.env` annab mõlemad, nii et juurde ei pea midagi lisama.
 
 **Locals** (plokk `locals`) on koodi sees arvutatud väärtused, mida väljast üle kirjutada ei saa, näiteks kõigi masinate ühised tag'id. Koodis viidatakse neile kujul `local.nimi`.
 
@@ -582,7 +582,7 @@ Fail `terraform.tfvars` sisaldab keskkonna andmeid ja jääb Gitist välja. Giti
 
 ### for_each: plokk iga kirje kohta
 
-`for_each` teeb ühest plokist nii mitu objekti, kui on kirjeid. Ploki sees on `each.key` kirje võti (näiteks `web01`) ja `each.value` kirje väljad (`each.value.ip`, `each.value.memory`).
+`for_each` teeb ühest plokist nii mitu objekti, kui on kirjeid. Ploki sees on `each.key` kirje võti (näiteks `web01`) ja `each.value` kirje väljad (`each.value.vm_id`, `each.value.memory`).
 
 ```hcl
 resource "proxmox_virtual_environment_vm" "lab" {
@@ -606,7 +606,7 @@ OpenTofu loob objektid paralleelselt, vaikimisi kümme korraga (`-parallelism=10
 
 === "Viis plokki"
 
-    Iga masin on eraldi `resource` plokk, kokku umbes 150 rida. CPU tüübi parandus tuleb teha viies kohas ja üks jääb alati tegemata.
+    Iga masin on eraldi `resource` plokk, kokku umbes 150 rida. CPU tüübi parandus tuleb teha viies kohas ja mõnes neist jääb see kergesti tegemata.
 
 === "Üks plokk ja for_each"
 
@@ -654,7 +654,7 @@ Mõlemad tööriistad kirjeldavad soovitud olekut, aga eri tasemel. OpenTofu hal
     | | OpenTofu | Ansible |
     |---|---|---|
     | Haldab | API objektid: VM, ketas, võrk, DNS | masina sisu: paketid, failid, teenused, kasutajad |
-    | Mälu | state: teab, mida on loonud | puudub, küsib igal käivitusel masinalt |
+    | Loodud objektide arvestus | state: teab, mida on loonud | puudub, küsib igal käivitusel masinalt |
     | Koodist eemaldatud objekt | kustutatakse | jääb alles |
     | Ühendus | hüperviisori või pilve API | SSH masinasse |
     | Sobib kõige paremini | loomine, asendus, mahavõtmine | seadistus, paigad, muudatused masinate kaupa |
@@ -711,7 +711,7 @@ resource "local_file" "inventory" {
   <figcaption>Joonis 4.9. OpenTofu loob masinad ja kirjutab inventory, Ansible seadistab masinad selle järgi (Talvik, 2026).</figcaption>
 </figure>
 
-Uutel masinatel on uued host key'd, mida `known_hosts` veel ei tunne. Ansible ei saa küsida, kas võtit usaldada, ja ühendus ebaõnnestub teatega `Host key verification failed`. Laborikeskkonnas lülitatakse kontroll välja (`ANSIBLE_HOST_KEY_CHECKING=False`). Tootmises kogutakse võtmed usaldusväärsest kanalist või kasutatakse SSH sertifikaate.
+Uutel masinatel on uued hostivõtmed, mida `known_hosts` veel ei tunne. Ansible ei saa küsida, kas võtit usaldada, ja ühendus ebaõnnestub teatega `Host key verification failed`. Laborikeskkonnas lülitatakse kontroll välja (`ANSIBLE_HOST_KEY_CHECKING=False`). Tootmises kogutakse võtmed usaldusväärsest kanalist või kasutatakse SSH sertifikaate.
 
 === "IP-d käsitsi inventory's"
 
@@ -719,7 +719,7 @@ Uutel masinatel on uued host key'd, mida `known_hosts` veel ei tunne. Ansible ei
 
 === "Inventory OpenTofu väljundist"
 
-    IP-aadress on kirjas ainult failis `terraform.tfvars`. Sama `apply`, mis masina loob, kirjutab ka inventory ja Ansible kasutab alati õiget aadressi.
+    IP-aadressi annab DHCP ja OpenTofu loeb selle guest agent'i kaudu. Sama `apply`, mis masina loob, kirjutab ka inventory ja Ansible kasutab masina tegelikku aadressi.
 
 ### Orkestreerimine
 
@@ -731,11 +731,11 @@ Tööriistade vahel ei ole tehingut. Kui OpenTofu lõi viis VM-i ja Ansible eba�
 
     VM on API jaoks valmis enne, kui cloud-init on võrgu, kasutaja ja võtme paika pannud. Kui Ansible ühendub liiga vara, ebaõnnestub esimene ühendus või muudavad kaks tööriista samal ajal samu faile. Töövoog ootab seepärast selget märki: Ansible'i moodul `wait_for_connection` ootab, kuni SSH vastab, ja masinas käsk `cloud-init status --wait` ootab, kuni cloud-init on lõpetanud. Fikseeritud ooteaeg (`sleep 60`) on kord liiga lühike ja kord liiga pikk. Osalise õnnestumise ja ajastuse vigu käsitleb kursuse IS2 [loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k04/loeng/#osaline-onnestumine).
 
-**Leia viga.** Väljund ja inventory arvutati muutujast, mitte ressursist:
+**Leia viga.** Inventory masinate nimekiri arvutati muutujast, mitte ressursist. Aadressi leiab Ansible nime järgi DNS-ist:
 
 ```hcl
 locals {
-  hosts = { for name, v in var.vms : name => v.ip }
+  hosts = keys(var.vms)   # ["app01", "db01", "mc01", "rmq01", "web01"]
 }
 ```
 
@@ -745,7 +745,7 @@ db01 loomine ebaõnnestus, sest tokenil puudus õigus salvestuskohale. Inventory
 
     **Mida taheti:** anda Ansible'ile loodud masinate nimed ja aadressid.
 
-    **Mis oli:** `local.hosts` tuli sisendist `var.vms`. Sisend on olemas ka siis, kui masinat luua ei õnnestunud, nii et inventory lubas masinat, mida pole. Viga paistis võrguveana.
+    **Mis oli:** `local.hosts` tuli sisendist `var.vms`. Sisend on olemas ka siis, kui masinat luua ei õnnestunud, nii et inventory'sse jäi kirje masina kohta, mille loomine ebaõnnestus. Viga paistis võrguveana.
 
     **Õige:** arvuta väärtus ressursist `proxmox_virtual_environment_vm.lab`. Siis on inventory's ainult loodud masinad ja `local_file` sõltub VM-idest.
 
@@ -767,7 +767,7 @@ db01 loomine ebaõnnestus, sest tokenil puudus õigus salvestuskohale. Inventory
     | plaan | `+` loob, `~` muudab kohapeal, `-/+` asendab, `-` kustutab; loe esmalt `-/+` ja `-` |
     | state | seob koodi aadressi Proxmoxi objektiga; ei lähe Giti, saladused on seal lihttekstina |
     | triiv | muudatus koodist mööda; järgmine `apply` võtab selle tagasi, kui seda koodi ei pane |
-    | cloud-init | seadistab masina käivitumisel; muudatus pärast loomist vajab `-replace`-i |
+    | cloud-init | seadistab masina esimesel käivitumisel; muudatus rakendub pärast taaskäivitust, kindlaim kontroll on `-replace` |
     | muutujad ja `for_each` | andmed failis `terraform.tfvars`, üks plokk teeb igast kirjest objekti, identiteet on võti |
     | väljund ja inventory | väärtus ressursist, `templatefile()` ja `local_file` kirjutavad Ansible'i inventory |
     | jaotus | OpenTofu loob masinad, Ansible seadistab nende sisu |
