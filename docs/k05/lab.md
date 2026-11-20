@@ -7,37 +7,61 @@ tags:
 
 # Praktikum: Kubernetes k3s-is
 
-3. kohtumisel käivitas Docker konteineri ühes masinas ja kui konteiner kustus, jäi see kustunuks. Täna paigaldad oma control'isse ühe masinaga Kubernetese klastri k3s, käivitad seal rakenduse kolme koopiana ja vaatad, kuidas Kubernetes kustutatud koopia ise asendab. Seejärel kirjutad sama rakenduse YAML-failidesse, teed selle Service'iga brauseris nähtavaks ja otsid üles vea, mille tõttu uus versioon ei käivitu.
+Eelmisel korral käivitasid Dockeri konteineri: kui selle kustutasid, jäi see kustutatuks. Nüüd paigaldad control'isse k3s-i, käivitad rakenduse kolme koopiana ja vaatad, kuidas Kubernetes kustutatud koopia asendab.
 
-Iga osa alguses on eesmärk ja kontroll. Kui oskad, tee osa eesmärgi järgi ise ja ava lahendused ainult kontrolliks. Töö tulemus on harus `k05-k8s` olevad failid ja automaatkontroll kontrollib neid GitHubis.
+Seejärel kirjeldad rakenduse YAML-failides, teed selle brauseris kättesaadavaks ja parandad vea, mis takistab uue versiooni käivitumist.
+
+Iga osa alguses on eesmärk ja kontroll. Proovi esmalt ise, lahenduse ava vajaduse korral.
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
-Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa küsimusele käsk ja kogu veateade tekstina.
+## Algseis ja tulemus
 
-??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
+Olemas on control ja repositoorium `~/kursus`. Alustad harust `main`, varasemaid töid pole vaja.
 
-    **Saad valmis kujul:** control'i ja repositooriumi `~/kursus`. Repositooriumis on kooli Harbori CA-fail `k03-docker/roles/docker/files/harbor-ca.crt`. Harbor hoiab Docker Hubi image'ite koopiaid, nii et kogu klass ei tõmba neid korraga Docker Hubist. Eelmiste kohtumiste tööd see praktikum ei vaja: alustad harust `main`.
+Kooli Harborist saad Docker Hubi image'ite koopiad. Harbori CA-sertifikaat on failis `k03-docker/roles/docker/files/harbor-ca.crt`.
 
-    **Teed ise:** paigaldad control'isse k3s-i, kirjutad kausta `~/kursus/k05-k8s` failid `deployment.yaml` ja `service.yaml`, salvestad klastri oleku kausta `k05-k8s/logid` ja esitad töö tag'iga `k05`.
+Sinu ülesanne:
 
-    **Kui midagi läks katki:** `kubectl delete -f k05-k8s/` kustutab kõik, mis failidest loodi, ja `kubectl apply -f k05-k8s/` loob need uuesti. Kogu k3s-i saab eemaldada käsuga `/usr/local/bin/k3s-uninstall.sh` ja seejärel uuesti paigaldada.
+- paigaldada k3s;
+- luua harus `k05-k8s` failid `k05-k8s/deployment.yaml` ja `k05-k8s/service.yaml`;
+- salvestada klastri olek kausta `k05-k8s/logid`;
+- esitada töö tag'iga `k05`.
+
+Faile kontrollib GitHubis automaatkontroll.
 
 ??? abstract "Õpiväljundid"
 
-    1. Paigaldad ühe masinaga Kubernetese klastri k3s ja kontrollid `kubectl`-iga, et see töötab.
-    2. Käivitad rakenduse Deployment'iga ja näitad, et Kubernetes hoiab soovitud arvu pod'e ka siis, kui mõni neist kustutatakse.
-    3. Kirjutad Deployment'i ja Service'i YAML-faili ning rakendad need käsuga `kubectl apply`.
-    4. Teed rakenduse Service'iga brauseris nähtavaks ja näitad, et päringud jagunevad pod'ide vahel.
-    5. Leiad käskudega `kubectl get` ja `kubectl describe` põhjuse, miks pod ei käivitu, ja parandad selle failis.
+    1. Paigaldad ühe masinaga Kubernetese klastri ja kontrollid, et see töötab.
+    2. Käivitad Deployment'iga rakenduse kolm koopiat ja kontrollid, et Kubernetes asendab kustutatud koopia.
+    3. Rakendad Deployment'i ja Service'i YAML-failid käsuga `kubectl apply`.
+    4. Avad rakenduse Service'i kaudu brauseris ja kontrollid, kuidas päringud pod'ide vahel jagunevad.
+    5. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe` ning parandad vea failis.
+
+Iga osa käib samamoodi: mõtle enne käsku läbi, mis juhtub, käivita käsk ja kontrolli tulemust käsuga `kubectl get`.
+
+## Abi ja taastamine
+
+Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/discussions). Lisa kasutatud käsk ja kogu veateade tekstina.
+
+Failides kirjeldatud ressursid kustutad ja lood uuesti nii:
+
+```bash
+kubectl delete -f k05-k8s/
+kubectl apply -f k05-k8s/
+```
+
+Kogu k3s-i eemaldad nii:
+
+```bash
+/usr/local/bin/k3s-uninstall.sh
+```
 
 ??? info "Testitud versioonid"
 
-    k3s `v1.36.6+k3s1`, image `traefik/whoami:v1.11.0`, Ubuntu 24.04.
+    k3s `v1.36.6+k3s1`, `traefik/whoami:v1.11.0`, Ubuntu 24.04.
 
-    Dokumentatsioon: [k3s](https://docs.k3s.io/), [Kubernetes](https://kubernetes.io/docs/home/), [kubectl käskude ülevaade](https://kubernetes.io/docs/reference/kubectl/quick-reference/).
-
-Iga osa käib sama rütmiga: teed muudatuse, mõtled enne käsku läbi, mida Kubernetes teeb, ja kontrollid tulemust käsuga `kubectl get`.
+    Dokumentatsioon: [k3s](https://docs.k3s.io/), [Kubernetes](https://kubernetes.io/docs/home/), [kubectl](https://kubernetes.io/docs/reference/kubectl/quick-reference/).
 
 ## Osa 1 · k3s control'isse
 
