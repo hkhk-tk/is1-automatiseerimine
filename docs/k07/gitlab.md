@@ -16,6 +16,7 @@ Täna paned GitLabi konveieri web01 seadistama: sina muudad koodi ja teed push'i
     2. Oskad paigaldada GitLab Runneri ja registreerida selle oma projektile.
     3. Oskad kirjutada `.gitlab-ci.yml` faili, milles on kolm stage'i: lint, deploy ja check.
     4. Oskad muuta serverit ainult push'iga ja näed, kuidas konveier vea enne serverit kinni peab.
+    5. Oskad viia muudatuse serverisse merge request'i kaudu ja hoida väärtusi GitLabi muutujates.
 
 <figure markdown="span">
   ![Sina teed git push, GitLab loeb faili .gitlab-ci.yml ja annab töö runnerile, mis töötab control'is sinu kasutajana. Runner käivitab järjest lint, deploy ja check; deploy ühendub SSH-ga web01-ga, kus on leht pordil 8081 ja tervitustekst](assets/k07_gitlab_konveier.svg)
@@ -315,9 +316,124 @@ git push
 
 Eemalda vigane rida, tee commit ja push. Konveier on jälle roheline.
 
+## Osa 6 · Muudatus käib läbi merge request'i
+
+Ettevõttes ei saadeta muudatust otse harusse `main`, millest konveier serverit seadistab. Muudatus tehakse eraldi harus, konveier kontrollib seda ja teine inimene vaatab selle üle. Alles liitmine (**merge request**) viib muudatuse `main`-i ja sealt serverisse.
+
+**Eesmärk:** harus käivitub ainult lint, pärast liitmist `main`-i teeb konveier ka deploy'i.  
+**Kontroll:** haru konveieris on üks töö `lint`, liitmise järel on lehel uus tekst.  
+**Kus:** control ja brauser.
+
+### 6.1 Deploy ainult harust `main`
+
+Võti `rules` ütleb, millal töö käivitub. Muutuja `CI_COMMIT_BRANCH` on haru nimi, mille GitLab annab igale tööle.
+
+??? example "Ülesanne: lisa töödele `deploy` ja `check` reegel"
+    ```yaml
+    deploy:
+      stage: deploy
+      rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+      script:
+        - ansible-playbook veeb.yml
+
+    check:
+      stage: check
+      rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+      script:
+        - curl -fsS http://<web01 IP>:8081/ | grep -i "kohv"
+    ```
+
+```bash
+git commit -am "Deploy ainult main"
+git push
+```
+
+### 6.2 Muudatus harus
+
+```bash
+git switch -c uus-tekst
+nano veeb.yml
+```
+
+??? example "Ülesanne: muuda rida failis `veeb.yml`"
+    ```yaml
+        teade: "Kohv on keemas. Teatas Ansible."
+    ```
+
+**Ennusta:** mitu tööd on selle haru konveieris ja mis tekst on pärast seda lehel?
+
+```bash
+git commit -am "Kohv keemas"
+git push -u origin uus-tekst
+```
+
+??? success "Vastus"
+    Haru konveieris on ainult `lint`. Leht näitab endiselt `Kohv on otsas. Teatas Ansible.`: muudatus on kontrollitud, aga serverisse see veel ei jõudnud.
+
+### 6.3 Merge request ja liitmine
+
+Push'i järel näitab GitLab projekti lehel nuppu **Create merge request**. Vajuta seda, kirjuta pealkiri ja vajuta **Create merge request**. Lehel on konveieri tulemus ja muudatus (**Changes**). Kui lint on roheline, vajuta **Merge**.
+
+??? success "Oodatav tulemus"
+    `main`-is käivitub uus konveier kolme tööga ja pärast seda näitab leht `Kohv on keemas. Teatas Ansible.`.
+
+Too muudatus oma masinasse ja mine tagasi harule `main`:
+
+```bash
+git switch main
+git pull
+```
+
+??? question "Kontrolli ennast"
+    Kus näeb pärast, kes muudatuse tegi, kes selle heaks kiitis ja millal see serverisse jõudis?
+
+    ??? success "Vastus"
+        Merge request'i lehel: seal on autor, liitja, kommentaarid ja konveieri tulemus. Konveieri logis on deploy'i aeg.
+
+## Osa 7 · Teade GitLabi muutujast
+
+Kõik väärtused ei pea olema koodis. GitLab hoiab projekti **muutujaid** (CI/CD variables) ja annab need tööle keskkonnamuutujatena. Nii saab väärtust muuta ilma koodi muutmata. Samamoodi hoitakse paroole ja tokeneid: need ei lähe Giti.
+
+**Eesmärk:** lehe tekst tuleb GitLabi muutujast `TEADE`.  
+**Kontroll:** muutuja muutmine ja konveieri käivitamine muudab lehte, kood jääb samaks.  
+**Kus:** brauser ja control.
+
+### 7.1 Muutuja GitLabis
+
+Ava **Settings → CI/CD → Variables** ja vajuta **Add variable**. **Key** on `TEADE`, **Value** näiteks `Kohvimasin parandatud. Teatas konveier.` Linnuke **Protect variable** jääb alles: siis saavad muutuja ainult kaitstud harud, nagu `main`. Vajuta **Add variable**.
+
+### 7.2 Playbook loeb muutuja
+
+Ansible'i `lookup('env', ...)` loeb keskkonnamuutujat. Kui muutujat pole, näiteks kui käivitad playbook'i ise control'is, kasutatakse vaikimisi teksti.
+
+??? example "Ülesanne: muuda rida failis `veeb.yml`"
+    ```yaml
+        teade: "{{ lookup('env', 'TEADE') | default('Kohv on olemas.', true) }}"
+    ```
+
+??? example "Ülesanne: töö `check` kontrollib sama teksti"
+    ```yaml
+        - curl -fsS http://<web01 IP>:8081/ | grep -F "$TEADE"
+    ```
+
+```bash
+git commit -am "Teade GitLabi muutujast"
+git push
+```
+
+??? success "Oodatav tulemus"
+    Pärast konveierit näitab leht `Kohvimasin parandatud. Teatas konveier.`
+
+Muuda nüüd ainult muutujat: **Settings → CI/CD → Variables**, muutuja `TEADE` juures pliiats, uus väärtus näiteks `Kohv on jälle otsas. Teatas konveier.` Käivita konveier ilma koodi muutmata: **Build → Pipelines → New pipeline → Run pipeline**.
+
+??? success "Oodatav tulemus"
+    Leht näitab uut teksti. Gitis ei muutunud midagi.
+
 ## Töö esitamine
 
-Projekti viimane konveier harus `main` on roheline ja web01 lehel on sinu teade.
+Projekti viimane konveier harus `main` on roheline, projektis on liidetud merge request ja web01 lehe tekst tuleb muutujast `TEADE`.
 
 ```bash
 git status
@@ -328,31 +444,11 @@ Tulemuse näeb koolitaja GitLabis sinu projekti all **Build → Pipelines**.
 
 ## Lisaülesanded
 
-??? example "1 · Deploy ainult harust `main`"
-    Lisa töödele `deploy` ja `check` reegel, mis lubab neid ainult harus `main`. Tee uus haru, muuda seal teksti ja tee push: käivitub ainult lint.
-
-    ```yaml
-    deploy:
-      stage: deploy
-      rules:
-        - if: $CI_COMMIT_BRANCH == "main"
-      script:
-        - ansible-playbook veeb.yml
-    ```
-
-    Dokumentatsioon: [rules](https://docs.gitlab.com/ci/yaml/#rules).
-
-??? example "2 · Teade GitLabi muutujast"
-    Ava **Settings → CI/CD → Variables** ja lisa muutuja `TEADE`. Anna see playbook'ile käsurealt:
-
-    ```yaml
-        - ansible-playbook veeb.yml -e "teade=$TEADE"
-    ```
-
-    Muuda muutuja väärtust GitLabis ja käivita konveier nupuga **Build → Pipelines → New pipeline**, ilma koodi muutmata.
-
-??? example "3 · Konveieri märk README-s"
+??? example "1 · Konveieri märk README-s"
     Ava **Settings → CI/CD → General pipelines → Pipeline status** ja kopeeri Markdowni rida README algusesse. Märk näitab, kas viimane konveier õnnestus.
+
+??? example "2 · Merge request'i kinnitus"
+    Ava **Settings → Merge requests** ja märgi **Pipelines must succeed**. Nüüd ei saa liita merge request'i, mille konveier on punane. Proovi katkise YAML-iga harust.
 
 ??? info "Loe juurde"
     - [GitLab CI/CD sissejuhatus](https://docs.gitlab.com/ci/): konveieri, etapi ja töö mõisted.
