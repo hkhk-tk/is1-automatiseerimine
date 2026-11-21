@@ -687,9 +687,9 @@ for t in files fmt validate secrets resources ci logid; do bash autograde/check.
 git add k06-aws .github/workflows/k06-ci.yml autograde/check.sh
 git commit -m "k06: koristuse tulemus"
 git push
-gh pr create --base main --head k06-aws --title "K6 AWS" --body "K6: AWS käsurealt"
-gh pr merge --merge
-git switch main && git pull
+git switch main
+git merge k06-aws
+git push
 git tag k06 && git push origin k06
 ```
 

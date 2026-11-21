@@ -687,7 +687,7 @@ kubectl get pods -l app=app01 -w
 
     Paari minuti pärast on app01 `1/1` ja `/health` Ingress'i kaudu jälle `UP`. Andmebaasi andmed on alles, sest need olid PVC-l, mitte konteineris.
 
-### 2.7 Commit ja pull request
+### 2.7 Commit ja main
 
 Automaatkontroll vaatab ainult repositooriumi. Käivita samad testid enne commit'i ise ja kontrolli, et manifestides pole Secret'it ega `namespace:` ridu:
 
@@ -696,14 +696,16 @@ for t in files objects hygiene; do bash autograde/check.sh k07 $t; done
 grep -rn 'namespace:\|kind: Secret' k07-k8s/*.yaml
 git add k07-k8s && git commit -m "k07: Labori seis klastris"
 git push -u origin k07-k8s
-gh pr create --base main --head k07-k8s --title "K7 Kubernetes" --body "7. kohtumise praktikum"
+git switch main
+git merge k07-k8s
+git push
 ```
 
 ??? success "Oodatav tulemus"
 
     Kolm testi annavad `OK` ja `grep` on tühi. Testi `kubeconform` käivitab GitHubi automaatkontroll, kus tööriist on olemas. Kui `kubeconform` on control'is paigaldatud, käivita ka `bash autograde/check.sh k07 kubeconform`.
 
-Vaata pull request GitHubis üle ja ühenda see (**Merge pull request**). Argo CD loeb 3. osas haru `main`.
+Argo CD loeb 3. osas haru `main`, seepärast liidetakse haru `k07-k8s` kohe `main`-iga.
 
 ## Osa 3 · Argo CD hoiab soovitud olekut
 
@@ -759,7 +761,7 @@ kubectl get application labori-seis -w
 
 ??? warning "Kui olek on `OutOfSync` või `Unknown`"
 
-    Vaata põhjust: `kubectl get application labori-seis -o jsonpath='{.status.conditions[*].message}'; echo`. `repository not accessible` tähendab kirjaviga `repoURL`-is. `destination … is not permitted in project` tähendab, et namespace ei ole sinu oma. `OutOfSync` ilma veata tähendab, et klastris on midagi, mida Gitis pole: kas pull request jäi ühendamata?
+    Vaata põhjust: `kubectl get application labori-seis -o jsonpath='{.status.conditions[*].message}'; echo`. `repository not accessible` tähendab kirjaviga `repoURL`-is. `destination … is not permitted in project` tähendab, et namespace ei ole sinu oma. `OutOfSync` ilma veata tähendab, et klastris on midagi, mida Gitis pole: kas haru `k07-k8s` jäi `main`-iga liitmata?
 
 Sync status ja health status on kaks eri asja. **Synced** tähendab, et klaster vastab Gitile. **Healthy** tähendab, et objektid töötavad: Deployment'idel on Ready pod'id.
 
@@ -840,10 +842,10 @@ Tulemuse näed Classroom 50-s.
 
 ??? warning "K7 tulemus on 0, kuigi töö on tehtud"
 
-    Tag osutab siis commit'ile, kus manifeste veel pole, sest pull request jäi ühendamata. Ühenda pull request ja tõsta tag uuele commit'ile:
+    Tag osutab siis commit'ile, kus manifeste veel pole, sest haru `k07-k8s` jäi `main`-iga liitmata. Liida haru ja tõsta tag uuele commit'ile:
 
     ```bash
-    git switch main && git pull
+    git switch main && git merge k07-k8s && git push
     git tag -f k07 && git push -f origin k07
     ```
 

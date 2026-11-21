@@ -542,15 +542,15 @@ for t in files manifest logid; do bash autograde/check.sh k05 "$t"; done
 
     Sinu repositooriumi kontrollskript on vana. Uuenda see: `curl -fsSL https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/autograde/check.sh -o autograde/check.sh`.
 
-### 7.2 Commit, PR ja tag
+### 7.2 Commit, main ja tag
 
 ```bash
 git add k05-k8s autograde/check.sh
 git commit -m "k05: klastri olek logis"
 git push -u origin k05-k8s
-gh pr create --base main --head k05-k8s --title "K5 Kubernetes" --body "K5: Kubernetes k3s-is"
-gh pr merge --merge
-git switch main && git pull
+git switch main
+git merge k05-k8s
+git push
 git tag k05 && git push origin k05
 ```
 
