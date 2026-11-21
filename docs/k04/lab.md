@@ -274,7 +274,7 @@ tofu apply
 
 ??? warning "Kui tuleb `vm_id ... already exists`"
 
-    Sellel numbril on juba VM. Vaata veebiliidesest oma pool'i. Kui seal on sinu varasem `test01` sama numbriga, vali number, mis on sinu vahemikus ja vaba. Kui sa ei tea, kelle masin see on, küsi enne kustutamist koolitajalt.
+    Kontrolli käsuga `pwd`, et oled kaustas `~/kursus/k04-tofu/01-alused`, ja vaata `tofu state list`. Kui sama numbriga masin tekkis sinu eelmisest katsest, ära muuda kohe numbrit ega kustuta masinat. Saada koolitajale veateade, masina number ja `tofu state list` väljund.
 
 ### 3.2 Teine plaan
 
@@ -298,7 +298,7 @@ Plaani kõige tähtsam osa ütleb, kas muudatus tehakse olemasolevale VM-ile, `~
 
 ### 4.1 Mälu ja CPU
 
-Mallist tuleb 1 GB mälu ja 2 tuuma. Lisa `test01`-le mälu, CPU ja guest agent'i plokk. CPU tüüp `x86-64-v2-AES` on vajalik AlmaLinux 9-le, mis ei käivitu vaikimisi CPU tüübiga. **Guest agent** on VM-i sees töötav teenus, mis annab Proxmoxile VM-i IP-aadressi. Tofu ootab agenti kuni `timeout`-i.
+Mallist tuleb 1 GB mälu ja 2 tuuma. Määra `test01` mäluks 768 MB ja tuumade arvuks üks, lisa CPU tüüp ja guest agent'i plokk. Väiksemad masinad jätavad kooli Proxmoxis ruumi kõigile. CPU tüüp `x86-64-v2-AES` on vajalik AlmaLinux 9-le, mis ei käivitu vaikimisi CPU tüübiga. **Guest agent** on VM-i sees töötav teenus, mis annab Proxmoxile VM-i IP-aadressi. Tofu ootab agenti kuni `timeout`-i.
 
 ??? example "Ülesanne: mälu, CPU ja agent"
 
@@ -443,7 +443,7 @@ ssh kasutaja@$(tofu output -raw ip) hostname
 
 ??? warning "Kui `ssh` ei vasta või annab `REMOTE HOST IDENTIFICATION HAS CHANGED`"
 
-    Taaskäivitus võtab natuke aega. Proovi uuesti. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme. Vana võtme kustutab `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, vaata VM-i konsooli veebiliideses. Jätka alles siis, kui ühendus töötab.
+    Oota veidi ja proovi sama käsku uuesti. Kontrolli veebiliidesest, et VM töötab. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme: vaata konsoolist uue võtme sõrmejälge ja kustuta vana võti käsuga `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, ava VM-i konsool ja saada nähtav veateade koolitajale. Ära tee selle pärast `destroy`-d ega `-replace`-i.
 
 Vaata veebiliideses `test01` vahekaarti **Cloud-Init**: seal on kasutaja, võti ja `ip=dhcp`, mille Tofu kirjutas.
 
@@ -492,9 +492,9 @@ git commit -m "k04: test01 mallist, cloud-init ja asendus"
 
 ## Osa 7 · Viis VM-i muutujatega
 
-Viis kopeeritud VM-i plokki lähevad aja jooksul lahku: üks saab parandatud CPU tüübi, teised mitte. Nüüd eraldad koodi ja andmed. Kood ütleb, kuidas VM ehitatakse. Fail `terraform.tfvars` ütleb, milliseid VM-e on vaja. Üks `for_each` plokk teeb igast kirjest VM-i.
+Viis kopeeritud VM-i plokki lähevad aja jooksul lahku: üks saab parandatud CPU tüübi, teised mitte. Nüüd eraldad koodi ja andmed. Kood ütleb, kuidas VM ehitatakse. Fail `terraform.tfvars` ütleb, milliseid VM-e on vaja. Üks ressursiplokk koos `for_each`-iga teeb igast kirjest VM-i.
 
-Tofu loeb kõik kausta `*.tf` failid üheks tervikuks ja failinimi tähendust ei kanna. Failid on jagatud teema järgi lugeja jaoks.
+See on uus konfiguratsioon kaustas `~/kursus/k04-tofu`. Alamkausta `01-alused` faile Tofu siin ei loe ja siia tekivad oma `.terraform/`, lukufail ja state. Tofu loeb kõik kausta `.tf`-failid üheks tervikuks. Failid on jagatud teema järgi lugeja jaoks.
 
 **Eesmärk:** kaustas `k04-tofu/` on kood, mis loob viis VM-i.  
 **Kontroll:** veebiliideses töötavad web01, app01, rmq01, mc01 ja db01 ning teine `tofu plan` ütleb `No changes`.  
@@ -718,7 +718,7 @@ tofu plan
 
 ### 7.4 Kõik viis
 
-Kood jääb samaks, muutub ainult `terraform.tfvars`. Lisa ülejäänud neli VM-i. web01, app01 ja rmq01 on Ubuntu, mc01 ja db01 AlmaLinux. Numbrid on sinu `IS1_VMID_BASE` + 1 kuni 5.
+Kood jääb samaks, muutub ainult `terraform.tfvars`. Asenda failis senine `vms`-plokk alloleva viie kirjega plokiga. `node` ja `pool` jäävad alles ja failis on ainult üks `vms`. web01, app01 ja rmq01 on Ubuntu, mc01 ja db01 AlmaLinux. Numbrid on sinu `IS1_VMID_BASE` + 1 kuni 5.
 
 ??? example "Ülesanne: viis VM-i failis `terraform.tfvars`"
 
@@ -749,7 +749,7 @@ tofu state list
 
 ## Osa 8 · Tulemus output'iga välja
 
-Output'i kaudu loevad teised tööriistad Tofu tulemust, näiteks Ansible'i inventory. Väärtused tulevad ressursist, mitte `var.vms`-ist: ressursi IP on see, mille agent tegelikult teatas, ja see on olemas ainult siis, kui VM tegelikult loodi.
+Output'i kaudu loevad teised tööriistad Tofu tulemust, näiteks Ansible'i inventory. IP-aadressid loed VM-i ressursi atribuutidest, sest need on agendi teatatud väärtused. `var.vms` kirjeldab soovitud masinaid, aga DHCP-st saadud aadresse seal pole.
 
 **Eesmärk:** `tofu output` näitab viie VM-i nimesid ja IP-sid.  
 **Kontroll:** `tofu output -json hosts` annab viis IP-d.  
@@ -793,8 +793,26 @@ tofu output -json hosts
 
 Proovi, mida teeb Tofu, kui output viitab tokenile.
 
-1. Lisa ajutiselt `output "token" { value = var.proxmox_api_token }` ja käivita `tofu plan`.
-2. Lisa samale output'ile `sensitive = true` ja käivita uuesti `tofu plan`. `apply`-d ei tee.
+Selles katses käivitad ainult `tofu plan`. Tokenit ekraanile ei kuva.
+
+1. Lisa ajutiselt faili `outputs.tf`:
+
+    ```hcl
+    output "token" {
+      value = var.proxmox_api_token
+    }
+    ```
+
+    ja käivita `tofu plan`.
+
+2. Muuda sama plokk selliseks ja käivita uuesti `tofu plan`. `apply`-d ei tee.
+
+    ```hcl
+    output "token" {
+      value     = var.proxmox_api_token
+      sensitive = true
+    }
+    ```
 3. Eemalda output ja kontrolli, et `tofu plan` ütleb `No changes`.
 
 ??? success "Oodatav tulemus"
@@ -895,7 +913,7 @@ ansible-inventory -i inventory.ini --graph
 
 ## Osa 10 · Esitamine
 
-Automaatkontroll näeb ainult repositooriumi: failid, vormingu, `validate`-i, ressursid ja saladused. Proxmoxi VM-e see ei näe. Enne esitamist käivitad samad kontrollid ise.
+Automaatkontroll näeb ainult repositooriumi: failid, vormingu, saladused ja ressursid. `validate` tehakse kaustas `k04-tofu` pärast `init`-i lukufaili järgi, kausta `01-alused` kontrollitakse ainult vormingu ja saladuste osas. Proxmoxi VM-e automaatkontroll ei näe. Enne esitamist käivitad samad kontrollid ise.
 
 **Eesmärk:** töö on `main`-is ja tag `k04` on käivitanud automaatkontrolli.  
 **Kontroll:** viis kontrolli annavad `OK`.  
