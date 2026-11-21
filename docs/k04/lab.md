@@ -949,16 +949,16 @@ for t in files secrets fmt validate resources; do bash autograde/check.sh k04 "$
 
     Lukufailis puudub mõni provider. Käivita `tofu -chdir=k04-tofu providers lock -platform=linux_amd64` ja lisa `.terraform.lock.hcl` uuesti.
 
-### 10.2 Commit, PR ja tag
+### 10.2 Commit, main ja tag
 
-Genereeritud `inventory.ini` läheb samuti Giti: PR-is on siis näha, milline IP muutus.
+Genereeritud `inventory.ini` läheb samuti Giti: commit'is on siis näha, milline IP muutus. Haru `k04-tofu` liidetakse `main`-iga ja tag `k04` pannakse `main`-i viimasele commit'ile.
 
 ```bash
 git commit -m "k04: viis VM-i for_each'iga, output ja inventory Tofust"
 git push -u origin k04-tofu
-gh pr create --base main --head k04-tofu --title "K4 OpenTofu" --body "K4: OpenTofu"
-gh pr merge --merge
-git switch main && git pull
+git switch main
+git merge k04-tofu
+git push
 git tag k04 && git push origin k04
 ```
 
