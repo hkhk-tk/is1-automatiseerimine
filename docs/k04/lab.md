@@ -441,6 +441,10 @@ ssh kasutaja@$(tofu output -raw ip) hostname
 
     Plaan näitab `~ update in-place`. Provider kirjutas uue cloud-init'i CD ja taaskäivitas VM-i. Käivitusel nägi cloud-init uut seadistust ja lisas sinu võtme, nii et `ssh` vastab `test01` ilma paroolita.
 
+??? warning "Kui tuleb ikka `Permission denied` ja sinu võtme nimi pole `id_ed25519`"
+
+    SSH proovib ainult vaikimisi nimega võtmeid ja `~/.ssh/config` failis on read ainult web01…db01 jaoks. Anna võti käsule ette: `ssh -i ~/.ssh/<sinu võti> kasutaja@$(tofu output -raw ip) hostname`. Koodis peab `keys` viitama sama võtme `.pub` failile.
+
 ??? warning "Kui `ssh` ei vasta või annab `REMOTE HOST IDENTIFICATION HAS CHANGED`"
 
     Oota veidi ja proovi sama käsku uuesti. Kontrolli veebiliidesest, et VM töötab. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme: vaata konsoolist uue võtme sõrmejälge ja kustuta vana võti käsuga `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, ava VM-i konsool ja saada nähtav veateade koolitajale. Ära tee selle pärast `destroy`-d ega `-replace`-i.
@@ -906,6 +910,10 @@ ansible-inventory -i inventory.ini --graph
 ??? warning "Kui tuleb `Decryption failed` või `no vault secrets found`"
 
     Kaustas `k02-ansible` on 2. kohtumise Vaulti fail ja Ansible loeb selle iga käsuga, ka `ping`-iga. Fail `~/.config/is1/vault_pass` puudub või selles on teine parool. Paranda see nagu [2. kohtumise praktikumis](../k02/lab.md): kirjuta faili sama parool, millega `vault.yml` loodi.
+
+??? warning "Kui tuleb `Permission denied` ja sinu võtme nimi pole `id_ed25519`"
+
+    Genereeritud inventory's pole võtme rida. Lisa faili `k02-ansible/ansible.cfg` plokki `[defaults]` rida `private_key_file = ~/.ssh/<sinu võti>`.
 
 ??? warning "Kui tuleb `Host key verification failed`"
 
