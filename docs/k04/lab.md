@@ -584,6 +584,8 @@ Muutuja `vms` on kaart: võti on VM-i nimi, väärtus on objekt VM-i andmetega.
 
 ??? example "Ülesanne: `terraform.tfvars.example`"
 
+    Failis `terraform.tfvars` asenda `is1-perenimi` oma pool'iga ja `4301` oma numbriga: `IS1_VMID_BASE` + 1. Number 4301 on näidis ja kuulub teisele õppijale.
+
     ```hcl
     node = "SR630V3-1"
     pool = "is1-perenimi"
