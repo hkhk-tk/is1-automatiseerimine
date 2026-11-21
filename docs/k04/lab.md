@@ -19,7 +19,7 @@ Küsimused: [Küsimused ja teated](https://github.com/hkhk-tk/is126-arutelu/disc
 
 ??? tip "Algseis: mida saad valmis kujul ja mida teed ise"
 
-    **Saad valmis kujul:** control'is on fail `~/.config/is1/proxmox.env`, kus on Proxmoxi aadress, sinu ajutine API token ja sinu väärtused: pool, sõlm ja VM-ide numbrite algus. Token kehtib 5. kohtumise eelõhtuni. Proxmoxis on kooli mallid Ubuntu 24.04 ja AlmaLinux 9. Repositooriumi `.gitignore` hoiab state'i, `terraform.tfvars`-i ja kausta `.terraform/` Gitist väljas. OpenTofu osas eelmiste kohtumiste masinaid ei kasutata ja alustad harust `main`. Osas 9 kirjutab Tofu inventory 2. kohtumise kausta `k02-ansible`. Kui seda kausta sinu repositooriumis pole, loob Tofu selle ise.
+    **Saad valmis kujul:** control'is on fail `~/.config/is1/proxmox.env`, kus on Proxmoxi aadress, sinu ajutine API token ja sinu väärtused: pool, sõlm ja VM-ide numbrite algus. Token kehtib 5. kohtumise eelõhtuni. Proxmoxis on kooli mallid Ubuntu 24.04 ja AlmaLinux 9. Repositooriumi `.gitignore` hoiab state'i, `terraform.tfvars`-i ja kausta `.terraform/` Gitist väljas. OpenTofu osas eelmiste kohtumiste masinaid ei kasutata ja alustad harust `main`. Osas 9 on vaja 2. kohtumise kausta `k02-ansible`: sinna kirjutab Tofu inventory ja sealt tulevad Ansible'i seaded `ansible.cfg`.
 
     **Teed ise:** kirjutad kausta `~/kursus/k04-tofu` OpenTofu koodi, mis loob kõigepealt ühe VM-i ja siis muutujate põhjal viis, kirjutad Tofu väljundist Ansible'i inventory ja esitad töö tag'iga `k04`. Proxmoxi veebiliideses `https://192.168.124.200:8006` näed oma kooli kontoga, mida kood lõi.
 
@@ -443,7 +443,7 @@ ssh kasutaja@$(tofu output -raw ip) hostname
 
 ??? warning "Kui `ssh` ei vasta või annab `REMOTE HOST IDENTIFICATION HAS CHANGED`"
 
-    Taaskäivitus võtab kuni minuti. Proovi uuesti. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme. Vana võtme kustutab `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, vaata VM-i konsooli veebiliideses. Jätka alles siis, kui ühendus töötab.
+    Taaskäivitus võtab natuke aega. Proovi uuesti. Kui hoiatuses on juttu muutunud hostivõtmest, tegi cloud-init masinale uue võtme. Vana võtme kustutab `ssh-keygen -R $(tofu output -raw ip)`. Kui SSH ikka ei vasta, vaata VM-i konsooli veebiliideses. Jätka alles siis, kui ühendus töötab.
 
 Vaata veebiliideses `test01` vahekaarti **Cloud-Init**: seal on kasutaja, võti ja `ip=dhcp`, mille Tofu kirjutas.
 
@@ -859,7 +859,7 @@ Grupid tulevad VM-i väljast `group` ja distrost. Avaldis kasutab ressursist tul
     }
     ```
 
-`apply` kirjutab faili `k02-ansible/inventory.ini` üle. 2. kohtumisel käsitsi kirjutatud fail on Gitis alles, seega ei pea seda eraldi varundama.
+`apply` kirjutab faili `k02-ansible/inventory.ini` üle. 2. kohtumisel käsitsi kirjutatud fail on Gitis K2 töö juures, sealt saad selle vajaduse korral tagasi.
 
 ```bash
 echo 'local.groups' | tofu console

@@ -656,7 +656,7 @@ Mõlemad tööriistad kirjeldavad soovitud olekut, aga eri tasemel. OpenTofu hal
     | | OpenTofu | Ansible |
     |---|---|---|
     | Haldab | API objektid: VM, ketas, võrk, DNS | masina sisu: paketid, failid, teenused, kasutajad |
-    | Mida mäletab | state'i abil teab, mida on loonud | puudub, küsib igal käivitusel masinalt |
+    | Mida mäletab | state'is on kirjas, mida on loodud | puudub, küsib igal käivitusel masinalt |
     | Koodist eemaldatud objekt | kustutatakse | jääb alles |
     | Ühendus | hüperviisori või pilve API | SSH masinasse |
     | Sobib kõige paremini | loomine, asendus, mahavõtmine | seadistus, paigad, muudatused masinate kaupa |
@@ -733,7 +733,7 @@ Tööriistade vahel ei ole tehingut. Kui OpenTofu lõi viis VM-i ja Ansible eba�
 
     VM on API jaoks valmis enne, kui cloud-init on võrgu, kasutaja ja võtme paika pannud. Kui Ansible ühendub liiga vara, ebaõnnestub esimene ühendus või muudavad kaks tööriista samal ajal samu faile. Töövoog ootab seepärast selget märki: Ansible'i moodul `wait_for_connection` ootab, kuni SSH vastab, ja masinas käsk `cloud-init status --wait` ootab, kuni cloud-init on lõpetanud. Fikseeritud ooteaeg (`sleep 60`) on kord liiga lühike ja kord liiga pikk. Osalise õnnestumise ja ajastuse vigu käsitleb kursuse IS2 [loeng](https://hkhk-tk.github.io/is2-automatiseerimine/k04/loeng/#osaline-onnestumine).
 
-**Leia viga.** Inventory masinate nimekiri arvutati muutujast, mitte ressursist. Aadressi leiab Ansible nime järgi DNS-ist:
+**Leia viga.** Inventory masinate nimekiri arvutati muutujast, mitte ressursist:
 
 ```hcl
 locals {
