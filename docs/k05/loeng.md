@@ -440,6 +440,11 @@ Uuendust jälgitakse käsuga `kubectl rollout`:
 
 Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võib aga vajada käivitumiseks aega. **readinessProbe** ütleb, kuidas valmidust kontrollida, näiteks HTTP-päringuga aadressile `/health`. Kuni kontroll ei õnnestu, ei saada Service pod'ile päringuid ja rolling update ei kustuta järgmist vana pod'i. **livenessProbe** kontrollib samamoodi, kas töötav konteiner on veel terve. Kui see kontroll ebaõnnestub, käivitab kubelet konteineri uuesti. Mõlemad on kirjas [dokumentatsioonis](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
 
+<figure markdown="span">
+  ![kubelet kontrollib iga pod'i aadressi /health, mittevalmis pod jääb Service'ist välja](assets/k05_readiness.svg)
+  <figcaption>Joonis 5.6. readinessProbe eemaldab mittevalmis pod'i Service'ist (Talvik, 2026).</figcaption>
+</figure>
+
 **Ära kasuta tag'i `latest`.** Sama tag võib eri päevadel tähendada eri image'it. Siis ei tea keegi, milline versioon töötab, ja `rollout undo` ei pruugi viia tagasi eelmise versiooni juurde. Kasuta kindlat versiooni, näiteks `v1.12.0`.
 
 ??? question "Kontrolli ennast"
@@ -493,6 +498,11 @@ Compose'i failis on iga teenuse kohta image, pordid, muutujad, paroolid ja andme
     | `healthcheck`, `depends_on` | readinessProbe, käivitamise järjekorda Kubernetes ei taga |
     | `restart: unless-stopped` | Deployment'i kontroller teeb seda alati |
 
+<figure markdown="span">
+  ![ConfigMap annab väärtused konteinerile keskkonnamuutujatena](assets/k05_configmap.svg)
+  <figcaption>Joonis 5.7. ConfigMap'i väärtus jõuab konteinerisse käivitumisel (Talvik, 2026).</figcaption>
+</figure>
+
 Secret ei ole krüpteeritud. Väärtus on base64-kujul ja selle saab tagasi lugeda igaüks, kellel on õigus Secret'eid lugeda. Seepärast ei panda Secret'i faili Giti. Töökohas hoitakse paroole välises saladuste halduris, näiteks OpenBaos, ja klastrisse tuuakse need eraldi tööriistaga.
 
 Andmebaasi hoitakse sageli klastrist väljas, näiteks pilve hallatud andmebaasina. Klastris on lihtsam hoida rakendusi, mis ei hoia andmeid. Andmebaasi varundamine, uuendamine ja taastamine klastris vajab lisateadmisi. Selleks kasutatakse **Operator**'eid: kontrollereid, mis teavad, kuidas üht kindlat rakendust, näiteks PostgreSQL-i, hallata.
@@ -543,7 +553,7 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 <path class="a d" d="M592,220 V244 H345 V222" marker-end="url(#lxb)"/>
 <text class="s" x="470" y="258" text-anchor="middle">jälgib triivi, pöörab tagasi</text>
 </svg>
-<figcaption>Joonis 5.6. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
+<figcaption>Joonis 5.8. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
 </figure>
 
 Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab ja testib image'i ning kirjutab selle uue tag'i Gitis olevasse YAML-faili. Argo CD näeb Gitis muudatust ja uuendab klastrit. Argo CD kontrollib Giti vaikimisi iga kolme minuti tagant, nii et muudatus ei jõua klastrisse kohe. Konveier ei vaja klastri võtit, klastrisse kirjutab ainult Argo CD. Nii töötavad ka Eesti ettevõtted. Näiteks on Entigo kirjutanud tag'i uuendamise sammu jaoks oma tööriista [entigo-k8s-gitops](https://github.com/entigolabs/entigo-k8s-gitops).
@@ -559,6 +569,41 @@ Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab j
     ??? success "Vastus"
 
         Argo CD märkab, et klaster erineb Gitist, ja viib koopiate arvu tagasi kolmele. Püsiv muudatus tuleb teha Gitis: muuda faili, tee commit ja push. Kui `selfHeal` on välja lülitatud, jääb klastrisse viis koopiat ja Argo CD näitab rakendust olekus `OutOfSync`.
+
+## 13. Tuttavad vasted
+
+Enamikul Kubernetese mõistetel on vaste, mida administraator tunneb serverite ja virtuaalmasinate maailmast. Vaste ei ole täpne, aga aitab meelde jätta, milleks mõiste on.
+
+??? note "Tabel 5.14. Kubernetese mõisted ja nende vasted tavalises IT-s"
+
+    | Kubernetes | Tavalises IT-s | Erinevus |
+    |---|---|---|
+    | klaster | Proxmoxi või VMware'i klaster | haldab konteinereid, mitte VM-e |
+    | node | füüsiline server või hüperviisori host | |
+    | control plane | vCenter, Proxmoxi klastri haldus | |
+    | etcd | konfiguratsioonibaas (CMDB) | kirjeldab soovitud olekut, mitte inventari |
+    | scheduler | VMware DRS, Proxmoxi HA haldur | valib node'i iga pod'i jaoks |
+    | kubelet | agent igas serveris, näiteks Zabbixi agent | käivitab pod'e, mitte ainult ei raporteeri |
+    | pod | protsess või väike VM | ajutine, IP muutub |
+    | Deployment | systemd teenus koos taaskäivitusega mitmes masinas | hoiab õiget koopiate arvu |
+    | rolling update | serverite uuendamine ükshaaval koormusjaoturi taga | käib automaatselt |
+    | `rollout undo` | paketi eelmise versiooni paigaldamine | |
+    | Service | koormusjaotur või virtuaalne IP (keepalived) | püsiv nimi ja IP pod'ide grupile |
+    | Ingress | pöördproksi: nginx'i virtuaalhostid, HAProxy | reeglid on YAML-is |
+    | readinessProbe | koormusjaoturi tervisekontroll (HAProxy `check`) | |
+    | livenessProbe | watchdog, monit | taaskäivitab konteineri |
+    | ConfigMap | konfiguratsioonifail kaustas `/etc` | |
+    | Secret | parool failis `.env` või Vaultis | ainult base64, mitte krüpteeritud |
+    | requests, limits | VM-i CPU ja mälu, cgroups | scheduler arvestab `requests`-iga |
+    | PersistentVolumeClaim | SAN-ist või NAS-ist ketta taotlemine | |
+    | Namespace | projekt, Proxmoxi pool, AD organisatsiooniüksus | |
+    | RBAC | sudoers, AD grupid, Proxmoxi rollid | |
+    | label | Ansible'i inventory grupp, Proxmoxi tag | |
+    | DaemonSet | agent, mis paigaldatakse igasse serverisse | |
+    | CronJob | `cron` | |
+    | kubectl | `ssh` ja `pvesh` | kõik käib API kaudu |
+    | Helm | `apt`, `dnf` | |
+    | Argo CD | Puppeti agent, `ansible-pull` | võrdleb Gitiga pidevalt |
 
 ??? info "Loe juurde ja harjuta"
 

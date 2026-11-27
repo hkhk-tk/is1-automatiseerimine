@@ -494,6 +494,11 @@ git commit -m "k05: NodePort Service tere"
 
 Pordi number 30080 on kasutajale ebamugav ja iga rakendus vajaks oma porti. **Ingress** suunab päringu nime järgi õigesse Service'isse. k3s-is teeb seda Traefik, mis klastris juba töötab ja kuulab porte 80 ja 443. Traefik vaatab päringu päist `Host` ja leiab Ingressi reeglist, millisele Service'ile päring läheb.
 
+<figure markdown="span">
+  ![Kolm teed Service'ini: NodePort 30080, Traefik nimega tere.local ja teine pod nimega tere](assets/k05_service_tee.svg)
+  <figcaption>Joonis L5.4. NodePort ja Ingress viivad mõlemad sama Service'ini (Talvik, 2026).</figcaption>
+</figure>
+
 **Eesmärk:** rakendus vastab pordil 80 nimega `tere.local`.  
 **Kontroll:** `curl -H 'Host: tere.local' http://localhost/` vastab reaga `Hostname: tere-...`.  
 **Kus:** control, kaust `~/kursus`.
@@ -548,6 +553,11 @@ git commit -m "k05: Ingress tere.local"
 ## Osa 7 · ConfigMap: seadistus väljaspool image'it
 
 Compose'is andsid konteinerile seadistuse võtmega `environment`. Kubernetesis hoitakse seadistust eraldi objektis **ConfigMap**. Sama image töötab nii testis kui ka toodangus, ainult ConfigMap on erinev. Rakendus `whoami` loeb muutujat `WHOAMI_NAME` ja näitab seda vastuse esimesel real `Name:`.
+
+<figure markdown="span">
+  ![configmap.yaml läheb käsuga kubectl apply ConfigMap'iks, envFrom annab selle väärtused konteinerile keskkonnamuutujatena](assets/k05_configmap.svg)
+  <figcaption>Joonis L5.5. ConfigMap'i väärtus jõuab konteinerisse käivitumisel (Talvik, 2026).</figcaption>
+</figure>
 
 **Eesmärk:** rakendus näitab ConfigMap'ist tulnud nime ja näed, millal muudatus pod'ideni jõuab.  
 **Kontroll:** `curl -s http://localhost:30080 | head -1` näitab rida `Name:` sinu ConfigMap'i väärtusega.  
@@ -631,6 +641,11 @@ git commit -m "k05: ConfigMap tere-seaded"
 Kubernetes peab pod'i valmis olevaks kohe, kui konteiner käivitus. Rakendus võib aga vajada aega või minna katki nii, et protsess töötab edasi. **readinessProbe** kontrollib korrapäraselt, kas pod suudab päringuid vastu võtta. Kui kontroll ebaõnnestub, jätab Service selle pod'i vahele. Rakendusel `whoami` on aadress `/health`, mis vastab koodiga 200.
 
 Väli **resources** ütleb, kui palju protsessorit ja mälu konteiner vajab. `requests` on osa, mille scheduler node'il pod'ile kinni paneb. `limits` on ülempiir.
+
+<figure markdown="span">
+  ![kubelet kontrollib iga pod'i aadressi /health, pod c vastab 500 ja Service ei saada sellele päringuid](assets/k05_readiness.svg)
+  <figcaption>Joonis L5.6. Mittevalmis pod jääb Service'ist välja, aga töötab edasi (Talvik, 2026).</figcaption>
+</figure>
 
 **Eesmärk:** mittevalmis pod jääb Service'ist välja ja liiga suure ressursinõudega pod'i põhjus on leitud.  
 **Kontroll:** `kubectl get pods` näitab nelja pod'i olekus `1/1 Running`.  
@@ -737,6 +752,8 @@ kubectl describe node control | grep -A 8 'Allocated resources'
     ??? success "Vastus"
 
         Uued pod'id on olekus `Pending` ja sündmus ütleb `0/1 nodes are available: 1 Insufficient memory`. control'is on umbes 2,8 GB mälu ja scheduler ei leia node'i, kus oleks 4 GB vaba. Pod ei käivitunud kordagi, seega `logs` ei näita midagi.
+
+        ![Node'i mälust on k3s-il ja kolmel pod'il kasutusel osa, uus pod nõuab 4Gi ja scheduler jätab selle olekusse Pending](assets/k05_requests.svg)
 
         Rakendus töötab, sest rolling update jättis vanad pod'id alles. Sama viga tekib töökohas siis, kui `requests` on kopeeritud teisest projektist ja klastris pole nii suurt node'i.
 
