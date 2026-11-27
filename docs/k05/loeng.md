@@ -96,6 +96,7 @@ Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** 
     | **k0s** | väike klaster | Mirantis. Samuti üks programm, lisad paigaldad ise |
     | **minikube**, **kind**, **MicroK8s** | arendaja arvuti, MicroK8s ka väike server | ühe node'iga klaster virtuaalmasinas või Dockeris |
     | **EKS**, **AKS**, **GKE** | pilv | control plane'i haldab pilveteenuse pakkuja |
+    | **Talos Linux** | oma serverid ja Proxmox | Sidero Labs. Operatsioonisüsteem ainult Kubernetese jaoks: SSH-d ei ole, masinat hallatakse API kaudu käsuga `talosctl` |
     | **OpenShift** | suured asutused | Red Hati Kubernetes koos lisatööriistade ja tasulise toega |
 
 **k3s** paigaldub ühe käsuga ja vajab vähe mälu, sest kogu juhtimise osa on ühes programmis. Ühe masinaga klastris hoiab k3s andmeid SQLite'i andmebaasis. Täpsemalt: [k3s dokumentatsioon](https://docs.k3s.io/).
