@@ -110,6 +110,7 @@ Kubernetes ei ole ainus orkestreerija. Väiksemaid süsteeme hallatakse sageli l
     | **Podman ja systemd** | konteiner systemd teenusena (Quadlet) | üksikud teenused Red Hati põhistes serverites |
     | **Docker Swarm** | Dockeri sisseehitatud klaster, failid sarnased Compose'iga | väike klaster ilma uue sõnavarata |
     | **HashiCorp Nomad** | üks programm, käivitab konteinereid ja tavalisi programme | segakeskkond, HashiCorpi tööriistade kasutajad |
+    | **Coolify**, **Dokku**, **CapRover** | oma serverisse paigaldatav platvorm: `git push` või veebiliides ehitab ja käivitab rakenduse, all on Docker või Swarm | väike meeskond tahab automaatset paigaldust ilma klastrita |
     | **AWS ECS**, **Google Cloud Run** | pilve enda konteineriteenus | ainult ühes pilves, klastrit ei halda keegi ise |
 
     Swarmi ja Nomadi kasutajaid on vähem ja töökuulutustes küsitakse peaaegu alati Kubernetest.
