@@ -130,8 +130,8 @@ Ansible ja Kubernetes ei välista teineteist. Ansible'iga paigaldatakse sageli k
 Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsustab, kus miski töötab. **Node**'idel töötavad pod'id. k3s-is võib sama masin olla korraga control plane ja node, nagu praktikumis masin `control`.
 
 <figure markdown="span">
-  ![Control plane: API server, andmebaas, scheduler ja kontrollerid; node'il kubelet ja containerd](assets/k05_juhttasand.svg)
-  <figcaption>Joonis 5.3. Kõik osad suhtlevad ainult API serveriga (Talvik, 2026).</figcaption>
+  ![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)
+  <figcaption>Joonis 5.3. Mis juhtub pärast käsku kubectl apply. Kõik osad suhtlevad ainult API serveriga (Talvik, 2026).</figcaption>
 </figure>
 
 - **API server** võtab vastu kõik päringud ja kontrollib õigusi. Ta kuulab porti 6443.
@@ -140,6 +140,19 @@ Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsu
 - **Kontrollerid** hoiavad soovitud olekut, näiteks pod'ide arvu.
 - **kubelet** töötab igal node'il ja käivitab sellele node'ile määratud pod'id.
 - **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
+- **kube-proxy** töötab igal node'il ja seab võrgureeglid, mille abil Service'i aadressile saadetud päring jõuab mõne pod'ini.
+
+Joonise 5.3 numbrid näitavad, mis juhtub pärast käsku `kubectl apply -f tere.yaml`:
+
+1. kubectl saadab Deployment'i kirjelduse API serverile. API server kontrollib õigusi ja faili kuju.
+2. API server salvestab soovitud oleku andmebaasi etcd.
+3. Kontroller näeb uut Deployment'i ja loob pod'ide kirjed. Neil pod'idel ei ole veel node'i.
+4. Scheduler näeb node'ita pod'i ja määrab sellele node'i.
+5. Selle node'i kubelet näeb, et talle on määratud uus pod.
+6. kubelet annab containerd'le käsu image alla laadida ja konteiner käivitada. Seejärel teatab kubelet pod'i oleku API serverile ja `kubectl get pods` näitab olekut `Running`.
+7. Kui pod'i ees on Service, seab kube-proxy võrgureeglid, mis saadavad Service'i päringud uuele pod'ile.
+
+Ükski osa ei anna teisele otse käsku. Igaüks jälgib API serverit ja teeb oma osa, kui näeb muudatust.
 
 Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik käsud lähevad API serverile käsuga **kubectl**. SSH leiab failist `~/.ssh/config`, kuhu ühenduda ja millise võtmega. kubectl leiab sama info failist `~/.kube/config`. Sellist faili nimetatakse lühidalt **kubeconfig**'iks. Seal on klastri aadress, sinu sertifikaat või token ja vaikimisi **nimeruum** (namespace). Nimeruum jagab klastri osadeks, näiteks iga meeskonna või keskkonna jaoks oma.
 
