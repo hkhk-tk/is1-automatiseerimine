@@ -8,6 +8,19 @@ tags:
 
 Kui midagi ei tööta, alusta kolmest käsust: `kubectl get pods` näitab olekut, `kubectl describe pod <nimi>` näitab lõpus sündmusi ja `kubectl logs <nimi>` näitab konteineri väljundit. Küsimusele lisa käsk ja kogu veateade tekstina.
 
+??? note "Pod'i olekud ja kust põhjust otsida"
+
+    | Olek | Mida tähendab | Kust otsida |
+    |---|---|---|
+    | `Pending` | pod'ile ei leitud node'i | `describe pod`: sündmused, näiteks `Insufficient memory` |
+    | `ContainerCreating` | image laaditakse alla | oota, siis `describe pod` |
+    | `ErrImagePull`, `ImagePullBackOff` | image'i ei saanud alla laadida | `describe pod`: `not found` tähendab vale nime või tag'i |
+    | `CrashLoopBackOff` | konteineri protsess lõpetab kohe töö ja käivitatakse üha pikema ootega uuesti | `logs <pod> --previous` |
+    | `OOMKilled` | konteiner kasutas rohkem mälu, kui `limits` lubab, ja kernel lõpetas selle | `describe pod`: `Last State`, suurenda `limits.memory` |
+    | `Running`, aga `READY 0/1` | konteiner töötab, aga ei ole valmis päringuid vastu võtma | `describe pod`: `Readiness probe failed` |
+
+Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jääb enamik vanu pod'e tööle ja rakendus vastab edasi. `kubectl get deployment` näitab siis, et `READY` on väiksem kui soovitud arv.
+
 ??? warning "`The connection to the server localhost:8080 was refused`"
 
     kubectl ei leia kubeconfig'i. Selles terminalis pole muutujat `KUBECONFIG`. Käivita `export KUBECONFIG=~/.kube/config` ja kontrolli, et rida on ka failis `~/.bashrc`.

@@ -1,23 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" width="800">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" width="800"><defs><linearGradient id="ubg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F8FF"/><stop offset="1" stop-color="#E3EDFC"/></linearGradient><filter id="ush" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#2A4A80" flood-opacity="0.14"/></filter></defs>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2A8FBF"/></marker></defs>
-<style>text{font-family:Segoe UI, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.l{text-anchor:start}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}</style>
-<rect width="100%" height="100%" fill="#EEF3FA"/>
-<rect class="p" x="30" y="30" width="200" height="60" rx="8"/>
+<style>text{font-family:'Segoe UI',Arial,sans-serif;fill:#13294B;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.l{text-anchor:start}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}</style>
+<rect width="100%" height="100%" fill="url(#ubg)"/>
+<rect filter="url(#ush)" class="p" x="30" y="30" width="200" height="60" rx="14"/>
 <text class="t" x="130" y="56">Deployment tere</text>
 <text class="s" x="130" y="76">replicas: 2</text>
-<rect class="p" x="30" y="150" width="200" height="60" rx="8"/>
+<rect filter="url(#ush)" class="p" x="30" y="150" width="200" height="60" rx="14"/>
 <text class="t" x="130" y="176">ReplicaSet tere-7d9f</text>
 <text class="s" x="130" y="196">selector: app=tere</text>
-<rect class="m" x="300" y="150" width="200" height="60" rx="8"/>
+<rect filter="url(#ush)" class="m" x="300" y="150" width="200" height="60" rx="14"/>
 <text class="t w" x="400" y="176">Pod tere-7d9f-abcde</text>
 <text class="s w" x="400" y="196">silt app=tere</text>
-<rect class="m" x="300" y="250" width="200" height="60" rx="8"/>
+<rect filter="url(#ush)" class="m" x="300" y="250" width="200" height="60" rx="14"/>
 <text class="t w" x="400" y="276">Pod tere-7d9f-fghij</text>
 <text class="s w" x="400" y="296">silt app=tere</text>
-<rect class="o" x="570" y="30" width="200" height="60" rx="8"/>
+<rect filter="url(#ush)" class="o" x="570" y="30" width="200" height="60" rx="14"/>
 <text class="t" x="670" y="56">Service tere</text>
 <text class="s" x="670" y="76">selector: app=tere</text>
-<rect class="o" x="570" y="150" width="200" height="60" rx="8"/>
+<rect filter="url(#ush)" class="o" x="570" y="150" width="200" height="60" rx="14"/>
 <text class="t" x="670" y="176">Endpoints tere</text>
 <text class="s" x="670" y="196">kahe pod'i IP-d</text>
 <line class="ln" x1="130" y1="90" x2="130" y2="148" marker-end="url(#a)"/>

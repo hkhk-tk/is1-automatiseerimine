@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 480" width="1300">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 480" width="1300"><defs><linearGradient id="ubg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F8FF"/><stop offset="1" stop-color="#E3EDFC"/></linearGradient><filter id="ush" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#2A4A80" flood-opacity="0.14"/></filter></defs>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2A8FBF"/></marker>
 <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e65100"/></marker></defs>
-<style>text{font-family:Segoe UI, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:17px;font-weight:600}.s{font-size:14.5px}.w{fill:#ffffff}.c{font-family:monospace;font-size:13.5px}.big{font-size:20px;font-weight:700}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.lo{stroke:#e65100;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.b{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}.z{fill:none;stroke:#9e9e9e;stroke-width:1.4;stroke-dasharray:6 4}.zf{fill:#FFFFFF;stroke:#9e9e9e;stroke-width:1.2}</style>
-<rect width="100%" height="100%" fill="#EEF3FA"/>
+<style>text{font-family:'Segoe UI',Arial,sans-serif;fill:#13294B;text-anchor:middle}.t{font-size:17px;font-weight:600}.s{font-size:14.5px}.w{fill:#ffffff}.c{font-family:'Segoe UI',Arial,sans-serif;font-size:13.5px}.big{font-size:20px;font-weight:700}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.lo{stroke:#e65100;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#fff3e0;stroke:#ff9100;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.b{fill:#e3f2fd;stroke:#1565c0;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}.z{fill:none;stroke:#B8CBEA;stroke-width:1.4;stroke-dasharray:6 4}.zf{fill:#FFFFFF;stroke:#B8CBEA;stroke-width:1.2}</style>
+<rect width="100%" height="100%" fill="url(#ubg)"/>
 <text class="big" x="30" y="30" style="text-anchor:start">Push: CI teeb deploy</text>
-<rect class="o" x="30" y="50" width="220" height="80" rx="8"/>
+<rect filter="url(#ush)" class="o" x="30" y="50" width="220" height="80" rx="14"/>
 <text class="t" x="140.0" y="81.0">Git</text>
 <text class="s" x="140.0" y="101.0">manifestid</text>
-<rect class="r" x="430" y="50" width="280" height="80" rx="8"/>
+<rect filter="url(#ush)" class="r" x="430" y="50" width="280" height="80" rx="14"/>
 <text class="t" x="570.0" y="81.0">CI runner</text>
 <text class="s" x="570.0" y="101.0">hoiab klastri võtit</text>
-<rect class="p" x="900" y="50" width="340" height="80" rx="8"/>
+<rect filter="url(#ush)" class="p" x="900" y="50" width="340" height="80" rx="14"/>
 <text class="t" x="1070.0" y="96.0">klaster</text>
 <line class="ln" x1="250" y1="90" x2="428" y2="90" marker-end="url(#a)"/>
 <line class="ln" x1="710" y1="90" x2="898" y2="90" marker-end="url(#a)"/>
@@ -18,15 +18,15 @@
 <text class="c" x="805" y="80" style="text-anchor:middle">kubectl apply</text>
 <text class="t" x="640" y="170" style="text-anchor:middle;fill:#c62828">Käsitsi tehtud muudatus klastris jääb märkamata kuni järgmise deploy'ni.</text>
 <text class="big" x="30" y="240" style="text-anchor:start">Pull: GitOps</text>
-<rect class="o" x="30" y="270" width="220" height="80" rx="8"/>
+<rect filter="url(#ush)" class="o" x="30" y="270" width="220" height="80" rx="14"/>
 <text class="t" x="140.0" y="301.0">Git</text>
 <text class="s" x="140.0" y="321.0">soovitud olek</text>
-<rect class="z" x="420" y="250" width="860" height="210" rx="12"/>
+<rect filter="url(#ush)" class="z" x="420" y="250" width="860" height="210" rx="14"/>
 <text class="t" x="434" y="274" style="text-anchor:start">klaster</text>
-<rect class="m" x="450" y="290" width="280" height="80" rx="8"/>
+<rect filter="url(#ush)" class="m" x="450" y="290" width="280" height="80" rx="14"/>
 <text class="t w" x="590.0" y="321.0">Argo CD või Flux</text>
 <text class="s w" x="590.0" y="341.0">klastri sees</text>
-<rect class="g" x="900" y="290" width="340" height="80" rx="8"/>
+<rect filter="url(#ush)" class="g" x="900" y="290" width="340" height="80" rx="14"/>
 <text class="t" x="1070.0" y="321.0">nimeruum default</text>
 <text class="s" x="1070.0" y="341.0">tegelik olek</text>
 <line class="ln" x1="448" y1="330" x2="252" y2="330" marker-end="url(#a)"/>

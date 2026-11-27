@@ -1,21 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 270" width="840">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 270" width="840"><defs><linearGradient id="ubg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F8FF"/><stop offset="1" stop-color="#E3EDFC"/></linearGradient><filter id="ush" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#2A4A80" flood-opacity="0.14"/></filter></defs>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2A8FBF"/></marker></defs>
-<style>text{font-family:Segoe UI, Arial, sans-serif;fill:#212121;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.c{font-family:monospace;font-size:12.5px}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.x{stroke:#c62828;stroke-width:2;stroke-dasharray:6 4;fill:none}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}.z{fill:none;stroke:#bdbdbd;stroke-width:1.2;stroke-dasharray:5 4}.bar{fill:#c5cae9;stroke:#5c6bc0;stroke-width:1}</style>
-<rect width="100%" height="100%" fill="#EEF3FA"/>
+<style>text{font-family:'Segoe UI',Arial,sans-serif;fill:#13294B;text-anchor:middle}.t{font-size:15px;font-weight:600}.s{font-size:13px}.w{fill:#ffffff}.c{font-family:'Segoe UI',Arial,sans-serif;font-size:12.5px}.ln{stroke:#2A8FBF;stroke-width:2;fill:none}.d{stroke-dasharray:6 4}.x{stroke:#c62828;stroke-width:2;stroke-dasharray:6 4;fill:none}.p{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.o{fill:#FFFFFF;stroke:#2A8FBF;stroke-width:1.5}.g{fill:#e8f5e9;stroke:#2e7d32;stroke-width:1.5}.r{fill:#ffebee;stroke:#c62828;stroke-width:1.5}.m{fill:#326CE5;stroke:#326CE5}.z{fill:none;stroke:#B8CBEA;stroke-width:1.2;stroke-dasharray:5 4}.bar{fill:#c5cae9;stroke:#5c6bc0;stroke-width:1}</style>
+<rect width="100%" height="100%" fill="url(#ubg)"/>
 <text class="t" x="20" y="30" style="text-anchor:start">node control: mälu umbes 2,8 GB</text>
-<rect x="20" y="45" width="600" height="50" rx="6" fill="#f5f5f5" stroke="#9e9e9e"/>
-<rect x="20" y="45" width="230" height="50" fill="#d1c4e9" stroke="#9e9e9e"/>
+<rect filter="url(#ush)" x="20" y="45" width="600" height="50" rx="14" fill="#f5f5f5" stroke="#B8CBEA"/>
+<rect x="20" y="45" width="230" height="50" fill="#d1c4e9" stroke="#B8CBEA"/>
 <text class="s" x="135.0" y="75" style="text-anchor:middle">k3s ja süsteem</text>
-<rect x="250" y="45" width="20" height="50" fill="#c8e6c9" stroke="#9e9e9e"/>
-<rect x="270" y="45" width="20" height="50" fill="#c8e6c9" stroke="#9e9e9e"/>
-<rect x="290" y="45" width="20" height="50" fill="#c8e6c9" stroke="#9e9e9e"/>
-<rect x="310" y="45" width="290" height="50" fill="#ffffff" stroke="#9e9e9e"/>
+<rect x="250" y="45" width="20" height="50" fill="#c8e6c9" stroke="#B8CBEA"/>
+<rect x="270" y="45" width="20" height="50" fill="#c8e6c9" stroke="#B8CBEA"/>
+<rect x="290" y="45" width="20" height="50" fill="#c8e6c9" stroke="#B8CBEA"/>
+<rect x="310" y="45" width="290" height="50" fill="#ffffff" stroke="#B8CBEA"/>
 <text class="s" x="455.0" y="75" style="text-anchor:middle">vaba umbes 1,3 GB</text>
 <text class="c" x="320" y="115" style="text-anchor:middle">iga pod tere: requests.memory 32Mi</text>
-<rect class="r" x="20" y="150" width="300" height="70" rx="8"/>
+<rect filter="url(#ush)" class="r" x="20" y="150" width="300" height="70" rx="14"/>
 <text class="t" x="170.0" y="181.0">uus pod: requests 4Gi</text><text class="s" x="170.0" y="199.0">ei mahu ühelegi node'ile</text>
 <line class="x" x1="320" y1="185" x2="418" y2="185" marker-end="url(#a)"/>
-<rect class="o" x="420" y="150" width="400" height="70" rx="8"/>
+<rect filter="url(#ush)" class="o" x="420" y="150" width="400" height="70" rx="14"/>
 <text class="t" x="620.0" y="181.0">scheduler: Pending</text><text class="c" x="620.0" y="199.0">0/1 nodes are available: Insufficient memory</text>
 <text class="s" x="420" y="250" style="text-anchor:middle">scheduler arvestab requests-väärtust, mitte seda, kui palju konteiner tegelikult kasutab</text>
 </svg>
