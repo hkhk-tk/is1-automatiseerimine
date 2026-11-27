@@ -603,7 +603,7 @@ Andmebaasi hoitakse sageli klastrist väljas, näiteks pilve hallatud andmebaasi
 
 ## 11. Helm ja GitOps
 
-Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskkonda, muutub failide käsitsi haldamine raskeks. Selleks on kaks tööriista, mida praktikumi lisaülesannetes proovid.
+Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskkonda, muutub failide käsitsi haldamine raskeks. Selleks on kaks tööriista. Helmi proovid praktikumi lisaülesandes.
 
 **Helm** on Kubernetese paketihaldur, nagu `apt` Ubuntus. Pakett on **chart**: YAML-failide mallid koos vaikeväärtustega. Käsk `helm install` teeb mallidest failid ja saadab need klastrisse, `helm upgrade` uuendab ja `helm rollback` viib eelmise versiooni juurde. k3s paigaldab Traefiku ise Helmi chart'ina. Enamik valmis tarkvara, näiteks Argo CD, Prometheus ja andmebaasid, paigaldatakse Kubernetesesse Helmiga. Teine levinud tööriist on [Kustomize](https://kustomize.io/), mis on `kubectl`-i sisse ehitatud (`kubectl apply -k`). See ei kasuta malle, vaid lisab tavalistele YAML-failidele keskkonna kaupa muudatusi, näiteks test- ja toodangukeskkonnas erineva koopiate arvu.
 

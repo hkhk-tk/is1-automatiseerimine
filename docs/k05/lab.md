@@ -77,7 +77,7 @@ Kogu k3s-i eemaldad nii:
 
 ## Osa 1 · k3s control'isse
 
-**Kubernetes** on süsteem, mis käivitab konteinereid mitmes masinas ja hoiab neid töös. Sina kirjeldad soovitud olekut, näiteks „rakendusest töötab kolm koopiat“, ja Kubernetes võrdleb seda pidevalt tegeliku olekuga. **k3s** on Kubernetes, mis on pakitud ühte programmi ja paigaldub ühe käsuga. Käsud ja failid on samad mis suures klastris, nii et kõik siin õpitu kehtib ka pilves.
+**Kubernetes** on süsteem, mis käivitab konteinereid mitmes masinas ja hoiab neid töös. Sina kirjeldad soovitud olekut, näiteks „rakendusest töötab kolm koopiat“, ja Kubernetes võrdleb seda pidevalt tegeliku olekuga. **k3s** on Kubernetese jaotus, mis on pakitud ühte programmi ja paigaldub ühe käsuga. Käsud ja failid on samad mis suures klastris, nii et kõik siin õpitu kehtib ka pilves.
 
 **Eesmärk:** control'is töötab k3s ja `kubectl` töötab ilma `sudo`-ta.  
 **Kontroll:** `kubectl get nodes` näitab node'i `control` olekus `Ready`.  
@@ -1225,56 +1225,6 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
     ```
 
     `helm list -A` näitab release'e `traefik` ja `traefik-crd`. Vaata lähemalt [k3s-i Helmi lehelt](https://docs.k3s.io/add-ons/helm).
-
-??? example "2 · Argo CD hoiab klastrit Gitiga samas olekus"
-
-    **Argo CD** loeb soovitud olekut Gitist ja viib klastri sellega kooskõlla. Käsitsi tehtud muudatuse muudab see tagasi. Paigalda Argo CD Helmiga (vajab lisaülesannet 1):
-
-    ```bash
-    helm repo add argo https://argoproj.github.io/argo-helm
-    helm install argocd argo/argo-cd -n argocd --create-namespace
-    kubectl get pods -n argocd
-    ```
-
-    Tee fail `k05-k8s/argocd/application.yaml`, mis jälgib sinu repositooriumi haru `main` kausta `k05-k8s`. Repositoorium peab olema Argo CD jaoks loetav: kui see on privaatne, tuleb lisada token ([Argo CD dokumentatsioon](https://argo-cd.readthedocs.io/en/stable/user-guide/private-repositories/)).
-
-    ```yaml
-    apiVersion: argoproj.io/v1alpha1
-    kind: Application
-    metadata:
-      name: tere
-      namespace: argocd
-    spec:
-      project: default
-      source:
-        repoURL: https://github.com/<org>/<sinu-repo>.git
-        targetRevision: main
-        path: k05-k8s
-        directory:
-          exclude: 'argocd/*'
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: default
-      syncPolicy:
-        automated:
-          selfHeal: true
-    ```
-
-    ```bash
-    kubectl apply -f k05-k8s/argocd/application.yaml
-    kubectl scale deployment tere --replicas=1
-    kubectl get pods -w
-    ```
-
-    Mõne sekundi pärast teeb Argo CD pod'e jälle neli, sest Gitis on kirjas `replicas: 4`.
-
-??? example "3 · GitHub Actions uuendab image'i Gitis"
-
-    Tööl ei muuda keegi image'i rida käsitsi. Konveier ehitab uue image'i, kirjutab selle tag'i YAML-faili ja teeb commit'i. Argo CD näeb Gitis muudatust ja uuendab klastrit. Nii ei vaja konveier klastri parooli: klastrisse kirjutab ainult Argo CD. Selle ahela saad läbi teha [IS2 süvenemise lehel](https://hkhk-tk.github.io/is2-automatiseerimine/k07/syvenemine/#42-ci-kirjutab-tagi-argo-viib-klastrisse).
-
-??? example "4 · Kubernetes pilves"
-
-    Samad failid töötavad ka pilves, näiteks AWS-i Kubernetese teenuses EKS. Erinevus on paigalduses: k3s-i paigaldasid ise, EKS-is haldab control plane'i AWS. Vaata [HashiCorpi EKS-i õpetust](https://developer.hashicorp.com/terraform/tutorials/kubernetes/eks). EKS maksab ka tühjana tunnitasu, nii et kustuta klaster kohe pärast proovimist.
 
 Veaotsing: [Abi](abi.md).
 
