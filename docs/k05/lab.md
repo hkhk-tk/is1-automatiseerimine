@@ -7,7 +7,7 @@ tags:
 
 # Praktikum: Kubernetes k3s-is
 
-Eelmisel korral lõid OpenTofuga koodist viis virtuaalmasinat. Masinad tekivad nüüd ühe käsuga, aga rakendusi hoiad töös endiselt ise. K3-s käivitasid Dockeriga konteinereid ühes masinas: kui konteiner kustutati või masin kadus, jäi rakendus seisma, kuni keegi selle taastas.
+Eelmisel korral lõid OpenTofuga koodist viis virtuaalmasinat. Masinad tekivad nüüd ühe käsuga, aga rakendusi hoiad töös endiselt ise. 3. kohtumisel käivitasid Dockeriga konteinereid ühes masinas: kui konteiner kustutati või masin kadus, jäi rakendus seisma, kuni keegi selle taastas.
 
 Täna paigaldad control'isse k3s-i, käivitad rakenduse kolme koopiana ja vaatad, kuidas Kubernetes kustutatud koopia ise asendab.
 
@@ -46,7 +46,7 @@ Faile kontrollib GitHubis automaatkontroll.
     5. Teed rakenduse nime järgi kättesaadavaks Ingressiga.
     6. Annad rakendusele seadistuse ConfigMap'ist ja rakendad muudatuse uue rollout'iga.
     7. Lisad valmisoleku kontrolli ja ressursipiirid ning näed, kuidas Service mittevalmis pod'i vahele jätab.
-    8. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe` ning parandad vea failis.
+    8. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe`, parandad vea failis ja võtad vajaduse korral eelmise versiooni tagasi.
 
 Iga osa käib samamoodi: mõtle enne käsku läbi, mis juhtub, käivita käsk ja kontrolli tulemust käsuga `kubectl get`.
 
@@ -113,7 +113,7 @@ free -h
 
 ### 1.2 Image'id Harborist
 
-Klastri enda osad, näiteks DNS ja Traefik, on samuti konteinerid ja nende image'id tulevad Docker Hubist. Docker Hub lubab ühelt IP-aadressilt piiratud arvu tõmbeid tunnis ja kogu kool on interneti jaoks üks aadress. Fail `/etc/rancher/k3s/registries.yaml` ütleb k3s-ile, et Docker Hubi image'id tuleb küsida kooli Harborist. Harbor tõmbab image'i Docker Hubist üks kord ja annab selle siis kõigile.
+Klastri enda osad, näiteks DNS ja Traefik, on samuti konteinerid ja nende image'id tulevad Docker Hubist. Docker Hub lubab ilma sisselogimiseta ühelt IP-aadressilt piiratud arvu tõmbeid ([piirangud](https://docs.docker.com/docker-hub/usage/pulls/)) ja kogu kool on interneti jaoks üks aadress. Fail `/etc/rancher/k3s/registries.yaml` ütleb k3s-ile, et Docker Hubi image'id tuleb küsida kooli Harborist. Harbor tõmbab image'i Docker Hubist üks kord ja annab selle siis kõigile.
 
 Harboril on kooli enda CA sertifikaat. k3s usaldab Harborit, kui CA-fail on masinas olemas ja `registries.yaml` viitab sellele.
 
@@ -141,6 +141,8 @@ Tee fail `/etc/rancher/k3s/registries.yaml`, näiteks käsuga `sudo nano /etc/ra
     ```
 
 ??? info "Kui Harbor ei vasta"
+
+    k3s loeb faili `registries.yaml` ainult käivitumisel. Kui muudad seda pärast paigaldust, käivita `sudo systemctl restart k3s`. Harbori vead on failis `/var/lib/rancher/k3s/agent/containerd/containerd.log`.
 
     k3s proovib kõigepealt Harborit ja kui see ei vasta, tõmbab image'i otse Docker Hubist. Fail ei tee seega midagi katki, ainult hoiab Docker Hubi tõmbed väiksemad. Vaata lähemalt [k3s-i dokumentatsioonist](https://docs.k3s.io/installation/private-registry).
 
@@ -195,7 +197,7 @@ kubectl get pods -A
 
 ??? success "Oodatav tulemus"
 
-    Nimeruumis `kube-system` töötavad klastri enda osad: `coredns` annab nimed, `local-path-provisioner` annab kettaruumi, `metrics-server` kogub mõõdikuid ja `traefik` võtab vastu veebiliikluse. Kaks pod'i `helm-install-traefik` on olekus `Completed`: k3s paigaldas Traefiku Helmiga ja see töö on lõppenud. Helmist on juttu lisaülesannetes.
+    Nimeruumis `kube-system` töötavad klastri enda osad: `coredns` annab nimed, `local-path-provisioner` annab kettaruumi, `metrics-server` kogub mõõdikuid, `traefik` võtab vastu veebiliikluse ja `svclb-traefik` (ServiceLB) avab Traefiku pordid node'i IP-aadressil. Kaks pod'i `helm-install-traefik` on olekus `Completed`: k3s paigaldas Traefiku Helmiga ja see töö on lõppenud. Helmist on juttu lisaülesannetes.
 
     **Nimeruum** (namespace) jagab klastri osadeks. Sinu rakendus läheb nimeruumi `default`, mida `kubectl` kasutab, kui nimeruumi pole antud. Võti `-A` näitab kõiki nimeruume.
 
@@ -221,7 +223,7 @@ kubectl get pods -o wide
 
 ??? warning "Kui olek jääb `ContainerCreating`"
 
-    Image tuleb alla laadida. Oota pool minutit. Kui olek muutub `ErrImagePull`-iks, vaata 6. osa: seal on sama viga lahti seletatud.
+    Image tuleb alla laadida. Oota pool minutit. Kui olek muutub `ErrImagePull`-iks, vaata 9. osa: seal on sama viga lahti seletatud.
 
 ### 2.2 Vaata pod'i sisse
 
@@ -316,7 +318,7 @@ cat k05-k8s/deployment.yaml
 
 ??? success "Oodatav tulemus"
 
-    Failis on umbes 25 rida. Read `creationTimestamp: null`, `resources: {}`, `strategy: {}` ja `status: {}` on tühjad väärtused. Need võivad jääda või võid need kustutada.
+    Failis on umbes 25 rida. Read `creationTimestamp: null`, `resources: {}`, `strategy: {}` ja `status: {}` on tühjad väärtused. Kustuta rida `resources: {}`, sest 8. osas lisad sinna tegelikud väärtused. Teised võivad jääda või võid need kustutada.
 
 Fail koosneb neljast osast, mis on igal Kubernetese objektil.
 
@@ -655,7 +657,7 @@ Väli **resources** ütleb, kui palju protsessorit ja mälu konteiner vajab. `re
 
 ??? example "Ülesanne: lisa failis `k05-k8s/deployment.yaml` konteinerile kontroll ja ressursid"
 
-    Lisa read konteineri `whoami` juurde, `envFrom` plokile järele, sama taandega.
+    Lisa read konteineri `whoami` juurde, `envFrom` plokile järele, sama taandega. Kui failis on veel rida `resources: {}`, kustuta see. Muidu on võti `resources` failis kaks korda ja kehtib ainult viimane: tühi `{}` kirjutab sinu väärtused vaikselt üle.
 
     ```yaml
             readinessProbe:
@@ -692,17 +694,18 @@ kubectl get pods -o wide
 curl -X POST -d 500 http://<pod-ip>/health
 ```
 
-Oota 10 sekundit. Enne käske mõtle läbi: kas pod kustutatakse? Kas Service saadab sellele päringuid?
+Oota 20 sekundit: kontroll käib iga 5 sekundi järel ja pod märgitakse mittevalmis alles pärast kolme järjestikust ebaõnnestumist. Enne käske mõtle läbi: kas pod kustutatakse? Kas Service saadab sellele päringuid?
 
 ```bash
 kubectl get pods
-kubectl get endpointslices -l kubernetes.io/service-name=tere
+kubectl get endpointslices -l kubernetes.io/service-name=tere \
+  -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} {.conditions.ready}{"\n"}{end}'
 for i in $(seq 1 12); do curl -s http://localhost:30080 | grep Hostname; done | sort | uniq -c
 ```
 
 ??? success "Oodatav tulemus"
 
-    Valitud pod on olekus `0/1 Running`: konteiner töötab, aga ei ole valmis. Pod'i ei kustutata, sest `readinessProbe` ainult eemaldab pod'i Service'ist. EndpointSlice'is on kolm aadressi ja päringutele vastavad ainult kolm pod'i.
+    Valitud pod on olekus `0/1 Running`: konteiner töötab, aga ei ole valmis. Pod'i ei kustutata, sest `readinessProbe` ainult eemaldab pod'i Service'ist. EndpointSlice'is on neli aadressi, neist üks märkega `false`, ja päringutele vastavad ainult kolm pod'i.
 
     Pod'i taaskäivitab **livenessProbe**, mida selles praktikumis ei kasuta. Mõlemast loe [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
 
@@ -778,10 +781,10 @@ Rakendusest on ilmunud uus versioon. Uuendad Deployment'is image'i ja vaatad, ka
 
 ??? example "Ülesanne: uus image failis `k05-k8s/deployment.yaml`"
 
-    Asenda rida `image:` järgmisega:
+    Muuda real `- image:` ainult versiooni. Kriips ja võti jäävad alles:
 
     ```yaml
-            image: traefik/whoami:1.12.0
+          - image: traefik/whoami:1.12.0
     ```
 
 Enne käsku mõtle läbi: kas rakendus jääb brauseris kättesaadavaks, kui uus versioon ei käivitu?
@@ -840,7 +843,7 @@ Enne käsku mõtle läbi: mis versioon töötab pärast `undo`-d ja mida näitab
 
 ```bash
 kubectl rollout undo deployment tere
-kubectl rollout status deployment tere
+kubectl get pods
 kubectl get deployment tere -o jsonpath='{.spec.template.spec.containers[0].image}'; echo
 kubectl diff -f k05-k8s/deployment.yaml
 ```
