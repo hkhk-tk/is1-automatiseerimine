@@ -1327,7 +1327,7 @@ git push
 git tag k05 && git push origin k05
 ```
 
-Tulemuse näed mõne minuti pärast Classroom 50-s.
+Tulemuse näed mõne minuti pärast [Classroom 50-s](https://classroom50.org/hkhk-tk/is126-automatiseerimine/assignments), kus on kõigi kohtumiste tulemused.
 
 ??? warning "Kui pead pärast esitamist parandama"
 
