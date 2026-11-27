@@ -13,7 +13,7 @@ Täna paigaldad control'isse k3s-i, käivitad rakenduse kolme koopiana ja vaatad
 
 Seejärel kirjeldad rakenduse YAML-failides, teed selle brauseris kättesaadavaks ja parandad vea, mis takistab uue versiooni käivitumist.
 
-Iga osa alguses on eesmärk ja kontroll. Proovi esmalt ise, lahenduse ava vajaduse korral.
+Iga osa alguses on eesmärk ja kontroll. Proovi esmalt ise ja ava lahendus vajaduse korral.
 
 **Edenemine:** laboritahvel <http://is126.kaaren.lab.hkhk.lan> (VPN-iga).
 
@@ -100,7 +100,7 @@ git branch --show-current
 
     Haru on sul juba olemas. Vaheta sellele käsuga `git switch k05-k8s`.
 
-control'is on umbes 2,8 GB mälu. Kui seal töötab veel 3. kohtumise Compose'i stack, võtab see suure osa mälust ja k3s jääb aeglaseks. Vaata, mis töötab, ja peata konteinerid. Andmed jäävad volume'idesse alles.
+control'is on umbes 2,8 GB mälu. Kui seal töötab veel 3. kohtumise Compose'i stack, võtab see suure osa mälust ja k3s jääb aeglaseks. Vaata, mis töötab, ja peata konteinerid. Andmed jäävad volume'ides alles.
 
 ```bash
 free -h
@@ -146,7 +146,7 @@ Tee fail `/etc/rancher/k3s/registries.yaml`, näiteks käsuga `sudo nano /etc/ra
 
     k3s loeb faili `registries.yaml` ainult käivitumisel. Kui muudad seda pärast paigaldust, käivita `sudo systemctl restart k3s`. Harbori vead on failis `/var/lib/rancher/k3s/agent/containerd/containerd.log`.
 
-    k3s proovib kõigepealt Harborit ja kui see ei vasta, tõmbab image'i otse Docker Hubist. Fail ei tee seega midagi katki, ainult hoiab Docker Hubi tõmbed väiksemad. Vaata lähemalt [k3s-i dokumentatsioonist](https://docs.k3s.io/installation/private-registry).
+    k3s proovib kõigepealt Harborit ja kui see ei vasta, tõmbab image'i otse Docker Hubist. Fail ei tee seega midagi katki, ainult vähendab Docker Hubi tõmbeid. Vaata lähemalt [k3s-i dokumentatsioonist](https://docs.k3s.io/installation/private-registry).
 
 ### 1.3 Paigalda k3s
 
@@ -199,7 +199,7 @@ kubectl get pods -A
 
 ??? success "Oodatav tulemus"
 
-    Nimeruumis `kube-system` töötavad klastri enda osad: `coredns` annab nimed, `local-path-provisioner` annab kettaruumi, `metrics-server` kogub mõõdikuid, `traefik` võtab vastu veebiliikluse ja `svclb-traefik` (ServiceLB) avab Traefiku pordid node'i IP-aadressil. Kaks pod'i `helm-install-traefik` on olekus `Completed`: k3s paigaldas Traefiku Helmiga ja see töö on lõppenud. Helmist on juttu lisaülesannetes.
+    Nimeruumis `kube-system` töötavad klastri enda osad: `coredns` annab nimed, `local-path-provisioner` annab kettaruumi, `metrics-server` kogub mõõdikuid, `traefik` võtab vastu veebiliikluse ja `svclb-traefik` (ServiceLB) avab Traefiku pordid node'i IP-aadressil. Pod'id `helm-install-traefik` ja `helm-install-traefik-crd` on olekus `Completed`: k3s paigaldas Traefiku Helmiga ja see töö on lõppenud. Helmist on juttu lisaülesannetes.
 
     **Nimeruum** (namespace) jagab klastri osadeks. Sinu rakendus läheb nimeruumi `default`, mida `kubectl` kasutab, kui nimeruumi pole antud. Võti `-A` näitab kõiki nimeruume.
 
@@ -382,7 +382,7 @@ git commit -m "k05: Deployment tere failist"
 
 ## Osa 5 · Service
 
-Pod'ide aadressid muutuvad. **Service** annab pod'ide grupile püsiva nime ja aadressi ning jagab päringud nende pod'ide vahel. Service leiab pod'id sama sildi järgi nagu Deployment: `app: tere`. Vaikimisi tüüpi Service, **ClusterIP**, on nähtav ainult klastri sees. Tüüp **NodePort** avab lisaks pordi node'il, nii et rakendust saab vaadata ka oma arvuti brauserist.
+Pod'ide aadressid muutuvad. **Service** annab pod'ide grupile püsiva nime ja aadressi ning jagab päringud nende pod'ide vahel. Service leiab pod'id sama sildi järgi nagu Deployment: `app: tere`. Vaikimisi on Service tüüpi **ClusterIP** ja see on nähtav ainult klastri sees. Tüüp **NodePort** avab lisaks pordi node'il, nii et rakendust saab vaadata ka oma arvuti brauserist.
 
 <figure markdown="span">
   ![Deployment loob ReplicaSet'i, ReplicaSet loob pod'id, Service leiab pod'id sildi app: tere järgi](assets/k05_labelid.svg)
@@ -715,7 +715,7 @@ for i in $(seq 1 12); do curl -s http://localhost:30080 | grep Hostname; done | 
 
     Valitud pod on olekus `0/1 Running`: konteiner töötab, aga ei ole valmis. Pod'i ei kustutata, sest `readinessProbe` ainult eemaldab pod'i Service'ist. EndpointSlice'is on neli aadressi, neist üks märkega `false`, ja päringutele vastavad ainult kolm pod'i.
 
-    Pod'i taaskäivitab **livenessProbe**, mida selles praktikumis ei kasuta. Mõlemast loe [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
+    Konteineri taaskäivitab **livenessProbe**, mida selles praktikumis ei kasutata. Mõlemast loe [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
 
 Tee pod uuesti terveks:
 
@@ -781,7 +781,7 @@ kubectl rollout status deployment tere
 
 ## Osa 9 · Leia viga: uus versioon ei käivitu
 
-Rakendusest on ilmunud uus versioon. Uuendad Deployment'is image'i ja vaatad, kas uuendus õnnestus. Kubernetes vahetab pod'e järk-järgult: uus pod peab enne töötama, kui vana kustutatakse. Seda nimetatakse **rolling update**'iks.
+Rakendusest on ilmunud uus versioon. Uuendad Deployment'is image'i ja vaatad, kas uuendus õnnestus. Kubernetes vahetab pod'e järk-järgult, seda nimetatakse **rolling update**'iks. Vaikimisi võib nelja koopia puhul korraga puududa üks valmis pod (`maxUnavailable` 25%).
 
 **Eesmärk:** leiad, miks uus pod ei käivitu, ja parandad selle failis.  
 **Kontroll:** `kubectl get deployment tere` näitab `READY 4/4` ja `UP-TO-DATE 4`.  
@@ -876,7 +876,7 @@ kubectl diff -f k05-k8s/deployment.yaml && echo sama
 
 ## Osa 10 · Andmebaas: Secret, ConfigMap ja Volume
 
-Seni oli klastris üks rakendus ilma andmeteta. Nüüd lisad andmebaasi PostgreSQL ja veebiliidese Adminer, millega andmebaasi brauseris vaadata. Sama ülesehitus on loengus: rakendus ja andmebaas, parool Secret'is, seadistus ConfigMap'is ja andmed Volume'il.
+Seni oli klastris üks rakendus ilma andmeteta. Nüüd lisad PostgreSQL-i andmebaasi ja Admineri veebiliidese, millega andmebaasi brauseris vaadata. Sama ülesehitus on loengus: rakendus ja andmebaas, parool Secret'is, seadistus ConfigMap'is ja andmed Volume'il.
 
 **Eesmärk:** andmebaasi andmed jäävad alles ka siis, kui andmebaasi pod kustutatakse.  
 **Kontroll:** pärast pod'i kustutamist näitab päring `select * from kursus;` sinu lisatud rida.  
@@ -978,7 +978,7 @@ kubectl rollout status deployment andmebaas
 kubectl get pods,services
 ```
 
-Oota umbes 15 sekundit, kuni andmebaas on alustanud. Tee tabel ja lisa rida:
+Oota umbes 15 sekundit, kuni andmebaas on käivitunud. Tee tabel ja lisa rida:
 
 ```bash
 P=$(kubectl get pod -l app=andmebaas -o name)
@@ -1084,7 +1084,7 @@ git commit -m "k05: andmebaas Secret'i, ConfigMap'i ja Volume'iga"
 
 ## Osa 11 · Rakendus räägib andmebaasiga
 
-Nüüd lisad veebirakenduse Adminer, mis leiab andmebaasi Service'i nime järgi. Aadress tuleb ConfigMap'ist, mitte image'ist. Brauseris avad selle välise Service'i ehk NodePort'i kaudu.
+Nüüd lisad veebirakenduse Admineri, mis leiab andmebaasi Service'i nime järgi. Aadress tuleb ConfigMap'ist, mitte image'ist. Brauseris avad selle välise Service'i ehk NodePort'i kaudu.
 
 **Eesmärk:** näed brauseris tabelit `kursus` ja selle rida.  
 **Kontroll:** `curl -s -o /dev/null -w '%{http_code}' http://localhost:30081/` vastab `200`.  
@@ -1139,7 +1139,7 @@ kubectl rollout status deployment adminer
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:30081/
 ```
 
-Ava brauseris `http://<control'i IP>:30081`. Vali **System: PostgreSQL**. Server on juba täidetud väärtusega `andmebaas`, kasutaja `tere`, parool sinu parool Secret'ist, andmebaas `tere`.
+Ava brauseris `http://<control'i IP>:30081`. Vali **System: PostgreSQL**. Serveri väljal on juba `andmebaas`, kasutaja `tere`, parool sinu parool Secret'ist, andmebaas `tere`.
 
 ??? success "Oodatav tulemus"
 
@@ -1215,7 +1215,7 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
     kubectl get pods -n kube-system | grep helm-install
     ```
 
-    Paigalda Helmi käsk ja vaata, mis release'id klastris on:
+    Paigalda Helmi käsurea tööriist `helm` ja vaata, mis release'id klastris on:
 
     ```bash
     curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 -o get-helm.sh
@@ -1228,7 +1228,7 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
 
 ??? example "2 · Argo CD hoiab klastrit Gitiga samas olekus"
 
-    **Argo CD** loeb soovitud olekut Gitist ja viib klastri sellega kooskõlla. Käsitsi tehtud muudatuse muudab see tagasi. Paigalda Argo CD Helmiga (vajab lisaülesannet 3):
+    **Argo CD** loeb soovitud olekut Gitist ja viib klastri sellega kooskõlla. Käsitsi tehtud muudatuse muudab see tagasi. Paigalda Argo CD Helmiga (vajab lisaülesannet 1):
 
     ```bash
     helm repo add argo https://argoproj.github.io/argo-helm
