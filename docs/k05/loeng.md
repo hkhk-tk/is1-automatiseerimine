@@ -12,12 +12,12 @@ tags:
 
     Pärast loengut ja praktikumi oskad:
 
-    - selgitada, mida teeb orkestreerija, ja otsustada, kas teenuse jaoks on Kubernetes vajalik või piisab Compose'ist;
-    - selgitada soovitud ja tegeliku oleku abil, miks Kubernetes asendab kustutatud pod'i ise;
-    - nimetada klastri osad ja järjestada sammud, mis järgnevad käsule `kubectl apply`;
-    - lugeda Deployment'i ja Service'i YAML-faili ning selgitada, kuidas need siltide kaudu seotud on;
-    - leida pod'i olekust ja sündmustest, miks pod ei käivitu;
-    - eristada Helmi ja Argo CD ülesannet ning seda, kuhu need Kubernetese kõrval kuuluvad.
+    - otsustada kahe põhjendusega, kas teenuse jaoks sobib Compose või Kubernetes;
+    - selgitada soovitud ja tegeliku oleku abil, mida kontroller teeb, kui pod kustutatakse;
+    - järjestada joonise 5.3 abil klastri osade sammud, mis järgnevad käsule `kubectl apply`;
+    - märkida Deployment'i ja Service'i YAML-failis read, mis seovad need siltide kaudu;
+    - leida käskudega `kubectl get`, `describe` ja `logs`, miks pod ei käivitu;
+    - eristada käskude `kubectl apply`, `helm upgrade` ja Argo CD ülesannet rakenduse paigaldamisel.
 
 ## 1. Miks orkestreerimine
 
