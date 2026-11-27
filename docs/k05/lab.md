@@ -26,11 +26,16 @@ Kooli Harborist saad Docker Hubi image'ite koopiad. Harbori CA-sertifikaat on fa
 Sinu ülesanne:
 
 - paigaldada k3s;
-- luua harus `k05-k8s` failid `k05-k8s/deployment.yaml` ja `k05-k8s/service.yaml`;
+- luua harus `k05-k8s` failid `deployment.yaml`, `service.yaml`, `ingress.yaml` ja `configmap.yaml`;
 - salvestada klastri olek kausta `k05-k8s/logid`;
 - esitada töö tag'iga `k05`.
 
 Faile kontrollib GitHubis automaatkontroll.
+
+<figure markdown="span">
+  ![Sinu arvuti brauser jõuab NodePort 30080 või Traefiku kaudu Service'ini tere, Service saadab päringu ühele neljast pod'ist. ConfigMap annab pod'idele seadistuse, containerd laadib image'id Harborist.](assets/k05_lab_tervik.svg)
+  <figcaption>Joonis L5.1. Praktikumi lõpuks töötab control'is see klaster (Talvik, 2026).</figcaption>
+</figure>
 
 ??? abstract "Õpiväljundid"
 
@@ -38,7 +43,10 @@ Faile kontrollib GitHubis automaatkontroll.
     2. Käivitad Deployment'iga rakenduse kolm koopiat ja kontrollid, et Kubernetes asendab kustutatud koopia.
     3. Rakendad Deployment'i ja Service'i YAML-failid käsuga `kubectl apply`.
     4. Avad rakenduse Service'i kaudu brauseris ja kontrollid, kuidas päringud pod'ide vahel jagunevad.
-    5. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe` ning parandad vea failis.
+    5. Teed rakenduse nime järgi kättesaadavaks Ingressiga.
+    6. Annad rakendusele seadistuse ConfigMap'ist ja rakendad muudatuse uue rollout'iga.
+    7. Lisad valmisoleku kontrolli ja ressursipiirid ning näed, kuidas Service mittevalmis pod'i vahele jätab.
+    8. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe` ning parandad vea failis.
 
 Iga osa käib samamoodi: mõtle enne käsku läbi, mis juhtub, käivita käsk ja kontrolli tulemust käsuga `kubectl get`.
 
@@ -73,7 +81,7 @@ Kogu k3s-i eemaldad nii:
 **Kontroll:** `kubectl get nodes` näitab node'i `control` olekus `Ready`.  
 **Kus:** control, kaust `~/kursus`.
 
-### 1.1 Haru ja kaust
+### 1.1 Haru, kaust ja vaba mälu
 
 ```bash
 cd ~/kursus && git switch main && git pull
@@ -89,6 +97,19 @@ git branch --show-current
 ??? warning "Kui tuleb viga `a branch named 'k05-k8s' already exists`"
 
     Haru on sul juba olemas. Vaheta sellele käsuga `git switch k05-k8s`.
+
+control'is on umbes 2,8 GB mälu. Kui seal töötab veel 3. kohtumise Compose'i stack, võtab see suure osa mälust ja k3s jääb aeglaseks. Vaata, mis töötab, ja peata konteinerid. Andmed jäävad volume'idesse alles.
+
+```bash
+free -h
+docker ps --format '{{.Names}}'
+docker stop $(docker ps -q)
+free -h
+```
+
+??? success "Oodatav tulemus"
+
+    Pärast peatamist näitab `free -h` veerus `available` vähemalt 1,5 GB. Kui `docker ps` ei näita ühtegi konteinerit või Dockerit ei ole, jäta `docker stop` vahele.
 
 ### 1.2 Image'id Harborist
 
@@ -224,6 +245,11 @@ curl http://<pod-ip>
 
 Siin on Kubernetese põhimõte. Deployment'is on kirjas soovitud olek: mitu pod'i peab töötama. Kontroller võrdleb seda pidevalt tegeliku olekuga ja kui need erinevad, teeb vahe tasa. Sama mõtet nägid Ansible'is ja OpenTofus, aga seal käivitasid võrdluse sina. Kubernetes võrdleb kogu aeg ise.
 
+<figure markdown="span">
+  ![Kontroller võrdleb soovitud olekut ja tegelikku olekut ning loob puuduva pod'i](assets/k05_kontrolltsukkel.svg)
+  <figcaption>Joonis L5.2. Kustutamine muudab tegelikku olekut, soovitud olek jääb samaks (Talvik, 2026).</figcaption>
+</figure>
+
 **Eesmärk:** näed, et kustutatud pod asendatakse uuega.  
 **Kontroll:** pärast kustutamist on jälle kolm pod'i ja üks neist on uue nimega.  
 **Kus:** control.
@@ -354,6 +380,11 @@ git commit -m "k05: Deployment tere failist"
 
 Pod'ide aadressid muutuvad. **Service** annab pod'ide grupile püsiva nime ja aadressi ning jagab päringud nende pod'ide vahel. Service leiab pod'id sama sildi järgi nagu Deployment: `app: tere`. Vaikimisi tüüpi Service, **ClusterIP**, on nähtav ainult klastri sees. Tüüp **NodePort** avab lisaks pordi node'il, nii et rakendust saab vaadata ka oma arvuti brauserist.
 
+<figure markdown="span">
+  ![Deployment loob ReplicaSet'i, ReplicaSet loob pod'id, Service leiab pod'id sildi app: tere järgi](assets/k05_labelid.svg)
+  <figcaption>Joonis L5.3. Service leiab pod'id sildi järgi, mitte nime järgi (Talvik, 2026).</figcaption>
+</figure>
+
 **Eesmärk:** rakendus on brauseris nähtav ja päringutele vastavad erinevad pod'id.  
 **Kontroll:** `curl http://localhost:30080` vastab ja `Hostname` muutub päringust päringusse.  
 **Kus:** control ja sinu arvuti brauser.
@@ -459,7 +490,268 @@ git add k05-k8s/service.yaml
 git commit -m "k05: NodePort Service tere"
 ```
 
-## Osa 6 · Leia viga: uus versioon ei käivitu
+## Osa 6 · Ingress: rakendus nime järgi
+
+Pordi number 30080 on kasutajale ebamugav ja iga rakendus vajaks oma porti. **Ingress** suunab päringu nime järgi õigesse Service'isse. k3s-is teeb seda Traefik, mis klastris juba töötab ja kuulab porte 80 ja 443. Traefik vaatab päringu päist `Host` ja leiab Ingressi reeglist, millisele Service'ile päring läheb.
+
+**Eesmärk:** rakendus vastab pordil 80 nimega `tere.local`.  
+**Kontroll:** `curl -H 'Host: tere.local' http://localhost/` vastab reaga `Hostname: tere-...`.  
+**Kus:** control, kaust `~/kursus`.
+
+### 6.1 ingress.yaml
+
+Tee fail `k05-k8s/ingress.yaml`. Võtmed `name` ja `port` viitavad Service'ile, mille tegid 5. osas.
+
+??? example "Ülesanne: fail `k05-k8s/ingress.yaml`"
+
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: tere
+    spec:
+      rules:
+        - host: tere.local
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: tere
+                    port:
+                      number: 80
+    ```
+
+Enne käsku mõtle läbi: mis vastab, kui saadad päringu pordile 80 ilma päiseta `Host: tere.local`?
+
+```bash
+kubectl apply -f k05-k8s/ingress.yaml
+kubectl get ingress tere
+curl -s -H 'Host: tere.local' http://localhost/ | grep Hostname
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost/
+```
+
+??? success "Oodatav tulemus"
+
+    `get ingress` näitab hosti `tere.local` ja aadressi, mis on control'i IP. Esimene `curl` vastab `Hostname: tere-...`. Teine `curl` vastab koodiga `404`: Traefik ei leidnud ühtegi reeglit, mis sobiks nimega `localhost`.
+
+??? tip "Brauseris nimega tere.local"
+
+    Brauser saadab päise `Host` aadressiribalt. Et nimi `tere.local` viiks control'i, lisa oma arvuti hosts-faili rida `<control'i IP> tere.local`. Windowsis on fail `C:\Windows\System32\drivers\etc\hosts` ja selle muutmiseks on vaja administraatori õigusi. Kui õigusi ei ole, piisab `curl`-ist.
+
+```bash
+git add k05-k8s/ingress.yaml
+git commit -m "k05: Ingress tere.local"
+```
+
+## Osa 7 · ConfigMap: seadistus väljaspool image'it
+
+Compose'is andsid konteinerile seadistuse võtmega `environment`. Kubernetesis hoitakse seadistust eraldi objektis **ConfigMap**. Sama image töötab nii testis kui ka toodangus, ainult ConfigMap on erinev. Rakendus `whoami` loeb muutujat `WHOAMI_NAME` ja näitab seda vastuse esimesel real `Name:`.
+
+**Eesmärk:** rakendus näitab ConfigMap'ist tulnud nime ja näed, millal muudatus pod'ideni jõuab.  
+**Kontroll:** `curl -s http://localhost:30080 | head -1` näitab rida `Name:` sinu ConfigMap'i väärtusega.  
+**Kus:** control, kaust `~/kursus`.
+
+### 7.1 configmap.yaml ja Deployment
+
+Tee fail `k05-k8s/configmap.yaml` ja lisa Deployment'i konteinerile viide sellele. Võti `envFrom` teeb ConfigMap'i igast võtmest keskkonnamuutuja.
+
+??? example "Ülesanne: fail `k05-k8s/configmap.yaml`"
+
+    Asenda `<sinu-kasutajanimi>` oma kasutajanimega.
+
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: tere-seaded
+    data:
+      WHOAMI_NAME: "<sinu-kasutajanimi>-k8s"
+    ```
+
+??? example "Ülesanne: lisa failis `k05-k8s/deployment.yaml` konteinerile `envFrom`"
+
+    Lisa read konteineri `whoami` juurde, `image` rea järele, sama taandega nagu `image`.
+
+    ```yaml
+            envFrom:
+              - configMapRef:
+                  name: tere-seaded
+    ```
+
+Enne käsku mõtle läbi: Deployment'i mall muutub. Mis juhtub olemasolevate pod'idega?
+
+```bash
+kubectl apply -f k05-k8s/configmap.yaml -f k05-k8s/deployment.yaml
+kubectl rollout status deployment tere
+curl -s http://localhost:30080 | head -1
+```
+
+??? success "Oodatav tulemus"
+
+    Mall muutus, seega tegi Deployment uue ReplicaSet'i ja vahetas kõik pod'id välja, nagu versiooni uuendamisel. `curl` näitab rida `Name: <sinu-kasutajanimi>-k8s`.
+
+### 7.2 Muuda ConfigMap'i
+
+Muuda failis `configmap.yaml` väärtust, näiteks lisa lõppu `-v2`. Enne käsku mõtle läbi: kas töötavad pod'id näevad uut väärtust?
+
+```bash
+kubectl apply -f k05-k8s/configmap.yaml
+curl -s http://localhost:30080 | head -1
+```
+
+??? success "Oodatav tulemus"
+
+    `configmap/tere-seaded configured`, aga `curl` näitab endiselt vana nime. Keskkonnamuutujad loetakse ainult konteineri käivitumisel. Deployment'i mall ei muutunud, seega Deployment pod'e ei vahetanud.
+
+Käivita pod'id uuesti. `rollout restart` vahetab pod'id järk-järgult nagu uuendus, nii et rakendus vastab kogu aeg.
+
+```bash
+kubectl rollout restart deployment tere
+kubectl rollout status deployment tere
+curl -s http://localhost:30080 | head -1
+```
+
+??? success "Oodatav tulemus"
+
+    Uued pod'id näitavad nime lõpuga `-v2`.
+
+??? info "Paroolid: Secret"
+
+    Paroole ConfigMap'i ei panda. Selleks on **Secret**, mis näeb välja samasugune, aga väärtused on base64-kujul ja lugemisõigusi saab anda eraldi. Base64 ei ole krüpteering, seepärast ei lähe ka Secret'i fail Giti. Vaata [Kubernetese dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/secret/).
+
+```bash
+git add k05-k8s/configmap.yaml k05-k8s/deployment.yaml
+git commit -m "k05: ConfigMap tere-seaded"
+```
+
+## Osa 8 · Valmisolek ja ressursid
+
+Kubernetes peab pod'i valmis olevaks kohe, kui konteiner käivitus. Rakendus võib aga vajada aega või minna katki nii, et protsess töötab edasi. **readinessProbe** kontrollib korrapäraselt, kas pod suudab päringuid vastu võtta. Kui kontroll ebaõnnestub, jätab Service selle pod'i vahele. Rakendusel `whoami` on aadress `/health`, mis vastab koodiga 200.
+
+Väli **resources** ütleb, kui palju protsessorit ja mälu konteiner vajab. `requests` on osa, mille scheduler node'il pod'ile kinni paneb. `limits` on ülempiir.
+
+**Eesmärk:** mittevalmis pod jääb Service'ist välja ja liiga suure ressursinõudega pod'i põhjus on leitud.  
+**Kontroll:** `kubectl get pods` näitab nelja pod'i olekus `1/1 Running`.  
+**Kus:** control, kaust `~/kursus`.
+
+### 8.1 Lisa valmisoleku kontroll ja ressursid
+
+??? example "Ülesanne: lisa failis `k05-k8s/deployment.yaml` konteinerile kontroll ja ressursid"
+
+    Lisa read konteineri `whoami` juurde, `envFrom` plokile järele, sama taandega.
+
+    ```yaml
+            readinessProbe:
+              httpGet:
+                path: /health
+                port: 80
+              periodSeconds: 5
+            resources:
+              requests:
+                cpu: 50m
+                memory: 32Mi
+              limits:
+                memory: 64Mi
+    ```
+
+    `50m` tähendab 50 millituuma ehk 5% ühest protsessorituumast.
+
+```bash
+kubectl apply -f k05-k8s/deployment.yaml
+kubectl rollout status deployment tere
+kubectl get pods
+```
+
+??? success "Oodatav tulemus"
+
+    Neli uut pod'i olekus `1/1 Running`. Veerus `READY` olev `1/1` tähendab nüüd, et ka valmisoleku kontroll õnnestus.
+
+### 8.2 Tee üks pod mittevalmis
+
+Rakenduse `whoami` aadressile `/health` saab saata POST-päringu, mis muudab vastuse koodi. Nii saad tekitada olukorra, kus protsess töötab, aga rakendus ei ole terve. Vali üks pod ja kasuta selle IP-aadressi.
+
+```bash
+kubectl get pods -o wide
+curl -X POST -d 500 http://<pod-ip>/health
+```
+
+Oota 10 sekundit. Enne käske mõtle läbi: kas pod kustutatakse? Kas Service saadab sellele päringuid?
+
+```bash
+kubectl get pods
+kubectl get endpointslices -l kubernetes.io/service-name=tere
+for i in $(seq 1 12); do curl -s http://localhost:30080 | grep Hostname; done | sort | uniq -c
+```
+
+??? success "Oodatav tulemus"
+
+    Valitud pod on olekus `0/1 Running`: konteiner töötab, aga ei ole valmis. Pod'i ei kustutata, sest `readinessProbe` ainult eemaldab pod'i Service'ist. EndpointSlice'is on kolm aadressi ja päringutele vastavad ainult kolm pod'i.
+
+    Pod'i taaskäivitab **livenessProbe**, mida selles praktikumis ei kasuta. Mõlemast loe [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
+
+Tee pod uuesti terveks:
+
+```bash
+curl -X POST -d 200 http://<pod-ip>/health
+kubectl get pods
+```
+
+??? success "Oodatav tulemus"
+
+    Mõne sekundi pärast on pod jälle `1/1` ja vastab päringutele.
+
+```bash
+git add k05-k8s/deployment.yaml
+git commit -m "k05: readinessProbe ja resources"
+```
+
+### 8.3 Leia viga: pod ei leia node'i
+
+??? example "Ülesanne: muuda failis `k05-k8s/deployment.yaml` mälu nõuet"
+
+    ```yaml
+                memory: 4Gi
+    ```
+
+    Muuda nii `requests.memory` kui ka `limits.memory` väärtuseks `4Gi`.
+
+```bash
+kubectl apply -f k05-k8s/deployment.yaml
+kubectl get pods
+kubectl get deployment tere
+```
+
+Leia põhjus. Asenda `<pod>` pod'iga, mis ei ole `Running`.
+
+```bash
+kubectl describe pod <pod> | tail -n 5
+kubectl describe node control | grep -A 8 'Allocated resources'
+```
+
+??? question "Leia põhjus"
+
+    Mis olekus on uued pod'id ja mida ütleb sündmus? Miks töötab rakendus endiselt?
+
+    ??? success "Vastus"
+
+        Uued pod'id on olekus `Pending` ja sündmus ütleb `0/1 nodes are available: 1 Insufficient memory`. control'is on umbes 2,8 GB mälu ja scheduler ei leia node'i, kus oleks 4 GB vaba. Pod ei käivitunud kordagi, seega `logs` ei näita midagi.
+
+        Rakendus töötab, sest rolling update jättis vanad pod'id alles. Sama viga tekib töökohas siis, kui `requests` on kopeeritud teisest projektist ja klastris pole nii suurt node'i.
+
+Pane failis tagasi `memory: 32Mi` ja `memory: 64Mi` ning rakenda uuesti:
+
+```bash
+kubectl apply -f k05-k8s/deployment.yaml
+kubectl rollout status deployment tere
+```
+
+??? success "Oodatav tulemus"
+
+    `deployment "tere" successfully rolled out` ja neli pod'i `1/1 Running`.
+
+## Osa 9 · Leia viga: uus versioon ei käivitu
 
 Rakendusest on ilmunud uus versioon. Uuendad Deployment'is image'i ja vaatad, kas uuendus õnnestus. Kubernetes vahetab pod'e järk-järgult: uus pod peab enne töötama, kui vana kustutatakse. Seda nimetatakse **rolling update**'iks.
 
@@ -499,6 +791,8 @@ kubectl describe pod <pod> | tail -n 10
 
         Kolm vana pod'i töötavad edasi ja brauseris vastab leht endiselt. Nelja koopia puhul lubab rolling update ühel pod'il puududa, seepärast kustutati üks vana pod ja tehti kaks uut. Deployment'i real näed `READY 3/4` ja `UP-TO-DATE 2`: kaks pod'i on uue malli järgi tehtud, aga need ei tööta.
 
+        ![Enne neli vana pod'i, vale tag'iga kolm vana ja kaks ImagePullBackOff, pärast parandust neli uut](assets/k05_rolling.svg)
+
 Paranda failis image'i rida kujule `traefik/whoami:v1.12.0` ja rakenda uuesti:
 
 ```bash
@@ -511,40 +805,70 @@ kubectl get pods
 
     `rollout status` ootab ja lõpeb reaga `deployment "tere" successfully rolled out`. Kõik neli pod'i on uute nimedega ja `Running`. `curl http://localhost:30080` vastab endiselt.
 
-??? info "Käsk `kubectl rollout undo`"
-
-    Teine võimalus on käsk `kubectl rollout undo deployment tere`, mis viib Deployment'i eelmise versiooni juurde. Siis aga erinevad fail ja klaster ning järgmine `apply` toob vea tagasi. Kui soovitud olek on failis, parandad vea failis.
-
 ```bash
 git add k05-k8s/deployment.yaml
 git commit -m "k05: tere image v1.12.0"
 ```
 
-## Osa 7 · Esitamine
+### 9.1 Ajalugu ja tagasivõtt
 
-Automaatkontroll näeb ainult repositooriumi, sinu klastrit see ei näe. Seepärast salvestad klastri oleku faili kausta `k05-k8s/logid`. Automaatkontroll kontrollib failide olemasolu, Deployment'i ja Service'i sisu ning logifaili.
-
-**Eesmärk:** töö on `main`-is ja tag `k05` on käivitanud automaatkontrolli.  
-**Kontroll:** kolm kontrolli annavad `OK`.  
-**Kus:** control, kaust `~/kursus`.
-
-### 7.1 Klastri olek faili
+Deployment hoiab varasemaid ReplicaSet'e alles, et saaks eelmise versiooni juurde tagasi minna. Iga muudatus mallis, ka ConfigMap'i lisamine ja `rollout restart`, on ajaloos eraldi versioon.
 
 ```bash
-kubectl get nodes,deployments,pods,services -o wide > k05-k8s/logid/klaster.txt
-cat k05-k8s/logid/klaster.txt
-for t in files manifest logid; do bash autograde/check.sh k05 "$t"; done
+kubectl rollout history deployment tere
+kubectl get replicasets
+```
+
+Enne käsku mõtle läbi: mis versioon töötab pärast `undo`-d ja mida näitab `kubectl diff` failiga võrreldes?
+
+```bash
+kubectl rollout undo deployment tere
+kubectl rollout status deployment tere
+kubectl get deployment tere -o jsonpath='{.spec.template.spec.containers[0].image}'; echo
+kubectl diff -f k05-k8s/deployment.yaml
 ```
 
 ??? success "Oodatav tulemus"
 
-    Failis on node `control` olekus `Ready`, Deployment `tere` kujul `4/4`, neli `Running` pod'i ja Service `tere` pordiga `80:30080`. Kõik kolm kontrolli annavad `OK`.
+    `undo` viis klastri eelmise versiooni juurde, see on vigane tag `1.12.0`, ja pod'id ei käivitu jälle. `diff` näitab erinevust: failis on `v1.12.0`, klastris `1.12.0`. `undo` muudab klastrit, aga mitte faili. Töökohas on `undo` hädaabi, kui rakendus on katki ja parandus võtab aega. Püsiv parandus käib failis.
+
+Vii klaster tagasi faili olekusse:
+
+```bash
+kubectl apply -f k05-k8s/deployment.yaml
+kubectl rollout status deployment tere
+kubectl diff -f k05-k8s/deployment.yaml && echo sama
+```
+
+??? success "Oodatav tulemus"
+
+    `rollout status` lõpeb `successfully rolled out` ja viimane käsk trükib `sama`.
+
+## Osa 10 · Esitamine
+
+Automaatkontroll näeb ainult repositooriumi, sinu klastrit see ei näe. Seepärast salvestad klastri oleku faili kausta `k05-k8s/logid`. Automaatkontroll kontrollib failide olemasolu, Deployment'i ja Service'i sisu ning logifaili.
+
+**Eesmärk:** töö on `main`-is ja tag `k05` on käivitanud automaatkontrolli.  
+**Kontroll:** neli kontrolli annavad `OK`.  
+**Kus:** control, kaust `~/kursus`.
+
+### 10.1 Klastri olek faili
+
+```bash
+kubectl get nodes,deployments,pods,services,ingress,configmaps -o wide > k05-k8s/logid/klaster.txt
+cat k05-k8s/logid/klaster.txt
+for t in files manifest logid ingress; do bash autograde/check.sh k05 "$t"; done
+```
+
+??? success "Oodatav tulemus"
+
+    Failis on node `control` olekus `Ready`, Deployment `tere` kujul `4/4`, neli `Running` pod'i ja Service `tere` pordiga `80:30080`. Kõik neli kontrolli annavad `OK`.
 
 ??? warning "Kui `check.sh` ütleb `tundmatu kohtumine k05`"
 
     Sinu repositooriumi kontrollskript on vana. Uuenda see: `curl -fsSL https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/autograde/check.sh -o autograde/check.sh`.
 
-### 7.2 Commit, main ja tag
+### 10.2 Commit, main ja tag
 
 ```bash
 git add k05-k8s autograde/check.sh
@@ -564,49 +888,7 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
 
 ## Lisaülesanded
 
-??? example "1 · Ingress: nimi pordi asemel"
-
-    NodePort'i number on kasutajale ebamugav. **Ingress** suunab päringu nime järgi õigesse Service'isse ja k3s-is teeb seda Traefik, mis klastris juba töötab. Tee fail `k05-k8s/ingress.yaml`:
-
-    ```yaml
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    metadata:
-      name: tere
-    spec:
-      rules:
-        - host: tere.local
-          http:
-            paths:
-              - path: /
-                pathType: Prefix
-                backend:
-                  service:
-                    name: tere
-                    port:
-                      number: 80
-    ```
-
-    ```bash
-    kubectl apply -f k05-k8s/ingress.yaml
-    curl -s -H 'Host: tere.local' http://localhost/ | grep Hostname
-    ```
-
-    Vastus tuleb pordilt 80 ilma pordi numbrita. Päise `Host` järgi leidis Traefik õige Service'i. Vaata lähemalt [Kubernetese Ingressi dokumentatsioonist](https://kubernetes.io/docs/concepts/services-networking/ingress/).
-
-??? example "2 · Rolling update ja ajalugu"
-
-    Muuda image'iks `traefik/whoami:v1.11.0`, rakenda ja vaata samal ajal teises terminalis `kubectl get pods -w`. Vaata seejärel ajalugu:
-
-    ```bash
-    kubectl rollout history deployment tere
-    kubectl rollout undo deployment tere
-    kubectl get deployment tere -o jsonpath='{.spec.template.spec.containers[0].image}'; echo
-    ```
-
-    Pod'id vahetuvad ükshaaval ja `undo` viib tagasi `v1.12.0` juurde. Pärast `undo`-d erinevad fail ja klaster: muuda fail samaks ja tee `kubectl diff -f k05-k8s/deployment.yaml`, mis peab olema tühi.
-
-??? example "3 · Helm: k3s paigaldas Traefiku chart'ina"
+??? example "1 · Helm: k3s paigaldas Traefiku chart'ina"
 
     **Helm** on Kubernetese paketihaldur nagu `apt` Ubuntus. Pakett on **chart**: mallide kogum, millest Helm teeb YAML-failid. k3s paigaldas Traefiku Helmiga ise:
 
@@ -626,7 +908,7 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
 
     `helm list -A` näitab release'e `traefik` ja `traefik-crd`. Vaata lähemalt [k3s-i Helmi lehelt](https://docs.k3s.io/add-ons/helm).
 
-??? example "4 · Argo CD hoiab klastrit Gitiga samas olekus"
+??? example "2 · Argo CD hoiab klastrit Gitiga samas olekus"
 
     **Argo CD** loeb soovitud olekut Gitist ja viib klastri sellega kooskõlla. Käsitsi tehtud muudatuse muudab see tagasi. Paigalda Argo CD Helmiga (vajab lisaülesannet 3):
 
@@ -668,11 +950,11 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
 
     Mõne sekundi pärast teeb Argo CD pod'e jälle neli, sest Gitis on kirjas `replicas: 4`.
 
-??? example "5 · GitHub Actions uuendab image'i Gitis"
+??? example "3 · GitHub Actions uuendab image'i Gitis"
 
     Tööl ei muuda keegi image'i rida käsitsi. Konveier ehitab uue image'i, kirjutab selle tag'i YAML-faili ja teeb commit'i. Argo CD näeb Gitis muudatust ja uuendab klastrit. Nii ei vaja konveier klastri parooli: klastrisse kirjutab ainult Argo CD. Selle ahela saad läbi teha [IS2 süvenemise lehel](https://hkhk-tk.github.io/is2-automatiseerimine/k07/syvenemine/#42-ci-kirjutab-tagi-argo-viib-klastrisse).
 
-??? example "6 · Kubernetes pilves"
+??? example "4 · Kubernetes pilves"
 
     Samad failid töötavad ka pilves, näiteks AWS-i Kubernetese teenuses EKS. Erinevus on paigalduses: k3s-i paigaldasid ise, EKS-is haldab control plane'i AWS. Vaata [HashiCorpi EKS-i õpetust](https://developer.hashicorp.com/terraform/tutorials/kubernetes/eks). EKS maksab ka tühjana tunnitasu, nii et kustuta klaster kohe pärast proovimist.
 
