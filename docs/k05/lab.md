@@ -892,7 +892,7 @@ Andmebaasi parool ei tohi olla Deployment'i failis ega image'is. See läheb Secr
 
 ??? example "Ülesanne: fail `k05-k8s/andmebaas/seaded.yaml`"
 
-    Pane parooliks oma parool. Kursusel läheb see fail sinu privaatsesse repositooriumi. Töökohas Secret'i faili Giti ei panda, paroolid tulevad saladuste haldurist, näiteks OpenBaost.
+    Pane parooliks oma parool. Kursusel läheb see fail sinu privaatsesse repositooriumi. Töökohas Secret'i faili Giti ei panda, paroolid tulevad saladuste haldurist, näiteks OpenBao või HashiCorp Vault.
 
     ```yaml
     apiVersion: v1
