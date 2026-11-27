@@ -94,7 +94,7 @@ Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** 
     |---|---|---|
     | **k3s** | väike klaster, servamasinad, õppimine | Rancher, 2019. Ühes programmis, kaasas Traefik, ServiceLB ja kohalik kettaruum (local-path). Kursusel kasutad seda |
     | **k0s** | väike klaster | Mirantis. Samuti üks programm, lisad paigaldad ise |
-    | **minikube**, **kind** | arendaja arvuti | ühe node'iga klaster virtuaalmasinas või Dockeris |
+    | **minikube**, **kind**, **MicroK8s** | arendaja arvuti, MicroK8s ka väike server | ühe node'iga klaster virtuaalmasinas või Dockeris |
     | **EKS**, **AKS**, **GKE** | pilv | control plane'i haldab pilveteenuse pakkuja |
     | **OpenShift** | suured asutused | Red Hati Kubernetes koos lisatööriistade ja tasulise toega |
 
@@ -200,6 +200,8 @@ Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik k
     | `kubectl apply -f <fail>` | viib klastri failiga kooskõlla | `ansible-playbook`, `tofu apply` |
     | `kubectl diff -f <fail>` | näitab, mis muutuks | `--check --diff`, `tofu plan` |
     | `kubectl delete -f <fail>` | kustutab failis kirjeldatud objektid | `tofu destroy` |
+
+    Käskude kõrval kasutatakse terminali kasutajaliidest [k9s](https://k9scli.io/), mis näitab klastri objekte tabelina ja värskendab vaadet pidevalt.
 
 ## 5. k3s paigaldus ja klastri enda osad
 
@@ -501,7 +503,7 @@ Andmebaasi hoitakse sageli klastrist väljas, näiteks pilve hallatud andmebaasi
 
 Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskkonda, muutub failide käsitsi haldamine raskeks. Selleks on kaks tööriista, mida praktikumi lisaülesannetes proovid.
 
-**Helm** on Kubernetese paketihaldur, nagu `apt` Ubuntus. Pakett on **chart**: YAML-failide mallid koos vaikeväärtustega. Käsk `helm install` teeb mallidest failid ja saadab need klastrisse, `helm upgrade` uuendab ja `helm rollback` viib eelmise versiooni juurde. k3s paigaldab Traefiku ise Helmi chart'ina. Enamik valmis tarkvara, näiteks Argo CD, Prometheus ja andmebaasid, paigaldatakse Kubernetesesse Helmiga.
+**Helm** on Kubernetese paketihaldur, nagu `apt` Ubuntus. Pakett on **chart**: YAML-failide mallid koos vaikeväärtustega. Käsk `helm install` teeb mallidest failid ja saadab need klastrisse, `helm upgrade` uuendab ja `helm rollback` viib eelmise versiooni juurde. k3s paigaldab Traefiku ise Helmi chart'ina. Enamik valmis tarkvara, näiteks Argo CD, Prometheus ja andmebaasid, paigaldatakse Kubernetesesse Helmiga. Teine levinud tööriist on [Kustomize](https://kustomize.io/), mis on `kubectl`-i sisse ehitatud (`kubectl apply -k`). See ei kasuta malle, vaid lisab tavalistele YAML-failidele keskkonna kaupa muudatusi, näiteks test- ja toodangukeskkonnas erineva koopiate arvu.
 
 ??? question "Kontrolli ennast"
 
@@ -511,7 +513,7 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 
         `kubectl apply` saadab klastrisse failid nii, nagu need on. `helm upgrade` teeb chart'i mallidest ja väärtustest failid ning salvestab paigalduse versiooni. Seepärast saab Helmiga minna käsuga `helm rollback` eelmise versiooni juurde.
 
-**GitOps** tähendab, et soovitud olek on Gitis ja klastris töötav tööriist viib klastri sellega kooskõlla. **Argo CD** on selline tööriist. See on samasugune kontroller nagu Kubernetese enda omad, ainult soovitud olek tuleb Gitist. Kui keegi muudab klastris midagi käsitsi, märkab Argo CD erinevust Gitiga ehk **triivi** (drift) ja muudab klastri tagasi. Seda teeb Argo CD ainult siis, kui rakenduse seadistuses on sisse lülitatud `selfHeal`. Vaikimisi näitab Argo CD triivi, aga ei paranda seda.
+**GitOps** tähendab, et soovitud olek on Gitis ja klastris töötav tööriist viib klastri sellega kooskõlla. **Argo CD** on selline tööriist, teine levinud on [Flux](https://fluxcd.io/). See on samasugune kontroller nagu Kubernetese enda omad, ainult soovitud olek tuleb Gitist. Kui keegi muudab klastris midagi käsitsi, märkab Argo CD erinevust Gitiga ehk **triivi** (drift) ja muudab klastri tagasi. Seda teeb Argo CD ainult siis, kui rakenduse seadistuses on sisse lülitatud `selfHeal`. Vaikimisi näitab Argo CD triivi, aga ei paranda seda.
 
 <figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 690 286" role="img" aria-label="Push-mudelis loeb CI runner Gitist ja käivitab kubectl apply, klastri võti on runneril. Pull-mudelis töötab Argo CD klastri sees, loeb Gitist soovitud oleku, rakendab selle ja pöörab käsitsi tehtud muudatused tagasi." xmlns="http://www.w3.org/2000/svg">
