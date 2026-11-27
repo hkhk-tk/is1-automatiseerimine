@@ -14,20 +14,34 @@ tags:
 
     - otsustada kahe põhjendusega, kas teenuse jaoks sobib Compose või Kubernetes;
     - selgitada soovitud ja tegeliku oleku abil, mida kontroller teeb, kui pod kustutatakse;
-    - järjestada joonise 5.3 abil klastri osade sammud, mis järgnevad käsule `kubectl apply`;
+    - järjestada joonise abil klastri osade sammud, mis järgnevad käsule `kubectl apply`;
     - märkida Deployment'i ja Service'i YAML-failis read, mis seovad need siltide kaudu;
     - kirjeldada joonise abil, mis teed pidi jõuab päring brauserist või teisest pod'ist pod'ini;
     - arvutada, mitu vana pod'i jääb rolling update'i ajal tööle, kui uus versioon ei käivitu;
     - leida käskudega `kubectl get`, `describe` ja `logs`, miks pod ei käivitu;
-    - eristada käskude `kubectl apply`, `helm upgrade` ja Argo CD ülesannet rakenduse paigaldamisel.
+    - eristada käskude `kubectl apply`, `helm upgrade` ja Argo CD ülesannet rakenduse paigaldamisel;
+    - valida olukorra järgi õige komponent: Deployment või StatefulSet, ClusterIP või NodePort või Ingress, ConfigMap või Secret, Volume.
 
-## 1. Miks orkestreerimine
+## 1. Mis on Kubernetes ja miks
+
+**Mis see on.** Kubernetes on avatud lähtekoodiga konteinerite orkestreerimise tööriist, mille tegi algselt Google. See haldab rakendusi, mis koosnevad sadadest või tuhandetest konteineritest, ja seda eri keskkondades: füüsilistes masinates, virtuaalmasinates, pilves või nende segus.
+
+Varem oli rakendus sageli üks suur programm ehk monoliit. Siis jagati rakendused väikesteks iseseisvateks osadeks ehk mikroteenusteks ja igaüks pandi konteinerisse. Konteinereid sai nii palju, et nende haldamine skriptide ja käsitsi muutus keeruliseks. Orkestreerija tagab kolm asja:
+
+- **kõrgkäideldavus**: rakendusel ei ole seisakut;
+- **skaleeritavus**: koopiaid saab koormuse järgi kiiresti juurde lisada ja vähendada;
+- **taastamine**: kui serverid või andmed kaovad, taastatakse klastri olek varukoopiast.
+
+<figure markdown="span">
+  ![Kuus mikroteenust, igaüks oma konteineris](assets/k05_f_i_micro.svg)
+  <figcaption>Joonis 5.1. Mikroteenustega rakenduses on palju konteinereid (Talvik, 2026).</figcaption>
+</figure>
 
 Compose'iga töötasid kõik konteinerid ühes masinas. Taaskäivitusreegel `restart: unless-stopped` käivitab seiskunud konteineri uuesti, aga ainult samas masinas. Kui masin ise läheb rikki või vajab hooldust, ei vii keegi konteinereid teise masinasse ja rakendus seisab.
 
 Seda probleemi lahendab **orkestreerimine**. Orkestreerija on tarkvara, mis otsustab, millises masinas konteiner töötab, asendab rikkis koopiad uutega ja vahetab versioonid järk-järgult välja. Administraator kirjeldab, mis peab töötama ja mitu koopiat. Masina valib orkestreerija.
 
-Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 4 ja 6.
+Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 3 ja 4.
 
 <figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 690 250" role="img" aria-label="Vasakul üks Docker-host, kus kõik neli teenust seisavad, kui host läheb rikki. Paremal klaster: control plane hoiab soovitud olekut, node 2 läks rikki ja app01 pod luuakse uuesti node 3-l." xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +61,7 @@ Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel
 <path class="a d" d="M520,190 C520,222 618,222 618,193" marker-end="url(#lxa)"/>
 <text class="g" x="520" y="236" text-anchor="middle">pod luuakse uuesti teisel node'il</text>
 </svg>
-<figcaption>Joonis 5.1. Ühe hosti rike peatab Compose'i stacki, klastris luuakse pod teisel node'il uuesti (Talvik, 2026).</figcaption>
+<figcaption>Joonis 5.2. Ühe hosti rike peatab Compose'i stacki, klastris luuakse pod teisel node'il uuesti (Talvik, 2026).</figcaption>
 </figure>
 
 Virtuaalmasinatega töötanud administraator tunneb sama mõtet Proxmoxi kõrgkäideldavusest (HA): kui server kaob, käivitatakse VM teises serveris. Kubernetes teeb sama üksiku rakenduse tasemel ja palju kiiremini, sest konteineri käivitamiseks ei pea operatsioonisüsteemi laadima.
@@ -118,22 +132,173 @@ Kubernetes ei ole ainus orkestreerija. Väiksemaid süsteeme hallatakse sageli l
 
 Nimi k3s tuli mõttest teha Kubernetes, mis vajab poole vähem mälu. K8s on kümnetäheline sõna, seega poole väiksem on viietäheline K3s.
 
-## 3. Soovitud olek ja kontroller
+## 3. Arhitektuur
+
+Kubernetese klaster koosneb vähemalt ühest **control plane**'ist ja selle külge ühendatud **worker node**'idest. Node on virtuaalne või füüsiline masin.
+
+**Worker node**'idel töötavad sinu rakendused. Igal node'il on kolm Kubernetese protsessi: **kubelet** saab API serverilt pod'i kirjelduse ja käivitab selle, **konteineri käivitaja** (k3s-is containerd) laadib image'i ja käivitab konteineri ning **kube-proxy** seab Service'i võrgureeglid. Worker node'idel on kõige suurem koormus, seepärast on need suured.
+
+**Control plane**'is töötab neli protsessi:
+
+- **API server** on ainus sissepääs klastrisse. Sellega räägivad veebiliides, skriptid ja `kubectl`.
+- **Controller Manager** jälgib, mis klastris toimub, ja loob näiteks surnud pod'i asemele uue.
+- **Scheduler** otsustab, millisele node'ile uus pod läheb, vabade ressursside järgi.
+- **etcd** on võti-väärtus andmebaas, kus on kogu klastri olek. Klastri varundamine tähendab etcd varundamist.
+
+**Virtuaalvõrk** ühendab kõik node'id, nii et klaster on nagu üks suur masin. k3s-is teeb seda Flannel. Control plane on tähtsam kui üksik worker node: kui see kaob, ei saa klastrit hallata. Seepärast on tootmises vähemalt kaks, tavaliselt kolm control plane'i.
+
+<figure markdown="span">
+  ![Control plane, virtuaalvõrk ja kolm worker node'i](assets/k05_f_a_vn.svg)
+  <figcaption>Joonis 5.3. Klastri arhitektuur (Talvik, 2026).</figcaption>
+</figure>
+
+Praktikumis on kõik ühes masinas: sinu `control` on korraga control plane ja worker node. k3s paneb kõik osad ühte programmi ja kasutab etcd asemel SQLite'i.
+
+Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsustab, kus miski töötab. **Node**'idel töötavad pod'id. k3s-is võib sama masin olla korraga control plane ja node, nagu praktikumis masin `control`.
+
+<figure markdown="span">
+  ![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)
+  <figcaption>Joonis 5.4. Mis juhtub pärast käsku kubectl apply. Kontrollerid, scheduler ja kubelet suhtlevad API serveri kaudu (Talvik, 2026).</figcaption>
+</figure>
+
+- **API server** võtab vastu kõik päringud ja kontrollib õigusi. Ta kuulab porti 6443.
+- **etcd** (k3s-is ühe masina puhul SQLite) on andmebaas, kus on kogu soovitud olek.
+- **Scheduler** valib igale uuele pod'ile node'i, kus on piisavalt vaba protsessorit ja mälu. Kui palju pod vajab, kirjutatakse Deployment'i konteineri juurde väljale `resources`: `requests` on see, mille scheduler pod'ile kinni paneb, ja `limits` on ülempiir, millest rohkem konteiner kasutada ei saa. Vaata lähemalt [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
+- **Kontrollerid** hoiavad soovitud olekut, näiteks pod'ide arvu.
+- **kubelet** töötab igal node'il ja käivitab sellele node'ile määratud pod'id.
+- **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
+- **Flannel** ühendab k3s-is pod'ide võrgu node'ide vahel, nii et kõik node'id on nagu üks suur masin.
+- **kube-proxy** töötab igal node'il ja seab võrgureeglid, mille abil Service'i aadressile saadetud päring jõuab mõne pod'ini.
+
+k3s paigaldab kõik need osad ühe käsuga. Kui tahad näha, kuidas klaster osade kaupa kokku pannakse, vaata juhendit [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way). Selles paigaldatakse iga osa käsitsi, koos sertifikaatidega, ja töö võtab mitu tundi.
+
+Joonise 5.4 numbrid näitavad, mis juhtub pärast käsku `kubectl apply -f tere.yaml`:
+
+1. kubectl saadab Deployment'i kirjelduse API serverile. API server kontrollib õigusi ja faili kuju.
+2. API server salvestab soovitud oleku andmebaasi etcd.
+3. Deployment'i kontroller näeb uut Deployment'i ja loob ReplicaSet'i. ReplicaSet'i kontroller loob pod'ide kirjed. Neil pod'idel ei ole veel node'i.
+4. Scheduler näeb node'ita pod'i ja määrab sellele node'i.
+5. Selle node'i kubelet näeb, et talle on määratud uus pod.
+6. kubelet annab containerd'le käsu image alla laadida ja konteiner käivitada. Seejärel teatab kubelet pod'i oleku API serverile ja `kubectl get pods` näitab olekut `Running`.
+7. Kui pod'i ees on Service, seab kube-proxy võrgureeglid, mis saadavad Service'i päringud uuele pod'ile.
+
+Kontrollerid, scheduler ja kubelet ei anna üksteisele käske. Igaüks jälgib API serverit ja teeb oma osa, kui näeb muudatust.
+
+??? question "Kontrolli ennast"
+
+    Pod on olekus `Pending` ja `kubectl describe pod` näitab sündmust `Insufficient memory`. Millise joonise 5.4 sammu juures töö seisab?
+
+    ??? success "Vastus"
+
+        Sammu 4 juures. Scheduler ei leidnud node'i, kus on piisavalt vaba mälu. Pod'il ei ole node'i, seega ükski kubelet seda ei käivita.
+
+Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik käsud lähevad API serverile käsuga **kubectl**. SSH leiab failist `~/.ssh/config`, kuhu ühenduda ja millise võtmega. kubectl leiab sama info failist `~/.kube/config`. Sellist faili nimetatakse lühidalt **kubeconfig**'iks. Seal on klastri aadress, sinu sertifikaat või token ja vaikimisi **nimeruum** (namespace). Nimeruum jagab klastri osadeks, näiteks iga meeskonna või keskkonna jaoks oma.
+
+??? note "Tabel 5.4. Sagedasemad kubectl käsud"
+
+    | Käsk | Mida teeb | Tuttav vaste |
+    |---|---|---|
+    | `kubectl get pods` | näitab pod'e ja nende olekut | `docker ps` |
+    | `kubectl describe pod <nimi>` | näitab kõike pod'i kohta ja lõpus sündmusi | `docker inspect` |
+    | `kubectl logs <nimi>` | näitab konteineri väljundit | `docker logs` |
+    | `kubectl apply -f <fail>` | viib klastri failiga kooskõlla | `ansible-playbook`, `tofu apply` |
+    | `kubectl diff -f <fail>` | näitab, mis muutuks | `--check --diff`, `tofu plan` |
+    | `kubectl delete -f <fail>` | kustutab failis kirjeldatud objektid | `tofu destroy` |
+    | `kubectl exec -it <pod> -- sh` | avab shelli konteineri sees | `docker exec -it` |
+    | `kubectl explain deployment.spec` | näitab objekti väljade kirjeldust | `ansible-doc` |
+
+    Käskude kõrval kasutatakse terminali kasutajaliidest [k9s](https://k9scli.io/), mis näitab klastri objekte tabelina ja värskendab vaadet pidevalt.
+
+## 4. Põhikomponendid
+
+Põhikomponente on mugav selgitada ühe näite peal: veebirakendus ja andmebaas. Iga komponent lahendab ühe probleemi, mis eelmisest sammust jäi.
+
+### Node ja pod
+
+**Pod** on Kubernetese väikseim üksus, kiht konteineri ümber. Kubernetes peidab konteineri tehnoloogia ära, nii et sa räägid ainult Kubernetesega, mitte Dockeriga. Pod'is on tavaliselt üks rakendus. Igal pod'il on oma sisemine IP-aadress, mitte igal konteineril.
+
+Pod on **ajutine** (inglise keeles *ephemeral*). Kui rakendus kukub või node'il saab mälu otsa, sureb pod ja asemele tuleb uus pod uue IP-aadressiga. Kui veebirakendus räägib andmebaasiga IP järgi, tuleks iga kord seadistust muuta.
+
+<figure markdown="span">
+  ![Andmebaasi pod luuakse uuesti ja see saab uue IP-aadressi](assets/k05_f_c_newip.svg)
+  <figcaption>Joonis 5.5. Uus pod saab uue IP-aadressi (Talvik, 2026).</figcaption>
+</figure>
+
+### Service
+
+**Service** on püsiv IP-aadress ja nimi pod'i ees. Service'i ja pod'i elutsükkel ei ole seotud: pod sureb, Service jääb. Service on ka koormusjaotur, mis saadab päringu ühele oma pod'idest.
+
+Rakendus peab olema brauseris kättesaadav, andmebaas mitte. Seepärast on kaks tüüpi: **väline** Service (tüüp `NodePort`) avab pordi node'i IP-l ja **sisemine** Service (tüüp `ClusterIP`) on nähtav ainult klastri sees. Tüüp antakse loomisel, vaikimisi on Service sisemine.
+
+<figure markdown="span">
+  ![Väline Service on brauserist kättesaadav, sisemine Service mitte](assets/k05_f_c_int.svg)
+  <figcaption>Joonis 5.6. Väline ja sisemine Service (Talvik, 2026).</figcaption>
+</figure>
+
+### Ingress
+
+Välise Service'i aadress on node'i IP ja port, näiteks `http://192.168.125.81:30080`. Testimiseks sobib, kasutajale mitte. **Ingress** võtab vastu päringu nimega, näiteks `tere.firma.ee`, ja saadab selle õigele Service'ile. k3s-is täidab Ingressi reegleid Traefik.
+
+<figure markdown="span">
+  ![Brauser saadab päringu Ingressile, Ingress Service'ile](assets/k05_f_c_ing.svg)
+  <figcaption>Joonis 5.7. Ingress on klastri sissepääs nime järgi (Talvik, 2026).</figcaption>
+</figure>
+
+### ConfigMap ja Secret
+
+Andmebaasi aadress on tavaliselt rakenduse sees. Kui see muutub, tuleb image uuesti ehitada, registrisse lükata ja pod'i tõmmata. **ConfigMap** hoiab seadistust väljaspool image'it: muudad ConfigMap'i ja image jääb samaks.
+
+Paroolid lähevad **Secret**'i. Secret on nagu ConfigMap, aga väärtused on base64-kujul ja lugemisõigusi saab anda eraldi. Base64 ei ole krüpteering: Kubernetes ei krüpteeri Secret'eid ise. Pod loeb mõlemat keskkonnamuutujatena või failina.
+
+<figure markdown="span">
+  ![ConfigMap ja Secret annavad rakendusele andmebaasi aadressi, kasutaja ja parooli](assets/k05_f_c_sec.svg)
+  <figcaption>Joonis 5.8. ConfigMap ja Secret pod'i küljes (Talvik, 2026).</figcaption>
+</figure>
+
+### Volume
+
+Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühendab pod'iga ketta, mis on pod'ist väljas: samal node'il või väljaspool klastrit. Kubernetes ise andmeid ei varunda, see on administraatori töö. Praktikumi osas 10 näed mõlemat: ilma Volume'ita andmed kaovad, Volume'iga jäävad alles.
+
+<figure markdown="span">
+  ![Andmebaasi pod'i külge on ühendatud kohalik ja väline ketas](assets/k05_f_c_vol2.svg)
+  <figcaption>Joonis 5.9. Volume: kohalik või väline ketas (Talvik, 2026).</figcaption>
+</figure>
+
+### Deployment ja StatefulSet
+
+Kui ainus rakenduse pod kukub, on rakendus maas. Seepärast töötavad koopiad mitmes node'is ja on seotud sama Service'iga. Koopiaid ei looda käsitsi: **Deployment** on pod'i mall, kus on kirjas, mitu koopiat peab töötama. Praktikas lood Deployment'e, mitte pod'e.
+
+Andmebaasi Deployment'iga ei paljundata, sest koopiad peavad kirjutamist omavahel sünkroonima. Selleks on **StatefulSet**: igal pod'il püsiv nimi ja oma ketas. See on keeruline, seepärast hoitakse andmebaasi sageli klastrist väljas. Lisaks on **DaemonSet** (üks pod igal node'il, näiteks logikoguja), **Job** (ühekordne töö) ja **CronJob** (ajastatud töö nagu `cron`).
+
+<figure markdown="span">
+  ![Kaks node'i, kummaski rakenduse ja andmebaasi koopia](assets/k05_f_d_sts.svg)
+  <figcaption>Joonis 5.10. Deployment rakendusele, StatefulSet andmebaasile (Talvik, 2026).</figcaption>
+</figure>
+
+??? question "Kontrolli ennast"
+
+    Millise komponendi valid? 1) Veebileht peab vastama, kui üks server kaob. 2) Andmebaas peab olema nähtav ainult klastri sees. 3) Andmebaasi parool. 4) Andmed peavad pod'i taaskäivitusel alles jääma.
+
+    ??? success "Vastus"
+
+        1) Deployment, vähemalt kaks koopiat. 2) Sisemine Service ehk ClusterIP. 3) Secret. 4) Volume ehk PersistentVolumeClaim, mitme koopia korral StatefulSet.
+
+## 5. Konfiguratsioon: soovitud olek ja YAML
 
 `docker run` on **imperatiivne** käsk: see ütleb, mida teha. Kubernetese YAML-fail on **deklaratiivne** kirjeldus: see ütleb, milline olek peab olema, ja süsteem leiab ise, mida selleks teha. Sama mõtet kasutasid Ansible'is ja OpenTofus: `state: present` või `resource` kirjeldab tulemust.
 
-Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid pod'e (täpsemalt jaotises 6). Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
+Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid pod'e (täpsemalt jaotises 4). Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
 
 Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) töötab lõputus tsüklis: loeb soovitud olekut, vaatab tegelikku olekut ja teeb sammu, et vahe kaoks.
 
 <figure markdown="span">
   ![Kontrolltsükkel: kubectl apply muudab soovitud olekut, kubectl delete pod muudab tegelikku olekut; kontroller loeb mõlemat ja loob puuduva pod'i](assets/k05_kontrolltsukkel.svg)
-  <figcaption>Joonis 5.2. Kontroller võrdleb soovitud ja tegelikku olekut ning kõrvaldab vahe (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.11. Kontroller võrdleb soovitud ja tegelikku olekut ning kõrvaldab vahe (Talvik, 2026).</figcaption>
 </figure>
 
 Kui pod kustutatakse, näeb kontroller vahet „soovitud 3, tegelik 2“ ja loob uue pod'i. Uus pod saab uue nime ja uue IP-aadressi. Pod on **ajutine** (inglise keeles *ephemeral*): see võib igal hetkel kaduda ja asemele tuleb uus. Seepärast ei tohi miski sõltuda pod'i nimest ega aadressist.
 
-??? note "Tabel 5.4. Ansible ja Kubernetes"
+??? note "Tabel 5.5. Ansible ja Kubernetes"
 
     | | Ansible | Kubernetes |
     |---|---|---|
@@ -152,120 +317,12 @@ Ansible ja Kubernetes ei välista teineteist. Ansible'iga paigaldatakse sageli k
 
         Pod'i kustutamine muutis ainult tegelikku olekut. Deployment'is on soovitud olek endiselt kolm pod'i ja kontroller lõi puuduva pod'i uuesti. Rakenduse peatamiseks tuleb muuta soovitud olekut: `replicas: 0` või kustutada Deployment ise.
 
-## 4. Klastri osad ja kubectl
-
-Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsustab, kus miski töötab. **Node**'idel töötavad pod'id. k3s-is võib sama masin olla korraga control plane ja node, nagu praktikumis masin `control`.
-
-<figure markdown="span">
-  ![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)
-  <figcaption>Joonis 5.3. Mis juhtub pärast käsku kubectl apply. Kontrollerid, scheduler ja kubelet suhtlevad API serveri kaudu (Talvik, 2026).</figcaption>
-</figure>
-
-- **API server** võtab vastu kõik päringud ja kontrollib õigusi. Ta kuulab porti 6443.
-- **etcd** (k3s-is ühe masina puhul SQLite) on andmebaas, kus on kogu soovitud olek.
-- **Scheduler** valib igale uuele pod'ile node'i, kus on piisavalt vaba protsessorit ja mälu. Kui palju pod vajab, kirjutatakse Deployment'i konteineri juurde väljale `resources`: `requests` on see, mille scheduler pod'ile kinni paneb, ja `limits` on ülempiir, millest rohkem konteiner kasutada ei saa. Vaata lähemalt [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-- **Kontrollerid** hoiavad soovitud olekut, näiteks pod'ide arvu.
-- **kubelet** töötab igal node'il ja käivitab sellele node'ile määratud pod'id.
-- **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
-- **Flannel** ühendab k3s-is pod'ide võrgu node'ide vahel, nii et kõik node'id on nagu üks suur masin.
-- **kube-proxy** töötab igal node'il ja seab võrgureeglid, mille abil Service'i aadressile saadetud päring jõuab mõne pod'ini.
-
-k3s paigaldab kõik need osad ühe käsuga. Kui tahad näha, kuidas klaster osade kaupa kokku pannakse, vaata juhendit [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way). Selles paigaldatakse iga osa käsitsi, koos sertifikaatidega, ja töö võtab mitu tundi.
-
-Joonise 5.3 numbrid näitavad, mis juhtub pärast käsku `kubectl apply -f tere.yaml`:
-
-1. kubectl saadab Deployment'i kirjelduse API serverile. API server kontrollib õigusi ja faili kuju.
-2. API server salvestab soovitud oleku andmebaasi etcd.
-3. Deployment'i kontroller näeb uut Deployment'i ja loob ReplicaSet'i. ReplicaSet'i kontroller loob pod'ide kirjed. Neil pod'idel ei ole veel node'i.
-4. Scheduler näeb node'ita pod'i ja määrab sellele node'i.
-5. Selle node'i kubelet näeb, et talle on määratud uus pod.
-6. kubelet annab containerd'le käsu image alla laadida ja konteiner käivitada. Seejärel teatab kubelet pod'i oleku API serverile ja `kubectl get pods` näitab olekut `Running`.
-7. Kui pod'i ees on Service, seab kube-proxy võrgureeglid, mis saadavad Service'i päringud uuele pod'ile.
-
-Kontrollerid, scheduler ja kubelet ei anna üksteisele käske. Igaüks jälgib API serverit ja teeb oma osa, kui näeb muudatust.
-
-??? question "Kontrolli ennast"
-
-    Pod on olekus `Pending` ja `kubectl describe pod` näitab sündmust `Insufficient memory`. Millise joonise 5.3 sammu juures töö seisab?
-
-    ??? success "Vastus"
-
-        Sammu 4 juures. Scheduler ei leidnud node'i, kus on piisavalt vaba mälu. Pod'il ei ole node'i, seega ükski kubelet seda ei käivita.
-
-Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik käsud lähevad API serverile käsuga **kubectl**. SSH leiab failist `~/.ssh/config`, kuhu ühenduda ja millise võtmega. kubectl leiab sama info failist `~/.kube/config`. Sellist faili nimetatakse lühidalt **kubeconfig**'iks. Seal on klastri aadress, sinu sertifikaat või token ja vaikimisi **nimeruum** (namespace). Nimeruum jagab klastri osadeks, näiteks iga meeskonna või keskkonna jaoks oma.
-
-??? note "Tabel 5.5. Sagedasemad kubectl käsud"
-
-    | Käsk | Mida teeb | Tuttav vaste |
-    |---|---|---|
-    | `kubectl get pods` | näitab pod'e ja nende olekut | `docker ps` |
-    | `kubectl describe pod <nimi>` | näitab kõike pod'i kohta ja lõpus sündmusi | `docker inspect` |
-    | `kubectl logs <nimi>` | näitab konteineri väljundit | `docker logs` |
-    | `kubectl apply -f <fail>` | viib klastri failiga kooskõlla | `ansible-playbook`, `tofu apply` |
-    | `kubectl diff -f <fail>` | näitab, mis muutuks | `--check --diff`, `tofu plan` |
-    | `kubectl delete -f <fail>` | kustutab failis kirjeldatud objektid | `tofu destroy` |
-    | `kubectl exec -it <pod> -- sh` | avab shelli konteineri sees | `docker exec -it` |
-    | `kubectl explain deployment.spec` | näitab objekti väljade kirjeldust | `ansible-doc` |
-
-    Käskude kõrval kasutatakse terminali kasutajaliidest [k9s](https://k9scli.io/), mis näitab klastri objekte tabelina ja värskendab vaadet pidevalt.
-
-## 5. k3s paigaldus ja klastri enda osad
-
-Praktikumis paigaldad k3s-i masinasse `control`. [Ametlik paigaldusskript](https://docs.k3s.io/quick-start) laadib alla ühe programmi `k3s`, teeb sellest systemd teenuse ja käivitab selle. Selles ühes programmis on API server, scheduler, kontrollerid, kubelet, containerd ja käsk `kubectl`. Suures klastris on need eraldi programmid ja sageli eraldi masinates.
-
-Skript käivitatakse `sudo` õigustes. Seepärast laadid selle enne alla ja loed läbi. Muutuja `INSTALL_K3S_VERSION` määrab versiooni, et kõigil õppijatel oleks sama klaster. Sama põhimõte kehtis OpenTofu provider'i versiooni puhul.
-
-```bash
-curl -sfL https://get.k3s.io -o install-k3s.sh
-less install-k3s.sh
-INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
-```
-
-??? note "Tabel 5.6. k3s-i failid ja kaustad"
-
-    | Fail või kaust | Mis seal on |
-    |---|---|
-    | teenus `k3s` | haldad käsuga `systemctl`, logi näed käsuga `journalctl -u k3s` |
-    | `/etc/rancher/k3s/k3s.yaml` | administraatori kubeconfig, loetav ainult root'ile |
-    | `/etc/rancher/k3s/registries.yaml` | kust k3s image'id tõmbab, selle faili teed ise |
-    | `/var/lib/rancher/k3s/` | klastri andmebaas, image'id ja pod'ide andmed |
-
-**kubeconfig.** k3s kirjutab administraatori kubeconfig'i faili, mida saab lugeda ainult root. Praktikumis kopeerid selle oma kodukausta `~/.kube/config` õigustega `600`, et `kubectl` töötaks ilma `sudo`-ta. Selle failiga on klastrile täielik juurdepääs, seepärast ei panda seda Giti. Töökohas saab iga inimene oma kubeconfig'i piiratud õigustega. Õigusi jagab Kubernetes rollide kaupa (**RBAC**, role-based access control), näiteks „võib lugeda pod'e nimeruumis `test`“. Sama mõte oli Proxmoxi piiratud tokenil.
-
-**Image'id Harborist.** Docker Hub lubab ühelt IP-aadressilt piiratud arvu tõmbeid tunnis. Kogu kool on interneti jaoks üks aadress, nii et 20 õppija klastrid ületaksid piiri kiiresti. Kooli Harbor töötab vahemäluna: tõmbab image'i Docker Hubist üks kord ja annab selle siis kõigile. Fail `registries.yaml` ütleb containerd'le, et Docker Hubi image'id tuleb küsida Harborist. Kui Harbor ei vasta, tõmbab k3s image'i otse Docker Hubist. Ettevõtted hoiavad oma registrit samal põhjusel ja ka selleks, et image'id enne kasutamist turvavigade suhtes kontrollida.
-
-**Klastri enda osad.** Kohe pärast paigaldust näitab `kubectl get pods -A` mitut pod'i, kuigi sa ei ole veel midagi käivitanud. Need on klastri enda osad nimeruumis `kube-system`. Klastri lisad on samuti pod'id ja neid hallatakse samamoodi nagu sinu rakendust.
-
-??? note "Tabel 5.7. Pod'id nimeruumis kube-system"
-
-    | Pod | Mida teeb |
-    |---|---|
-    | `coredns` | annab Service'itele nimed, nii et pod leiab teise pod'i nime järgi |
-    | `traefik` | võtab pordil 80 ja 443 vastu veebiliikluse ja suunab selle Ingressi reeglite järgi |
-    | `svclb-traefik` | ServiceLB: avab Traefiku pordid node'i IP-aadressil |
-    | `local-path-provisioner` | annab pod'idele kettaruumi node'i kaustast |
-    | `metrics-server` | kogub pod'ide protsessori ja mälu kasutust käsule `kubectl top` |
-    | `helm-install-traefik` | ühekordne töö, mis paigaldas Traefiku Helmiga, olek `Completed` |
-
-??? question "Kontrolli ennast"
-
-    `kubectl get pods` vastab `No resources found in default namespace`, aga `kubectl get pods -A` näitab seitset pod'i. Miks?
-
-    ??? success "Vastus"
-
-        Ilma võtmeta `-n` näitab `kubectl` ainult nimeruumi `default`, kus sinu rakendusi veel ei ole. Võti `-A` näitab kõiki nimeruume ja seal on klastri enda osad nimeruumis `kube-system`.
-
-## 6. Pod, Deployment ja Service
-
-**Pod** on väikseim üksus, mida Kubernetes käivitab: üks või mitu konteinerit, millel on ühine IP-aadress. Pod'e otse tavaliselt ei looda. **Deployment** kirjeldab, mitu ühesugust pod'i peab töötama ja millisest image'ist. Deployment teeb vahepealse objekti **ReplicaSet**, mis hoiab pod'ide arvu. Versiooni uuendamisel teeb Deployment uue ReplicaSet'i ja vahetab pod'id järk-järgult. Seda nimetatakse **rolling update**'iks. Deployment sobib rakendustele, mille kõik koopiad on ühesugused. Muudel juhtudel on oma objektid: **StatefulSet** andmebaasidele, **DaemonSet** üheks pod'iks igal node'il, näiteks logikogujale, **Job** ühekordsele tööle ja **CronJob** ajastatud tööle nagu `cron`.
-
-Iga uus pod saab uue IP-aadressi. **Service** annab pod'ide grupile püsiva nime ja aadressi ning jagab päringud nende vahel. Compose'is lahendas selle ülesande teenuse nimi: konteiner leidis teise konteineri nime järgi.
 
 Deployment ja Service ei tea pod'ide nimesid. Need leiavad pod'id **siltide** (labels) järgi. Silt on võti ja väärtus, näiteks `app: tere`. Deployment paneb sildi igale pod'ile, mille ta loob, ja Service saadab liikluse kõigile pod'idele, millel see silt on. Sama mõtet kasutasid Ansible'i inventory grupid.
 
 <figure markdown="span">
   ![Deployment loob ReplicaSet'i, ReplicaSet loob pod'id, Service leiab pod'id sildi järgi](assets/k05_labelid.svg)
-  <figcaption>Joonis 5.4. Deployment, ReplicaSet, pod ja Service on seotud ainult siltide kaudu (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.12. Deployment, ReplicaSet, pod ja Service on seotud ainult siltide kaudu (Talvik, 2026).</figcaption>
 </figure>
 
 Igas Kubernetese YAML-failis on samad neli osa. `apiVersion` ja `kind` ütlevad, mis tüüpi objekt see on. `metadata` annab nime ja sildid. `spec` on soovitud olek, mille kirjutad sina. `status` on tegelik olek, mille kirjutab Kubernetes.
@@ -327,7 +384,7 @@ Kust Service on kättesaadav, ütleb selle tüüp `type`. Tüüpidest ja päring
 
         Mõlemad failid võetakse vastu ja pod'id töötavad, aga Service ei leia ühtegi pod'i, sest sildid on tõstutundlikud. `kubectl get endpointslices` näitab, et Service'il pole aadresse, ja päringud ei jõua kuhugi.
 
-## 7. Käsust failiks
+## 6. Käsust failiks
 
 Kubernetesele saab anda korraldusi kahel viisil. **Imperatiivne** käsk ütleb, mida teha: `kubectl create deployment`, `kubectl scale`, `kubectl delete pod`. **Deklaratiivne** fail kirjeldab soovitud olekut ja `kubectl apply` viib klastri sellega kooskõlla. Käsk sobib katsetamiseks, aga sellest ei jää kirja, milline olek on soovitud. Kui klaster kaob, ei tea keegi, mis seal töötas.
 
@@ -338,7 +395,7 @@ kubectl create deployment tere --image=traefik/whoami:v1.11.0 --replicas=3 \
   --dry-run=client -o yaml > deployment.yaml
 ```
 
-??? note "Tabel 5.8. Sama muudatus käsuga ja failiga"
+??? note "Tabel 5.6. Sama muudatus käsuga ja failiga"
 
     | Muudatus | Käsuga | Failiga |
     |---|---|---|
@@ -359,13 +416,59 @@ Kui keegi muudab klastrit käsuga, erinevad fail ja klaster. Seda erinevust nime
 
         Kolm. `apply` viib klastri faili olekusse ja failis on `replicas: 3`. Kui viis koopiat oli vaja, pidi muudatus minema faili. Kui faili muudetakse, tuleb muudatus Giti, ja nii jääb kirja, kes ja miks muutis.
 
+## 7. k3s paigaldus ja klastri enda osad
+
+Praktikumis paigaldad k3s-i masinasse `control`. [Ametlik paigaldusskript](https://docs.k3s.io/quick-start) laadib alla ühe programmi `k3s`, teeb sellest systemd teenuse ja käivitab selle. Selles ühes programmis on API server, scheduler, kontrollerid, kubelet, containerd ja käsk `kubectl`. Suures klastris on need eraldi programmid ja sageli eraldi masinates.
+
+Skript käivitatakse `sudo` õigustes. Seepärast laadid selle enne alla ja loed läbi. Muutuja `INSTALL_K3S_VERSION` määrab versiooni, et kõigil õppijatel oleks sama klaster. Sama põhimõte kehtis OpenTofu provider'i versiooni puhul.
+
+```bash
+curl -sfL https://get.k3s.io -o install-k3s.sh
+less install-k3s.sh
+INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
+```
+
+??? note "Tabel 5.7. k3s-i failid ja kaustad"
+
+    | Fail või kaust | Mis seal on |
+    |---|---|
+    | teenus `k3s` | haldad käsuga `systemctl`, logi näed käsuga `journalctl -u k3s` |
+    | `/etc/rancher/k3s/k3s.yaml` | administraatori kubeconfig, loetav ainult root'ile |
+    | `/etc/rancher/k3s/registries.yaml` | kust k3s image'id tõmbab, selle faili teed ise |
+    | `/var/lib/rancher/k3s/` | klastri andmebaas, image'id ja pod'ide andmed |
+
+**kubeconfig.** k3s kirjutab administraatori kubeconfig'i faili, mida saab lugeda ainult root. Praktikumis kopeerid selle oma kodukausta `~/.kube/config` õigustega `600`, et `kubectl` töötaks ilma `sudo`-ta. Selle failiga on klastrile täielik juurdepääs, seepärast ei panda seda Giti. Töökohas saab iga inimene oma kubeconfig'i piiratud õigustega. Õigusi jagab Kubernetes rollide kaupa (**RBAC**, role-based access control), näiteks „võib lugeda pod'e nimeruumis `test`“. Sama mõte oli Proxmoxi piiratud tokenil.
+
+**Image'id Harborist.** Docker Hub lubab ühelt IP-aadressilt piiratud arvu tõmbeid tunnis. Kogu kool on interneti jaoks üks aadress, nii et 20 õppija klastrid ületaksid piiri kiiresti. Kooli Harbor töötab vahemäluna: tõmbab image'i Docker Hubist üks kord ja annab selle siis kõigile. Fail `registries.yaml` ütleb containerd'le, et Docker Hubi image'id tuleb küsida Harborist. Kui Harbor ei vasta, tõmbab k3s image'i otse Docker Hubist. Ettevõtted hoiavad oma registrit samal põhjusel ja ka selleks, et image'id enne kasutamist turvavigade suhtes kontrollida.
+
+**Klastri enda osad.** Kohe pärast paigaldust näitab `kubectl get pods -A` mitut pod'i, kuigi sa ei ole veel midagi käivitanud. Need on klastri enda osad nimeruumis `kube-system`. Klastri lisad on samuti pod'id ja neid hallatakse samamoodi nagu sinu rakendust.
+
+??? note "Tabel 5.8. Pod'id nimeruumis kube-system"
+
+    | Pod | Mida teeb |
+    |---|---|
+    | `coredns` | annab Service'itele nimed, nii et pod leiab teise pod'i nime järgi |
+    | `traefik` | võtab pordil 80 ja 443 vastu veebiliikluse ja suunab selle Ingressi reeglite järgi |
+    | `svclb-traefik` | ServiceLB: avab Traefiku pordid node'i IP-aadressil |
+    | `local-path-provisioner` | annab pod'idele kettaruumi node'i kaustast |
+    | `metrics-server` | kogub pod'ide protsessori ja mälu kasutust käsule `kubectl top` |
+    | `helm-install-traefik` | ühekordne töö, mis paigaldas Traefiku Helmiga, olek `Completed` |
+
+??? question "Kontrolli ennast"
+
+    `kubectl get pods` vastab `No resources found in default namespace`, aga `kubectl get pods -A` näitab seitset pod'i. Miks?
+
+    ??? success "Vastus"
+
+        Ilma võtmeta `-n` näitab `kubectl` ainult nimeruumi `default`, kus sinu rakendusi veel ei ole. Võti `-A` näitab kõiki nimeruume ja seal on klastri enda osad nimeruumis `kube-system`.
+
 ## 8. Kuidas päring pod'ini jõuab
 
-Pod'i IP-aadress, näiteks `10.42.0.9`, on nähtav ainult klastri sees ja muutub iga uue pod'iga. Service saab püsiva aadressi teisest vahemikust, näiteks `10.43.0.15`, ja püsiva nime. Joonis 5.5 näitab kolme teed Service'ini.
+Pod'i IP-aadress, näiteks `10.42.0.9`, on nähtav ainult klastri sees ja muutub iga uue pod'iga. Service saab püsiva aadressi teisest vahemikust, näiteks `10.43.0.15`, ja püsiva nime. Joonis 5.13 näitab kolme teed Service'ini.
 
 <figure markdown="span">
   ![Kolm teed Service'ini: brauser node'i pordile 30080 kube-proxy kaudu, brauser nimega tere.local Traefiku kaudu ja teine pod nimega tere CoreDNS-i kaudu. Service saadab päringu ühele kolmest pod'ist.](assets/k05_service_tee.svg)
-  <figcaption>Joonis 5.5. Päring jõuab pod'ini alati Service'i kaudu (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.13. Päring jõuab pod'ini alati Service'i kaudu (Talvik, 2026).</figcaption>
 </figure>
 
 **Klastri seest.** Teine pod kasutab aadressi `http://tere`. CoreDNS annab nimele `tere` Service'i aadressi. Sama tegi Compose'i võrgus Dockeri DNS: konteiner leidis teise teenuse nime järgi. Täisnimi on `tere.default.svc.cluster.local`, kus `default` on nimeruum. Teise nimeruumi Service'i poole pöördutakse nimega `tere.<nimeruum>`.
@@ -443,7 +546,7 @@ Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võ
 
 <figure markdown="span">
   ![kubelet kontrollib iga pod'i aadressi /health, mittevalmis pod jääb Service'ist välja](assets/k05_readiness.svg)
-  <figcaption>Joonis 5.6. readinessProbe eemaldab mittevalmis pod'i Service'ist (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.14. readinessProbe eemaldab mittevalmis pod'i Service'ist (Talvik, 2026).</figcaption>
 </figure>
 
 **Ära kasuta tag'i `latest`.** Sama tag võib eri päevadel tähendada eri image'it. Siis ei tea keegi, milline versioon töötab, ja `rollout undo` ei pruugi viia tagasi eelmise versiooni juurde. Kasuta kindlat versiooni, näiteks `v1.12.0`.
@@ -473,7 +576,7 @@ Pod'i olek ütleb, millises etapis see pidama jäi, ja põhjus on pod'i sündmus
 
 Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jääb enamik vanu pod'e tööle ja rakendus vastab edasi. `kubectl get deployment` näitab siis, et `READY` on väiksem kui soovitud arv.
 
-??? question "Leia viga"
+??? question "Kontrolli ennast"
 
     Administraator muudab Deployment'is image'i real `traefik/whoami:v1.11.0` väärtuseks `traefik/whoami:latest-amd`. Pärast `apply`-d näitab `kubectl get pods` üht pod'i olekus `ImagePullBackOff` ja kolme `Running`. Kas rakendus töötab? Kust põhjus leida ja kuidas parandada?
 
@@ -501,7 +604,7 @@ Compose'i failis on iga teenuse kohta image, pordid, muutujad, paroolid ja andme
 
 <figure markdown="span">
   ![ConfigMap annab väärtused konteinerile keskkonnamuutujatena](assets/k05_configmap.svg)
-  <figcaption>Joonis 5.7. ConfigMap'i väärtus jõuab konteinerisse käivitumisel (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.15. ConfigMap'i väärtus jõuab konteinerisse käivitumisel (Talvik, 2026).</figcaption>
 </figure>
 
 Secret ei ole krüpteeritud. Väärtus on base64-kujul ja selle saab tagasi lugeda igaüks, kellel on õigus Secret'eid lugeda. Seepärast ei panda Secret'i faili Giti. Töökohas hoitakse paroole välises saladuste halduris, näiteks OpenBaos, ja klastrisse tuuakse need eraldi tööriistaga.
@@ -554,7 +657,7 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 <path class="a d" d="M592,220 V244 H345 V222" marker-end="url(#lxb)"/>
 <text class="s" x="470" y="258" text-anchor="middle">jälgib triivi, pöörab tagasi</text>
 </svg>
-<figcaption>Joonis 5.8. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
+<figcaption>Joonis 5.16. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
 </figure>
 
 Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab ja testib image'i ning kirjutab selle uue tag'i Gitis olevasse YAML-faili. Argo CD näeb Gitis muudatust ja uuendab klastrit. Argo CD kontrollib Giti vaikimisi iga kolme minuti tagant, nii et muudatus ei jõua klastrisse kohe. Konveier ei vaja klastri võtit, klastrisse kirjutab ainult Argo CD. Nii töötavad ka Eesti ettevõtted. Näiteks on Entigo kirjutanud tag'i uuendamise sammu jaoks oma tööriista [entigo-k8s-gitops](https://github.com/entigolabs/entigo-k8s-gitops).
