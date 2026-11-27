@@ -169,6 +169,8 @@ Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsu
 - **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
 - **kube-proxy** töötab igal node'il ja seab võrgureeglid, mille abil Service'i aadressile saadetud päring jõuab mõne pod'ini.
 
+k3s paigaldab kõik need osad ühe käsuga. Kui tahad näha, kuidas klaster osade kaupa kokku pannakse, vaata juhendit [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way). Selles paigaldatakse iga osa käsitsi, koos sertifikaatidega, ja töö võtab mitu tundi.
+
 Joonise 5.3 numbrid näitavad, mis juhtub pärast käsku `kubectl apply -f tere.yaml`:
 
 1. kubectl saadab Deployment'i kirjelduse API serverile. API server kontrollib õigusi ja faili kuju.
