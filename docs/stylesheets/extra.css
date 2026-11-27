@@ -155,7 +155,7 @@ img.logo { height: 14px; max-height: 14px; width: auto; vertical-align: -0.18em;
   .md-typeset :is(h1, h2, h3, h4) { break-after: avoid; page-break-after: avoid; }
   .md-typeset :is(figure, table) { break-inside: avoid; page-break-inside: avoid; }
   .md-typeset pre { break-inside: avoid; page-break-inside: avoid; }
-  .md-typeset pre > code { font-size: 7.5pt; white-space: pre-wrap; }
+  .md-typeset pre > code { font-size: 8.5pt; white-space: pre-wrap; }
   .md-typeset details > summary::after { display: none; }
   .md-typeset :is(.admonition, details) { box-shadow: none; border-width: 1px; border-style: solid; }
   .md-typeset figcaption { break-before: avoid; page-break-before: avoid; }
@@ -166,6 +166,13 @@ img.logo { height: 14px; max-height: 14px; width: auto; vertical-align: -0.18em;
 /* Trükis ei lõigata laia tabelit ära */
 @media print {
   .md-typeset__scrollwrap, .md-typeset__table { overflow: visible !important; }
-  .md-typeset table:not([class]) { display: table; width: 100%; table-layout: fixed; font-size: 7pt; }
+  .md-typeset table:not([class]) { display: table; width: 100%; table-layout: fixed; font-size: 8.5pt; }
   .md-typeset table:not([class]) :is(td, th) { padding: .3em .45em; overflow-wrap: anywhere; }
+}
+
+/* Trükis: joonis lehe laiuseks, et joonise tekst jääks loetavaks */
+@media print {
+  .md-typeset figure:not(.hero-pilt) { width: 100% !important; max-width: 100% !important; }
+  .md-typeset figure:not(.hero-pilt) img[src$=".svg"] { width: 100% !important; max-width: 100% !important; height: auto; }
+  .md-typeset figure > a::after { content: none !important; }
 }

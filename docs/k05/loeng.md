@@ -33,7 +33,7 @@ Varem oli rakendus sageli üks suur programm ehk monoliit. Siis jagati rakenduse
 - **taastamine**: kui serverid või andmed kaovad, taastatakse klastri olek varukoopiast.
 
 <figure markdown="span">
-  ![Image, konteiner, Docker ja Kubernetes järjest, ülal orkestreerimine, paremal virtuaalmasin ja konteiner kõrvuti](assets/k05_ylevaade.svg)
+  [![Image, konteiner, Docker ja Kubernetes järjest, ülal orkestreerimine, paremal virtuaalmasin ja konteiner kõrvuti](assets/k05_ylevaade.svg)](assets/k05_ylevaade.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.1. Tõmmisest orkestreerimiseni (Talvik, 2026).</figcaption>
 </figure>
 
@@ -44,7 +44,7 @@ Seda probleemi lahendab **orkestreerimine**. Orkestreerija on tarkvara, mis otsu
 Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 3 ja 4.
 
 <figure markdown="span">
-  ![Kaks node'i, node 1 kaob, rakendus ja andmebaas töötavad node 2-l edasi](assets/k05_f_d_nodex.svg)
+  [![Kaks node'i, node 1 kaob, rakendus ja andmebaas töötavad node 2-l edasi](assets/k05_f_d_nodex.svg)](assets/k05_f_d_nodex.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.2. Kui node kaob, töötab rakendus teisel node'il edasi (Talvik, 2026).</figcaption>
 </figure>
 
@@ -136,7 +136,7 @@ Kubernetese klaster koosneb vähemalt ühest **control plane**'ist ja selle kül
 **Virtuaalvõrk** ühendab kõik node'id, nii et klaster on nagu üks suur masin. k3s-is teeb seda Flannel. Control plane on tähtsam kui üksik worker node: kui see kaob, ei saa klastrit hallata. Seepärast on tootmises vähemalt kaks, tavaliselt kolm control plane'i.
 
 <figure markdown="span">
-  ![Control plane, virtuaalvõrk ja kolm worker node'i](assets/k05_f_a_vn.svg)
+  [![Control plane, virtuaalvõrk ja kolm worker node'i](assets/k05_f_a_vn.svg)](assets/k05_f_a_vn.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.3. Klastri arhitektuur (Talvik, 2026).</figcaption>
 </figure>
 
@@ -145,7 +145,7 @@ Praktikumis on kõik ühes masinas, mille nimi on `control`. See masin on korrag
 Allolev loetelu kordab osi lühidalt, joonis 5.4 näitab, kuidas need ühe käsu juures koos töötavad.
 
 <figure markdown="span">
-  ![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)
+  [![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)](assets/k05_juhttasand.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.4. Mis juhtub pärast käsku kubectl apply. Kontrollerid, scheduler ja kubelet suhtlevad API serveri kaudu (Talvik, 2026).</figcaption>
 </figure>
 
@@ -208,7 +208,7 @@ Põhikomponente on mugav selgitada ühe näite peal: veebirakendus ja andmebaas.
 Pod on **ajutine** (inglise keeles *ephemeral*). Kui rakendus kukub või node'il saab mälu otsa, sureb pod ja asemele tuleb uus pod uue IP-aadressiga. Kui veebirakendus räägib andmebaasiga IP järgi, tuleks iga kord seadistust muuta.
 
 <figure markdown="span">
-  ![Andmebaasi pod luuakse uuesti ja see saab uue IP-aadressi](assets/k05_f_c_newip.svg)
+  [![Andmebaasi pod luuakse uuesti ja see saab uue IP-aadressi](assets/k05_f_c_newip.svg)](assets/k05_f_c_newip.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.5. Uus pod saab uue IP-aadressi (Talvik, 2026).</figcaption>
 </figure>
 
@@ -219,7 +219,7 @@ Pod on **ajutine** (inglise keeles *ephemeral*). Kui rakendus kukub või node'il
 Rakendus peab olema brauseris kättesaadav, andmebaas mitte. Seepärast on kaks tüüpi: **väline** Service (tüüp `NodePort`) avab pordi node'i IP-l ja **sisemine** Service (tüüp `ClusterIP`) on nähtav ainult klastri sees. Tüüp antakse loomisel, vaikimisi on Service sisemine.
 
 <figure markdown="span">
-  ![Väline Service on brauserist kättesaadav, sisemine Service mitte](assets/k05_f_c_int.svg)
+  [![Väline Service on brauserist kättesaadav, sisemine Service mitte](assets/k05_f_c_int.svg)](assets/k05_f_c_int.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.6. Väline ja sisemine Service (Talvik, 2026).</figcaption>
 </figure>
 
@@ -228,7 +228,7 @@ Rakendus peab olema brauseris kättesaadav, andmebaas mitte. Seepärast on kaks 
 Välise Service'i aadress on node'i IP ja port, näiteks `http://192.168.125.81:30080`. Testimiseks sobib, kasutajale mitte. **Ingress** võtab vastu päringu nimega, näiteks `tere.firma.ee`, ja saadab selle õigele Service'ile. k3s-is täidab Ingressi reegleid Traefik.
 
 <figure markdown="span">
-  ![Brauser saadab päringu Ingressile, Ingress Service'ile](assets/k05_f_c_ing.svg)
+  [![Brauser saadab päringu Ingressile, Ingress Service'ile](assets/k05_f_c_ing.svg)](assets/k05_f_c_ing.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.7. Ingress on klastri sissepääs nime järgi (Talvik, 2026).</figcaption>
 </figure>
 
@@ -239,7 +239,7 @@ Andmebaasi aadress on tavaliselt rakenduse sees. Kui see muutub, tuleb image uue
 Paroolid lähevad **Secret**'i. Secret on nagu ConfigMap, aga väärtused on base64-kujul ja lugemisõigusi saab anda eraldi. Base64 ei ole krüpteering: Kubernetes ei krüpteeri Secret'eid ise. Pod loeb mõlemat keskkonnamuutujatena või failina.
 
 <figure markdown="span">
-  ![ConfigMap ja Secret annavad rakendusele andmebaasi aadressi, kasutaja ja parooli](assets/k05_f_c_sec.svg)
+  [![ConfigMap ja Secret annavad rakendusele andmebaasi aadressi, kasutaja ja parooli](assets/k05_f_c_sec.svg)](assets/k05_f_c_sec.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.8. ConfigMap ja Secret pod'i küljes (Talvik, 2026).</figcaption>
 </figure>
 
@@ -248,7 +248,7 @@ Paroolid lähevad **Secret**'i. Secret on nagu ConfigMap, aga väärtused on bas
 Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühendab pod'iga ketta, mis on pod'ist väljas: samal node'il või väljaspool klastrit. Kubernetes ise andmeid ei varunda, see on administraatori töö. [Praktikumi osas 10](lab.md#osa-10-andmebaas-secret-configmap-ja-volume) näed mõlemat: ilma Volume'ita andmed kaovad, Volume'iga jäävad alles. Rakendus küsib ketast **PersistentVolumeClaim**'iga (PVC): mitu gigabaiti ja kas üks või mitu kirjutajat. Klaster annab selle StorageClass'i järgi, k3s-is local-path.
 
 <figure markdown="span">
-  ![Andmebaasi pod'i külge on ühendatud kohalik ja väline ketas](assets/k05_f_c_vol2.svg)
+  [![Andmebaasi pod'i külge on ühendatud kohalik ja väline ketas](assets/k05_f_c_vol2.svg)](assets/k05_f_c_vol2.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.9. Volume: kohalik või väline ketas (Talvik, 2026).</figcaption>
 </figure>
 
@@ -259,7 +259,7 @@ Kui ainus rakenduse pod kukub, ei ole rakendus kättesaadav. Seepärast töötav
 Andmebaasi koopiaid Deployment'iga ei tehta, sest koopiad ei ole võrdsed: igaüks vajab oma andmeid ja püsivat nime. Selleks on **StatefulSet**: igal pod'il on püsiv nimi (`postgres-0`, `postgres-1`), püsiv DNS-nimi ja oma ketas. Andmete kopeerimist koopiate vahel StatefulSet ei tee, seda korraldab andmebaas ise või andmebaasi operator. Seepärast hoitakse andmebaasi sageli klastrist väljas. Lisaks on **DaemonSet** (üks pod igal node'il, näiteks logikoguja), **Job** (ühekordne töö) ja **CronJob** (ajastatud töö nagu `cron`).
 
 <figure markdown="span">
-  ![Kaks node'i, kummaski rakenduse ja andmebaasi koopia](assets/k05_f_d_sts.svg)
+  [![Kaks node'i, kummaski rakenduse ja andmebaasi koopia](assets/k05_f_d_sts.svg)](assets/k05_f_d_sts.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.10. Deployment rakendusele, StatefulSet andmebaasile (Talvik, 2026).</figcaption>
 </figure>
 
@@ -284,7 +284,7 @@ Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid po
 Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) töötab lõputus tsüklis: loeb soovitud olekut, vaatab tegelikku olekut ja teeb sammu, et vahe kaoks.
 
 <figure markdown="span">
-  ![Kontrolltsükkel: kubectl apply muudab soovitud olekut, kubectl delete pod muudab tegelikku olekut; kontroller loeb mõlemat ja loob puuduva pod'i](assets/k05_f_k_ctrl.svg)
+  [![Kontrolltsükkel: kubectl apply muudab soovitud olekut, kubectl delete pod muudab tegelikku olekut; kontroller loeb mõlemat ja loob puuduva pod'i](assets/k05_f_k_ctrl.svg)](assets/k05_f_k_ctrl.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.11. Kontroller võrdleb soovitud ja tegelikku olekut ning kõrvaldab vahe (Talvik, 2026).</figcaption>
 </figure>
 
@@ -313,7 +313,7 @@ Ansible ja Kubernetes ei välista teineteist. Ansible'iga paigaldatakse sageli k
 Deployment ja Service ei tea pod'ide nimesid. Need leiavad pod'id **siltide** (labels) järgi. Silt on võti ja väärtus, näiteks `app: tere`. Deployment paneb sildi igale pod'ile, mille ta loob, ja Service saadab liikluse kõigile pod'idele, millel see silt on. Sama mõtet kasutasid Ansible'i inventory grupid.
 
 <figure markdown="span">
-  ![Deployment loob ReplicaSet'i, ReplicaSet loob pod'id, Service leiab pod'id sildi järgi](assets/k05_labelid.svg)
+  [![Deployment loob ReplicaSet'i, ReplicaSet loob pod'id, Service leiab pod'id sildi järgi](assets/k05_labelid.svg)](assets/k05_labelid.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.12. Deployment, ReplicaSet, pod ja Service on seotud ainult siltide kaudu (Talvik, 2026).</figcaption>
 </figure>
 
@@ -459,7 +459,7 @@ INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
 Pod'i IP-aadress, näiteks `10.42.0.9`, on nähtav ainult klastri sees ja muutub iga uue pod'iga. Service saab püsiva aadressi teisest vahemikust, näiteks `10.43.0.15`, ja püsiva nime. Joonis 5.13 näitab kolme teed Service'ini.
 
 <figure markdown="span">
-  ![Kolm teed Service'ini: brauser node'i pordile 30080 kube-proxy kaudu, brauser nimega tere.local Traefiku kaudu ja teine pod nimega tere CoreDNS-i kaudu. Service saadab päringu ühele kolmest pod'ist.](assets/k05_service_tee.svg)
+  [![Kolm teed Service'ini: brauser node'i pordile 30080 kube-proxy kaudu, brauser nimega tere.local Traefiku kaudu ja teine pod nimega tere CoreDNS-i kaudu. Service saadab päringu ühele kolmest pod'ist.](assets/k05_service_tee.svg)](assets/k05_service_tee.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.13. Päring jõuab pod'ini alati Service'i kaudu (Talvik, 2026).</figcaption>
 </figure>
 
@@ -552,7 +552,7 @@ resources:
 ```
 
 <figure markdown="span">
-  ![kubelet kontrollib iga pod'i aadressi /health, mittevalmis pod jääb Service'ist välja](assets/k05_readiness.svg)
+  [![kubelet kontrollib iga pod'i aadressi /health, mittevalmis pod jääb Service'ist välja](assets/k05_readiness.svg)](assets/k05_readiness.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.14. readinessProbe eemaldab mittevalmis pod'i Service'ist (Talvik, 2026).</figcaption>
 </figure>
 
@@ -585,11 +585,11 @@ Compose'i failis on iga teenuse kohta image, pordid, muutujad, paroolid ja andme
     | `restart: unless-stopped` | Deployment'i kontroller teeb seda alati |
 
 <figure markdown="span">
-  ![ConfigMap annab väärtused konteinerile keskkonnamuutujatena](assets/k05_configmap.svg)
+  [![ConfigMap annab väärtused konteinerile keskkonnamuutujatena](assets/k05_configmap.svg)](assets/k05_configmap.svg){ target="_blank" title="Ava suurelt" }
   <figcaption>Joonis 5.15. ConfigMap'i väärtus jõuab konteinerisse käivitumisel (Talvik, 2026).</figcaption>
 </figure>
 
-Secret ei ole krüpteeritud. Väärtus on base64-kujul ja selle saab tagasi lugeda igaüks, kellel on õigus Secret'eid lugeda. Seepärast ei panda Secret'i faili Giti. Töökohas hoitakse paroole välises saladuste halduris, näiteks OpenBaos, ja klastrisse tuuakse need eraldi tööriistaga.
+Secret ei ole krüpteeritud. Väärtus on base64-kujul ja selle saab tagasi lugeda igaüks, kellel on õigus Secret'eid lugeda. Seepärast ei panda Secret'i faili Giti. Töökohas hoitakse paroole välises saladuste halduris, näiteks OpenBao või HashiCorp Vault. Klastrisse tuuakse need eraldi tööriistaga.
 
 Andmebaasi hoitakse sageli klastrist väljas, näiteks pilve hallatud andmebaasina. Klastris on lihtsam hoida rakendusi, mis ei hoia andmeid. Andmebaasi varundamine, uuendamine ja taastamine klastris vajab lisateadmisi. Selleks kasutatakse **Operator**'eid: kontrollereid, mis teavad, kuidas üht kindlat rakendust, näiteks PostgreSQL-i, hallata.
 
@@ -620,7 +620,7 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
     **GitOps** tähendab, et soovitud olek on Gitis ja klastris töötav tööriist viib klastri sellega kooskõlla. **Argo CD** on selline tööriist, teine levinud on [Flux](https://fluxcd.io/). See on samasugune kontroller nagu Kubernetese enda omad, ainult soovitud olek tuleb Gitist. Kui keegi muudab klastris midagi käsitsi, märkab Argo CD erinevust Gitiga ehk **triivi** (drift) ja muudab klastri tagasi. Seda teeb Argo CD ainult siis, kui rakenduse seadistuses on sisse lülitatud `selfHeal`. Vaikimisi näitab Argo CD triivi, aga ei paranda seda.
 
     <figure markdown="span">
-      ![Push-mudelis saadab CI runner muudatuse klastrisse, pull-mudelis loeb Argo CD klastri seest Gitist](assets/k05_gitops.svg)
+      [![Push-mudelis saadab CI runner muudatuse klastrisse, pull-mudelis loeb Argo CD klastri seest Gitist](assets/k05_gitops.svg)](assets/k05_gitops.svg){ target="_blank" title="Ava suurelt" }
       <figcaption>Joonis 5.16. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
     </figure>
 
