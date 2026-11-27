@@ -33,8 +33,8 @@ Varem oli rakendus sageli üks suur programm ehk monoliit. Siis jagati rakenduse
 - **taastamine**: kui serverid või andmed kaovad, taastatakse klastri olek varukoopiast.
 
 <figure markdown="span">
-  ![Kuus mikroteenust, igaüks oma konteineris](assets/k05_f_i_micro.svg)
-  <figcaption>Joonis 5.1. Mikroteenustega rakenduses on palju konteinereid (Talvik, 2026).</figcaption>
+  ![Image, konteiner, Docker ja Kubernetes järjest, ülal orkestreerimine, paremal virtuaalmasin ja konteiner kõrvuti](assets/k05_ylevaade.svg)
+  <figcaption>Joonis 5.1. Image'ist orkestreerimiseni (Talvik, 2026).</figcaption>
 </figure>
 
 Compose'iga töötasid kõik konteinerid ühes masinas. Taaskäivitusreegel `restart: unless-stopped` käivitab seiskunud konteineri uuesti, aga ainult samas masinas. Kui masin ise läheb rikki või vajab hooldust, ei vii keegi konteinereid teise masinasse ja rakendus seisab.
