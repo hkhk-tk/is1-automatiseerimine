@@ -369,7 +369,7 @@ kubectl get pods
 
 ??? success "Oodatav tulemus"
 
-    `diff` näitab rida `-  replicas: 3` ja `+  replicas: 4`. `apply` vastab `configured` ja pod'e on neli.
+    `diff` näitab rida `-  replicas: 3` ja `+  replicas: 4`. Kui erinevus on olemas, lõpeb `diff` koodiga 1, nagu Linuxi käsk `diff`. See ei ole viga. `apply` vastab `configured` ja pod'e on neli.
 
 Salvesta töö Giti:
 
@@ -472,7 +472,13 @@ Ava oma arvuti brauseris `http://<control'i IP>:30080` ja värskenda lehte mitu 
 
 ??? warning "Kui brauser ei vasta"
 
-    Kontrolli, et VPN on ühendatud ja `curl` töötab control'is. Kui control'is on tulemüür sees (`sudo ufw status` näitab `active`), luba port: `sudo ufw allow 30080/tcp`.
+    Kontrolli, et VPN on ühendatud ja `curl` töötab control'is. Kui control'is on tulemüür sees (`sudo ufw status` näitab `active`), luba NodePort ning pod'ide ja Service'ite võrgud, nagu soovitab [k3s-i dokumentatsioon](https://docs.k3s.io/installation/requirements):
+
+    ```bash
+    sudo ufw allow 30080/tcp
+    sudo ufw allow from 10.42.0.0/16 to any
+    sudo ufw allow from 10.43.0.0/16 to any
+    ```
 
 Kustuta korraga kõik pod'id ja jälgi samal ajal brauserit. Enne käsku mõtle läbi: kas leht jääb pikaks ajaks kättesaamatuks?
 
