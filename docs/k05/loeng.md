@@ -16,6 +16,8 @@ tags:
     - selgitada soovitud ja tegeliku oleku abil, mida kontroller teeb, kui pod kustutatakse;
     - järjestada joonise 5.3 abil klastri osade sammud, mis järgnevad käsule `kubectl apply`;
     - märkida Deployment'i ja Service'i YAML-failis read, mis seovad need siltide kaudu;
+    - kirjeldada joonise abil, mis teed pidi jõuab päring brauserist või teisest pod'ist pod'ini;
+    - arvutada, mitu vana pod'i jääb rolling update'i ajal tööle, kui uus versioon ei käivitu;
     - leida käskudega `kubectl get`, `describe` ja `logs`, miks pod ei käivitu;
     - eristada käskude `kubectl apply`, `helm upgrade` ja Argo CD ülesannet rakenduse paigaldamisel.
 
@@ -25,7 +27,7 @@ Compose'iga töötasid kõik konteinerid ühes masinas. Taaskäivitusreegel `res
 
 Seda probleemi lahendab **orkestreerimine**. Orkestreerija on tarkvara, mis otsustab, millises masinas konteiner töötab, asendab rikkis koopiad uutega ja vahetab versioonid järk-järgult välja. Administraator kirjeldab, mis peab töötama ja mitu koopiat. Masina valib orkestreerija.
 
-Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 4 ja 5.
+Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 4 ja 6.
 
 <figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
 <svg viewBox="0 0 690 250" role="img" aria-label="Vasakul üks Docker-host, kus kõik neli teenust seisavad, kui host läheb rikki. Paremal klaster: control plane hoiab soovitud olekut, node 2 läks rikki ja app01 pod luuakse uuesti node 3-l." xmlns="http://www.w3.org/2000/svg">
@@ -98,13 +100,27 @@ Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** 
 
 **k3s** paigaldub ühe käsuga ja vajab vähe mälu, sest kogu juhtimise osa on ühes programmis. Ühe masinaga klastris hoiab k3s andmeid SQLite'i andmebaasis. Täpsemalt: [k3s dokumentatsioon](https://docs.k3s.io/).
 
+Kubernetes ei ole ainus orkestreerija. Väiksemaid süsteeme hallatakse sageli lihtsamate tööriistadega.
+
+??? note "Tabel 5.3. Kubernetese alternatiivid"
+
+    | Tööriist | Mis see on | Millal valitakse |
+    |---|---|---|
+    | **Docker Compose** | mitu konteinerit ühes masinas | üks server, väike rakendus |
+    | **Podman ja systemd** | konteiner systemd teenusena (Quadlet) | üksikud teenused Red Hati põhistes serverites |
+    | **Docker Swarm** | Dockeri sisseehitatud klaster, failid sarnased Compose'iga | väike klaster ilma uue sõnavarata |
+    | **HashiCorp Nomad** | üks programm, käivitab konteinereid ja tavalisi programme | segakeskkond, HashiCorpi tööriistade kasutajad |
+    | **AWS ECS**, **Google Cloud Run** | pilve enda konteineriteenus | ainult ühes pilves, klastrit ei halda keegi ise |
+
+    Swarmi ja Nomadi kasutajaid on vähem ja töökuulutustes küsitakse peaaegu alati Kubernetest.
+
 Nimi k3s tuli mõttest teha Kubernetes, mis vajab poole vähem mälu. K8s on kümnetäheline sõna, seega poole väiksem on viietäheline K3s.
 
 ## 3. Soovitud olek ja kontroller
 
 `docker run` on **imperatiivne** käsk: see ütleb, mida teha. Kubernetese YAML-fail on **deklaratiivne** kirjeldus: see ütleb, milline olek peab olema, ja süsteem leiab ise, mida selleks teha. Sama mõtet kasutasid Ansible'is ja OpenTofus: `state: present` või `resource` kirjeldab tulemust.
 
-Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid pod'e (täpsemalt jaotises 5). Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
+Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid pod'e (täpsemalt jaotises 6). Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
 
 Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) töötab lõputus tsüklis: loeb soovitud olekut, vaatab tegelikku olekut ja teeb sammu, et vahe kaoks.
 
@@ -115,7 +131,7 @@ Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://
 
 Kui pod kustutatakse, näeb kontroller vahet „soovitud 3, tegelik 2“ ja loob uue pod'i. Uus pod saab uue nime ja uue IP-aadressi. Seepärast ei tohi miski sõltuda pod'i nimest ega aadressist.
 
-??? note "Tabel 5.3. Ansible ja Kubernetes"
+??? note "Tabel 5.4. Ansible ja Kubernetes"
 
     | | Ansible | Kubernetes |
     |---|---|---|
@@ -173,7 +189,7 @@ Kontrollerid, scheduler ja kubelet ei anna üksteisele käske. Igaüks jälgib A
 
 Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik käsud lähevad API serverile käsuga **kubectl**. SSH leiab failist `~/.ssh/config`, kuhu ühenduda ja millise võtmega. kubectl leiab sama info failist `~/.kube/config`. Sellist faili nimetatakse lühidalt **kubeconfig**'iks. Seal on klastri aadress, sinu sertifikaat või token ja vaikimisi **nimeruum** (namespace). Nimeruum jagab klastri osadeks, näiteks iga meeskonna või keskkonna jaoks oma.
 
-??? note "Tabel 5.4. Sagedasemad kubectl käsud"
+??? note "Tabel 5.5. Sagedasemad kubectl käsud"
 
     | Käsk | Mida teeb | Tuttav vaste |
     |---|---|---|
@@ -184,7 +200,53 @@ Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik k
     | `kubectl diff -f <fail>` | näitab, mis muutuks | `--check --diff`, `tofu plan` |
     | `kubectl delete -f <fail>` | kustutab failis kirjeldatud objektid | `tofu destroy` |
 
-## 5. Pod, Deployment ja Service
+## 5. k3s paigaldus ja klastri enda osad
+
+Praktikumis paigaldad k3s-i masinasse `control`. [Ametlik paigaldusskript](https://docs.k3s.io/quick-start) laadib alla ühe programmi `k3s`, teeb sellest systemd teenuse ja käivitab selle. Selles ühes programmis on API server, scheduler, kontrollerid, kubelet, containerd ja käsk `kubectl`. Suures klastris on need eraldi programmid ja sageli eraldi masinates.
+
+Skript käivitatakse `sudo` õigustes. Seepärast laadid selle enne alla ja loed läbi. Muutuja `INSTALL_K3S_VERSION` määrab versiooni, et kõigil õppijatel oleks sama klaster. Sama põhimõte kehtis OpenTofu provider'i versiooni puhul.
+
+```bash
+curl -sfL https://get.k3s.io -o install-k3s.sh
+less install-k3s.sh
+INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
+```
+
+??? note "Tabel 5.6. k3s-i failid ja kaustad"
+
+    | Fail või kaust | Mis seal on |
+    |---|---|
+    | teenus `k3s` | haldad käsuga `systemctl`, logi näed käsuga `journalctl -u k3s` |
+    | `/etc/rancher/k3s/k3s.yaml` | administraatori kubeconfig, loetav ainult root'ile |
+    | `/etc/rancher/k3s/registries.yaml` | kust k3s image'id tõmbab, selle faili teed ise |
+    | `/var/lib/rancher/k3s/` | klastri andmebaas, image'id ja pod'ide andmed |
+
+**kubeconfig.** k3s kirjutab administraatori kubeconfig'i faili, mida saab lugeda ainult root. Praktikumis kopeerid selle oma kodukausta `~/.kube/config` õigustega `600`, et `kubectl` töötaks ilma `sudo`-ta. Selle failiga on klastrile täielik juurdepääs, seepärast ei panda seda Giti. Töökohas saab iga inimene oma kubeconfig'i piiratud õigustega. Õigusi jagab Kubernetes rollide kaupa (**RBAC**, role-based access control), näiteks „võib lugeda pod'e nimeruumis `test`“. Sama mõte oli Proxmoxi piiratud tokenil.
+
+**Image'id Harborist.** Docker Hub lubab ühelt IP-aadressilt piiratud arvu tõmbeid tunnis. Kogu kool on interneti jaoks üks aadress, nii et 20 õppija klastrid ületaksid piiri kiiresti. Kooli Harbor töötab vahemäluna: tõmbab image'i Docker Hubist üks kord ja annab selle siis kõigile. Fail `registries.yaml` ütleb containerd'le, et Docker Hubi image'id tuleb küsida Harborist. Kui Harbor ei vasta, tõmbab k3s image'i otse Docker Hubist. Ettevõtted hoiavad oma registrit samal põhjusel ja ka selleks, et image'id enne kasutamist turvavigade suhtes kontrollida.
+
+**Klastri enda osad.** Kohe pärast paigaldust näitab `kubectl get pods -A` mitut pod'i, kuigi sa ei ole veel midagi käivitanud. Need on klastri enda osad nimeruumis `kube-system`. Klastri lisad on samuti pod'id ja neid hallatakse samamoodi nagu sinu rakendust.
+
+??? note "Tabel 5.7. Pod'id nimeruumis kube-system"
+
+    | Pod | Mida teeb |
+    |---|---|
+    | `coredns` | annab Service'itele nimed, nii et pod leiab teise pod'i nime järgi |
+    | `traefik` | võtab pordil 80 ja 443 vastu veebiliikluse ja suunab selle Ingressi reeglite järgi |
+    | `svclb-traefik` | ServiceLB: avab Traefiku pordid node'i IP-aadressil |
+    | `local-path-provisioner` | annab pod'idele kettaruumi node'i kaustast |
+    | `metrics-server` | kogub pod'ide protsessori ja mälu kasutust käsule `kubectl top` |
+    | `helm-install-traefik` | ühekordne töö, mis paigaldas Traefiku Helmiga, olek `Completed` |
+
+??? question "Kontrolli ennast"
+
+    `kubectl get pods` vastab `No resources found in default namespace`, aga `kubectl get pods -A` näitab seitset pod'i. Miks?
+
+    ??? success "Vastus"
+
+        Ilma võtmeta `-n` näitab `kubectl` ainult nimeruumi `default`, kus sinu rakendusi veel ei ole. Võti `-A` näitab kõiki nimeruume ja seal on klastri enda osad nimeruumis `kube-system`.
+
+## 6. Pod, Deployment ja Service
 
 **Pod** on väikseim üksus, mida Kubernetes käivitab: üks või mitu konteinerit, millel on ühine IP-aadress. Pod'e otse tavaliselt ei looda. **Deployment** kirjeldab, mitu ühesugust pod'i peab töötama ja millisest image'ist. Deployment teeb vahepealse objekti **ReplicaSet**, mis hoiab pod'ide arvu. Versiooni uuendamisel teeb Deployment uue ReplicaSet'i ja vahetab pod'id järk-järgult. Seda nimetatakse **rolling update**'iks.
 
@@ -246,7 +308,7 @@ spec:
         - Deployment'is `selector.matchLabels`: `app: tere` ütleb, millised pod'id Deployment'ile kuuluvad. Kui see erineb mallist, keeldub API server Deployment'i vastu võtmast.
         - Service'is `selector`: `app: tere` ütleb, millistele pod'idele Service päringud saadab. Kui see erineb, võetakse fail vastu, aga Service'il ei ole ühtegi pod'i.
 
-Service'i tüüp ütleb, kust see on kättesaadav. **ClusterIP** on vaikimisi tüüp ja on nähtav ainult klastri sees. **NodePort** avab lisaks pordi igal node'il vahemikus 30000–32767. **LoadBalancer** küsib pilves koormusjaoturi. Veebirakenduse jaoks kasutatakse tootmises **Ingress**'i, mis suunab päringu nime järgi õigesse Service'isse. k3s-is teeb seda Traefik.
+Kust Service on kättesaadav, ütleb selle tüüp `type`. Tüüpidest ja päringu teest tuleb juttu jaotises 8.
 
 ??? question "Kontrolli ennast"
 
@@ -256,11 +318,135 @@ Service'i tüüp ütleb, kust see on kättesaadav. **ClusterIP** on vaikimisi t�
 
         Mõlemad failid võetakse vastu ja pod'id töötavad, aga Service ei leia ühtegi pod'i, sest sildid on tõstutundlikud. `kubectl get endpointslices` näitab, et Service'il pole aadresse, ja päringud ei jõua kuhugi.
 
-## 6. Kui pod ei käivitu
+## 7. Käsust failiks
+
+Kubernetesele saab anda korraldusi kahel viisil. **Imperatiivne** käsk ütleb, mida teha: `kubectl create deployment`, `kubectl scale`, `kubectl delete pod`. **Deklaratiivne** fail kirjeldab soovitud olekut ja `kubectl apply` viib klastri sellega kooskõlla. Käsk sobib katsetamiseks, aga sellest ei jää kirja, milline olek on soovitud. Kui klaster kaob, ei tea keegi, mis seal töötas.
+
+YAML-faili ei pea kirjutama tühjalt lehelt. Võti `--dry-run=client` ütleb, et `kubectl` ei saada midagi klastrisse. Võti `-o yaml` trükib objekti, mille käsk oleks loonud. Nii saad õige kujuga faili, mida muudad edasi ja hoiad Gitis.
+
+```bash
+kubectl create deployment tere --image=traefik/whoami:v1.11.0 --replicas=3 \
+  --dry-run=client -o yaml > deployment.yaml
+```
+
+??? note "Tabel 5.8. Sama muudatus käsuga ja failiga"
+
+    | Muudatus | Käsuga | Failiga |
+    |---|---|---|
+    | loo Deployment | `kubectl create deployment tere --image=…` | `kubectl apply -f deployment.yaml` |
+    | muuda koopiate arvu | `kubectl scale deployment tere --replicas=4` | muuda failis `replicas`, siis `apply` |
+    | muuda image'i | `kubectl set image deployment/tere whoami=…` | muuda failis `image`, siis `apply` |
+    | kus soovitud olek on kirjas | ainult klastris | failis ja Gitis |
+
+`kubectl apply` on idempotentne. Kui fail ja klaster on juba samad, vastab teine käivitus `unchanged`, nagu Ansible'i `changed=0` ja OpenTofu `No changes`. `kubectl diff -f deployment.yaml` näitab enne muudatust, mis klastris muutuks, nagu `tofu plan`.
+
+Kui keegi muudab klastrit käsuga, erinevad fail ja klaster. Seda erinevust nimetatakse **triiviks** (drift). Järgmine `kubectl apply` viib klastri tagasi faili olekusse ja käsitsi tehtud muudatus kaob. Seepärast tehakse muudatus failis ja failist tuleb see klastrisse.
+
+??? question "Kontrolli ennast"
+
+    Failis on `replicas: 3`. Administraator teeb käsu `kubectl scale deployment tere --replicas=5`. Hiljem muudetakse failis image'i versiooni ja tehakse `kubectl apply`. Mitu pod'i on pärast seda?
+
+    ??? success "Vastus"
+
+        Kolm. `apply` viib klastri faili olekusse ja failis on `replicas: 3`. Kui viis koopiat oli vaja, pidi muudatus minema faili. Kui faili muudetakse, tuleb muudatus Giti, ja nii jääb kirja, kes ja miks muutis.
+
+## 8. Kuidas päring pod'ini jõuab
+
+Pod'i IP-aadress, näiteks `10.42.0.9`, on nähtav ainult klastri sees ja muutub iga uue pod'iga. Service saab püsiva aadressi teisest vahemikust, näiteks `10.43.0.15`, ja püsiva nime. Joonis 5.5 näitab kolme teed Service'ini.
+
+<figure markdown="span">
+  ![Kolm teed Service'ini: brauser node'i pordile 30080 kube-proxy kaudu, brauser nimega tere.local Traefiku kaudu ja teine pod nimega tere CoreDNS-i kaudu. Service saadab päringu ühele kolmest pod'ist.](assets/k05_service_tee.svg)
+  <figcaption>Joonis 5.5. Päring jõuab pod'ini alati Service'i kaudu (Talvik, 2026).</figcaption>
+</figure>
+
+**Klastri seest.** Teine pod kasutab aadressi `http://tere`. CoreDNS annab nimele `tere` Service'i aadressi. Sama tegi Compose'i võrgus Dockeri DNS: konteiner leidis teise teenuse nime järgi. Täisnimi on `tere.default.svc.cluster.local`, kus `default` on nimeruum. Teise nimeruumi Service'i poole pöördutakse nimega `tere.<nimeruum>`.
+
+**NodePort.** Service'i tüüp `NodePort` avab pordi vahemikus 30000–32767 igal node'il. kube-proxy seab node'il võrgureeglid, mis saadavad sellele pordile tulnud päringu Service'ile. Port on avatud igal node'il, nii et brauseris sobib ükskõik millise node'i IP-aadress. Praktikumis kasutad porti `30080`.
+
+**Ingress.** Traefik kuulab porte 80 ja 443 ning vaatab päringu päist `Host`. Ingressi reegel ütleb, et nimi `tere.local` läheb Service'ile `tere`. Nii saab ühe IP-aadressi ja pordi taga olla palju rakendusi, nagu nginx'i virtuaalhostid. Ingress ei ole Service'i tüüp, vaid eraldi objekt, mis viitab Service'ile.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tere
+spec:
+  rules:
+    - host: tere.local            # päise Host väärtus
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tere        # Service, kuhu päring läheb
+                port:
+                  number: 80
+```
+
+??? note "Tabel 5.9. Kuidas Service'i välja näidata"
+
+    | Viis | Kust kättesaadav | Kus kasutatakse |
+    |---|---|---|
+    | `ClusterIP` | ainult klastri sees, nimega | andmebaas, sisemine teenus |
+    | `NodePort` | iga node'i IP ja port 30000–32767 | katsetamine, praktikum |
+    | `LoadBalancer` | eraldi väline IP-aadress | pilves loob pakkuja koormusjaoturi, k3s-is avab ServiceLB pordi node'il |
+    | Ingress | nimi ja tee, pordid 80 ja 443 | veebirakendused |
+
+Service jagab päringud oma pod'ide vahel. Praktikumis näed seda nii, et rakenduse vastuses muutub `Hostname` päringust päringusse.
+
+??? question "Kontrolli ennast"
+
+    Brauseris on avatud `http://<control'i IP>:30080`. Administraator kustutab korraga kõik kolm pod'i. Mis muutub ja mis jääb samaks?
+
+    ??? success "Vastus"
+
+        Deployment loob kolm uut pod'i uute nimede ja IP-aadressidega. Service'i aadress, nimi ja port `30080` jäävad samaks. Mõne sekundi jooksul võib brauser anda vea, siis vastab leht uute pod'ide nimedega.
+
+## 9. Uus versioon ja tagasivõtt
+
+Image'i tag määrab rakenduse versiooni. Kui failis muutub tag, teeb Deployment uue ReplicaSet'i ja vahetab pod'id järk-järgult välja. Seda nimetatakse **rolling update**'iks. Uus pod peab olema valmis, enne kui järgmine vana pod kustutatakse.
+
+Kaks seadet ütlevad, kui kiiresti vahetus käib. `maxSurge` ütleb, mitu pod'i võib olla soovitud arvust rohkem. `maxUnavailable` ütleb, mitu pod'i võib soovitud arvust puududa. Mõlema vaikeväärtus on 25%. `maxSurge` ümardatakse üles ja `maxUnavailable` alla.
+
+??? note "Tabel 5.10. Rolling update vaikeväärtustega"
+
+    | `replicas` | `maxSurge` | `maxUnavailable` | Mis juhtub, kui uus versioon ei käivitu |
+    |---|---|---|---|
+    | 3 | 1 | 0 | 3 vana töötavad, 1 uus ei käivitu |
+    | 4 | 1 | 1 | 3 vana töötavad, 2 uut ei käivitu |
+    | 10 | 3 | 2 | 8 vana töötavad, 5 uut ei käivitu |
+
+Uuendust jälgitakse käsuga `kubectl rollout`:
+
+??? note "Tabel 5.11. Käsud uuenduse jälgimiseks"
+
+    | Käsk | Mida teeb |
+    |---|---|
+    | `kubectl rollout status deployment tere` | ootab, kuni uuendus lõpeb, või näitab, et see seisab |
+    | `kubectl rollout history deployment tere` | näitab varasemaid versioone |
+    | `kubectl rollout undo deployment tere` | viib klastri eelmise versiooni juurde |
+    | `kubectl get replicasets` | näitab vana ja uut ReplicaSet'i ning nende pod'ide arvu |
+
+`kubectl rollout undo` muudab klastrit, aga mitte faili. Järgmine `apply` toob vigase versiooni tagasi. `undo` sobib hädaolukorraks, kui rakendus on katki ja parandus võtab aega. Seejärel parandatakse ka fail.
+
+Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võib aga vajada käivitumiseks aega. **readinessProbe** ütleb, kuidas valmidust kontrollida, näiteks HTTP-päringuga aadressile `/health`. Kuni kontroll ei õnnestu, ei saada Service pod'ile päringuid ja rolling update ei kustuta järgmist vana pod'i.
+
+**Ära kasuta tag'i `latest`.** Sama tag võib eri päevadel tähendada eri image'it. Siis ei tea keegi, milline versioon töötab, ja `rollout undo` ei pruugi viia tagasi eelmise versiooni juurde. Kasuta kindlat versiooni, näiteks `v1.12.0`.
+
+??? question "Kontrolli ennast"
+
+    Deployment'is on `replicas: 4`. Uues versioonis on image'i tag vale. Mitu pod'i on `Running` ja mitu `ImagePullBackOff`? Mida näitab `kubectl get deployment`?
+
+    ??? success "Vastus"
+
+        Kolm vana pod'i on `Running` ja kaks uut on `ImagePullBackOff`. Nelja koopia puhul lubab `maxUnavailable` ühel pod'il puududa, seepärast kustutati üks vana pod. `maxSurge` lubab viit pod'i korraga, seega tehti kaks uut. `kubectl get deployment` näitab `READY 3/4` ja `UP-TO-DATE 2`.
+
+## 10. Kui pod ei käivitu
 
 Pod'i olek ütleb, millises etapis see pidama jäi, ja põhjus on pod'i sündmustes. Kolm käsku leiavad enamiku vigu: `kubectl get pods` näitab olekut, `kubectl describe pod <nimi>` näitab lõpus sündmusi ja `kubectl logs <nimi>` näitab konteineri väljundit.
 
-??? note "Tabel 5.5. Pod'i olekud ja kust põhjust otsida"
+??? note "Tabel 5.12. Pod'i olekud ja kust põhjust otsida"
 
     | Olek | Mida tähendab | Kust otsida |
     |---|---|---|
@@ -270,7 +456,7 @@ Pod'i olek ütleb, millises etapis see pidama jäi, ja põhjus on pod'i sündmus
     | `CrashLoopBackOff` | konteineri protsess lõpetab kohe töö ja käivitatakse üha pikema ootega uuesti | `logs <pod> --previous` |
     | `Running`, aga `READY 0/1` | konteiner töötab, aga ei ole valmis päringuid vastu võtma | `describe pod`: `Readiness probe failed` |
 
-Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jäävad vanad pod'id tööle ja rakendus vastab edasi. `kubectl get deployment` näitab siis, et `UP-TO-DATE` on väiksem kui soovitud arv.
+Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jääb enamik vanu pod'e tööle ja rakendus vastab edasi. `kubectl get deployment` näitab siis, et `READY` on väiksem kui soovitud arv.
 
 ??? question "Leia viga"
 
@@ -280,7 +466,37 @@ Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jäävad 
 
         Rakendus töötab, sest kolm vana pod'i jäid alles. `kubectl describe pod` näitab sündmust `not found`: Docker Hubis on tag `latest-amd64`, mitte `latest-amd`. Parandus käib failis: õige tag, seejärel `kubectl apply`. Tootmises ei kasutata tag'i `latest`, sest siis ei tea keegi, milline versioon töötab.
 
-## 7. Helm ja GitOps
+## 11. Compose'i stack Kubernetesesse
+
+Compose'i failis on iga teenuse kohta image, pordid, muutujad, paroolid ja andmekaustad. Kubernetesis on igaühe jaoks oma objekt. Seepärast on Kubernetese failid pikemad, aga iga osa saab eraldi muuta ja õigusi jagada.
+
+??? note "Tabel 5.13. Compose'i osad Kubernetesis"
+
+    | Compose | Kubernetes |
+    |---|---|
+    | teenus, `image` | Deployment |
+    | teenuse nimi võrgus | Service tüübiga `ClusterIP` |
+    | `ports: "8080:80"` | Service tüübiga `NodePort` või Ingress |
+    | `environment` | **ConfigMap**: seadistus võtme ja väärtusena |
+    | paroolid failis `.env` | **Secret**: nagu ConfigMap, aga eraldi õigustega |
+    | `volumes` andmete jaoks | **PersistentVolumeClaim**: kettaruumi taotlus, k3s-is annab selle local-path |
+    | andmebaas | **StatefulSet**: igal pod'il püsiv nimi ja oma ketas |
+    | `healthcheck`, `depends_on` | readinessProbe, käivitamise järjekorda Kubernetes ei taga |
+    | `restart: unless-stopped` | Deployment'i kontroller teeb seda alati |
+
+Secret ei ole krüpteeritud. Väärtus on base64-kujul ja selle saab tagasi lugeda igaüks, kellel on õigus Secret'eid lugeda. Seepärast ei panda Secret'i faili Giti. Töökohas hoitakse paroole välises saladuste halduris, näiteks OpenBaos, ja klastrisse tuuakse need eraldi tööriistaga.
+
+Andmebaasi hoitakse sageli klastrist väljas, näiteks pilve hallatud andmebaasina. Klastris on lihtsam hoida rakendusi, mis ei hoia andmeid. Andmebaasi varundamine, uuendamine ja taastamine klastris vajab lisateadmisi. Selleks kasutatakse **Operator**'eid: kontrollereid, mis teavad, kuidas üht kindlat rakendust, näiteks PostgreSQL-i, hallata.
+
+??? question "Kontrolli ennast"
+
+    Compose'is oli andmebaasi parool failis `.env`, mis ei läinud Giti. Kuhu läheb parool Kubernetesis ja kas see on seal krüpteeritud?
+
+    ??? success "Vastus"
+
+        Parool läheb Secret'i. Vaikimisi ei ole see krüpteeritud, vaid ainult base64-kujul. Selle näeb igaüks, kellel on õigus Secret'eid lugeda. Secret'i fail ei lähe Giti, sama nagu `.env`.
+
+## 12. Helm ja GitOps
 
 Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskkonda, muutub failide käsitsi haldamine raskeks. Selleks on kaks tööriista, mida praktikumi lisaülesannetes proovid.
 
@@ -318,7 +534,7 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 <path class="a d" d="M592,220 V244 H345 V222" marker-end="url(#lxb)"/>
 <text class="s" x="470" y="258" text-anchor="middle">jälgib triivi, pöörab tagasi</text>
 </svg>
-<figcaption>Joonis 5.5. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
+<figcaption>Joonis 5.6. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
 </figure>
 
 Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab ja testib image'i ning kirjutab selle uue tag'i Gitis olevasse YAML-faili. Argo CD näeb Gitis muudatust ja uuendab klastrit. Argo CD kontrollib Giti vaikimisi iga kolme minuti tagant, nii et muudatus ei jõua klastrisse kohe. Konveier ei vaja klastri võtit, klastrisse kirjutab ainult Argo CD. Nii töötavad ka Eesti ettevõtted. Näiteks on Entigo kirjutanud tag'i uuendamise sammu jaoks oma tööriista [entigo-k8s-gitops](https://github.com/entigolabs/entigo-k8s-gitops).
@@ -348,5 +564,10 @@ Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab j
     | Deployment | hoiab soovitud arvu pod'e ja vahetab versioone järk-järgult |
     | Service | püsiv nimi ja aadress pod'ide grupile |
     | silt (label) | võti ja väärtus, mille järgi objektid üksteist leiavad |
+    | nimeruum | klastri osa, `kube-system` klastri enda osadele, `default` rakendustele |
+    | `kubectl apply`, triiv | viib klastri failiga kooskõlla; käsuga tehtud muudatus kaob järgmisel `apply`-l |
+    | NodePort, Ingress | port igal node'il; nimi pordil 80 Traefiku kaudu |
+    | rolling update | pod'id vahetatakse järk-järgult, vigane versioon ei peata rakendust |
+    | ConfigMap, Secret | seadistus ja paroolid, Secret ei ole krüpteeritud |
     | Helm | paketihaldur, chart'id |
     | Argo CD | viib klastri Gitis kirjeldatud olekusse ja märkab triivi |

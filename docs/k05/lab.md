@@ -495,7 +495,7 @@ kubectl describe pod <pod> | tail -n 10
 
         Uus pod on olekus `ErrImagePull` ja seejärel `ImagePullBackOff`: image'i ei saa alla laadida ja Kubernetes proovib uuesti üha pikemate vahedega. Sündmus ütleb `failed to resolve reference "docker.io/traefik/whoami:1.12.0": ... not found`. Sellist tag'i ei ole: versiooni ees puudub `v`. Docker Hubis on tag'id kujul `v1.12.0`.
 
-        Neli vana pod'i töötavad edasi ja brauseris vastab leht endiselt. Rolling update ei kustuta vana pod'i enne, kui uus töötab. Deployment'i real näed `READY 4/4`, aga `UP-TO-DATE 1`: üks pod on uue malli järgi tehtud, aga see ei tööta.
+        Kolm vana pod'i töötavad edasi ja brauseris vastab leht endiselt. Nelja koopia puhul lubab rolling update ühel pod'il puududa, seepärast kustutati üks vana pod ja tehti kaks uut. Deployment'i real näed `READY 3/4` ja `UP-TO-DATE 2`: kaks pod'i on uue malli järgi tehtud, aga need ei tööta.
 
 Paranda failis image'i rida kujule `traefik/whoami:v1.12.0` ja rakenda uuesti:
 
