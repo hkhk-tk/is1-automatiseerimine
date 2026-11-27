@@ -250,7 +250,7 @@ Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühenda
 
 ### Deployment ja StatefulSet
 
-Kui ainus rakenduse pod kukub, on rakendus maas. Seepärast töötavad koopiad mitmes node'is ja on seotud sama Service'iga. Koopiaid ei looda käsitsi: **Deployment** on pod'i mall, kus on kirjas, mitu koopiat peab töötama. Praktikas lood Deployment'e, mitte pod'e.
+Kui ainus rakenduse pod kukub, ei ole rakendus kättesaadav. Seepärast töötavad koopiad mitmes node'is ja on seotud sama Service'iga. Koopiaid ei looda käsitsi: **Deployment** on pod'i mall, kus on kirjas, mitu koopiat peab töötama. Praktikas lood Deployment'e, mitte pod'e.
 
 Andmebaasi koopiaid Deployment'iga ei tehta, sest koopiad ei ole võrdsed: igaüks vajab oma andmeid ja püsivat nime. Selleks on **StatefulSet**: igal pod'il on püsiv nimi (`postgres-0`, `postgres-1`), püsiv võrguaadress ja oma ketas. Andmete kopeerimist koopiate vahel StatefulSet ei tee, seda korraldab andmebaas ise või andmebaasi operator. Seepärast hoitakse andmebaasi sageli klastrist väljas. Lisaks on **DaemonSet** (üks pod igal node'il, näiteks logikoguja), **Job** (ühekordne töö) ja **CronJob** (ajastatud töö nagu `cron`).
 
@@ -719,3 +719,5 @@ Enamikul Kubernetese mõistetel on vaste, mida administraator tunneb serverite j
     | ConfigMap, Secret | seadistus ja paroolid, Secret ei ole krüpteeritud |
     | Helm | paketihaldur, chart'id |
     | Argo CD | viib klastri Gitis kirjeldatud olekusse ja märkab triivi |
+
+--8<-- "includes/k05-sonastik.md"

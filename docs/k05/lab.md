@@ -1277,3 +1277,5 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
     Samad failid töötavad ka pilves, näiteks AWS-i Kubernetese teenuses EKS. Erinevus on paigalduses: k3s-i paigaldasid ise, EKS-is haldab control plane'i AWS. Vaata [HashiCorpi EKS-i õpetust](https://developer.hashicorp.com/terraform/tutorials/kubernetes/eks). EKS maksab ka tühjana tunnitasu, nii et kustuta klaster kohe pärast proovimist.
 
 Veaotsing: [Abi](abi.md).
+
+--8<-- "includes/k05-sonastik.md"
