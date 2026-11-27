@@ -203,6 +203,40 @@ kubectl get pods -A
 
     **Nimeruum** (namespace) jagab klastri osadeks. Sinu rakendus läheb nimeruumi `default`, mida `kubectl` kasutab, kui nimeruumi pole antud. Võti `-A` näitab kõiki nimeruume.
 
+??? tip "Soovi korral: ![](assets/logo/k9s.png){ width="64" } k9s näitab klastrit kogu aeg teises terminalis"
+
+    **k9s** on Kubernetese terminali kasutajaliides. See näitab pod'e, nende olekut ja logisid ning värskendab vaadet ise. Ava see teises terminalis ja jäta lahti: iga järgmise osa muudatust näed seal kohe. Klastrisse ei paigaldata midagi, k9s kasutab sama faili `~/.kube/config` mis `kubectl`.
+
+    ```bash
+    curl -fsSLO https://github.com/derailed/k9s/releases/download/v0.51.0/k9s_linux_amd64.deb
+    sudo apt install -y ./k9s_linux_amd64.deb
+    k9s
+    ```
+
+    | Klahv | Mida teeb |
+    |---|---|
+    | `:pod`, `:deploy`, `:svc`, `:secret` ja ++enter++ | vahetab vaadet |
+    | `0` | kõik nimeruumid |
+    | `l` | pod'i logi, tagasi ++esc++ |
+    | `d` | describe |
+    | `s` | pod'i vaates shell konteineris, Deployment'i vaates koopiate arv |
+    | ++ctrl+d++ | kustutab |
+    | `:q` | väljub |
+
+    Osas 9 näeb k9s nii välja: kolm vana pod'i töötavad ja kaks uut on olekus `ErrImagePull`.
+
+    ```text
+    ┌──────────────────────────── pods(default)[5] ────────────────────────────┐
+    │ NAME↑                    READY   STATUS         RESTARTS   IP          NODE    │
+    │ tere-7b7f9f4db6-96hmw    1/1     Running        0          10.42.0.23  control │
+    │ tere-7b7f9f4db6-rr6gp    1/1     Running        0          10.42.0.24  control │
+    │ tere-7b7f9f4db6-sr5gw    1/1     Running        0          10.42.0.22  control │
+    │ tere-7b54fc6fdf-gch5b    0/1     ErrImagePull   0          10.42.0.27  control │
+    │ tere-7b54fc6fdf-wwhr6    0/1     ErrImagePull   0          10.42.0.26  control │
+    ```
+
+    Praktikumi sammud tee ikka `kubectl`-iga ja failidega. k9s-is tehtud muudatust failis ei ole ja järgmine `kubectl apply` võtab selle tagasi.
+
 ## Osa 2 · Esimene rakendus käsuga
 
 **Pod** on Kubernetese väikseim üksus: üks või mitu konteinerit, millel on ühine IP-aadress. Pod'e otse ei looda. **Deployment** kirjeldab, mitu ühesugust pod'i peab töötama ja millisest image'ist, ning loob ja asendab need ise. Rakendus `traefik/whoami` on väike veebiserver, mis vastab pod'i nime ja IP-aadressiga. Nii näed, milline pod päringule vastas.
@@ -229,7 +263,7 @@ kubectl get pods -o wide
 
 ### 2.2 Vaata pod'i sisse
 
-`kubectl describe` näitab kõike, mida Kubernetes pod'i kohta teab, ja lõpus sündmusi (Events) loomise järjekorras. `kubectl logs` näitab konteineri väljundit nagu `docker logs`. Asenda `<pod>` oma pod'i nimega.
+`kubectl describe` näitab kõike, mida Kubernetes pod'i kohta teab, ja lõpus sündmusi (Events) loomise järjekorras. `kubectl logs` näitab konteineri väljundit nagu `docker logs`. Asenda `<pod>` oma pod'i nimega ja `<pod-ip>` aadressiga veerust `IP`. Mõlemad näitab käsk `kubectl get pods -o wide`.
 
 ```bash
 kubectl describe pod <pod> | tail -n 15
@@ -283,6 +317,15 @@ Kustuta esimeses terminalis üks pod. Enne käsku mõtle läbi: mitu pod'i on mi
 kubectl delete pod <üks-pod>
 kubectl get pods
 ```
+
+??? tip "Vihje: pod'i nimi"
+
+    Kopeeri nimi käsu `kubectl get pods` väljundist, näiteks `tere-6d8c5b7f9c-x2kq4`. Ilma kopeerimiseta kustutab esimese pod'i see käsk:
+
+    ```bash
+    kubectl delete $(kubectl get pods -l app=tere -o name | head -1)
+    ```
+
 
 ??? success "Oodatav tulemus"
 
@@ -369,6 +412,16 @@ kubectl apply -f k05-k8s/deployment.yaml
 kubectl get pods
 ```
 
+??? tip "Vihje: faili muutmine"
+
+    Ava fail käsuga `nano k05-k8s/deployment.yaml`, muuda rida `replicas: 3` kujule `replicas: 4`, salvesta ++ctrl+o++ ja ++enter++, välju ++ctrl+x++. Sama ühe käsuga:
+
+    ```bash
+    sed -i 's/replicas: 3/replicas: 4/' k05-k8s/deployment.yaml
+    grep replicas k05-k8s/deployment.yaml
+    ```
+
+
 ??? success "Oodatav tulemus"
 
     `diff` näitab rida `-  replicas: 3` ja `+  replicas: 4`. Kui erinevus on olemas, lõpeb `diff` koodiga 1, nagu Linuxi käsk `diff`. See ei ole viga. `apply` vastab `configured` ja pod'e on neli.
@@ -445,6 +498,15 @@ Vastust ei tule. Pod'id töötavad ja Service on olemas. Leia põhjus.
         EndpointSlice'is ei ole ühtegi aadressi: Service ei leidnud ühtegi pod'i. Service'i `selector` otsib silti `app: whoami`, aga pod'idel on silt `app: tere`. `whoami` on konteineri nimi, mitte silt. Service leiab pod'id ainult siltide järgi ja kui ükski pod ei klapi, ei lähe päring kuhugi.
 
 Paranda failis `selector` väärtuseks `app: tere` ja rakenda uuesti:
+
+??? tip "Vihje: paranda ühe käsuga"
+
+    ```bash
+    sed -i 's/app: whoami/app: tere/' k05-k8s/service.yaml
+    grep -A1 selector k05-k8s/service.yaml
+    ```
+
+    Teine käsk peab näitama rida `app: tere`.
 
 ```bash
 kubectl apply -f k05-k8s/service.yaml
@@ -621,6 +683,14 @@ kubectl apply -f k05-k8s/configmap.yaml
 curl -s http://localhost:30080 | head -1
 ```
 
+??? tip "Vihje: faili muutmine"
+
+    ```bash
+    sed -i 's/-k8s"/-k8s-v2"/' k05-k8s/configmap.yaml
+    grep WHOAMI k05-k8s/configmap.yaml
+    ```
+
+
 ??? success "Oodatav tulemus"
 
     `configmap/tere-seaded configured`, aga `curl` näitab endiselt vana nime. Keskkonnamuutujad loetakse ainult konteineri käivitumisel. Deployment'i mall ei muutunud, seega Deployment pod'e ei vahetanud.
@@ -695,11 +765,13 @@ kubectl get pods
 
 ### 8.2 Tee üks pod mittevalmis
 
-Rakenduse `whoami` aadressile `/health` saab saata POST-päringu, mis muudab vastuse koodi. Nii saad tekitada olukorra, kus protsess töötab, aga rakendus ei ole terve. Vali üks pod ja kasuta selle IP-aadressi.
+Rakenduse `whoami` aadressile `/health` saab saata POST-päringu, mis muudab vastuse koodi. Nii saad tekitada olukorra, kus protsess töötab, aga rakendus ei ole terve. Käsk `kubectl get pods -o wide` näitab iga pod'i aadressi veerus `IP`. Teine käsk paneb esimese pod'i aadressi muutujasse `P`, et seda ei peaks käsitsi kopeerima.
 
 ```bash
 kubectl get pods -o wide
-curl -X POST -d 500 http://<pod-ip>/health
+P=$(kubectl get pods -l app=tere -o jsonpath='{.items[0].status.podIP}')
+echo $P
+curl -X POST -d 500 http://$P/health
 ```
 
 Oota 20 sekundit: kontroll käib iga 5 sekundi järel ja pod märgitakse mittevalmis alles pärast kolme järjestikust ebaõnnestumist. Enne käske mõtle läbi: kas pod kustutatakse? Kas Service saadab sellele päringuid?
@@ -720,7 +792,7 @@ for i in $(seq 1 12); do curl -s http://localhost:30080 | grep Hostname; done | 
 Tee pod uuesti terveks:
 
 ```bash
-curl -X POST -d 200 http://<pod-ip>/health
+curl -X POST -d 200 http://$P/health
 kubectl get pods
 ```
 
@@ -735,13 +807,27 @@ git commit -m "k05: readinessProbe ja resources"
 
 ### 8.3 Leia viga: pod ei leia node'i
 
+Pod küsib nüüd rohkem mälu, kui node'il on. Muuda failis mõlemad mälu read väärtuseks `4Gi`.
+
 ??? example "Ülesanne: muuda failis `k05-k8s/deployment.yaml` mälu nõuet"
 
+    Plokk `resources` peab pärast muutmist olema selline:
+
     ```yaml
+            resources:
+              requests:
+                cpu: 50m
+                memory: 4Gi
+              limits:
                 memory: 4Gi
     ```
 
-    Muuda nii `requests.memory` kui ka `limits.memory` väärtuseks `4Gi`.
+    Ühe käsuga:
+
+    ```bash
+    sed -i 's/memory: 32Mi/memory: 4Gi/; s/memory: 64Mi/memory: 4Gi/' k05-k8s/deployment.yaml
+    grep -A5 resources k05-k8s/deployment.yaml
+    ```
 
 ```bash
 kubectl apply -f k05-k8s/deployment.yaml
@@ -750,6 +836,10 @@ kubectl get deployment tere
 ```
 
 Leia põhjus. Asenda `<pod>` pod'iga, mis ei ole `Running`.
+
+??? tip "Vihje: pod, mis ei tööta"
+
+    `kubectl get pods | grep -v Running` näitab ainult pod'e, mis ei ole olekus `Running`. Kopeeri sealt nimi.
 
 ```bash
 kubectl describe pod <pod> | tail -n 5
@@ -768,9 +858,11 @@ kubectl describe node control | grep -A 8 'Allocated resources'
 
         Rakendus töötab, sest rolling update jättis vanad pod'id alles. Sama viga tekib töökohas siis, kui `requests` on kopeeritud teisest projektist ja klastris pole nii suurt node'i.
 
-Pane failis tagasi `memory: 32Mi` ja `memory: 64Mi` ning rakenda uuesti:
+Pane fail tagasi. Osa 8.2 lõpus tegid commit'i, seega `git restore` toob tagasi faili, kus on `memory: 32Mi` ja `memory: 64Mi`. Rakenda see uuesti:
 
 ```bash
+git restore k05-k8s/deployment.yaml
+grep memory k05-k8s/deployment.yaml
 kubectl apply -f k05-k8s/deployment.yaml
 kubectl rollout status deployment tere
 ```
@@ -795,6 +887,13 @@ Rakendusest on ilmunud uus versioon. Uuendad Deployment'is image'i ja vaatad, ka
           - image: traefik/whoami:1.12.0
     ```
 
+    Ühe käsuga:
+
+    ```bash
+    sed -i 's#whoami:v1.11.0#whoami:1.12.0#' k05-k8s/deployment.yaml
+    grep image: k05-k8s/deployment.yaml
+    ```
+
 Enne käsku mõtle läbi: kas rakendus jääb brauseris kättesaadavaks, kui uus versioon ei käivitu?
 
 ```bash
@@ -803,6 +902,10 @@ kubectl get pods
 ```
 
 Oota minut ja vaata uuesti `kubectl get pods`. Leia põhjus järgmiste käskudega. Asenda `<pod>` pod'iga, mis ei ole `Running`.
+
+??? tip "Vihje: pod, mis ei tööta"
+
+    `kubectl get pods | grep -v Running` näitab ainult pod'e, mis ei ole olekus `Running`. Kopeeri sealt nimi.
 
 ```bash
 kubectl get deployment tere
@@ -822,6 +925,13 @@ kubectl describe pod <pod> | tail -n 10
         ![Enne neli vana pod'i, vale tag'iga kolm vana ja kaks ImagePullBackOff, pärast parandust neli uut](assets/k05_rolling.svg)
 
 Paranda failis image'i rida kujule `traefik/whoami:v1.12.0` ja rakenda uuesti:
+
+??? tip "Vihje: paranda ühe käsuga"
+
+    ```bash
+    sed -i 's#whoami:1.12.0#whoami:v1.12.0#' k05-k8s/deployment.yaml
+    grep image: k05-k8s/deployment.yaml
+    ```
 
 ```bash
 kubectl apply -f k05-k8s/deployment.yaml
@@ -1061,6 +1171,17 @@ kubectl get pvc
 
 Korda 10.2 katset: tee tabel, lisa rida, kustuta pod ja vaata uuesti.
 
+```bash
+sleep 15
+P=$(kubectl get pod -l app=andmebaas -o name)
+echo "create table kursus(nimi text); insert into kursus values ('IS1-26');" | kubectl exec -i $P -- psql -U tere -d tere
+kubectl delete pod -l app=andmebaas
+kubectl rollout status deployment andmebaas
+sleep 15
+P=$(kubectl get pod -l app=andmebaas -o name)
+echo "select * from kursus;" | kubectl exec -i $P -- psql -U tere -d tere
+```
+
 ??? success "Oodatav tulemus"
 
     Pärast kustutamist näitab päring rida `IS1-26`. Uus pod ühendas sama ketta ja andmed olid seal alles.
@@ -1140,6 +1261,14 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:30081/
 ```
 
 Ava brauseris `http://<control'i IP>:30081`. Vali **System: PostgreSQL**. Serveri väljal on juba `andmebaas`, kasutaja `tere`, parool sinu parool Secret'ist, andmebaas `tere`.
+
+??? tip "Vihje: parool"
+
+    Parool on Secret'is `andmebaas-saladus`. Kui see ununes:
+
+    ```bash
+    kubectl get secret andmebaas-saladus -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 -d; echo
+    ```
 
 ??? success "Oodatav tulemus"
 
@@ -1225,6 +1354,76 @@ Tulemuse näed mõne minuti pärast Classroom 50-s.
     ```
 
     `helm list -A` näitab release'e `traefik` ja `traefik-crd`. Vaata lähemalt [k3s-i Helmi lehelt](https://docs.k3s.io/add-ons/helm).
+
+??? example "2 · Vali Kubernetese kasutajaliides ja proovi"
+
+    Peale `kubectl`-i on klastri vaatamiseks ja muutmiseks mitu tööriista. Vali tabelist üks, paigalda see ametliku juhendi järgi ja tee sellega allolevad sammud.
+
+    | | Tööriist | Liik | Kus töötab |
+    |---|---|---|---|
+    | ![](assets/logo/k9s.png){ width="64" } | [k9s](https://k9scli.io/) | terminal | control'is, SSH kaudu |
+    | ![](assets/logo/ktop.svg){ width="40" } | [ktop](https://github.com/vladimirvivien/ktop) | terminal, nagu `top` | control'is: node'ide ja pod'ide protsessor ja mälu |
+    | ![](assets/logo/kdash.svg){ width="40" } | [KDash](https://github.com/kdash-rs/kdash) | terminal | control'is |
+    | | [kubetui](https://github.com/sarub0b0/kubetui) | terminal | control'is: ressursid ja logid |
+    | ![](assets/logo/headlamp.png){ width="40" } | [Headlamp](https://headlamp.dev/) | veebiliides | klastris, avad oma brauseris |
+    | ![](assets/logo/freelens.svg){ width="40" } | [Freelens](https://freelens.app/) | töölauarakendus | sinu arvutis, vajab kubeconfig'i |
+
+    Proovi valitud tööriistaga:
+
+    - leia pod'id ja ava ühe pod'i logi;
+    - kustuta üks pod `tere-…` ja vaata, kuidas Deployment teeb uue;
+    - muuda Deployment'i `tere` koopiate arvu ja kontrolli `kubectl get pods`;
+    - leia Secret `andmebaas-saladus` ja vaata, mida tööriist parooli väärtusest näitab.
+
+    Lõpuks vii klaster tagasi faili olekusse:
+
+    ```bash
+    kubectl apply -f k05-k8s/deployment.yaml
+    kubectl get deployment tere
+    ```
+
+    ??? success "Oodatav tulemus"
+
+        Kasutajaliideses tehtud muudatus oli ainult klastris, failis oli endiselt `replicas: 4`. `apply` muutis koopiate arvu tagasi neljaks. Sama juhtub töökohas, kui keegi muudab klastrit käsitsi ja järgmine paigaldus tuleb Gitist.
+
+??? example "3 · ![](assets/logo/headlamp.png){ width="28" } Headlamp: veebiliides Helmiga"
+
+    **Headlamp** on Kubernetese ametlik veebiliides, vana Kubernetes Dashboardi järglane. Selle paigaldamiseks on vaja Helmi lisaülesandest 1. Headlamp töötab klastris pod'ina ja sina avad selle oma brauseris pordilt 30082.
+
+    ```bash
+    helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+    helm install headlamp headlamp/headlamp -n kube-system \
+      --set service.type=NodePort --set service.nodePort=30082
+    kubectl -n kube-system rollout status deployment headlamp
+    kubectl -n kube-system get svc headlamp
+    ```
+
+    ??? success "Oodatav tulemus"
+
+        ```text
+        deployment "headlamp" successfully rolled out
+        NAME       TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+        headlamp   NodePort   10.43.44.60   <none>        80:30082/TCP   14s
+        ```
+
+    Headlamp küsib sisselogimisel tokenit. Chart tegi teenusekonto `headlamp` klastri administraatori õigustega, sellele saab teha ajutise tokeni:
+
+    ```bash
+    kubectl create token headlamp -n kube-system
+    ```
+
+    Ava brauseris `http://<control'i IP>:30082`, kleebi token ja tee läbi lisaülesande 2 sammud: logi, pod'i kustutamine, koopiate arv ja Secret.
+
+    ??? info "Miks token, mitte parool"
+
+        Token kehtib vaikimisi ühe tunni ja annab samad õigused, mis teenusekontol. Selle teenusekontoga saab klastris kõike muuta, nii et töökohas antakse veebiliidese kasutajale piiratud roll, näiteks ainult lugemine ühes nimeruumis.
+
+    Kui oled valmis, eemalda Headlamp, see võtab mälu:
+
+    ```bash
+    helm uninstall headlamp -n kube-system
+    ```
+
 
 Veaotsing: [Abi](abi.md).
 
