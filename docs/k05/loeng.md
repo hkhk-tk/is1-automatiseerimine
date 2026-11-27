@@ -203,6 +203,8 @@ Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik k
     | `kubectl apply -f <fail>` | viib klastri failiga kooskõlla | `ansible-playbook`, `tofu apply` |
     | `kubectl diff -f <fail>` | näitab, mis muutuks | `--check --diff`, `tofu plan` |
     | `kubectl delete -f <fail>` | kustutab failis kirjeldatud objektid | `tofu destroy` |
+    | `kubectl exec -it <pod> -- sh` | avab shelli konteineri sees | `docker exec -it` |
+    | `kubectl explain deployment.spec` | näitab objekti väljade kirjeldust | `ansible-doc` |
 
     Käskude kõrval kasutatakse terminali kasutajaliidest [k9s](https://k9scli.io/), mis näitab klastri objekte tabelina ja värskendab vaadet pidevalt.
 
@@ -254,7 +256,7 @@ INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
 
 ## 6. Pod, Deployment ja Service
 
-**Pod** on väikseim üksus, mida Kubernetes käivitab: üks või mitu konteinerit, millel on ühine IP-aadress. Pod'e otse tavaliselt ei looda. **Deployment** kirjeldab, mitu ühesugust pod'i peab töötama ja millisest image'ist. Deployment teeb vahepealse objekti **ReplicaSet**, mis hoiab pod'ide arvu. Versiooni uuendamisel teeb Deployment uue ReplicaSet'i ja vahetab pod'id järk-järgult. Seda nimetatakse **rolling update**'iks.
+**Pod** on väikseim üksus, mida Kubernetes käivitab: üks või mitu konteinerit, millel on ühine IP-aadress. Pod'e otse tavaliselt ei looda. **Deployment** kirjeldab, mitu ühesugust pod'i peab töötama ja millisest image'ist. Deployment teeb vahepealse objekti **ReplicaSet**, mis hoiab pod'ide arvu. Versiooni uuendamisel teeb Deployment uue ReplicaSet'i ja vahetab pod'id järk-järgult. Seda nimetatakse **rolling update**'iks. Deployment sobib rakendustele, mille kõik koopiad on ühesugused. Muudel juhtudel on oma objektid: **StatefulSet** andmebaasidele, **DaemonSet** üheks pod'iks igal node'il, näiteks logikogujale, **Job** ühekordsele tööle ja **CronJob** ajastatud tööle nagu `cron`.
 
 Iga uus pod saab uue IP-aadressi. **Service** annab pod'ide grupile püsiva nime ja aadressi ning jagab päringud nende vahel. Compose'is lahendas selle ülesande teenuse nimi: konteiner leidis teise konteineri nime järgi.
 
@@ -460,6 +462,7 @@ Pod'i olek ütleb, millises etapis see pidama jäi, ja põhjus on pod'i sündmus
     | `ContainerCreating` | image laaditakse alla | oota, siis `describe pod` |
     | `ErrImagePull`, `ImagePullBackOff` | image'i ei saanud alla laadida | `describe pod`: `not found` tähendab vale nime või tag'i |
     | `CrashLoopBackOff` | konteineri protsess lõpetab kohe töö ja käivitatakse üha pikema ootega uuesti | `logs <pod> --previous` |
+    | `OOMKilled` | konteiner kasutas rohkem mälu, kui `limits` lubab, ja kernel lõpetas selle | `describe pod`: `Last State`, suurenda `limits.memory` |
     | `Running`, aga `READY 0/1` | konteiner töötab, aga ei ole valmis päringuid vastu võtma | `describe pod`: `Readiness probe failed` |
 
 Rolling update kaitseb vigase versiooni eest. Kui uus pod ei käivitu, jääb enamik vanu pod'e tööle ja rakendus vastab edasi. `kubectl get deployment` näitab siis, et `READY` on väiksem kui soovitud arv.
@@ -556,6 +559,13 @@ Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab j
     ??? success "Vastus"
 
         Argo CD märkab, et klaster erineb Gitist, ja viib koopiate arvu tagasi kolmele. Püsiv muudatus tuleb teha Gitis: muuda faili, tee commit ja push. Kui `selfHeal` on välja lülitatud, jääb klastrisse viis koopiat ja Argo CD näitab rakendust olekus `OutOfSync`.
+
+??? info "Loe juurde ja harjuta"
+
+    - [Learn Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/): ametlik algajate õpetus.
+    - [Killercoda](https://killercoda.com/): tasuta Kubernetese ülesanded brauseris, klastrit pole vaja paigaldada.
+    - Oma arvutis saab klastri teha mõne minutiga: [kind](https://kind.sigs.k8s.io/), [k3d](https://k3d.io/) (k3s Dockeris) või minikube.
+    - Hea esimene harjutus: pane rakendus tööle Deployment'i, Service'i, ConfigMap'i ja Ingressiga, siis riku see meelega (vale image, vale port, liiga väike mälupiir) ja leia põhjus käskudega `describe` ja `logs`.
 
 ??? abstract "Kokkuvõte"
 
