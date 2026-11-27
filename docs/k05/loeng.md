@@ -72,6 +72,8 @@ Kustutatud pod luuakse uuesti mõne sekundiga. Kui kaob terve node, läheb kauem
 
         Compose. Teenuseid ja masinaid on vähe ning seisak on lubatud. Kubernetes lisaks klastri uuendamise, jälgimise ja varundamise töö, aga ei annaks siin midagi juurde.
 
+        Otsus muutuks, kui teenuseid ja servereid oleks palju või kui rakendus ei tohiks hoolduse ajal seista. Siis kaalub automaatne pod'ide asendamine teisel node'il üles klastri haldamise lisatöö.
+
 ## 2. Kust Kubernetes tuli ja mis on k3s
 
 **Mis see on.** Kubernetes on avatud lähtekoodiga orkestreerija. Nimi tuleb kreeka keelest ja tähendab tüürimeest. Lühend K8s tähendab, et K ja s vahel on kaheksa tähte.
@@ -233,6 +235,16 @@ spec:
       targetPort: 80          # konteineri port
       nodePort: 30080         # port igal node'il
 ```
+
+??? question "Kontrolli ennast"
+
+    Vaata ülal Deployment'i ja Service'i faili. Millised kolm rida peavad olema sama väärtusega, et päring jõuaks Service'ist pod'ini? Mida iga rida teeb?
+
+    ??? success "Vastus"
+
+        - Deployment'is `template.metadata.labels`: `app: tere` paneb sildi igale uuele pod'ile.
+        - Deployment'is `selector.matchLabels`: `app: tere` ütleb, millised pod'id Deployment'ile kuuluvad. Kui see erineb mallist, keeldub API server Deployment'i vastu võtmast.
+        - Service'is `selector`: `app: tere` ütleb, millistele pod'idele Service päringud saadab. Kui see erineb, võetakse fail vastu, aga Service'il ei ole ühtegi pod'i.
 
 Service'i tüüp ütleb, kust see on kättesaadav. **ClusterIP** on vaikimisi tüüp ja on nähtav ainult klastri sees. **NodePort** avab lisaks pordi igal node'il vahemikus 30000–32767. **LoadBalancer** küsib pilves koormusjaoturi. Veebirakenduse jaoks kasutatakse tootmises **Ingress**'i, mis suunab päringu nime järgi õigesse Service'isse. k3s-is teeb seda Traefik.
 
