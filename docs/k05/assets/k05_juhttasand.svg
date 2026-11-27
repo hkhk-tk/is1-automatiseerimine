@@ -5,8 +5,8 @@
 </defs>
 <style>
 text{font-family:'Segoe UI',Arial,sans-serif;fill:#13294B;text-anchor:middle}
-.t{font-size:22px;font-weight:700} .s{font-size:18px;fill:#3B4A63} .c{font-family:'Segoe UI',Arial,sans-serif;font-size:17px;fill:#13294B}
-.zt{font-size:20px;font-weight:700;fill:#3B4A63} .w{fill:#F6F5F0} .ws{font-size:18px;fill:#BFD8D5}
+.t{font-size:28.6px;font-weight:700} .s{font-size:23.4px;fill:#3B4A63} .c{font-family:'Segoe UI',Arial,sans-serif;font-size:22.1px;fill:#13294B}
+.zt{font-size:26.0px;font-weight:700;fill:#3B4A63} .w{fill:#F6F5F0} .ws{font-size:23.4px;fill:#BFD8D5}
 .app{fill:#DCEFEE;stroke:#0E7C7B;stroke-width:2.5} .db{fill:#FBEBDD;stroke:#D9822B;stroke-width:2.5}
 .k8s{fill:#E8F0FE;stroke:#326CE5;stroke-width:2.5} .dark{fill:#13294B;stroke:#13294B}
 .bad{fill:#F7E1E1;stroke:#B23B3B;stroke-width:2.5} .new{stroke:#D9822B;stroke-width:5}
@@ -59,11 +59,11 @@ text{font-family:'Segoe UI',Arial,sans-serif;fill:#13294B;text-anchor:middle}
 <line class="ln" x1="1270" y1="162" x2="1270" y2="228" marker-end="url(#a)"/>
 <line class="ln" x1="1270" y1="312" x2="1270" y2="358" marker-end="url(#a)"/>
 <line class="ln" x1="742" y1="330" x2="1018" y2="540" marker-start="url(#a)" marker-end="url(#a)"/>
-<circle cx="320" cy="290" r="20" fill="#D9822B"/><text x="320" y="297" style="fill:#F6F5F0;font-size:20px;font-weight:700">1</text>
-<circle cx="600" cy="410" r="20" fill="#D9822B"/><text x="600" y="417" style="fill:#F6F5F0;font-size:20px;font-weight:700">2</text>
-<circle cx="720" cy="210" r="20" fill="#D9822B"/><text x="720" y="217" style="fill:#F6F5F0;font-size:20px;font-weight:700">3</text>
-<circle cx="460" cy="210" r="20" fill="#D9822B"/><text x="460" y="217" style="fill:#F6F5F0;font-size:20px;font-weight:700">4</text>
-<circle cx="880" cy="190" r="20" fill="#D9822B"/><text x="880" y="197" style="fill:#F6F5F0;font-size:20px;font-weight:700">5</text>
-<circle cx="1300" cy="340" r="20" fill="#D9822B"/><text x="1300" y="347" style="fill:#F6F5F0;font-size:20px;font-weight:700">6</text>
-<circle cx="880" cy="430" r="20" fill="#D9822B"/><text x="880" y="437" style="fill:#F6F5F0;font-size:20px;font-weight:700">7</text>
+<circle cx="320" cy="290" r="20" fill="#D9822B"/><text x="320" y="297" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">1</text>
+<circle cx="600" cy="410" r="20" fill="#D9822B"/><text x="600" y="417" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">2</text>
+<circle cx="720" cy="210" r="20" fill="#D9822B"/><text x="720" y="217" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">3</text>
+<circle cx="460" cy="210" r="20" fill="#D9822B"/><text x="460" y="217" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">4</text>
+<circle cx="880" cy="190" r="20" fill="#D9822B"/><text x="880" y="197" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">5</text>
+<circle cx="1300" cy="340" r="20" fill="#D9822B"/><text x="1300" y="347" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">6</text>
+<circle cx="880" cy="430" r="20" fill="#D9822B"/><text x="880" y="437" style="fill:#F6F5F0;font-size:26.0px;font-weight:700">7</text>
 </svg>
