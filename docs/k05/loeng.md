@@ -94,7 +94,7 @@ Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** 
     |---|---|---|
     | **k3s** | väike klaster, servamasinad, õppimine | Rancher, 2019. Ühes programmis, kaasas Traefik, ServiceLB ja kohalik kettaruum (local-path). Kursusel kasutad seda |
     | **k0s** | väike klaster | Mirantis. Samuti üks programm, lisad paigaldad ise |
-    | **minikube**, **kind**, **MicroK8s** | arendaja arvuti, MicroK8s ka väike server | ühe node'iga klaster virtuaalmasinas või Dockeris |
+    | **[minikube](https://github.com/kubernetes/minikube)**, **kind**, **MicroK8s** | arendaja arvuti, MicroK8s ka väike server | ühe node'iga klaster virtuaalmasinas või Dockeris |
     | **EKS**, **AKS**, **GKE** | pilv | control plane'i haldab pilveteenuse pakkuja |
     | **Talos Linux** | oma serverid ja Proxmox | [Sidero Labs](https://www.siderolabs.com/). Operatsioonisüsteem ainult Kubernetese jaoks: SSH-d ei ole, masinat hallatakse API kaudu käsuga `talosctl` |
     | **OpenShift** | suured asutused | Red Hati Kubernetes koos lisatööriistade ja tasulise toega |
