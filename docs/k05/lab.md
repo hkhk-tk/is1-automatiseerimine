@@ -27,6 +27,7 @@ Sinu ülesanne:
 
 - paigaldada k3s;
 - luua harus `k05-k8s` failid `deployment.yaml`, `service.yaml`, `ingress.yaml` ja `configmap.yaml`;
+- käivitada andmebaas Secret'i, ConfigMap'i ja Volume'iga ning veebiliides, mis räägib andmebaasiga;
 - salvestada klastri olek kausta `k05-k8s/logid`;
 - esitada töö tag'iga `k05`.
 
@@ -47,6 +48,7 @@ Faile kontrollib GitHubis automaatkontroll.
     6. Annad rakendusele seadistuse ConfigMap'ist ja rakendad muudatuse uue rollout'iga.
     7. Lisad valmisoleku kontrolli ja ressursipiirid ning näed, kuidas Service mittevalmis pod'i vahele jätab.
     8. Leiad käivitusvea põhjuse käskudega `kubectl get` ja `kubectl describe`, parandad vea failis ja võtad vajaduse korral eelmise versiooni tagasi.
+    9. Hoiad andmebaasi parooli Secret'is ja andmeid Volume'il ning näitad, et andmed jäävad pod'i kustutamisel alles.
 
 Iga osa käib samamoodi: mõtle enne käsku läbi, mis juhtub, käivita käsk ja kontrolli tulemust käsuga `kubectl get`.
 
@@ -872,7 +874,295 @@ kubectl diff -f k05-k8s/deployment.yaml && echo sama
 
     `rollout status` lõpeb `successfully rolled out` ja viimane käsk trükib `sama`.
 
-## Osa 10 · Esitamine
+## Osa 10 · Andmebaas: Secret, ConfigMap ja Volume
+
+Seni oli klastris üks rakendus ilma andmeteta. Nüüd lisad andmebaasi PostgreSQL ja veebiliidese Adminer, millega andmebaasi brauseris vaadata. Sama ülesehitus on loengus: rakendus ja andmebaas, parool Secret'is, seadistus ConfigMap'is ja andmed Volume'il.
+
+**Eesmärk:** andmebaasi andmed jäävad alles ka siis, kui andmebaasi pod kustutatakse.  
+**Kontroll:** pärast pod'i kustutamist näitab päring `select * from kursus;` sinu lisatud rida.  
+**Kus:** control, kaust `~/kursus`.
+
+??? info "Mis on Adminer"
+
+    Adminer on väike veebirakendus, millega saab andmebaasi tabeleid vaadata ja muuta. See on samas rollis nagu loengu näites `my-app`: rakendus, mis räägib andmebaasiga Service'i nime kaudu.
+
+### 10.1 Parool Secret'i ja seadistus ConfigMap'i
+
+Andmebaasi parool ei tohi olla Deployment'i failis ega image'is. See läheb Secret'i. Kasutaja, andmebaasi nimi ja andmebaasi aadress lähevad ConfigMap'i. Võti `stringData` laseb Secret'i kirjutada lihttekstina, Kubernetes teeb sellest ise base64.
+
+??? example "Ülesanne: fail `k05-k8s/andmebaas/seaded.yaml`"
+
+    Pane parooliks oma parool. Kursusel läheb see fail sinu privaatsesse repositooriumi. Töökohas Secret'i faili Giti ei panda, paroolid tulevad saladuste haldurist, näiteks OpenBaost.
+
+    ```yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: andmebaas-saladus
+    stringData:
+      POSTGRES_PASSWORD: "<sinu-parool>"
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: andmebaas-seaded
+    data:
+      POSTGRES_USER: "tere"
+      POSTGRES_DB: "tere"
+      POSTGRES_HOST: "andmebaas"
+    ```
+
+```bash
+mkdir -p k05-k8s/andmebaas
+kubectl apply -f k05-k8s/andmebaas/seaded.yaml
+kubectl get secret andmebaas-saladus -o jsonpath='{.data.POSTGRES_PASSWORD}'; echo
+```
+
+??? success "Oodatav tulemus"
+
+    Viimane käsk näitab parooli base64-kujul, näiteks `TGFib3ItMjAyNg==`. Proovi `echo TGFib3ItMjAyNg== | base64 -d`: parool tuleb tagasi lihttekstina. Secret ei ole krüpteeritud, ainult kodeeritud.
+
+### 10.2 Andmebaas ilma Volume'ita
+
+Kõigepealt käivitad andmebaasi ilma Volume'ita, et näha, mis juhtub andmetega, kui pod kaob. Deployment võtab kasutaja ja andmebaasi nime ConfigMap'ist võtmega `envFrom` ja parooli Secret'ist võtmega `secretKeyRef`.
+
+??? example "Ülesanne: fail `k05-k8s/andmebaas/postgres.yaml`"
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: andmebaas
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: andmebaas
+      template:
+        metadata:
+          labels:
+            app: andmebaas
+        spec:
+          containers:
+            - name: postgres
+              image: postgres:16-alpine
+              envFrom:
+                - configMapRef:
+                    name: andmebaas-seaded
+              env:
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: andmebaas-saladus
+                      key: POSTGRES_PASSWORD
+              ports:
+                - containerPort: 5432
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: andmebaas
+    spec:
+      selector:
+        app: andmebaas
+      ports:
+        - port: 5432
+          targetPort: 5432
+    ```
+
+    Service'il ei ole `type` rida, nii et see on sisemine, tüüp ClusterIP. Andmebaas ei ole väljast nähtav.
+
+```bash
+kubectl apply -f k05-k8s/andmebaas/postgres.yaml
+kubectl rollout status deployment andmebaas
+kubectl get pods,services
+```
+
+Oota umbes 15 sekundit, kuni andmebaas on alustanud. Tee tabel ja lisa rida:
+
+```bash
+P=$(kubectl get pod -l app=andmebaas -o name)
+echo "create table kursus(nimi text); insert into kursus values ('IS1-26');" | kubectl exec -i $P -- psql -U tere -d tere
+echo "select * from kursus;" | kubectl exec -i $P -- psql -U tere -d tere
+```
+
+??? success "Oodatav tulemus"
+
+    `CREATE TABLE`, `INSERT 0 1` ja päring näitab rida `IS1-26`.
+
+Enne järgmist käsku mõtle läbi: Deployment loob kustutatud pod'i uuesti. Kas rida on alles?
+
+```bash
+kubectl delete pod -l app=andmebaas
+kubectl rollout status deployment andmebaas
+sleep 15
+P=$(kubectl get pod -l app=andmebaas -o name)
+echo "select * from kursus;" | kubectl exec -i $P -- psql -U tere -d tere
+```
+
+??? success "Oodatav tulemus"
+
+    `ERROR: relation "kursus" does not exist`. Uus pod alustas tühja andmebaasiga. Pod on ajutine ja kõik, mis oli konteineri sees, kadus koos sellega.
+
+### 10.3 Volume: andmed pod'ist välja
+
+Andmed peavad olema kettal, mis on pod'ist eraldi. **PersistentVolumeClaim** küsib klastrilt ketast. k3s-is annab selle local-path: kaust node'i kettal. Deployment'is ühendad ketta andmebaasi kausta külge.
+
+??? example "Ülesanne: lisa faili `k05-k8s/andmebaas/postgres.yaml` ketas"
+
+    Lisa faili algusesse uus objekt ja selle järele `---`:
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: andmebaas-andmed
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+    ---
+    ```
+
+    Lisa konteinerile `postgres` keskkonnamuutuja ja ketta ühendus, `env` alla:
+
+    ```yaml
+                - name: PGDATA
+                  value: /var/lib/postgresql/data/pgdata
+    ```
+
+    ja `ports` ploki järele, sama taandega:
+
+    ```yaml
+              volumeMounts:
+                - name: andmed
+                  mountPath: /var/lib/postgresql/data
+    ```
+
+    ning `containers` loendi järele, `containers` võtmega sama taandega:
+
+    ```yaml
+          volumes:
+            - name: andmed
+              persistentVolumeClaim:
+                claimName: andmebaas-andmed
+    ```
+
+```bash
+kubectl apply -f k05-k8s/andmebaas/postgres.yaml
+kubectl rollout status deployment andmebaas
+kubectl get pvc
+```
+
+??? success "Oodatav tulemus"
+
+    PVC `andmebaas-andmed` on olekus `Bound` ja selle StorageClass on `local-path`.
+
+Korda 10.2 katset: tee tabel, lisa rida, kustuta pod ja vaata uuesti.
+
+??? success "Oodatav tulemus"
+
+    Pärast kustutamist näitab päring rida `IS1-26`. Uus pod ühendas sama ketta ja andmed olid seal alles.
+
+??? warning "Kui pod jääb olekusse `CrashLoopBackOff`"
+
+    Vaata `kubectl logs <pod> --previous`. Kui logis on `directory exists but is not empty`, puudub rida `PGDATA`. PostgreSQL ei taha kirjutada ketta juurkausta, kus on `lost+found`.
+
+??? question "Kontrolli ennast"
+
+    Mis juhtuks andmetega, kui kaoks terve node `control`?
+
+    ??? success "Vastus"
+
+        local-path hoiab andmeid node'i enda kettal, nii et need kaoksid koos node'iga. Mitme node'iga klastris kasutatakse võrgu- või pilvekettaid, näiteks Longhorni, ja varundamine on ikka administraatori töö. Kubernetes ise andmeid ei varunda.
+
+```bash
+git add k05-k8s/andmebaas
+git commit -m "k05: andmebaas Secret'i, ConfigMap'i ja Volume'iga"
+```
+
+## Osa 11 · Rakendus räägib andmebaasiga
+
+Nüüd lisad veebirakenduse Adminer, mis leiab andmebaasi Service'i nime järgi. Aadress tuleb ConfigMap'ist, mitte image'ist. Brauseris avad selle välise Service'i ehk NodePort'i kaudu.
+
+**Eesmärk:** näed brauseris tabelit `kursus` ja selle rida.  
+**Kontroll:** `curl -s -o /dev/null -w '%{http_code}' http://localhost:30081/` vastab `200`.  
+**Kus:** control ja sinu arvuti brauser.
+
+??? example "Ülesanne: fail `k05-k8s/andmebaas/adminer.yaml`"
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: adminer
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: adminer
+      template:
+        metadata:
+          labels:
+            app: adminer
+        spec:
+          containers:
+            - name: adminer
+              image: adminer:4
+              env:
+                - name: ADMINER_DEFAULT_SERVER
+                  valueFrom:
+                    configMapKeyRef:
+                      name: andmebaas-seaded
+                      key: POSTGRES_HOST
+              ports:
+                - containerPort: 8080
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: adminer
+    spec:
+      type: NodePort
+      selector:
+        app: adminer
+      ports:
+        - port: 8080
+          targetPort: 8080
+          nodePort: 30081
+    ```
+
+```bash
+kubectl apply -f k05-k8s/andmebaas/adminer.yaml
+kubectl rollout status deployment adminer
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:30081/
+```
+
+Ava brauseris `http://<control'i IP>:30081`. Vali **System: PostgreSQL**. Server on juba täidetud väärtusega `andmebaas`, kasutaja `tere`, parool sinu parool Secret'ist, andmebaas `tere`.
+
+??? success "Oodatav tulemus"
+
+    Adminer näitab tabelit `kursus`. Vali **Select data**: seal on rida `IS1-26`. Lisa brauseris veel üks rida, kustuta andmebaasi pod ja värskenda lehte: mõlemad read on alles.
+
+??? question "Kontrolli ennast"
+
+    Adminer leidis andmebaasi nime `andmebaas` järgi. Mis selle nime taga on ja miks ei kasutatud pod'i IP-d?
+
+    ??? success "Vastus"
+
+        Nime taga on sisemine Service `andmebaas`, mille aadressi annab CoreDNS. Pod'i IP muutub iga uue pod'iga, nagu sa 10.2-s nägid. Service'i nimi ja IP jäävad samaks.
+
+??? info "Miks ei ole siin teist node'i"
+
+    Loengus olid koopiad kahes node'is. Sinu web01 ja app01 masinates on liiga vähe mälu k3s-i agendi jaoks, seepärast on praktikumi klaster ühe node'iga. Käsud ja failid on mitme node'iga klastris samad, ainult scheduler jagab pod'id node'ide vahel. `kubectl get pods -o wide` näitab veerus `NODE`, kus pod töötab.
+
+```bash
+git add k05-k8s/andmebaas/adminer.yaml
+git commit -m "k05: Adminer andmebaasi jaoks"
+```
+
+## Osa 12 · Esitamine
 
 Automaatkontroll näeb ainult repositooriumi, sinu klastrit see ei näe. Seepärast salvestad klastri oleku faili kausta `k05-k8s/logid`. Automaatkontroll kontrollib failide olemasolu, Deployment'i ja Service'i sisu ning logifaili.
 
@@ -880,10 +1170,10 @@ Automaatkontroll näeb ainult repositooriumi, sinu klastrit see ei näe. Seepär
 **Kontroll:** neli kontrolli annavad `OK`.  
 **Kus:** control, kaust `~/kursus`.
 
-### 10.1 Klastri olek faili
+### 12.1 Klastri olek faili
 
 ```bash
-kubectl get nodes,deployments,pods,services,ingress,configmaps -o wide > k05-k8s/logid/klaster.txt
+kubectl get nodes,deployments,pods,services,ingress,configmaps,pvc -o wide > k05-k8s/logid/klaster.txt
 cat k05-k8s/logid/klaster.txt
 for t in files manifest logid ingress; do bash autograde/check.sh k05 "$t"; done
 ```
@@ -896,7 +1186,7 @@ for t in files manifest logid ingress; do bash autograde/check.sh k05 "$t"; done
 
     Sinu repositooriumi kontrollskript on vana. Uuenda see: `curl -fsSL https://raw.githubusercontent.com/hkhk-tk/is1-starter/main/autograde/check.sh -o autograde/check.sh`.
 
-### 10.2 Commit, main ja tag
+### 12.2 Commit, main ja tag
 
 ```bash
 git add k05-k8s autograde/check.sh
