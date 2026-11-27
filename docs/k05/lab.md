@@ -625,7 +625,7 @@ curl -s http://localhost:30080 | head -1
 
 ??? success "Oodatav tulemus"
 
-    Uued pod'id näitavad nime lõpuga `-v2`.
+    Uued pod'id näitavad nime lõpuga `-v2`. Kui mõni päring näitab veel vana nime, vastas lõpetav vana pod. Oota mõni sekund ja proovi uuesti.
 
 ??? info "Paroolid: Secret"
 
@@ -846,6 +846,8 @@ kubectl diff -f k05-k8s/deployment.yaml
 ```
 
 ??? success "Oodatav tulemus"
+
+    `undo` trükib hoiatuse `Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation`. See ütleb sama, mida see osa näitab: klaster ja fail lähevad lahku.
 
     `undo` viis klastri eelmise versiooni juurde, see on vigane tag `1.12.0`, ja pod'id ei käivitu jälle. `diff` näitab erinevust: failis on `v1.12.0`, klastris `1.12.0`. `undo` muudab klastrit, aga mitte faili. Töökohas on `undo` hädaabi, kui rakendus on katki ja parandus võtab aega. Püsiv parandus käib failis.
 
