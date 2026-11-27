@@ -366,7 +366,7 @@ Pod'i IP-aadress, näiteks `10.42.0.9`, on nähtav ainult klastri sees ja muutub
 
 **NodePort.** Service'i tüüp `NodePort` avab pordi vahemikus 30000–32767 igal node'il. kube-proxy seab node'il võrgureeglid, mis saadavad sellele pordile tulnud päringu Service'ile. Port on avatud igal node'il, nii et brauseris sobib ükskõik millise node'i IP-aadress. Praktikumis kasutad porti `30080`.
 
-**Ingress.** Traefik kuulab porte 80 ja 443 ning vaatab päringu päist `Host`. Ingressi reegel ütleb, et nimi `tere.local` läheb Service'ile `tere`. Nii saab ühe IP-aadressi ja pordi taga olla palju rakendusi, nagu nginx'i virtuaalhostid. Ingress ei ole Service'i tüüp, vaid eraldi objekt, mis viitab Service'ile.
+**Ingress.** Traefik kuulab porte 80 ja 443 ning vaatab päringu päist `Host`. Ingressi reegel ütleb, et nimi `tere.local` läheb Service'ile `tere`. Nii saab ühe IP-aadressi ja pordi taga olla palju rakendusi, nagu nginx'i virtuaalhostid. Ingress ei ole Service'i tüüp, vaid eraldi objekt, mis viitab Service'ile. Ingressi järglane on [Gateway API](https://gateway-api.sigs.k8s.io/), mis jagab sama töö mitme objekti vahel ja oskab rohkem, näiteks jagada liiklust kahe versiooni vahel. Kubernetese projekt [lõpetas 2026. aasta märtsis](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/) levinud Ingressi kontrolleri ingress-nginx hoolduse, seepärast liiguvad paljud klastrid Gateway API peale. Traefik toetab mõlemat.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
