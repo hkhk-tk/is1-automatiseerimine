@@ -64,7 +64,7 @@ Kustutatud pod luuakse uuesti mõne sekundiga. Kui kaob terve node, läheb kauem
     | Kirjeldus | `compose.yaml` | YAML-failid, igas üks või mitu objekti |
     | Väljast ligipääs | masina port | Service ja Ingress |
 
-**Millal Kubernetest ei ole vaja.** Klaster lisab tööd: seda tuleb uuendada, jälgida ja varundada ning meeskond peab õppima uue sõnavara. Üks väike rakendus ühes serveris töötab hästi ka Compose'i või systemd teenusena. Kubernetes tasub ära siis, kui teenuseid ja masinaid on palju või kui rakendus peab rikke ajal töötama.
+**Millal Kubernetest ei ole vaja.** Klaster lisab tööd: seda tuleb uuendada, jälgida ja varundada ning meeskond peab õppima uue sõnavara. Kubernetesest ilmub [kolm versiooni aastas](https://kubernetes.io/releases/) ja iga versiooni toetatakse umbes aasta, nii et klastrit tuleb uuendada vähemalt kord aastas. Üks väike rakendus ühes serveris töötab hästi ka Compose'i või systemd teenusena. Kubernetes tasub ära siis, kui teenuseid ja masinaid on palju või kui rakendus peab rikke ajal töötama.
 
 ??? question "Kontrolli ennast"
 
@@ -161,7 +161,7 @@ Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsu
 
 - **API server** võtab vastu kõik päringud ja kontrollib õigusi. Ta kuulab porti 6443.
 - **etcd** (k3s-is ühe masina puhul SQLite) on andmebaas, kus on kogu soovitud olek.
-- **Scheduler** valib igale uuele pod'ile node'i, kus on piisavalt vaba protsessorit ja mälu.
+- **Scheduler** valib igale uuele pod'ile node'i, kus on piisavalt vaba protsessorit ja mälu. Kui palju pod vajab, kirjutatakse Deployment'i konteineri juurde väljale `resources`: `requests` on see, mille scheduler pod'ile kinni paneb, ja `limits` on ülempiir, millest rohkem konteiner kasutada ei saa. Vaata lähemalt [dokumentatsioonist](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 - **Kontrollerid** hoiavad soovitud olekut, näiteks pod'ide arvu.
 - **kubelet** töötab igal node'il ja käivitab sellele node'ile määratud pod'id.
 - **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
@@ -430,7 +430,7 @@ Uuendust jälgitakse käsuga `kubectl rollout`:
 
 `kubectl rollout undo` muudab klastrit, aga mitte faili. Järgmine `apply` toob vigase versiooni tagasi. `undo` sobib hädaolukorraks, kui rakendus on katki ja parandus võtab aega. Seejärel parandatakse ka fail.
 
-Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võib aga vajada käivitumiseks aega. **readinessProbe** ütleb, kuidas valmidust kontrollida, näiteks HTTP-päringuga aadressile `/health`. Kuni kontroll ei õnnestu, ei saada Service pod'ile päringuid ja rolling update ei kustuta järgmist vana pod'i.
+Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võib aga vajada käivitumiseks aega. **readinessProbe** ütleb, kuidas valmidust kontrollida, näiteks HTTP-päringuga aadressile `/health`. Kuni kontroll ei õnnestu, ei saada Service pod'ile päringuid ja rolling update ei kustuta järgmist vana pod'i. **livenessProbe** kontrollib samamoodi, kas töötav konteiner on veel terve. Kui see kontroll ebaõnnestub, käivitab kubelet konteineri uuesti. Mõlemad on kirjas [dokumentatsioonis](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
 
 **Ära kasuta tag'i `latest`.** Sama tag võib eri päevadel tähendada eri image'it. Siis ei tea keegi, milline versioon töötab, ja `rollout undo` ei pruugi viia tagasi eelmise versiooni juurde. Kasuta kindlat versiooni, näiteks `v1.12.0`.
 
