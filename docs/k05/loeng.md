@@ -84,7 +84,7 @@ Kustutatud pod luuakse uuesti mõne sekundiga. Kui kaob terve node, läheb kauem
 
 **Mis on praegu.** 2014. aastal avaldas Google Borgi kogemuse põhjal Kubernetese ja 2015. aastal anti see Cloud Native Computing Foundationile ([CNCF](https://www.cncf.io/)), nii et Kubernetes ei kuulu ühele ettevõttele. Kubernetes on konteinerite haldamise tegelik standard ja kõigil suurtel pilveteenuse pakkujatel on hallatud Kubernetese teenus: Amazon EKS, Azure AKS ja Google GKE.
 
-**Kuhu see läheb.** Kubernetes muutub platvormiks, mille peale ehitatakse teisi tööriistu: paketihaldur Helm, GitOpsi tööriistad nagu Argo CD ja ettevõtete sisemised arendusplatvormid. Paljud meeskonnad ei halda klastrit ise, vaid kasutavad pilve hallatud klastrit ja tegelevad ainult rakendustega.
+**Kuhu see läheb.** Kubernetes muutub platvormiks, mille peale ehitatakse teisi tööriistu: paketihaldur Helm, GitOpsi tööriistad nagu Argo CD ja ettevõtete sisemised arendusplatvormid. Paljud meeskonnad ei halda klastrit ise, vaid kasutavad pilve hallatud klastrit ja tegelevad ainult rakendustega. Kubernetes hakkab haldama ka virtuaalmasinaid: [KubeVirt](https://kubevirt.io/) käivitab VM-i pod'i sees, nii et konteinerid ja VM-id töötavad samades masinates ühe API kaudu. Näiteks Saksa ettevõte encircle360 [asendas k3s-i ja KubeVirtiga eraldi Proxmoxi ja libvirt'i hostid](https://encircle360.com/en/blog/k3s-kubevirt-converged-infrastructure).
 
 Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** ehk distributsiooni, nagu Linuxi tuumast tehakse Ubuntu ja AlmaLinux. Käsud ja YAML-failid on kõigis samad, erinevad paigaldus ja kaasa pandud lisad.
 
@@ -396,7 +396,7 @@ spec:
     |---|---|---|
     | `ClusterIP` | ainult klastri sees, nimega | andmebaas, sisemine teenus |
     | `NodePort` | iga node'i IP ja port 30000–32767 | katsetamine, praktikum |
-    | `LoadBalancer` | eraldi väline IP-aadress | pilves loob pakkuja koormusjaoturi, k3s-is avab ServiceLB pordi node'il |
+    | `LoadBalancer` | eraldi väline IP-aadress | pilves loob pakkuja koormusjaoturi, k3s-is avab ServiceLB pordi node'il, oma serverites jagab IP-aadresse [MetalLB](https://metallb.io/) |
     | Ingress | nimi ja tee, pordid 80 ja 443 | veebirakendused |
 
 Service jagab päringud oma pod'ide vahel. Praktikumis näed seda nii, et rakenduse vastuses muutub `Hostname` päringust päringusse.
@@ -485,7 +485,7 @@ Compose'i failis on iga teenuse kohta image, pordid, muutujad, paroolid ja andme
     | `ports: "8080:80"` | Service tüübiga `NodePort` või Ingress |
     | `environment` | **ConfigMap**: seadistus võtme ja väärtusena |
     | paroolid failis `.env` | **Secret**: nagu ConfigMap, aga eraldi õigustega |
-    | `volumes` andmete jaoks | **PersistentVolumeClaim**: kettaruumi taotlus, k3s-is annab selle local-path |
+    | `volumes` andmete jaoks | **PersistentVolumeClaim**: kettaruumi taotlus, k3s-is annab selle local-path ühe node'i kettalt, mitme node'i vahel kopeerib andmeid näiteks [Longhorn](https://longhorn.io/) |
     | andmebaas | **StatefulSet**: igal pod'il püsiv nimi ja oma ketas |
     | `healthcheck`, `depends_on` | readinessProbe, käivitamise järjekorda Kubernetes ei taga |
     | `restart: unless-stopped` | Deployment'i kontroller teeb seda alati |
