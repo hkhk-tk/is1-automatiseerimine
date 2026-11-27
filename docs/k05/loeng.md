@@ -131,7 +131,7 @@ Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://
   <figcaption>Joonis 5.2. Kontroller võrdleb soovitud ja tegelikku olekut ning kõrvaldab vahe (Talvik, 2026).</figcaption>
 </figure>
 
-Kui pod kustutatakse, näeb kontroller vahet „soovitud 3, tegelik 2“ ja loob uue pod'i. Uus pod saab uue nime ja uue IP-aadressi. Seepärast ei tohi miski sõltuda pod'i nimest ega aadressist.
+Kui pod kustutatakse, näeb kontroller vahet „soovitud 3, tegelik 2“ ja loob uue pod'i. Uus pod saab uue nime ja uue IP-aadressi. Pod on **ajutine** (inglise keeles *ephemeral*): see võib igal hetkel kaduda ja asemele tuleb uus. Seepärast ei tohi miski sõltuda pod'i nimest ega aadressist.
 
 ??? note "Tabel 5.4. Ansible ja Kubernetes"
 
@@ -167,6 +167,7 @@ Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsu
 - **Kontrollerid** hoiavad soovitud olekut, näiteks pod'ide arvu.
 - **kubelet** töötab igal node'il ja käivitab sellele node'ile määratud pod'id.
 - **containerd** laadib image'i ja käivitab konteineri, nagu Docker.
+- **Flannel** ühendab k3s-is pod'ide võrgu node'ide vahel, nii et kõik node'id on nagu üks suur masin.
 - **kube-proxy** töötab igal node'il ja seab võrgureeglid, mille abil Service'i aadressile saadetud päring jõuab mõne pod'ini.
 
 k3s paigaldab kõik need osad ühe käsuga. Kui tahad näha, kuidas klaster osade kaupa kokku pannakse, vaata juhendit [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way). Selles paigaldatakse iga osa käsitsi, koos sertifikaatidega, ja töö võtab mitu tundi.
@@ -607,6 +608,7 @@ Enamikul Kubernetese mõistetel on vaste, mida administraator tunneb serverite j
 
 ??? info "Loe juurde ja harjuta"
 
+    - [TechWorld with Nana: Kubernetes Crash Course](https://www.youtube.com/watch?v=s_o8dwzRlu4): sama sisu ühe tunniga, ingliskeelne video. Demo kood: [gitlab.com/nanuchi/k8s-in-1-hour](https://gitlab.com/nanuchi/k8s-in-1-hour).
     - [Learn Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/): ametlik algajate õpetus.
     - [Killercoda](https://killercoda.com/): tasuta Kubernetese ülesanded brauseris, klastrit pole vaja paigaldada.
     - Oma arvutis saab klastri teha mõne minutiga: [kind](https://kind.sigs.k8s.io/), [k3d](https://k3d.io/) (k3s Dockeris) või minikube.
