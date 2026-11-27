@@ -230,7 +230,7 @@ Välise Service'i aadress on node'i IP ja port, näiteks `http://192.168.125.81:
 
 ### ConfigMap ja Secret
 
-Andmebaasi aadress on tavaliselt rakenduse sees. Kui see muutub, tuleb image uuesti ehitada, registrisse lükata ja pod'i tõmmata. **ConfigMap** hoiab seadistust väljaspool image'it: muudad ConfigMap'i ja image jääb samaks.
+Andmebaasi aadress on tavaliselt rakenduse sees. Kui see muutub, tuleb image uuesti ehitada, registrisse lükata ja pod'i tõmmata. **ConfigMap** hoiab seadistust väljaspool image'it: muudad ConfigMap'i ja image jääb samaks. Kui ConfigMap antakse keskkonnamuutujatena, näeb pod uut väärtust alles pärast taaskäivitust. Kui see on ühendatud failina, uueneb fail töötavas pod'is mõne aja pärast ise.
 
 Paroolid lähevad **Secret**'i. Secret on nagu ConfigMap, aga väärtused on base64-kujul ja lugemisõigusi saab anda eraldi. Base64 ei ole krüpteering: Kubernetes ei krüpteeri Secret'eid ise. Pod loeb mõlemat keskkonnamuutujatena või failina.
 
@@ -241,7 +241,7 @@ Paroolid lähevad **Secret**'i. Secret on nagu ConfigMap, aga väärtused on bas
 
 ### Volume
 
-Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühendab pod'iga ketta, mis on pod'ist väljas: samal node'il või väljaspool klastrit. Kubernetes ise andmeid ei varunda, see on administraatori töö. Praktikumi osas 10 näed mõlemat: ilma Volume'ita andmed kaovad, Volume'iga jäävad alles.
+Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühendab pod'iga ketta, mis on pod'ist väljas: samal node'il või väljaspool klastrit. Kubernetes ise andmeid ei varunda, see on administraatori töö. [Praktikumi osas 10](lab.md#osa-10-andmebaas-secret-configmap-ja-volume) näed mõlemat: ilma Volume'ita andmed kaovad, Volume'iga jäävad alles. Rakendus küsib ketast **PersistentVolumeClaim**'iga (PVC): mitu gigabaiti ja kas üks või mitu kirjutajat. Klaster annab selle StorageClass'i järgi, k3s-is local-path.
 
 <figure markdown="span">
   ![Andmebaasi pod'i külge on ühendatud kohalik ja väline ketas](assets/k05_f_c_vol2.svg)
@@ -252,12 +252,16 @@ Kui andmebaasi pod taaskäivitub, kaovad andmed koos sellega. **Volume** ühenda
 
 Kui ainus rakenduse pod kukub, on rakendus maas. Seepärast töötavad koopiad mitmes node'is ja on seotud sama Service'iga. Koopiaid ei looda käsitsi: **Deployment** on pod'i mall, kus on kirjas, mitu koopiat peab töötama. Praktikas lood Deployment'e, mitte pod'e.
 
-Andmebaasi Deployment'iga ei paljundata, sest koopiad peavad kirjutamist omavahel sünkroonima. Selleks on **StatefulSet**: igal pod'il püsiv nimi ja oma ketas. See on keeruline, seepärast hoitakse andmebaasi sageli klastrist väljas. Lisaks on **DaemonSet** (üks pod igal node'il, näiteks logikoguja), **Job** (ühekordne töö) ja **CronJob** (ajastatud töö nagu `cron`).
+Andmebaasi koopiaid Deployment'iga ei tehta, sest koopiad ei ole võrdsed: igaüks vajab oma andmeid ja püsivat nime. Selleks on **StatefulSet**: igal pod'il on püsiv nimi (`postgres-0`, `postgres-1`), püsiv võrguaadress ja oma ketas. Andmete kopeerimist koopiate vahel StatefulSet ei tee, seda korraldab andmebaas ise või andmebaasi operator. Seepärast hoitakse andmebaasi sageli klastrist väljas. Lisaks on **DaemonSet** (üks pod igal node'il, näiteks logikoguja), **Job** (ühekordne töö) ja **CronJob** (ajastatud töö nagu `cron`).
 
 <figure markdown="span">
   ![Kaks node'i, kummaski rakenduse ja andmebaasi koopia](assets/k05_f_d_sts.svg)
   <figcaption>Joonis 5.10. Deployment rakendusele, StatefulSet andmebaasile (Talvik, 2026).</figcaption>
 </figure>
+
+### Nimeruum
+
+**Nimeruum** (namespace) jagab klastri osadeks, nagu kaust või Proxmoxi pool. Klastri enda osad on nimeruumis `kube-system`, sinu rakendus nimeruumis `default`. Sama nimi võib olla mitmes nimeruumis. `kubectl` vaatab vaikimisi nimeruumi `default`, võti `-n test` vaatab teist ja `-A` kõiki.
 
 ??? question "Kontrolli ennast"
 
@@ -436,7 +440,7 @@ INSTALL_K3S_VERSION=v1.36.6+k3s1 sh install-k3s.sh
     | `svclb-traefik` | ServiceLB: avab Traefiku pordid node'i IP-aadressil |
     | `local-path-provisioner` | annab pod'idele kettaruumi node'i kaustast |
     | `metrics-server` | kogub pod'ide protsessori ja mälu kasutust käsule `kubectl top` |
-    | `helm-install-traefik` | ühekordne töö, mis paigaldas Traefiku Helmiga, olek `Completed` |
+    | `helm-install-traefik`, `helm-install-traefik-crd` | ühekordsed tööd, mis paigaldasid Traefiku Helmiga, olek `Completed` |
 
 ??? question "Kontrolli ennast"
 
@@ -527,6 +531,20 @@ Uuendust jälgitakse käsuga `kubectl rollout`:
 `kubectl rollout undo` muudab klastrit, aga mitte faili. Järgmine `apply` toob vigase versiooni tagasi. `undo` sobib hädaolukorraks, kui rakendus on katki ja parandus võtab aega. Seejärel parandatakse ka fail.
 
 Kubernetes peab pod'i valmis olevaks siis, kui konteiner käivitus. Rakendus võib aga vajada käivitumiseks aega. **readinessProbe** ütleb, kuidas valmidust kontrollida, näiteks HTTP-päringuga aadressile `/health`. Kuni kontroll ei õnnestu, ei saada Service pod'ile päringuid ja rolling update ei kustuta järgmist vana pod'i. **livenessProbe** kontrollib samamoodi, kas töötav konteiner on veel terve. Kui see kontroll ebaõnnestub, käivitab kubelet konteineri uuesti. Mõlemad on kirjas [dokumentatsioonis](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
+
+```yaml
+readinessProbe:          # kas pod võib päringuid saada
+  httpGet:
+    path: /health
+    port: 80
+  periodSeconds: 5
+resources:
+  requests:              # scheduler paneb selle kinni
+    cpu: 50m
+    memory: 32Mi
+  limits:                # rohkem mälu: OOMKilled
+    memory: 64Mi
+```
 
 <figure markdown="span">
   ![kubelet kontrollib iga pod'i aadressi /health, mittevalmis pod jääb Service'ist välja](assets/k05_readiness.svg)
@@ -661,7 +679,7 @@ Enamikul Kubernetese mõistetel on vaste, mida administraator tunneb serverite j
     | readinessProbe | koormusjaoturi tervisekontroll (HAProxy `check`) | |
     | livenessProbe | watchdog, monit | taaskäivitab konteineri |
     | ConfigMap | konfiguratsioonifail kaustas `/etc` | |
-    | Secret | parool failis `.env` või Vaultis | ainult base64, mitte krüpteeritud |
+    | Secret | parool failis `.env` või saladuste halduris, näiteks OpenBaos (Vaulti avatud haru) | ainult base64, mitte krüpteeritud |
     | requests, limits | VM-i CPU ja mälu, cgroups | scheduler arvestab `requests`-iga |
     | PersistentVolumeClaim | SAN-ist või NAS-ist ketta taotlemine | |
     | Namespace | projekt, Proxmoxi pool, AD organisatsiooniüksus | |
