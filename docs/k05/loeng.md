@@ -12,13 +12,12 @@ tags:
 
     Pärast loengut ja praktikumi oskad:
 
-    - selgitada, miks konteinereid hallatakse klastris ja mida teeb orkestreerija;
+    - selgitada, mida teeb orkestreerija, ja otsustada, kas teenuse jaoks on Kubernetes vajalik või piisab Compose'ist;
     - selgitada soovitud ja tegeliku oleku abil, miks Kubernetes asendab kustutatud pod'i ise;
-    - nimetada klastri osad ja selgitada, kuidas `kubectl` klastriga räägib;
+    - nimetada klastri osad ja järjestada sammud, mis järgnevad käsule `kubectl apply`;
     - lugeda Deployment'i ja Service'i YAML-faili ning selgitada, kuidas need siltide kaudu seotud on;
     - leida pod'i olekust ja sündmustest, miks pod ei käivitu;
-    - selgitada, mida teevad Helm ja Argo CD ning kuhu need Kubernetese kõrval kuuluvad;
-    - otsustada, kas teenuse jaoks on Kubernetes vajalik või piisab Compose'ist.
+    - eristada Helmi ja Argo CD ülesannet ning seda, kuhu need Kubernetese kõrval kuuluvad.
 
 ## 1. Miks orkestreerimine
 
@@ -65,13 +64,21 @@ Kustutatud pod luuakse uuesti mõne sekundiga. Kui kaob terve node, läheb kauem
 
 **Millal Kubernetest ei ole vaja.** Klaster lisab tööd: seda tuleb uuendada, jälgida ja varundada ning meeskond peab õppima uue sõnavara. Üks väike rakendus ühes serveris töötab hästi ka Compose'i või systemd teenusena. Kubernetes tasub ära siis, kui teenuseid ja masinaid on palju või kui rakendus peab rikke ajal töötama.
 
+??? question "Kontrolli ennast"
+
+    Väike meeskond haldab ühte veebirakendust ja andmebaasi ühes serveris. Hoolduse ajal on lubatud kuni 10 minutit seisakut. Kas valida Compose või Kubernetes?
+
+    ??? success "Vastus"
+
+        Compose. Teenuseid ja masinaid on vähe ning seisak on lubatud. Kubernetes lisaks klastri uuendamise, jälgimise ja varundamise töö, aga ei annaks siin midagi juurde.
+
 ## 2. Kust Kubernetes tuli ja mis on k3s
 
 **Mis see on.** Kubernetes on avatud lähtekoodiga orkestreerija. Nimi tuleb kreeka keelest ja tähendab tüürimeest. Lühend K8s tähendab, et K ja s vahel on kaheksa tähte.
 
 **Mis oli enne.** Google käitas oma teenuseid konteinerites juba 2000. aastate keskel ja haldas neid sisemise süsteemiga Borg. Teised ettevõtted haldasid servereid ja nende teenuseid skriptidega ja käsitsi.
 
-**Mis on praegu.** 2014. aastal avaldas Google Borgi kogemuse põhjal Kubernetese ja 2015. aastal anti see Cloud Native Computing Foundationile ([CNCF](https://www.cncf.io/)), nii et Kubernetes ei kuulu ühele ettevõttele. Kubernetes on konteinerite haldamise standard ja kõigil suurtel pilveteenuse pakkujatel on hallatud Kubernetese teenus: Amazon EKS, Azure AKS ja Google GKE.
+**Mis on praegu.** 2014. aastal avaldas Google Borgi kogemuse põhjal Kubernetese ja 2015. aastal anti see Cloud Native Computing Foundationile ([CNCF](https://www.cncf.io/)), nii et Kubernetes ei kuulu ühele ettevõttele. Kubernetes on konteinerite haldamise tegelik standard ja kõigil suurtel pilveteenuse pakkujatel on hallatud Kubernetese teenus: Amazon EKS, Azure AKS ja Google GKE.
 
 **Kuhu see läheb.** Kubernetes muutub platvormiks, mille peale ehitatakse teisi tööriistu: paketihaldur Helm, GitOpsi tööriistad nagu Argo CD ja ettevõtete sisemised arendusplatvormid. Paljud meeskonnad ei halda klastrit ise, vaid kasutavad pilve hallatud klastrit ja tegelevad ainult rakendustega.
 
@@ -81,21 +88,21 @@ Kubernetes on standard, mille põhjal teevad mitu tootjat oma **jaotuse** ehk di
 
     | Jaotus | Kellele | Märkus |
     |---|---|---|
-    | **k3s** | väike klaster, servamasinad, õppimine | Rancher, 2019. Ühes programmis, kaasas Traefik, ServiceLB ja kettaruum. Kursusel kasutad seda |
+    | **k3s** | väike klaster, servamasinad, õppimine | Rancher, 2019. Ühes programmis, kaasas Traefik, ServiceLB ja kohalik kettaruum (local-path). Kursusel kasutad seda |
     | **k0s** | väike klaster | Mirantis. Samuti üks programm, lisad paigaldad ise |
     | **minikube**, **kind** | arendaja arvuti | ühe node'iga klaster virtuaalmasinas või Dockeris |
     | **EKS**, **AKS**, **GKE** | pilv | control plane'i haldab pilveteenuse pakkuja |
     | **OpenShift** | suured asutused | Red Hati Kubernetes koos lisatööriistade ja tasulise toega |
 
-Nimi k3s tuli mõttest teha Kubernetes, mis vajab poole vähem mälu. K8s on kümnetäheline sõna, seega poole väiksem on viietäheline K3s.
-
 **k3s** paigaldub ühe käsuga ja vajab vähe mälu, sest kogu juhtimise osa on ühes programmis. Ühe masinaga klastris hoiab k3s andmeid SQLite'i andmebaasis. Täpsemalt: [k3s dokumentatsioon](https://docs.k3s.io/).
+
+Nimi k3s tuli mõttest teha Kubernetes, mis vajab poole vähem mälu. K8s on kümnetäheline sõna, seega poole väiksem on viietäheline K3s.
 
 ## 3. Soovitud olek ja kontroller
 
 `docker run` on **imperatiivne** käsk: see ütleb, mida teha. Kubernetese YAML-fail on **deklaratiivne** kirjeldus: see ütleb, milline olek peab olema, ja süsteem leiab ise, mida selleks teha. Sama mõtet kasutasid Ansible'is ja OpenTofus: `state: present` või `resource` kirjeldab tulemust.
 
-Lihtne näide: Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
+Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid pod'e (täpsemalt jaotises 5). Deployment `tere` ütleb, et image'ist `traefik/whoami` peab töötama kolm pod'i. Kui klastris on kaks pod'i, luuakse kolmas. Kui neli, kustutatakse üks. Kui kolm, ei tehta midagi.
 
 Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) töötab lõputus tsüklis: loeb soovitud olekut, vaatab tegelikku olekut ja teeb sammu, et vahe kaoks.
 
@@ -146,13 +153,21 @@ Joonise 5.3 numbrid näitavad, mis juhtub pärast käsku `kubectl apply -f tere.
 
 1. kubectl saadab Deployment'i kirjelduse API serverile. API server kontrollib õigusi ja faili kuju.
 2. API server salvestab soovitud oleku andmebaasi etcd.
-3. Kontroller näeb uut Deployment'i ja loob pod'ide kirjed. Neil pod'idel ei ole veel node'i.
+3. Deployment'i kontroller näeb uut Deployment'i ja loob ReplicaSet'i. ReplicaSet'i kontroller loob pod'ide kirjed. Neil pod'idel ei ole veel node'i.
 4. Scheduler näeb node'ita pod'i ja määrab sellele node'i.
 5. Selle node'i kubelet näeb, et talle on määratud uus pod.
 6. kubelet annab containerd'le käsu image alla laadida ja konteiner käivitada. Seejärel teatab kubelet pod'i oleku API serverile ja `kubectl get pods` näitab olekut `Running`.
 7. Kui pod'i ees on Service, seab kube-proxy võrgureeglid, mis saadavad Service'i päringud uuele pod'ile.
 
-Ükski osa ei anna teisele otse käsku. Igaüks jälgib API serverit ja teeb oma osa, kui näeb muudatust.
+Kontrollerid, scheduler ja kubelet ei anna üksteisele käske. Igaüks jälgib API serverit ja teeb oma osa, kui näeb muudatust.
+
+??? question "Kontrolli ennast"
+
+    Pod on olekus `Pending` ja `kubectl describe pod` näitab sündmust `Insufficient memory`. Millise joonise 5.3 sammu juures töö seisab?
+
+    ??? success "Vastus"
+
+        Sammu 4 juures. Scheduler ei leidnud node'i, kus on piisavalt vaba mälu. Pod'il ei ole node'i, seega ükski kubelet seda ei käivita.
 
 Administraator ei logi node'idesse sisse ega käivita seal konteinereid. Kõik käsud lähevad API serverile käsuga **kubectl**. SSH leiab failist `~/.ssh/config`, kuhu ühenduda ja millise võtmega. kubectl leiab sama info failist `~/.kube/config`. Sellist faili nimetatakse lühidalt **kubeconfig**'iks. Seal on klastri aadress, sinu sertifikaat või token ja vaikimisi **nimeruum** (namespace). Nimeruum jagab klastri osadeks, näiteks iga meeskonna või keskkonna jaoks oma.
 
@@ -202,6 +217,23 @@ spec:
           image: traefik/whoami:v1.11.0
 ```
 
+Service'i fail on lühem. Selle `selector` peab olema sama silt, mis Deployment'i mallis.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tere
+spec:
+  type: NodePort
+  selector:
+    app: tere                 # leiab pod'id, millel on see silt
+  ports:
+    - port: 80                # Service'i port klastri sees
+      targetPort: 80          # konteineri port
+      nodePort: 30080         # port igal node'il
+```
+
 Service'i tüüp ütleb, kust see on kättesaadav. **ClusterIP** on vaikimisi tüüp ja on nähtav ainult klastri sees. **NodePort** avab lisaks pordi igal node'il vahemikus 30000–32767. **LoadBalancer** küsib pilves koormusjaoturi. Veebirakenduse jaoks kasutatakse tootmises **Ingress**'i, mis suunab päringu nime järgi õigesse Service'isse. k3s-is teeb seda Traefik.
 
 ??? question "Kontrolli ennast"
@@ -242,6 +274,14 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 
 **Helm** on Kubernetese paketihaldur, nagu `apt` Ubuntus. Pakett on **chart**: YAML-failide mallid koos vaikeväärtustega. Käsk `helm install` teeb mallidest failid ja saadab need klastrisse, `helm upgrade` uuendab ja `helm rollback` viib eelmise versiooni juurde. k3s paigaldab Traefiku ise Helmi chart'ina. Enamik valmis tarkvara, näiteks Argo CD, Prometheus ja andmebaasid, paigaldatakse Kubernetesesse Helmiga.
 
+??? question "Kontrolli ennast"
+
+    Mis vahe on käskudel `helm upgrade` ja `kubectl apply`?
+
+    ??? success "Vastus"
+
+        `kubectl apply` saadab klastrisse failid nii, nagu need on. `helm upgrade` teeb chart'i mallidest ja väärtustest failid ning salvestab paigalduse versiooni. Seepärast saab Helmiga minna käsuga `helm rollback` eelmise versiooni juurde.
+
 **GitOps** tähendab, et soovitud olek on Gitis ja klastris töötav tööriist viib klastri sellega kooskõlla. **Argo CD** on selline tööriist. See on samasugune kontroller nagu Kubernetese enda omad, ainult soovitud olek tuleb Gitist. Kui keegi muudab klastris midagi käsitsi, märkab Argo CD erinevust Gitiga ehk **triivi** (drift) ja muudab klastri tagasi. Seda teeb Argo CD ainult siis, kui rakenduse seadistuses on sisse lülitatud `selfHeal`. Vaikimisi näitab Argo CD triivi, aga ei paranda seda.
 
 <figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
@@ -254,13 +294,13 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 <rect class="box" x="520" y="34" width="160" height="56" rx="6"/><text class="b" x="600.0" y="67.0" text-anchor="middle">klaster</text>
 <line class="a" x1="150" y1="62" x2="248" y2="62" marker-end="url(#lxb)"/><text class="s" x="199" y="54" text-anchor="middle">push</text>
 <line class="a" x1="420" y1="62" x2="518" y2="62" marker-end="url(#lxb)"/><text class="s" x="469" y="54" text-anchor="middle">kubectl apply</text>
-<text class="w" x="345" y="112" text-anchor="middle">Käsitsi muudatus klastris jääb märkamata kuni järgmise deploy'ni.</text>
+<text class="w" x="345" y="112" text-anchor="middle">Käsitsi tehtud muudatus klastris jääb märkamata kuni järgmise deploy'ni.</text>
 <text class="t" x="10" y="150" text-anchor="start">Pull: GitOps</text>
 <rect class="box" x="10" y="162" width="140" height="56" rx="6"/><text class="b" x="80.0" y="186.0" text-anchor="middle">Git</text><text class="s" x="80.0" y="204.0" text-anchor="middle">soovitud olek</text>
 <rect class="zone" x="250" y="156" width="430" height="120" rx="8"/>
 <text class="s" x="680" y="150" text-anchor="end">klaster</text>
 <rect class="hi" x="265" y="162" width="160" height="56" rx="6"/><text class="b" x="345.0" y="186.0" text-anchor="middle">Argo CD</text><text class="s" x="345.0" y="204.0" text-anchor="middle">klastri sees</text>
-<rect class="ok" x="520" y="162" width="145" height="56" rx="6"/><text class="b" x="592.5" y="186.0" text-anchor="middle">default</text><text class="s" x="592.5" y="204.0" text-anchor="middle">tegelik olek</text>
+<rect class="ok" x="520" y="162" width="145" height="56" rx="6"/><text class="b" x="592.5" y="186.0" text-anchor="middle">nimeruum default</text><text class="s" x="592.5" y="204.0" text-anchor="middle">tegelik olek</text>
 <line class="a" x1="263" y1="182" x2="152" y2="182" marker-end="url(#lxb)"/><text class="s" x="208" y="174" text-anchor="middle">loeb</text>
 <line class="a" x1="425" y1="182" x2="518" y2="182" marker-end="url(#lxb)"/><text class="s" x="471" y="174" text-anchor="middle">rakendab</text>
 <path class="a d" d="M592,220 V244 H345 V222" marker-end="url(#lxb)"/>
