@@ -84,7 +84,7 @@ Kustutatud pod luuakse uuesti mõne sekundiga. Kui kaob terve node, läheb kauem
 
 **Kuhu see läheb.** Kubernetes muutub platvormiks, mille peale ehitatakse teisi tööriistu: paketihaldur Helm, GitOpsi tööriistad nagu Argo CD ja ettevõtete sisemised arendusplatvormid. Paljud meeskonnad ei halda klastrit ise, vaid kasutavad pilve hallatud klastrit ja tegelevad ainult rakendustega.
 
-Kubernetes on standard, mille põhjal teevad mitu tootjat oma **jaotuse** ehk distributsiooni, nagu Linuxi tuumast tehakse Ubuntu ja AlmaLinux. Käsud ja YAML-failid on kõigis samad, erinevad paigaldus ja kaasa pandud lisad.
+Kubernetes on avatud projekt, mille põhjal teevad mitu tootjat oma **jaotuse** ehk distributsiooni, nagu Linuxi tuumast tehakse Ubuntu ja AlmaLinux. Käsud ja YAML-failid on kõigis samad, erinevad paigaldus ja kaasa pandud lisad.
 
 ??? note "Tabel 5.2. Kubernetese jaotused"
 
@@ -140,7 +140,7 @@ Klaster koosneb kahest osast. **Control plane** hoiab klastri kirjeldust ja otsu
 
 <figure markdown="span">
   ![Seitse nummerdatud sammu: kubectl saadab faili API serverile, see salvestab etcd-sse, kontroller loob pod'i, scheduler valib node'i, kubelet näeb pod'i, containerd käivitab konteineri, kube-proxy seab Service'i reeglid](assets/k05_juhttasand.svg)
-  <figcaption>Joonis 5.3. Mis juhtub pärast käsku kubectl apply. Kõik osad suhtlevad ainult API serveriga (Talvik, 2026).</figcaption>
+  <figcaption>Joonis 5.3. Mis juhtub pärast käsku kubectl apply. Kontrollerid, scheduler ja kubelet suhtlevad API serveri kaudu (Talvik, 2026).</figcaption>
 </figure>
 
 - **API server** võtab vastu kõik päringud ja kontrollib õigusi. Ta kuulab porti 6443.
