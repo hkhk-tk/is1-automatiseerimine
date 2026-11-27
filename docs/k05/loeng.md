@@ -43,25 +43,9 @@ Seda probleemi lahendab **orkestreerimine**. Orkestreerija on tarkvara, mis otsu
 
 Kubernetese klastris on kolm põhimõistet, mida kohtad juba järgmisel joonisel. **Node** on klastri masin, kus konteinerid töötavad. **Pod** on üks konteiner või mitu konteinerit koos, väikseim üksus, mida Kubernetes käivitab. **Control plane** on klastri juhtimise osa, mis otsustab, millisel node'il pod töötab. Täpsemalt tulevad need jaotistes 3 ja 4.
 
-<figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
-<svg viewBox="0 0 690 250" role="img" aria-label="Vasakul üks Docker-host, kus kõik neli teenust seisavad, kui host läheb rikki. Paremal klaster: control plane hoiab soovitud olekut, node 2 läks rikki ja app01 pod luuakse uuesti node 3-l." xmlns="http://www.w3.org/2000/svg">
-<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .ok{fill:#2e7d32;fill-opacity:.14;stroke:#2e7d32;stroke-width:1.3}.lx .bad{fill:#c62828;fill-opacity:.12;stroke:#c62828;stroke-width:1.3}.lx .zone{fill:none;stroke:var(--md-default-fg-color--lighter);stroke-width:1.2;stroke-dasharray:5 4}.lx .t{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .b{fill:var(--md-default-fg-color);font-size:14.5px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:13px}.lx .c{fill:var(--md-default-fg-color);font-size:13px;font-family:var(--md-code-font-family,monospace)}.lx .w{fill:#c62828;font-size:13.5px;font-weight:700}.lx .g{fill:#2e7d32;font-size:13.5px;font-weight:700}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .d{stroke-dasharray:4 3}.lx .h{fill:var(--md-default-fg-color--light)}</style>
-<defs><marker id="lxa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
-<text class="t" x="165" y="22" text-anchor="middle">Compose: üks host</text>
-<rect class="zone" x="10" y="34" width="310" height="210" rx="8"/>
-<rect class="bad" x="40" y="58" width="250" height="110" rx="6"/><text class="b" x="165.0" y="100.0" text-anchor="middle">docker01</text><text class="s" x="165.0" y="118.0" text-anchor="middle">app01, db01, mc01, rmq01</text><text class="s" x="165.0" y="136.0" text-anchor="middle">host läks rikki</text>
-<text class="w" x="165" y="200" text-anchor="middle">Teenused seisavad, kuni keegi</text>
-<text class="w" x="165" y="220" text-anchor="middle">hosti parandab või uue teeb</text>
-<text class="t" x="515" y="22" text-anchor="middle">Kubernetes: klaster</text>
-<rect class="zone" x="360" y="34" width="320" height="210" rx="8"/>
-<rect class="hi" x="380" y="48" width="280" height="44" rx="6"/><text class="b" x="520.0" y="66.0" text-anchor="middle">control plane</text><text class="s" x="520.0" y="84.0" text-anchor="middle">hoiab soovitud olekut: app01 × 2</text>
-<rect class="box" x="380" y="120" width="84" height="70" rx="6"/><text class="b" x="422.0" y="151.0" text-anchor="middle">node 1</text><text class="s" x="422.0" y="169.0" text-anchor="middle">app01</text>
-<rect class="bad" x="478" y="120" width="84" height="70" rx="6"/><text class="b" x="520.0" y="142.0" text-anchor="middle">node 2</text><text class="s" x="520.0" y="160.0" text-anchor="middle">app01</text><text class="s" x="520.0" y="178.0" text-anchor="middle">rikkis</text>
-<rect class="ok" x="576" y="120" width="84" height="70" rx="6"/><text class="b" x="618.0" y="151.0" text-anchor="middle">node 3</text><text class="s" x="618.0" y="169.0" text-anchor="middle">app01 uus</text>
-<path class="a d" d="M520,190 C520,222 618,222 618,193" marker-end="url(#lxa)"/>
-<text class="g" x="520" y="236" text-anchor="middle">pod luuakse uuesti teisel node'il</text>
-</svg>
-<figcaption>Joonis 5.2. Ühe hosti rike peatab Compose'i stacki, klastris luuakse pod teisel node'il uuesti (Talvik, 2026).</figcaption>
+<figure markdown="span">
+  ![Kaks node'i, node 1 kaob, rakendus ja andmebaas töötavad node 2-l edasi](assets/k05_f_d_nodex.svg)
+  <figcaption>Joonis 5.2. Kui node kaob, töötab rakendus teisel node'il edasi (Talvik, 2026).</figcaption>
 </figure>
 
 Virtuaalmasinatega töötanud administraator tunneb sama mõtet Proxmoxi kõrgkäideldavusest (HA): kui server kaob, käivitatakse VM teises serveris. Kubernetes teeb sama üksiku rakenduse tasemel ja palju kiiremini, sest konteineri käivitamiseks ei pea operatsioonisüsteemi laadima.
@@ -292,7 +276,7 @@ Lihtne näide: **Deployment** on objekt, mis hoiab soovitud arvu ühesuguseid po
 Kirjelduse täitmise eest vastutavad **kontrollerid**. Iga [kontroller](https://kubernetes.io/docs/concepts/architecture/controller/) töötab lõputus tsüklis: loeb soovitud olekut, vaatab tegelikku olekut ja teeb sammu, et vahe kaoks.
 
 <figure markdown="span">
-  ![Kontrolltsükkel: kubectl apply muudab soovitud olekut, kubectl delete pod muudab tegelikku olekut; kontroller loeb mõlemat ja loob puuduva pod'i](assets/k05_kontrolltsukkel.svg)
+  ![Kontrolltsükkel: kubectl apply muudab soovitud olekut, kubectl delete pod muudab tegelikku olekut; kontroller loeb mõlemat ja loob puuduva pod'i](assets/k05_f_k_ctrl.svg)
   <figcaption>Joonis 5.11. Kontroller võrdleb soovitud ja tegelikku olekut ning kõrvaldab vahe (Talvik, 2026).</figcaption>
 </figure>
 
@@ -635,29 +619,9 @@ Kui rakenduses on kümneid YAML-faile ja neid on vaja paigaldada mitmesse keskko
 
 **GitOps** tähendab, et soovitud olek on Gitis ja klastris töötav tööriist viib klastri sellega kooskõlla. **Argo CD** on selline tööriist, teine levinud on [Flux](https://fluxcd.io/). See on samasugune kontroller nagu Kubernetese enda omad, ainult soovitud olek tuleb Gitist. Kui keegi muudab klastris midagi käsitsi, märkab Argo CD erinevust Gitiga ehk **triivi** (drift) ja muudab klastri tagasi. Seda teeb Argo CD ainult siis, kui rakenduse seadistuses on sisse lülitatud `selfHeal`. Vaikimisi näitab Argo CD triivi, aga ei paranda seda.
 
-<figure style="max-width:690px;margin:.8em auto" class="lx" markdown="0">
-<svg viewBox="0 0 690 286" role="img" aria-label="Push-mudelis loeb CI runner Gitist ja käivitab kubectl apply, klastri võti on runneril. Pull-mudelis töötab Argo CD klastri sees, loeb Gitist soovitud oleku, rakendab selle ja pöörab käsitsi tehtud muudatused tagasi." xmlns="http://www.w3.org/2000/svg">
-<style>.lx svg{width:100%;height:auto;font-family:var(--md-text-font-family,sans-serif)}.lx .box{fill:var(--md-code-bg-color);stroke:var(--md-default-fg-color--lighter);stroke-width:1.2}.lx .hi{fill:var(--md-primary-fg-color);fill-opacity:.16;stroke:var(--md-primary-fg-color);stroke-width:1.5}.lx .ok{fill:#2e7d32;fill-opacity:.14;stroke:#2e7d32;stroke-width:1.3}.lx .bad{fill:#c62828;fill-opacity:.12;stroke:#c62828;stroke-width:1.3}.lx .zone{fill:none;stroke:var(--md-default-fg-color--lighter);stroke-width:1.2;stroke-dasharray:5 4}.lx .t{fill:var(--md-default-fg-color);font-size:15px;font-weight:700}.lx .b{fill:var(--md-default-fg-color);font-size:14.5px;font-weight:600}.lx .s{fill:var(--md-default-fg-color--light);font-size:13px}.lx .c{fill:var(--md-default-fg-color);font-size:13px;font-family:var(--md-code-font-family,monospace)}.lx .w{fill:#c62828;font-size:13.5px;font-weight:700}.lx .g{fill:#2e7d32;font-size:13.5px;font-weight:700}.lx .a{stroke:var(--md-default-fg-color--light);stroke-width:1.5;fill:none}.lx .d{stroke-dasharray:4 3}.lx .h{fill:var(--md-default-fg-color--light)}</style>
-<defs><marker id="lxb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="h" d="M0,0 L10,5 L0,10 z"/></marker></defs>
-<text class="t" x="10" y="22" text-anchor="start">Push: CI teeb deploy</text>
-<rect class="box" x="10" y="34" width="140" height="56" rx="6"/><text class="b" x="80.0" y="58.0" text-anchor="middle">Git</text><text class="s" x="80.0" y="76.0" text-anchor="middle">manifestid</text>
-<rect class="bad" x="250" y="34" width="170" height="56" rx="6"/><text class="b" x="335.0" y="58.0" text-anchor="middle">CI runner</text><text class="s" x="335.0" y="76.0" text-anchor="middle">hoiab klastri võtit</text>
-<rect class="box" x="520" y="34" width="160" height="56" rx="6"/><text class="b" x="600.0" y="67.0" text-anchor="middle">klaster</text>
-<line class="a" x1="150" y1="62" x2="248" y2="62" marker-end="url(#lxb)"/><text class="s" x="199" y="54" text-anchor="middle">push</text>
-<line class="a" x1="420" y1="62" x2="518" y2="62" marker-end="url(#lxb)"/><text class="s" x="469" y="54" text-anchor="middle">kubectl apply</text>
-<text class="w" x="345" y="112" text-anchor="middle">Käsitsi tehtud muudatus klastris jääb märkamata kuni järgmise deploy'ni.</text>
-<text class="t" x="10" y="150" text-anchor="start">Pull: GitOps</text>
-<rect class="box" x="10" y="162" width="140" height="56" rx="6"/><text class="b" x="80.0" y="186.0" text-anchor="middle">Git</text><text class="s" x="80.0" y="204.0" text-anchor="middle">soovitud olek</text>
-<rect class="zone" x="250" y="156" width="430" height="120" rx="8"/>
-<text class="s" x="680" y="150" text-anchor="end">klaster</text>
-<rect class="hi" x="265" y="162" width="160" height="56" rx="6"/><text class="b" x="345.0" y="186.0" text-anchor="middle">Argo CD</text><text class="s" x="345.0" y="204.0" text-anchor="middle">klastri sees</text>
-<rect class="ok" x="520" y="162" width="145" height="56" rx="6"/><text class="b" x="592.5" y="186.0" text-anchor="middle">nimeruum default</text><text class="s" x="592.5" y="204.0" text-anchor="middle">tegelik olek</text>
-<line class="a" x1="263" y1="182" x2="152" y2="182" marker-end="url(#lxb)"/><text class="s" x="208" y="174" text-anchor="middle">loeb</text>
-<line class="a" x1="425" y1="182" x2="518" y2="182" marker-end="url(#lxb)"/><text class="s" x="471" y="174" text-anchor="middle">rakendab</text>
-<path class="a d" d="M592,220 V244 H345 V222" marker-end="url(#lxb)"/>
-<text class="s" x="470" y="258" text-anchor="middle">jälgib triivi, pöörab tagasi</text>
-</svg>
-<figcaption>Joonis 5.16. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
+<figure markdown="span">
+  ![Push-mudelis saadab CI runner muudatuse klastrisse, pull-mudelis loeb Argo CD klastri seest Gitist](assets/k05_gitops.svg)
+  <figcaption>Joonis 5.16. Push-mudelis saadab CI muudatuse klastrisse, pull-mudelis loeb klastris töötav agent selle Gitist (Talvik, 2026).</figcaption>
 </figure>
 
 Tavaline ahel töökohas on selline: konveier, näiteks GitHub Actions, ehitab ja testib image'i ning kirjutab selle uue tag'i Gitis olevasse YAML-faili. Argo CD näeb Gitis muudatust ja uuendab klastrit. Argo CD kontrollib Giti vaikimisi iga kolme minuti tagant, nii et muudatus ei jõua klastrisse kohe. Konveier ei vaja klastri võtit, klastrisse kirjutab ainult Argo CD. Nii töötavad ka Eesti ettevõtted. Näiteks on Entigo kirjutanud tag'i uuendamise sammu jaoks oma tööriista [entigo-k8s-gitops](https://github.com/entigolabs/entigo-k8s-gitops).
