@@ -7,7 +7,9 @@ tags:
 
 # Praktikum: Kubernetes k3s-is
 
-Eelmisel korral käivitasid Dockeri konteineri: kui selle kustutasid, jäi see kustutatuks. Nüüd paigaldad control'isse k3s-i, käivitad rakenduse kolme koopiana ja vaatad, kuidas Kubernetes kustutatud koopia asendab.
+Eelmisel korral lõid OpenTofuga koodist viis virtuaalmasinat. Masinad tekivad nüüd ühe käsuga, aga rakendusi hoiad töös endiselt ise. K3-s käivitasid Dockeriga konteinereid ühes masinas: kui konteiner kustutati või masin kadus, jäi rakendus seisma, kuni keegi selle taastas.
+
+Täna paigaldad control'isse k3s-i, käivitad rakenduse kolme koopiana ja vaatad, kuidas Kubernetes kustutatud koopia ise asendab.
 
 Seejärel kirjeldad rakenduse YAML-failides, teed selle brauseris kättesaadavaks ja parandad vea, mis takistab uue versiooni käivitumist.
 
